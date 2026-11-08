@@ -1027,7 +1027,8 @@ function themed(t) {
   const cat = JSON.stringify({num:c.num, name:c.name, color:c.color}).replace(/</g, '\\u003c');
   const boot = (cfg.kit ? kitHead(t) : '') + '<script data-fth>window.__fthCat=' + cat + ';(' + fthEngine.toString() + ')(' + JSON.stringify(cfg).replace(/</g, '\\u003c') + ');'
     + '(' + fthProjectShim.toString() + ')(' + JSON.stringify({tool: t.id}).replace(/</g, '\\u003c') + ');<\/script>';
-  let h = t.html;
+  /* a tool file carries its own copy of the look for when it's opened on its own; inside the hub that copy is removed */
+  let h = t.html.replace(/<!--fth-standalone-->[\s\S]*?<!--\/fth-standalone-->\s*/g, '');
   if (/<head[^>]*>/i.test(h)) h = h.replace(/<head[^>]*>/i, m => m + boot);
   else if (/<!doctype[^>]*>/i.test(h)) h = h.replace(/<!doctype[^>]*>/i, m => m + boot);
   else h = boot + h;
@@ -1207,7 +1208,7 @@ menu.addEventListener('click', async e => {
     case 'newtab': newTab(id); break;
     case 'update': pickFile(f => startUpdate(id, f)); break;
     case 'edit': editDialog(id); break;
-    case 'download': await loadHtml(t); t.html = byId(id).html; download(t.fileName || slug(t.name) + '.html', (TOOL_THEME[id] || {}).kit ? t.html.replace(/<head[^>]*>/i, m => m + kitHead(t)) : t.html); break;
+    case 'download': await loadHtml(t); download(t.fileName || slug(t.name) + '.html', byId(id).html); break;
     case 'revert':
       if (await confirmDlg('Undo changes?', `${t.name} will go back to the version built into this hub file. Uploaded versions and edits for it will be discarded from this browser.`, 'Undo changes')) {
         await dropRec(id); refreshAfterChange(id); toast(`${t.name} restored to the built-in version`);

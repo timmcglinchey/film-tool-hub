@@ -20,6 +20,8 @@ The website for Film Tool Hub: 14 filmmaking tools in one place, with projects a
 
 **Add a tool.** Upload its file into `tools/`, then add an entry for it in `tools/tools.json` (copy an existing entry and change the details). A new tool should use the shared look in `hub/kit.css`.
 
+**Work on a tool in a separate chat.** Download its file from `tools/` and attach it together with `docs/tool-guide.md`, which explains the rules that keep it working in the hub. Each tool file also opens on its own in a browser.
+
 **Change a tool's name, description or category.** Edit its entry in `tools/tools.json`.
 
 **Undo a change.** Every change is kept in the history (the clock icon, "History"). Any earlier version can be brought back.
