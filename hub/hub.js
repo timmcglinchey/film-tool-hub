@@ -371,7 +371,7 @@ const gisReady = !driveOn() ? Promise.resolve(false) : new Promise(res => {
           let driveOk = true;
           try { driveOk = google.accounts.oauth2.hasGrantedAllScopes(r, 'https://www.googleapis.com/auth/drive.file'); } catch (e) {}
           token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000;
-          if (!driveOk) { token = null; w.rej(new Error('Google Drive access wasn’t allowed. Sign in again and tick the box that lets Film Tool Hub use its files in your Google Drive.')); return; }
+          if (!driveOk) { token = null; w.rej(new Error('Google Drive access wasn’t allowed, so your projects can’t be saved to your Drive. Click Sign in again and tick the Google Drive box.')); return; }
           w.res(token);
         },
         error_callback: e => { const w = tokenWait; tokenWait = null; if (w) w.rej(new Error((e && e.type) || 'sign-in cancelled')); }
@@ -591,6 +591,17 @@ async function signIn() {
       for (const e of empties) await deleteProject(e.id);
     }
   } catch (e) { if (!/cancel|closed|superseded/i.test(e.message)) toastLong('Couldn’t sign in. ' + e.message); renderAccount(); }
+}
+/* before Google's screen: point out the Drive tick box, because saving depends on it */
+function signInFlow() {
+  if (account) { signIn(); return; }
+  showDlg(`<h3>Before you sign in</h3>
+    <p class="sub">Google will ask what Film Tool Hub is allowed to do. <b>Tick the Google Drive box.</b> Saving your projects depends on it.</p>
+    <div class="gtick" aria-hidden="true"><span class="cb">✓</span><span>See, edit, create and delete only the specific Google Drive files that you use with this app</span></div>
+    <p class="sub">It only lets Film Tool Hub use the files it creates for you, in a Film Tool Hub folder in your Drive. It can't see anything else you keep there.</p>
+    <p class="sub">If the box isn't ticked, your projects stay on this computer only: you won't be able to open them anywhere else, and they're lost if this browser's data is cleared. <a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a></p>
+    <div class="dlg-actions"><button class="btn ghost" value="cancel">Cancel</button><button class="btn primary" value="ok">${GLOGO}Continue to Google</button></div>`,
+    () => { signIn(); });
 }
 async function reconnect() { try { await getToken(true); renderAccount(); await driveSync(true); } catch (e) { renderAccount(); } }
 async function signOut() {
@@ -1365,8 +1376,8 @@ document.addEventListener('click', e => { if (!pmenu().hidden && !e.target.close
 $('#saveBtn').onclick = () => saveProject();
 document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); saveProject(); } });
 form.addEventListener('click', e => { const b = e.target.closest('[data-pa]'); if (!b) return; e.preventDefault(); projAction(b.dataset.pa, b.dataset.id, b.dataset.bid); });
-document.addEventListener('click', e => { const b = e.target.closest('[data-pact]'); if (!b) return; if (b.dataset.pact === 'signin') signIn(); if (b.dataset.pact === 'manage') manageDialog(); if (b.dataset.pact === 'new') newProjectDialog(); });
-$('#acctBtn').onclick = e => { e.stopPropagation(); if (!account) { signIn(); return; } const m = $('#amenu'); if (!m.hidden) closeAcctMenu(); else { closeProjMenu(); closeMenu(); openAcctMenu(); } };
+document.addEventListener('click', e => { const b = e.target.closest('[data-pact]'); if (!b) return; if (b.dataset.pact === 'signin') signInFlow(); if (b.dataset.pact === 'manage') manageDialog(); if (b.dataset.pact === 'new') newProjectDialog(); });
+$('#acctBtn').onclick = e => { e.stopPropagation(); if (!account) { signInFlow(); return; } const m = $('#amenu'); if (!m.hidden) closeAcctMenu(); else { closeProjMenu(); closeMenu(); openAcctMenu(); } };
 $('#amenu').addEventListener('click', e => {
   const b = e.target.closest('[data-am]'); if (!b) return;
   if (b.dataset.am === 'folder') { closeAcctMenu(); return; }

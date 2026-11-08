@@ -273,3 +273,6 @@ dialog::backdrop{background:rgba(5,6,8,.7);backdrop-filter:blur(3px)}
 body:not(.admin) #addBtn,body:not(.admin) .cardw .more,body:not(.admin) #barActions [data-act="menu"],
 body:not(.admin) .foot #storeNote,body:not(.admin) #restoreBtn,body:not(.admin) #resetBtn,body:not(.admin) #banner{display:none!important}
 .foot a.lnk{text-decoration:none}.foot a.lnk:hover{text-decoration:underline}.psignin a{color:var(--muted)}
+.gtick{display:flex;gap:12px;align-items:flex-start;margin:4px 0 14px;padding:12px 14px;border-radius:10px;border:1px solid var(--line2);background:var(--surface2);font-size:13.5px;line-height:1.45;color:var(--text)}
+.gtick .cb{flex:none;width:20px;height:20px;border-radius:4px;background:#1a73e8;color:#fff;display:grid;place-items:center;font:700 13px/1 system-ui;margin-top:1px}
+#dlg .btn svg{width:16px;height:16px}
