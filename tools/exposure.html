@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Exposure Lab</title>
+<style>
+html,body{margin:0}
+:root {
+  --bg: #121315; --rail: #1a1b1e; --line: #2a2c31; --fg: #e9e6df; --muted: #8d8a83;
+  --accent: #e7bd6a; --accent-ink: #1b1508; --field: #232429;
+  --font-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+button { font-family: inherit; }
+.app {
+  height: 100%; display: grid; grid-template-columns: minmax(0,1fr) 350px; gap: 14px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: max(14px, env(safe-area-inset-top, 0px)); padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+}
+.stage { position: relative; min-width: 0; min-height: 0; border-radius: 10px; overflow: hidden; background: #0d0d0e; }
+#view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#view.dragging { cursor: grabbing; }
+#labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.mk {
+  position: absolute; transform: translate(-50%, -100%); pointer-events: auto; cursor: pointer;
+  font: 600 10.5px/1.15 var(--font-data); color: #e9e6df; text-align: center; white-space: nowrap;
+  background: color-mix(in srgb, var(--bg) 74%, transparent); border: 1px solid transparent;
+  border-radius: 5px; padding: 3px 5px 3px; margin-top: -8px;
+}
+.mk .d { color: var(--muted); font-weight: 400; }
+.mk:hover { border-color: var(--muted); }
+.mk.meter { border-color: var(--accent); color: var(--accent); }
+.mk.meter .d { color: #c9a45a; }
+.lampTag {
+  position: absolute; transform: translate(-50%, -50%); pointer-events: none;
+  font: 600 11px/1.2 var(--font-data); color: var(--accent-ink); background: var(--accent);
+  border-radius: 999px; padding: 4px 9px; white-space: nowrap;
+}
+.badge {
+  position: absolute; left: 16px; top: 14px; max-width: min(440px, calc(100% - 32px)); pointer-events: none;
+  background: color-mix(in srgb, var(--bg) 74%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-radius: 8px; padding: 10px 14px 12px;
+}
+.badge .eyebrow { font: 600 10.5px/1 var(--font-data); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.badge h2 { margin: 6px 0 4px; font-family: var(--font-display); font-stretch: 72%; font-weight: 750; font-size: clamp(26px, 3.4vw, 38px); line-height: 1; letter-spacing: -.01em; }
+.badge p { margin: 0; color: #cfcbc3; font-size: 13px; }
+.legend {
+  position: absolute; right: 14px; top: 14px; pointer-events: none; display: none;
+  background: color-mix(in srgb, var(--bg) 78%, transparent); border-radius: 8px; padding: 8px 10px;
+  font: 10.5px/1 var(--font-data); color: var(--muted);
+}
+.legend.on { display: block; }
+.legend .row { display: flex; align-items: center; gap: 7px; height: 16px; }
+.legend .sw { width: 22px; height: 12px; border-radius: 2px; }
+.stagebar {
+  position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px;
+  align-items: center; justify-content: space-between; pointer-events: none;
+}
+.stagebar > * { pointer-events: auto; }
+.hint { font: 11.5px/1.3 var(--font-data); color: #d6d2ca; background: color-mix(in srgb, var(--bg) 70%, transparent); padding: 6px 9px; border-radius: 6px; }
+.seg { display: inline-flex; background: color-mix(in srgb, var(--bg) 78%, transparent); border-radius: 7px; padding: 3px; gap: 2px; }
+.seg button, .btn {
+  font: 600 12px/1 var(--font-body); color: var(--muted); background: transparent; border: 0;
+  padding: 7px 10px; border-radius: 5px; cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.btn { background: color-mix(in srgb, var(--bg) 78%, transparent); color: var(--fg); padding: 10px 12px; border-radius: 7px; }
+.btn:hover { color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { color: var(--accent-ink); filter: brightness(1.08); }
+.btn:disabled { opacity: .45; cursor: default; }
+.stagebar .group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.seg button:focus-visible, .chip:focus-visible, .btn:focus-visible, .mk:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.count { display: inline-block; min-width: 16px; padding: 2px 4px; margin-left: 4px; border-radius: 999px; background: var(--field); color: var(--fg); font: 600 10.5px/1 var(--font-data); text-align: center; }
+.flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.flash.go { opacity: .35; transition: none; }
+
+/* captures viewer */
+.viewer {
+  position: absolute; inset: 0; background: #0b0b0c; display: none; flex-direction: column; z-index: 5;
+}
+.viewer.on { display: flex; }
+.viewer .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; }
+.viewer .top h3 { margin: 0; font: 600 10.5px/1 var(--font-data); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.viewer .imgwrap { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; margin: 0 12px; overflow: hidden; }
+.viewer img#vImg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+.viewer .empty { color: var(--muted); text-align: center; max-width: 360px; }
+.viewer .cap { font: 12px/1.3 var(--font-data); color: #d6d2ca; padding: 8px 12px 0; text-align: center; min-height: 16px; }
+.viewer .scrub { display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
+.viewer .scrub input { flex: 1; }
+.viewer .scrub output { font: 12px/1 var(--font-data); color: var(--muted); min-width: 52px; text-align: right; }
+.thumbs { display: flex; gap: 6px; overflow-x: auto; padding: 0 12px 10px; }
+.thumbs button { flex: none; padding: 0; border: 2px solid transparent; border-radius: 5px; background: none; cursor: pointer; }
+.thumbs button.on { border-color: var(--accent); }
+.thumbs img { display: block; height: 46px; border-radius: 3px; }
+.viewer .acts { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 12px 12px; justify-content: space-between; }
+.viewer .acts .group { display: flex; gap: 8px; flex-wrap: wrap; }
+.viewer .btn { background: var(--field); }
+
+.rail { min-width: 0; min-height: 0; overflow-y: auto; background: var(--rail); border-radius: 10px; display: flex; flex-direction: column; }
+.rail header { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+.rail h1 { margin: 0; font-family: var(--font-display); font-stretch: 118%; font-weight: 800; font-size: 18px; letter-spacing: .01em; text-transform: uppercase; }
+.rail header p { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; }
+.sec { padding: 14px 18px 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
+.sec:last-child { border-bottom: 0; }
+.sec h3 { margin: 0; font: 600 10.5px/1 var(--font-data); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 600 12.5px/1 var(--font-body); color: var(--fg); background: var(--field); border: 1px solid var(--line); border-radius: 999px; padding: 7px 11px; cursor: pointer; }
+.chip:hover { border-color: var(--muted); }
+.chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.modes button { font: 600 12.5px/1.15 var(--font-body); color: var(--fg); background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 9px 6px; cursor: pointer; }
+.modes button small { display: block; font-weight: 400; font-size: 10.5px; color: var(--muted); margin-top: 3px; }
+.modes button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.modes button.on small { color: #5a4920; }
+.note { color: var(--muted); font-size: 12px; margin: 0; }
+.note b { color: var(--fg); font-weight: 600; }
+#plan { width: 100%; aspect-ratio: 1; display: block; border-radius: 8px; background: var(--field); touch-action: none; cursor: crosshair; }
+#prof { width: 100%; height: 150px; display: block; border-radius: 8px; background: var(--field); }
+.readouts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ro { background: var(--field); border-radius: 7px; padding: 8px 10px; min-width: 0; }
+.ro .k { font: 10px/1 var(--font-data); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.ro .v { margin-top: 5px; font: 600 15px/1.1 var(--font-data); font-variant-numeric: tabular-nums; }
+.ro .s { margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+.ctl { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: baseline; }
+.ctl label { font-weight: 600; font-size: 13px; }
+.ctl input.num {
+  font: 12px/1 var(--font-data); font-variant-numeric: tabular-nums; color: var(--accent); text-align: right;
+  background: transparent; border: 1px solid transparent; border-radius: 5px; padding: 4px 6px; margin: -4px -7px -4px 0;
+  width: 11em; min-width: 0; cursor: text;
+}
+.ctl input#oNd { width: 15em; }
+.ctl input.num:hover { border-color: var(--line); }
+.ctl input.num:focus { outline: none; border-color: var(--accent); background: var(--field); color: var(--fg); }
+.ctl input[type=range] { grid-column: 1 / -1; }
+.ctl[hidden], .sub[hidden] { display: none; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; background: transparent; margin: 0; cursor: pointer; }
+input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: var(--line); }
+input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--line); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--fg); margin-top: -6px; border: 3px solid var(--rail); box-shadow: 0 0 0 1px var(--muted); }
+input[type=range]::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--fg); border: 3px solid var(--rail); box-shadow: 0 0 0 1px var(--muted); }
+input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 2px var(--accent); }
+.ticks { grid-column: 1 / -1; display: flex; justify-content: space-between; font: 10px/1 var(--font-data); color: var(--muted); margin-top: -2px; }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 600; font-size: 13px; cursor: pointer; }
+.toggle small { display: block; font-weight: 400; color: var(--muted); font-size: 11.5px; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.sub { display: flex; flex-direction: column; gap: 10px; }
+.inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.rbtn { font: 600 12.5px/1 var(--font-body); color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 7px; padding: 8px 12px; cursor: pointer; }
+.err { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--fg); }
+
+/* scenes */
+body.cam .lab-only { display: none !important; }
+body:not(.cam) .cam-only { display: none !important; }
+.modes.two { grid-template-columns: repeat(2, 1fr); }
+.camPrev {
+  position: absolute; right: 14px; bottom: 108px; width: min(36%, 380px); z-index: 2;
+  background: color-mix(in srgb, var(--bg) 82%, transparent); border-radius: 9px; padding: 7px 7px 9px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.camPrev .cpHead { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 0 3px 6px; font: 600 10.5px/1.2 var(--font-data); }
+.camPrev .cpHead b { color: var(--accent); letter-spacing: .1em; text-transform: uppercase; font-weight: 600; }
+.camPrev .cpHead span { color: #d6d2ca; text-align: right; }
+#prevCv { display: block; width: 100%; aspect-ratio: 3 / 2; border-radius: 4px; background: #000; cursor: zoom-in; }
+.cpLegend { display: none; grid-template-columns: repeat(10, 1fr); gap: 2px; margin: 6px 0 0; }
+.cpLegend.on { display: grid; }
+.cpLegend span { display: block; text-align: center; font: 600 9.5px/1 var(--font-data); padding: 4px 0 3px; border-radius: 2px; color: #111; }
+.evscale { position: relative; height: 30px; margin: 8px 6px 0; }
+.evscale .track { position: absolute; left: 0; right: 0; top: 9px; height: 2px; background: var(--line); }
+.evscale .tk { position: absolute; top: 5px; width: 1px; height: 6px; background: var(--muted); transform: translateX(-50%); }
+.evscale .tk.major { top: 3px; height: 10px; background: #bdb9b1; }
+.evscale .tl { position: absolute; top: 16px; transform: translateX(-50%); font: 9.5px/1 var(--font-data); color: var(--muted); }
+.evscale .ptr { position: absolute; top: -1px; width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 9px solid var(--accent); transform: translateX(-50%); transition: left .12s; }
+.evscale .out { position: absolute; top: -4px; font: 600 10px/1 var(--font-data); color: var(--accent); }
+.bd { display: flex; flex-direction: column; gap: 5px; }
+.bd .row { display: grid; grid-template-columns: 128px 1fr 52px; gap: 8px; align-items: center; font-size: 12.5px; }
+.bd .row .lab { color: #d6d2ca; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bd .row .val { font: 600 12px/1 var(--font-data); text-align: right; font-variant-numeric: tabular-nums; }
+.bd .row .bar { position: relative; height: 12px; background: var(--field); border-radius: 3px; overflow: hidden; }
+.bd .row .bar::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: #4a4c52; }
+.bd .row .bar i { position: absolute; top: 2px; bottom: 2px; border-radius: 2px; }
+.bd .row .bar i.pos { background: var(--accent); }
+.bd .row .bar i.neg { background: #6f8fd8; }
+.bd .row.total { border-top: 1px solid var(--line); padding-top: 6px; margin-top: 2px; font-weight: 700; }
+.bd .row.total .lab { color: var(--fg); }
+.bd .row.light .lab { color: var(--muted); }
+.inline .rbtn.ghost { background: var(--field); color: var(--fg); border: 1px solid var(--line); }
+
+@media (max-width: 860px) {
+  .camPrev { width: min(56%, 360px); }
+  html, body { height: auto; }
+  .app { height: auto; grid-template-columns: minmax(0,1fr); }
+  .stage { height: min(72vh, 580px); min-height: 400px; }
+  .rail { overflow: visible; }
+  .badge p { display: none; }
+  .legend { top: auto; bottom: 64px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<style data-fth-map>
+:root:root:root{--bg:var(--fth-bg);--rail:var(--fth-surface);--line:var(--fth-line);--fg:var(--fth-text);--muted:var(--fth-muted);--accent:var(--fth-accent);--accent-ink:var(--fth-on-accent);--field:var(--fth-bg2);--font-display:var(--fth-display);--font-body:var(--fth-display);--font-data:var(--fth-mono);}
+.stage{--bg:#121315;--rail:#1a1b1e;--line:#2a2c31;--fg:#e9e6df;--muted:#8d8a83;--accent:#e7bd6a;--accent-ink:#1b1508;--field:#232429;color:var(--fg);color-scheme:dark}
+html,body{height:100%}
+body{display:flex;flex-direction:column}
+.app{flex:1;min-height:0;height:auto!important}
+.rail header{padding-top:14px}
+.rail header p{margin-top:0}
+@media (max-width:860px){body{display:block}}
+.stage .stagebar{--accent:var(--fth-cat);--accent-ink:#14110b}
+.modes button.on small{color:inherit!important;opacity:.78}
+</style>
+</head>
+<body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>03 · Visual Planning</span><h1 class="fth-title">Exposure Lab</h1></div>
+  
+  <div class="fth-actions"></div>
+</header>
+<div class="app">
+  <section class="stage" aria-label="Lighting preview">
+    <canvas id="view"></canvas>
+    <div id="labels"></div>
+    <div class="badge" aria-live="polite">
+      <div class="eyebrow" id="bEyebrow">Metered exposure</div>
+      <h2 id="bTitle">1.20 m</h2>
+      <p id="bDesc"></p>
+    </div>
+    <div class="legend" id="legend" aria-label="Stop map legend"></div>
+    <div class="camPrev cam-only" id="camPrev">
+      <div class="cpHead"><b>Camera</b><span id="cpSet"></span></div>
+      <canvas id="prevCv" title="Click to look through the camera"></canvas>
+      <div class="cpLegend" id="cpLegend"></div>
+      <div class="evscale" id="evScale"></div>
+    </div>
+    <div class="stagebar">
+      <span class="hint" id="hint">Drag to move the light · Shift-drag to orbit · scroll to zoom · arrow keys walk</span>
+      <div class="group">
+        <div class="seg" role="group" aria-label="Drag moves">
+          <button id="dmLight" aria-pressed="true">Move light</button>
+          <button id="dmCam" aria-pressed="false">Orbit</button>
+        </div>
+        <div class="seg" role="group" aria-label="View">
+          <button data-view="set" aria-pressed="true">Set</button>
+          <button data-view="top" aria-pressed="false">Top</button>
+          <button data-view="wide" aria-pressed="false">Wide</button>
+          <button data-view="camera" aria-pressed="false" class="cam-only" title="Look through the camera">Camera</button>
+        </div>
+        <button class="btn primary" id="bCap" title="Capture this frame (C)">Capture</button>
+        <button class="btn" id="bSweep" title="Capture a series from 10 cm to 1 km">Sweep distance</button>
+        <button class="btn" id="bView">Captures<span class="count" id="capCount">0</span></button>
+      </div>
+    </div>
+    <div class="flash" id="flash"></div>
+
+    <div class="viewer" id="viewer" role="dialog" aria-label="Captures">
+      <div class="top">
+        <h3>Captures</h3>
+        <button class="btn" id="vClose">Close</button>
+      </div>
+      <div class="imgwrap" id="vWrap"><img id="vImg" alt=""><div class="empty" id="vEmpty">No captures yet. Use <b>Capture</b> to grab the current frame, or <b>Sweep distance</b> to record a series from 10 cm out to 1 km.</div></div>
+      <div class="cap" id="vCap"></div>
+      <div class="scrub">
+        <button class="btn" id="vPlay">Play</button>
+        <input type="range" id="vScrub" min="0" max="0" step="1" value="0" aria-label="Scrub captures">
+        <output id="vPos">0 / 0</output>
+      </div>
+      <div class="thumbs" id="vThumbs"></div>
+      <div class="acts">
+        <div class="group">
+          <button class="btn" id="vApply">Use these settings</button>
+          <button class="btn" id="vDel">Delete</button>
+          <button class="btn" id="vClear">Clear all</button>
+        </div>
+        <span class="note" style="align-self:center">← → keys step · right-click or long-press the image to save it</span>
+      </div>
+    </div>
+  </section>
+
+  <aside class="rail">
+    <header>
+      <p>Falloff, collimation, hard and soft light: one light and a few objects, from arm's length out to a kilometre.</p>
+    </header>
+
+    <div class="sec">
+      <h3>Scene</h3>
+      <div class="modes two" id="scenes">
+        <button data-scene="lab" class="on">Lab set<small>falloff · shadows · beams</small></button>
+        <button data-scene="camera">Camera &amp; subject<small>exposure triangle + ND</small></button>
+      </div>
+      <button class="rbtn cam-only" id="bCamAll" style="align-self:flex-start">Reset to starting position</button>
+    </div>
+
+    <div class="sec cam-only">
+      <h3>Light on the subject</h3>
+      <div class="ctl"><label for="sDist2">Distance</label><input class="num" id="oDist2" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sDist2" min="-12" max="24" step="1"><div class="ticks"><span>0.25</span><span>0.5</span><span>1</span><span>2</span><span>4</span><span>8</span><span>16 m</span></div></div>
+      <div class="ctl"><label for="sPow2">Intensity</label><input class="num" id="oPow2" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sPow2" min="-18" max="36" step="1"><div class="ticks"><span>−6</span><span>−3</span><span>0</span><span>+3</span><span>+6</span><span>+9</span><span>+12</span></div></div>
+      <p class="note">Each notch on the distance slider changes the light by ⅓ stop, so the marked distances are 2 stops apart. Type any distance for in-between values.</p>
+    </div>
+
+    <div class="sec cam-only">
+      <h3>Camera</h3>
+      <div class="ctl"><label for="sAp">Aperture</label><input class="num" id="oAp" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sAp" min="0" max="30" step="1"><div class="ticks"><span>f/1</span><span>f/2.8</span><span>f/8</span><span>f/22</span></div></div>
+      <div class="ctl"><label for="sSh">Shutter</label><input class="num" id="oSh" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sSh" min="0" max="54" step="1"><div class="ticks"><span>30″</span><span>1″</span><span>1/30</span><span>1/1000</span><span>1/8000</span></div></div>
+      <div class="ctl"><label for="sIso">ISO</label><input class="num" id="oIso" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sIso" min="0" max="30" step="1"><div class="ticks"><span>25</span><span>100</span><span>800</span><span>6400</span><span>25600</span></div></div>
+      <div class="ctl"><label for="sNd">ND filter</label><input class="num" id="oNd" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sNd" min="0" max="30" step="1"><div class="ticks"><span>none</span><span>0.9 · ND8</span><span>1.8 · ND64</span><span>3.0 · ND1000</span></div></div>
+      <p class="note">Every control moves in ⅓-stop steps. Click a value to type it: <b>f/5.6</b>, <b>1/250</b> or <b>2″</b>, <b>ISO 400</b>, ND as density <b>0.6</b>, factor <b>ND4</b> or <b>2 stops</b>.</p>
+      <div class="inline">
+        <button class="rbtn" id="bMeterAp">Set aperture from meter</button>
+        <button class="rbtn ghost" id="bCamReset">Camera to f/8 · 1/50 · ISO 800</button>
+      </div>
+      <p class="note" id="meterNote"></p>
+      <label class="toggle" for="tFalse"><span>False colour in camera<small>Stops above or below middle grey; magenta = clipped</small></span><input type="checkbox" id="tFalse"></label>
+    </div>
+
+    <div class="sec cam-only">
+      <h3>Exposure on the subject</h3>
+      <div class="bd" id="bd"></div>
+      <p class="note">Each row shows how many stops that setting adds or takes away. 0 everywhere means the ball's lit side sits at middle grey: the starting position: bare bulb at 1 m with intensity 0, f/8, 1/50, ISO 800, no ND. The bars run from −6 to +6 stops.</p>
+    </div>
+
+    <div class="sec lab-only">
+      <h3>Exposure mode</h3>
+      <div class="modes" id="modes">
+        <button data-mode="metered" class="on">Metered<small>shape of falloff</small></button>
+        <button data-mode="fixed">Fixed<small>inverse-square</small></button>
+        <button data-mode="map">Stop map<small>false colour</small></button>
+      </div>
+      <p class="note" id="modeNote"></p>
+      <div class="sub" id="fixedCtl" hidden>
+        <div class="inline"><button class="rbtn" id="bMeter">Re-meter here</button><span class="note" id="lockNote"></span></div>
+      </div>
+      <div class="sub" id="mapCtl" hidden>
+        <label class="toggle" for="tAuto"><span>Re-meter as the light moves<small>Off: bands are stops vs. your reading, so they shift with distance</small></span><input type="checkbox" id="tAuto"></label>
+        <div class="chips" id="steps" role="group" aria-label="Band size">
+          <button class="chip" data-step="1">1-stop bands</button>
+          <button class="chip on" data-step="0.3333333">⅓-stop bands</button>
+        </div>
+      </div>
+      <p class="note">Click any floor marker to make it the <b>meter point</b>.</p>
+    </div>
+
+    <div class="sec">
+      <h3>Demos</h3>
+      <div class="chips" id="presets"></div>
+    </div>
+
+    <div class="sec">
+      <h3>Floor plan · drag the light</h3>
+      <canvas id="plan" aria-label="Top-down plan on a logarithmic distance scale. Drag the light to set its angle and distance."></canvas>
+      <div class="readouts lab-only">
+        <div class="ro"><div class="k">Falloff across set</div><div class="v" id="roFall">—</div><div class="s">front to back marker</div></div>
+        <div class="ro"><div class="k">Hole-beam spread</div><div class="v" id="roSpread">—</div><div class="s" id="roSpreadS"></div></div>
+        <div class="ro"><div class="k">Source size</div><div class="v" id="roAng">—</div><div class="s" id="roAngS"></div></div>
+        <div class="ro"><div class="k" id="roExpK">Exposure</div><div class="v" id="roExp">—</div><div class="s" id="roExpS"></div></div>
+      </div>
+    </div>
+
+    <div class="sec lab-only">
+      <h3>Floor light along the beam</h3>
+      <canvas id="prof" aria-label="Chart of floor brightness in stops against position along the light direction"></canvas>
+      <p class="note">Stops on the floor along the light's direction, relative to the live meter reading or, when exposure is locked, to your reading. Grey lines show the same light at 1 m, 10 m and 1 km for comparison.</p>
+    </div>
+
+    <div class="sec">
+      <h3>Light</h3>
+      <div class="ctl lab-only"><label for="sDist" id="lDist">Distance</label><input class="num" id="oDist" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sDist" min="0" max="1000" step="1"><div class="ticks"><span>10 cm</span><span>1 m</span><span>10 m</span><span>100 m</span><span>1 km</span></div></div>
+      <div class="ctl"><label for="sAz">Angle</label><input class="num" id="oAz" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sAz" min="-180" max="180" step="1"></div>
+      <div class="ctl"><label for="sEl">Height</label><input class="num" id="oEl" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sEl" min="3" max="88" step="1"></div>
+      <div class="ctl lab-only" id="powCtl"><label for="sPow">Light power</label><input class="num" id="oPow" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sPow" min="-6" max="22" step="0.1"></div>
+      <div class="ctl"><label for="sSize" id="lSize">Source size</label><input class="num" id="oSize" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sSize" min="0" max="100" step="0.5"><div class="ticks"><span>5 mm</span><span>10 cm</span><span>1 m</span><span>10 m</span></div></div>
+    </div>
+
+    <div class="sec">
+      <h3>Modifier</h3>
+      <div class="chips" id="mods" role="group" aria-label="Modifier"></div>
+      <p class="note" id="modNote"></p>
+      <div class="sub" id="gridCtl" hidden>
+        <div class="chips" id="grids" role="group" aria-label="Grid angle"></div>
+      </div>
+      <div class="ctl" id="fresCtl" hidden><label for="sFocus">Focus</label><input class="num" id="oFocus" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sFocus" min="0" max="100" step="1"><div class="ticks"><span>flood</span><span>spot</span></div></div>
+    </div>
+
+    <div class="sec">
+      <h3>Set</h3>
+      <label class="toggle lab-only" for="tFace"><span>Objects face the light<small>Peg row and holed block turn square to the beam</small></span><input type="checkbox" id="tFace"></label>
+      <label class="toggle lab-only" for="tMarks"><span>Floor markers<small>Distance from the light and stops vs. the meter point</small></span><input type="checkbox" id="tMarks"></label>
+      <label class="toggle" for="tHaze"><span>Haze<small>Makes the beams visible in the air (slower)</small></span><input type="checkbox" id="tHaze"></label>
+      <div class="ctl" id="hazeCtl" hidden><label for="sHaze">Haze density</label><input class="num" id="oHaze" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sHaze" min="5" max="100" step="1"></div>
+      <div class="ctl"><label for="sAmb">Room fill</label><input class="num" id="oAmb" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sAmb" min="0" max="30" step="1"></div>
+      <p class="note">Shadows are traced from a spherical source. Its size and distance set the penumbra, and the direction of the rays comes from where the light actually is. A Fresnel's rays appear to come from a point behind the lamp, and an ideal collimator sends every ray parallel.</p>
+    </div>
+  </aside>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const DEG = Math.PI / 180;
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+/* ---------- state ---------- */
+const S = {
+  dist: 1.2, az: 0, el: 25, size: 4, mod: "bare", grid: 20, focus: 70, pow: 0,
+  mode: "metered", mapAuto: false, step: 1/3, meter: -1, face: false, marks: true, haze: false, hazeD: 35, amb: 5,
+  view: "set", drag: "light", camYaw: 0, camPitch: 0, camD: 0, camX: 0, camY: 0, camZ: 0,
+  scene: "lab", ap: 18, sh: 32, iso: 15, nd: 0, falseCol: false
+};
+/* ---------- camera settings, all in 1/3-stop steps ----------
+   aperture index i: N = 2^(i/6)       (i = 18 → f/8)
+   shutter index k:  t = 2^(-(k-15)/3) (k = 36 → 1/128 ≈ "1/125")
+   ISO index j:      ISO = 100·2^((j-6)/3)
+   ND index n:       optical density n/10 (0.1 OD ≈ 1/3 stop)            */
+const AP_LBL = ["1","1.1","1.2","1.4","1.6","1.8","2","2.2","2.5","2.8","3.2","3.5","4","4.5","5","5.6","6.3","7.1","8","9","10","11","13","14","16","18","20","22","25","29","32"];
+const SH_LBL = ['30"','25"','20"','15"','13"','10"','8"','6"','5"','4"','3.2"','2.5"','2"','1.6"','1.3"','1"','0.8"','0.6"','1/2','0.4"','0.3"','1/4','1/5','1/6','1/8','1/10','1/13','1/15','1/20','1/25','1/30','1/40','1/50','1/60','1/80','1/100','1/125','1/160','1/200','1/250','1/320','1/400','1/500','1/640','1/800','1/1000','1/1250','1/1600','1/2000','1/2500','1/3200','1/4000','1/5000','1/6400','1/8000'];
+const ISO_LBL = [25,32,40,50,64,80,100,125,160,200,250,320,400,500,640,800,1000,1250,1600,2000,2500,3200,4000,5000,6400,8000,10000,12800,16000,20000,25600];
+/* starting exposure: f/8 · 1/50 · ISO 800 · no ND. Every row of the breakdown is measured from here. */
+const CAM0 = { ap: 18, sh: 32, iso: 15, nd: 0 };
+const apStops  = () => -(S.ap - CAM0.ap) / 3;
+const shStops  = () => -(S.sh - CAM0.sh) / 3;
+const isoStops = () => (S.iso - CAM0.iso) / 3;
+const ndStops  = () => -(S.nd / 10) * Math.log2(10);
+const camStops = () => apStops() + shStops() + isoStops() + ndStops();
+const fmtSh = k => SH_LBL[k].replace('"', "″");
+const fmtNdFactor = od => { const f = Math.pow(10, od); return f < 9.5 ? String(Math.round(f * 10) / 10) : String(Math.round(f)); };
+const thirds = x => { const t = Math.round(Math.abs(x) * 3), w = Math.floor(t / 3), r = t % 3; return (w ? w : "") + (r === 1 ? "⅓" : r === 2 ? "⅔" : "") || "0"; };
+function fmtNd() { if (!S.nd) return "none"; const od = S.nd / 10; return `${od.toFixed(1)} · ND${fmtNdFactor(od)} · ${thirds(S.nd / 3)} stop${S.nd === 3 ? "" : "s"}`; }
+const camLabel = () => `f/${AP_LBL[S.ap]} · ${fmtSh(S.sh)} · ISO ${ISO_LBL[S.iso]}${S.nd ? " · ND " + (S.nd / 10).toFixed(1) : ""}`;
+const isCam = () => S.scene === "camera";
+let E_LOCK = null;          // locked reading (irradiance at meter point)
+/* exposure is locked in Fixed, and in Stop map unless "re-meter as the light moves" is on */
+const locked = () => S.mode === "fixed" || (S.mode === "map" && !S.mapAuto);
+
+const DMIN = 0.1, DMAX = 1000;
+const distFromSlider = v => DMIN * Math.pow(DMAX / DMIN, v / 1000);
+const sliderFromDist = d => 1000 * Math.log(d / DMIN) / Math.log(DMAX / DMIN);
+const SMIN = 0.5, SMAX = 1000; // cm
+const sizeFromSlider = v => SMIN * Math.pow(SMAX / SMIN, v / 100);
+const sliderFromSize = s => 100 * Math.log(s / SMIN) / Math.log(SMAX / SMIN);
+
+const omega = halfDeg => 2 * Math.PI * (1 - Math.cos(halfDeg * DEG));
+const REFL_HALF = 28, REFL_GAIN = 0.75 / omega(28);
+const MODS = {
+  bare:      { name: "Bare bulb",  size: "Bulb size",     note: "Shines in every direction. Its rays spread out from one point, so shadows fan out when it's close." },
+  reflector: { name: "Reflector",  size: "Reflector size", note: "A standard dish throws a ~55° beam. That's brighter on axis than a bare bulb, but the rays still spread from the lamp." },
+  softbox:   { name: "Softbox",    size: "Softbox size",  note: "A large diffuse face. Size is what softens shadows; distance still sets the falloff." },
+  grid:      { name: "Grid",       size: "Reflector size", note: "A honeycomb cuts the beam to a narrow cone. It doesn't make the rays parallel: shadows still fan out exactly as before. It only limits where the light lands." },
+  snoot:     { name: "Snoot",      size: "Snoot opening", note: "A tight tube gives a small, crisp-edged pool. The rays are still divergent." },
+  fresnel:   { name: "Fresnel",    size: "Lens size",     note: "" },
+  collim:    { name: "Collimator", size: "Beam diameter", note: "An ideal lens with the source at its focal point. Every ray is parallel, so there's no inverse-square falloff and shadows don't fan, even up close. Lasers and searchlights approach this." }
+};
+const MOD_ORDER = ["bare", "reflector", "softbox", "grid", "snoot", "fresnel", "collim"];
+const GRIDS = [10, 20, 30, 40];
+
+const PRESETS = [
+  { name: "Close: fast falloff",   s: { dist: 0.8,  el: 25, az: 0, size: 4,   mod: "bare" } },
+  { name: "Far: even light",      s: { dist: 30,   el: 25, az: 0, size: 4,   mod: "bare" } },
+  { name: "Fanning shadows",      s: { dist: 0.75, el: 18, az: 0, size: 0.8, mod: "bare" }, view: "top" },
+  { name: "Parallel shadows",     s: { dist: 1000, el: 18, az: 0, size: 0.8, mod: "bare" }, view: "top" },
+  { name: "Sunlight (0.5° source)", s: { dist: 1000, el: 35, az: -30, size: 900, mod: "bare" } },
+  { name: "Hard light",           s: { dist: 1.2,  el: 35, az: -20, size: 1.5, mod: "bare" } },
+  { name: "Soft light",           s: { dist: 0.9,  el: 35, az: -20, size: 150, mod: "softbox" } },
+  { name: "Grid ≠ collimation",   s: { dist: 0.9,  el: 25, az: 0, size: 18,  mod: "grid", grid: 20 } },
+  { name: "Fresnel spot throw",   s: { dist: 1.0,  el: 25, az: 0, size: 15,  mod: "fresnel", focus: 95 } },
+  { name: "Ideal collimator",     s: { dist: 1.0,  el: 20, az: 0, size: 240, mod: "collim" } }
+];
+
+/* camera & subject scene (metres) */
+const BALL = [0, 0.11, 0], BALL_R = 0.11;
+const PCAM = [-1.8, 0.17, 0], PCAM_FOV = 17;
+const E_CAL = 1 / (4 * Math.PI);   // bare bulb, intensity 0, 1 m from the lit side of the ball → middle grey at the starting exposure (CAM0)
+
+/* scene layout (metres) */
+const BLOCK_C = [0, 0.09, 0.30], PEG_C = [0, 0, -0.35];
+const HOLE_Y = 0.07, HOLE_SP = 0.1;
+const MARKERS = []; for (let i = 0; i < 10; i++) MARKERS.push([-0.85, 0, -0.5 + 0.25 * i]);
+const CENTRE = [0, 0, 0];
+const meterPos = () => S.meter < 0 ? CENTRE : MARKERS[S.meter];
+const K = 0.18;
+
+/* ---------- vector helpers ---------- */
+const add = (a, b) => [a[0]+b[0], a[1]+b[1], a[2]+b[2]];
+const sub = (a, b) => [a[0]-b[0], a[1]-b[1], a[2]-b[2]];
+const mul = (a, s) => [a[0]*s, a[1]*s, a[2]*s];
+const dot = (a, b) => a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+const len = a => Math.hypot(a[0], a[1], a[2]);
+const norm = a => mul(a, 1 / len(a));
+const cross = (a, b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+
+/* ---------- light model (mirrors the shader) ---------- */
+/* lab: distance from the set centre. camera scene: distance from the ball's surface (where you'd hold the meter) */
+const lightTarget = () => isCam() ? BALL : [0, 0, 0];
+function lampPos(d = S.dist) {
+  const a = S.az * DEG, e = S.el * DEG, T = lightTarget();
+  const dd = isCam() ? d + BALL_R : d;
+  return [T[0] + dd * Math.cos(e) * Math.sin(a), T[1] + dd * Math.sin(e), T[2] - dd * Math.cos(e) * Math.cos(a)];
+}
+const powerActive = () => isCam() || locked();
+function lightModel(d = S.dist) {
+  const lamp = lampPos(d);
+  const aim = norm(sub(lightTarget(), lamp));
+  const R = S.size / 200;
+  const P = powerActive() ? Math.pow(2, S.pow) : 1;
+  const m = { lamp, aim, virt: lamp, R, type: 0, cone: [0, 1], I: 0, beamR: R, v: 0, half: 180 };
+  switch (S.mod) {
+    case "bare": m.I = P / (4 * Math.PI); break;
+    case "softbox": m.type = 1; m.I = P * 0.5 / Math.PI; break;
+    case "reflector": m.type = 2; m.half = REFL_HALF; m.cone = [Math.cos((REFL_HALF + 7) * DEG), Math.cos((REFL_HALF - 7) * DEG)]; m.I = P * REFL_GAIN; break;
+    case "grid": { const h = S.grid / 2; m.type = 2; m.half = h; m.cone = [Math.cos((h + 2.5) * DEG), Math.cos(Math.max(h - 2.5, 0.5) * DEG)]; m.I = P * REFL_GAIN * 0.7; break; }
+    case "snoot": m.type = 2; m.half = 6; m.cone = [Math.cos(6.6 * DEG), Math.cos(5.4 * DEG)]; m.I = P * REFL_GAIN * 0.8; break;
+    case "fresnel": {
+      const t = S.focus / 100, u = 0.4 + 0.58 * t;
+      m.v = 0.15 * u / (1 - u);                // virtual source distance behind the lens
+      const h = 30 + (6 - 30) * t; m.half = h;
+      m.type = 2; m.cone = [Math.cos((h + 4) * DEG), Math.cos(Math.max(h - 4, 0.5) * DEG)];
+      m.virt = sub(lamp, mul(aim, m.v));
+      m.I = P * 0.6 / omega(h) * (1 + m.v) * (1 + m.v);
+      break;
+    }
+    case "collim": m.type = 3; m.I = P * 0.6 / (Math.PI * m.beamR * m.beamR); break;
+  }
+  return m;
+}
+/* irradiance on a surface with normal n (no shadows) */
+function irr(p, m, n = [0, 1, 0]) {
+  if (m.type === 3) {
+    const rel = sub(p, m.lamp), along = dot(rel, m.aim);
+    if (along <= 0) return 0;
+    const r = len(sub(rel, mul(m.aim, along)));
+    return m.I * (1 - smooth(m.beamR * 0.96, m.beamR, r)) * Math.max(-dot(n, m.aim), 0);
+  }
+  const tv = sub(m.virt, p), dv = len(tv), L = mul(tv, 1 / dv);
+  let prof = 1;
+  const ca = -dot(L, m.aim);
+  if (m.type === 2) prof = smooth(m.cone[0], m.cone[1], ca);
+  else if (m.type === 1) prof = Math.max(ca, 0);
+  return m.I * prof / (dv * dv) * Math.max(dot(n, L), 0);
+}
+/* irradiance on the lit side of the ball (surface point facing the light) */
+function subjE(m) {
+  const dir = m.type === 3 ? mul(m.aim, -1) : norm(sub(m.virt, BALL));
+  return irr(add(BALL, mul(dir, BALL_R)), m, dir);
+}
+const meterE = (m) => isCam() ? subjE(m) : irr(meterPos(), m);
+/* what "0 stops" means: the locked reading when exposure is locked, otherwise the live meter */
+const refE = (m) => Math.max(locked() && E_LOCK ? E_LOCK : meterE(m), 1e-14);
+const dispR = m => m.type === 3 ? Math.min(m.R, 0.12) : Math.min(m.R, S.dist * 0.9);
+
+/* ---------- WebGL ---------- */
+const cv = $("view");
+const gl = cv.getContext("webgl", { antialias: false, alpha: false, preserveDrawingBuffer: false, powerPreference: "high-performance" });
+function fail(msg) { const e = document.createElement("div"); e.className = "err"; e.textContent = msg; cv.parentNode.appendChild(e); }
+if (!gl) { fail("This preview needs WebGL, which your browser has turned off. Try another browser or enable hardware acceleration."); return; }
+
+const VS = `attribute vec2 a; void main(){ gl_Position = vec4(a,0.,1.); }`;
+const FS = `
+precision highp float;
+uniform vec2 uRes;
+uniform vec3 uCamPos, uCamR, uCamU, uCamF;
+uniform float uTanHalf;
+uniform vec3 uLamp, uVirt, uAim;
+uniform float uLampR, uDispR, uI, uType, uBeamR, uAmb, uMode, uStep, uHaze, uMarks, uShowLamp;
+uniform vec2 uCone, uBY, uPY;
+uniform vec3 uMeter;
+uniform vec2 uOff;
+uniform float uScene, uTone, uNoise;
+uniform vec3 uBMin, uBMax;
+const vec3 BALL = vec3(0.0, 0.11, 0.0);
+const float BALL_R = 0.11;
+const vec3 PCAM = vec3(-1.8, 0.17, 0.0);
+
+const vec3 BLOCK_C = vec3(0.0, 0.09, 0.30);
+const vec3 PEG_C = vec3(0.0, 0.0, -0.35);
+
+float sdBox(vec3 p, vec3 b){ vec3 q = abs(p)-b; return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0); }
+float sdCyl(vec2 pr, float py, float r, float h){ vec2 d = abs(vec2(length(pr), py)) - vec2(r, h); return min(max(d.x,d.y),0.0) + length(max(d,0.0)); }
+vec3 rotY(vec3 d, vec2 cs){ return vec3(dot(d.xz, vec2(cs.x, cs.y)), d.y, dot(d.xz, vec2(-cs.y, cs.x))); }
+
+vec2 mapCam(vec3 p){
+  vec2 res = vec2(length(p - BALL) - BALL_R, 3.0);
+  // camera on a stand, lens pointing at the ball (+x)
+  vec3 q = p - PCAM;
+  float body = sdBox(q - vec3(-0.045, 0.0, 0.0), vec3(0.04, 0.045, 0.065)) - 0.006;
+  float lens = sdCyl(q.yz, q.x - 0.035, 0.033, 0.035) - 0.002;
+  float ph = (PCAM.y - 0.05)*0.5;
+  float pole = sdCyl(q.xz + vec2(0.045, 0.0), p.y - ph, 0.011, ph);
+  float base = sdCyl(q.xz + vec2(0.045, 0.0), p.y - 0.006, 0.07, 0.006);
+  float cam = min(min(body, lens), min(pole, base));
+  if (cam < res.x) res = vec2(cam, 5.0);
+  return res;
+}
+vec2 map(vec3 p){
+  if (uScene > 0.5) return mapCam(p);
+  // holed block
+  vec3 b = rotY(p - BLOCK_C, uBY);
+  float blk = sdBox(b, vec3(0.355, 0.085, 0.0075)) - 0.005;
+  vec3 hq = b - vec3(0.0, ${(0.07 - 0.09).toFixed(3)}, 0.0);
+  hq.x -= 0.1*clamp(floor(hq.x/0.1 + 0.5), -3.0, 3.0);
+  float hole = length(hq.xy) - 0.018;
+  blk = max(blk, -hole);
+  vec2 res = vec2(blk, 1.0);
+  // peg row
+  vec3 q = rotY(p - PEG_C, uPY);
+  q.x -= 0.1*clamp(floor(q.x/0.1 + 0.5), -3.0, 3.0);
+  float peg = sdCyl(q.xz, q.y - 0.08, 0.009, 0.077) - 0.003;
+  if (peg < res.x) res = vec2(peg, 2.0);
+  // sphere
+  float sp = length(p - vec3(-0.62, 0.08, -0.05)) - 0.08;
+  if (sp < res.x) res = vec2(sp, 3.0);
+  // cube
+  vec3 c = rotY(p - vec3(0.62, 0.06, -0.05), vec2(0.866, 0.5));
+  float cb = sdBox(c, vec3(0.054)) - 0.006;
+  if (cb < res.x) res = vec2(cb, 4.0);
+  return res;
+}
+vec2 boxI(vec3 ro, vec3 rd){
+  vec3 inv = 1.0/rd;
+  vec3 t0 = (uBMin - ro)*inv, t1 = (uBMax - ro)*inv;
+  vec3 tmin = min(t0,t1), tmax = max(t0,t1);
+  return vec2(max(max(tmin.x,tmin.y),tmin.z), min(min(tmax.x,tmax.y),tmax.z));
+}
+vec3 calcNormal(vec3 p){
+  const float e = 0.0006; vec2 k = vec2(1.0,-1.0);
+  return normalize(k.xyy*map(p+k.xyy*e).x + k.yyx*map(p+k.yyx*e).x + k.yxy*map(p+k.yxy*e).x + k.xxx*map(p+k.xxx*e).x);
+}
+float shadow(vec3 ro, vec3 rd, float maxt, float tanA){
+  vec2 bb = boxI(ro, rd);
+  if (bb.y < 0.0 || bb.x > bb.y || bb.x > maxt) return 1.0;
+  float t = max(bb.x, 0.002), tend = min(bb.y, maxt);
+  float res = 1.0;
+  for (int i = 0; i < 110; i++){
+    if (t > tend) break;
+    float h = map(ro + rd*t).x;
+    res = min(res, h/(tanA*t));
+    if (res < -1.0) break;
+    t += clamp(h, 0.0012, 0.05);
+  }
+  res = max(res, -1.0);
+  return 0.25*(1.0+res)*(1.0+res)*(2.0-res);
+}
+float calcAO(vec3 p, vec3 n){
+  float occ = 0.0, sca = 1.0;
+  for (int i = 0; i < 5; i++){ float h = 0.004 + 0.022*float(i); occ += (h - map(p + n*h).x)*sca; sca *= 0.75; }
+  return clamp(1.0 - 3.0*occ, 0.0, 1.0);
+}
+/* E: irradiance on a surface facing the light (exposure applied) */
+void lightAt(vec3 p, out vec3 L, out float E, out float tanA, out float maxt){
+  if (uType > 2.5) {
+    L = -uAim;
+    vec3 rel = p - uLamp; float along = dot(rel, uAim);
+    float r = length(rel - uAim*along);
+    E = uI*(1.0 - smoothstep(uBeamR*0.96, uBeamR, r))*step(0.0, along);
+    tanA = 0.0012; maxt = max(along, 0.0);
+  } else {
+    vec3 tv = uVirt - p; float dv = length(tv); L = tv/dv;
+    float dl = length(uLamp - p);
+    float ca = -dot(L, uAim);
+    float prof = 1.0;
+    if (uType > 1.5) prof = smoothstep(uCone.x, uCone.y, ca);
+    else if (uType > 0.5) prof = max(ca, 0.0);
+    E = uI*prof/(dv*dv);
+    float sA = clamp(uLampR/dl, 0.0, 0.95);
+    tanA = max(sA/sqrt(1.0 - sA*sA), 0.0004);
+    maxt = max(dl - uLampR, 0.0);
+  }
+}
+vec3 palette(float s){
+  s = clamp(s, -5.0, 3.0);
+  vec3 c;
+  if (s < -4.0) c = mix(vec3(0.30,0.16,0.52), vec3(0.20,0.28,0.70), s + 5.0);
+  else if (s < -3.0) c = mix(vec3(0.20,0.28,0.70), vec3(0.13,0.47,0.82), s + 4.0);
+  else if (s < -2.0) c = mix(vec3(0.13,0.47,0.82), vec3(0.16,0.66,0.74), s + 3.0);
+  else if (s < -1.0) c = mix(vec3(0.16,0.66,0.74), vec3(0.38,0.76,0.44), s + 2.0);
+  else if (s < 0.0)  c = mix(vec3(0.38,0.76,0.44), vec3(0.80,0.80,0.76), s + 1.0);
+  else if (s < 1.0)  c = mix(vec3(0.80,0.80,0.76), vec3(0.97,0.84,0.30), s);
+  else if (s < 2.0)  c = mix(vec3(0.97,0.84,0.30), vec3(0.97,0.55,0.20), s - 1.0);
+  else               c = mix(vec3(0.97,0.55,0.20), vec3(0.90,0.20,0.20), s - 2.0);
+  return c;
+}
+vec4 gCont;
+
+float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
+
+vec3 shade(vec3 pos, vec3 n, vec3 rd, float m, float tHit){
+  vec3 V = -rd, L; float E, tanA, maxt;
+  lightAt(pos, L, E, tanA, maxt);
+  float ndl = dot(n, L);
+  float sh = 0.0;
+  if (ndl > 0.0 && E > 0.0) sh = shadow(pos + n*0.0015, L, maxt, tanA);
+  float ao = calcAO(pos, n);
+
+  vec3 alb = vec3(0.6); float rough = 0.55; float f0 = 0.03;
+  if (m < 0.5) {
+    // seamless grey floor, faint 10 cm grid
+    alb = uScene > 0.5 ? vec3(0.3, 0.297, 0.29) : vec3(0.44, 0.435, 0.425);
+    float fade = 1.0 - smoothstep(1.5, 5.0, tHit);
+    vec2 g = abs(fract(pos.xz*10.0 + 0.5) - 0.5)/10.0;
+    float gl = 1.0 - smoothstep(0.0007, 0.0016, min(g.x, g.y));
+    vec2 g1 = abs(fract(pos.xz + 0.5) - 0.5);
+    float gl1 = 1.0 - smoothstep(0.0012, 0.0026, min(g1.x, g1.y));
+    alb *= 1.0 - fade*(0.06*gl + 0.1*gl1);
+    rough = 0.9; f0 = 0.02;
+    if (uMarks > 0.5) {
+      for (int i = 0; i < 10; i++) {
+        vec2 mp = vec2(-0.85, -0.5 + 0.25*float(i));
+        float d = length(pos.xz - mp);
+        alb *= mix(1.0, 0.35, 1.0 - smoothstep(0.011, 0.014, d));
+        alb = mix(alb, vec3(0.72), (1.0 - smoothstep(0.004, 0.006, d)));
+      }
+      float dm = length(pos.xz - uMeter.xz);
+      float ring = 1.0 - smoothstep(0.0015, 0.003, abs(dm - 0.022));
+      alb = mix(alb, vec3(0.9, 0.62, 0.2), ring);
+    }
+  } else if (m < 1.5) { alb = vec3(0.56, 0.55, 0.53); rough = 0.7; }
+  else if (m < 2.5) { alb = vec3(0.66, 0.6, 0.52); rough = 0.6; }
+  else if (m < 3.5) {
+    if (uScene > 0.5) { alb = vec3(0.18); rough = 0.75; f0 = 0.02; }   // 18% grey ball
+    else { alb = vec3(0.62); rough = 0.35; f0 = 0.04; }
+  }
+  else if (m < 4.5) { alb = vec3(0.5, 0.52, 0.55); rough = 0.65; }
+  else { alb = vec3(0.045, 0.045, 0.05); rough = 0.35; f0 = 0.04; }
+
+  float nol = max(ndl, 0.0);
+  float key = E*nol*sh;
+  vec3 col = alb*key;
+  vec3 H = normalize(L + V);
+  float noh = max(dot(n,H),0.0), loh = max(dot(L,H),0.0);
+  float a = rough*rough; float a2 = a*a; float dd = noh*noh*(a2-1.0)+1.0;
+  float D = a2/(3.14159*dd*dd);
+  float Fr = f0 + (1.0-f0)*pow(1.0-loh, 5.0);
+  col += vec3(D*Fr*0.25/max(loh*loh, 0.05))*key;
+  col += alb*uAmb*ao*(0.6 + 0.4*n.y);
+
+  if (uMode > 1.5) {
+    // lab: incident light vs the meter (${K.toFixed(2)}); camera: recorded brightness vs middle grey (0.18)
+    float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
+    float st = uTone > 0.5 ? log2(max(lum, 1e-7)/0.18) : log2(max(key, 1e-7)/${K.toFixed(2)});
+    float bs = uStep;
+    float k = floor(st/bs + 0.5);
+    vec3 pc = palette(k*bs);
+    pc *= (mod(k, 2.0) < 0.5) ? 1.0 : 0.88;
+    if (st < -5.6) pc = vec3(0.09, 0.09, 0.1);
+    pc *= (m < 0.5) ? 1.0 : (0.72 + 0.28*n.y);
+    if (uTone > 0.5 && lum >= 0.995) pc = vec3(0.95, 0.2, 0.75);   // clipped
+    gCont = vec4(pc, 1.0);
+  }
+  return col;
+}
+
+vec3 hazeAcc(vec3 ro, vec3 rd, float tEnd){
+  // limited volume around the set
+  vec3 hmin = vec3(-1.4, 0.0, -1.8), hmax = vec3(1.4, 0.9, 2.2);
+  vec3 inv = 1.0/rd; vec3 t0 = (hmin-ro)*inv, t1 = (hmax-ro)*inv;
+  vec3 a = min(t0,t1), b = max(t0,t1);
+  float tn = max(max(max(a.x,a.y),a.z), 0.0), tf = min(min(min(b.x,b.y),b.z), tEnd);
+  if (tf <= tn) return vec3(0.0);
+  const int N = 36;
+  float dt = (tf - tn)/float(N);
+  float j = hash(gl_FragCoord.xy);
+  float acc = 0.0;
+  for (int i = 0; i < N; i++){
+    vec3 p = ro + rd*(tn + (float(i) + j)*dt);
+    vec3 L; float E, tanA, maxt;
+    lightAt(p, L, E, tanA, maxt);
+    if (E <= 0.0) continue;
+    float sh = shadow(p, L, maxt, max(tanA, 0.004));
+    float c = dot(L, -rd);
+    float g = 0.35; float ph = (1.0 - g*g)/pow(1.0 + g*g - 2.0*g*c, 1.5);
+    acc += E*sh*ph;
+  }
+  return vec3(0.95, 0.93, 0.88)*acc*dt*uHaze;
+}
+
+vec3 aces(vec3 x){ return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14), 0.0, 1.0); }
+
+void main(){
+  vec2 uv = (2.0*(gl_FragCoord.xy - uOff) - uRes)/uRes.y;
+  vec3 ro = uCamPos;
+  vec3 rd = normalize(uCamF + uv.x*uTanHalf*uCamR + uv.y*uTanHalf*uCamU);
+  gCont = vec4(0.0);
+
+  float tF = rd.y < 0.0 ? -ro.y/rd.y : 1e9;
+  float tHit = tF; float mHit = tF < 1e8 ? 0.0 : -1.0;
+  vec2 bb = boxI(ro, rd);
+  if (bb.y > 0.0 && bb.x < bb.y && bb.x < tF) {
+    float t = max(bb.x, 0.0); float tend = min(bb.y, tF);
+    for (int i = 0; i < 140; i++){
+      vec2 h = map(ro + rd*t);
+      if (h.x < 0.00015*t) { tHit = t; mHit = h.y; break; }
+      t += h.x*0.95;
+      if (t > tend) break;
+    }
+  }
+  vec3 col = vec3(0.0);
+  if (mHit > -0.5) {
+    vec3 p = ro + rd*tHit;
+    vec3 n = mHit < 0.5 ? vec3(0.0,1.0,0.0) : calcNormal(p);
+    col = shade(p, n, rd, mHit, tHit);
+    // fade far floor into the dark studio
+    if (mHit < 0.5) col *= 1.0 - smoothstep(8.0, 30.0, tHit)*0.85;
+  } else {
+    col = vec3(0.012, 0.012, 0.014) + uAmb*0.05;
+  }
+  if (uHaze > 0.0) col += hazeAcc(ro, rd, min(tHit, 20.0));
+
+  float tl = -1.0;
+  { vec3 oc = ro - uLamp; float b = dot(oc, rd); float h = b*b - (dot(oc,oc) - uDispR*uDispR);
+    if (h > 0.0) tl = -b - sqrt(h); }
+  bool lampHit = uShowLamp > 0.5 && tl > 0.0 && tl < tHit;
+
+  if (uTone > 0.5) col = clamp(col, 0.0, 1.0);   // camera: linear, clips at ~2.5 stops over middle grey
+  else col = aces(col*1.1);
+  col = pow(col, vec3(1.0/2.2));
+  if (uNoise > 0.0) col += (hash(gl_FragCoord.xy*1.37 + 11.0) - 0.5)*uNoise*(0.5 + sqrt(max(col.g, 0.0)));
+  if (gCont.a > 0.5) col = gCont.rgb;
+  if (lampHit) {
+    vec3 pl = ro + rd*tl;
+    float edge = dot(normalize(pl - uLamp), -rd);
+    col = mix(vec3(0.85,0.78,0.6), vec3(1.0,0.98,0.94), smoothstep(0.0, 0.4, edge));
+  }
+  col += (hash(gl_FragCoord.xy + 0.37) - 0.5)/255.0;
+  gl_FragColor = vec4(col, 1.0);
+}`;
+
+function compile(type, src) {
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+let prog;
+try {
+  prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+} catch (err) {
+  console.error(err); window.__err = String(err);
+  fail("The renderer could not start on this device's graphics driver."); return;
+}
+gl.useProgram(prog);
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+const aLoc = gl.getAttribLocation(prog, "a");
+gl.enableVertexAttribArray(aLoc);
+gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
+const U = {};
+["uOff","uScene","uTone","uNoise","uBMin","uBMax","uDispR","uRes","uCamPos","uCamR","uCamU","uCamF","uTanHalf","uLamp","uVirt","uAim","uLampR","uI","uType","uBeamR","uAmb","uMode","uStep","uHaze","uMarks","uShowLamp","uCone","uBY","uPY","uMeter"]
+  .forEach(n => U[n] = gl.getUniformLocation(prog, n));
+
+/* ---------- camera ---------- */
+const VIEWS = {
+  set:  { yaw: -Math.PI / 2 + 0.38, pitch: 0.7, D: 2.6, fov: 36, tgt: [-0.2, 0.0, 0.3] },
+  top:  { yaw: -Math.PI / 2, pitch: 1.48, D: 3.2, fov: 36, tgt: [-0.18, 0, 0.45] },
+  wide: { yaw: -Math.PI / 2 + 0.7, pitch: 0.5, D: 5.5, fov: 46, tgt: [0, 0.1, 0] }
+};
+const CAM_VIEWS = {
+  set:    { yaw: 0.22, pitch: 0.5, D: 3.1, fov: 38, tgt: [-0.8, 0.05, 0.15] },
+  top:    { yaw: 0, pitch: 1.48, D: 3.6, fov: 38, tgt: [-0.75, 0, -0.3] },
+  wide:   { yaw: 0.45, pitch: 0.5, D: 5.5, fov: 46, tgt: [-0.6, 0.1, 0] },
+  camera: { yaw: 0, pitch: 0, D: 1, fov: PCAM_FOV, tgt: BALL }
+};
+const viewDef = v => (isCam() ? CAM_VIEWS[v] : VIEWS[v]) || VIEWS.set;
+function setViewDefaults(v) {
+  if (v === "camera" && !isCam()) v = "set";
+  const V = viewDef(v); S.view = v; S.camYaw = V.yaw; S.camPitch = V.pitch; S.camD = V.D; S.camX = 0; S.camY = 0; S.camZ = 0;
+}
+setViewDefaults("set");
+function baseTarget() {
+  if (S.view === "wide") {
+    const lp = lampPos(Math.min(S.dist, 4)), T = lightTarget();
+    return [T[0] + (lp[0] - T[0]) * 0.4, 0.05 + lp[1] * 0.3, T[2] + (lp[2] - T[2]) * 0.4];
+  }
+  return viewDef(S.view).tgt;
+}
+/* the fixed photo camera: looks from the lens at the ball */
+function photoCam(w, h) {
+  const f = norm(sub(BALL, PCAM));
+  const r = norm(cross(f, [0, 1, 0])), u = cross(r, f);
+  return { cp: add(PCAM, mul(f, 0.09)), f, r, u, th: Math.tan(PCAM_FOV * DEG / 2), w, h };
+}
+function camera(w, h) {
+  if (isCam() && S.view === "camera") return photoCam(w, h);
+  const V = viewDef(S.view);
+  const b = baseTarget();
+  const tgt = [b[0] + S.camX, b[1] + S.camY, b[2] + S.camZ];
+  const cp = [tgt[0] + S.camD * Math.sin(S.camYaw) * Math.cos(S.camPitch),
+              tgt[1] + S.camD * Math.sin(S.camPitch),
+              tgt[2] + S.camD * Math.cos(S.camYaw) * Math.cos(S.camPitch)];
+  const f = norm(sub(tgt, cp));
+  const r = norm(cross(f, [0, 1, 0]));
+  const u = cross(r, f);
+  return { cp, f, r, u, th: Math.tan(V.fov * DEG / 2), w, h };
+}
+function project(cam, p) {
+  const d = sub(p, cam.cp); const z = dot(d, cam.f);
+  if (z <= 0.01) return null;
+  const ux = dot(d, cam.r) / z / cam.th, uy = dot(d, cam.u) / z / cam.th;
+  return { x: (ux * cam.h + cam.w) / 2, y: cam.h - (uy * cam.h + cam.h) / 2, z };
+}
+
+/* ---------- render ---------- */
+let scaleFull = Math.min(window.devicePixelRatio || 1, 1.5);
+let scaleLive = 0.55;
+let interacting = false, idleTimer = 0, dirty = true;
+
+function exposure(m) {
+  const Em = Math.max(meterE(m), 1e-14);
+  if (locked()) return K / (E_LOCK || Em);
+  return K / Em;
+}
+/* how a view is exposed and toned */
+function viewOpts(kind, m) {
+  if (!isCam()) return { ex: exposure(m), amb: (S.amb / 100) * K * 1.6, tone: 0, mode: S.mode === "map" ? 2 : 0, noise: 0 };
+  if (kind === "photo") {
+    const ex = Math.pow(2, camStops()) / E_CAL;           // what the camera actually records
+    return { ex, amb: (S.amb / 100) * E_CAL * ex, tone: 1, mode: S.falseCol ? 2 : 0, noise: 0.006 * Math.sqrt(ISO_LBL[S.iso] / 100) };
+  }
+  const ex = 1 / Math.max(subjE(m), 1e-14);               // observer view: auto-exposed on the ball
+  return { ex, amb: (S.amb / 100) * Math.min(1, E_CAL * ex), tone: 1, mode: 0, noise: 0 };   // keep room fill from washing out the overview
+}
+const BOUNDS = { lab: [[-0.72, -0.01, -0.70], [0.72, 0.21, 0.68]], camera: [[-1.95, -0.01, -0.13], [0.13, 0.25, 0.13]] };
+function renderView(x, y, w, h, cam, o, m) {
+  gl.viewport(x, y, w, h);
+  const bya = S.face ? S.az * DEG : 0;
+  const B = BOUNDS[isCam() ? "camera" : "lab"];
+  gl.uniform2f(U.uRes, w, h); gl.uniform2f(U.uOff, x, y);
+  gl.uniform3fv(U.uCamPos, cam.cp); gl.uniform3fv(U.uCamR, cam.r); gl.uniform3fv(U.uCamU, cam.u); gl.uniform3fv(U.uCamF, cam.f);
+  gl.uniform1f(U.uTanHalf, cam.th);
+  gl.uniform3fv(U.uLamp, m.lamp); gl.uniform3fv(U.uVirt, m.virt); gl.uniform3fv(U.uAim, m.aim);
+  gl.uniform1f(U.uLampR, Math.min(m.R, S.dist * 0.9));
+  gl.uniform1f(U.uDispR, dispR(m));
+  gl.uniform1f(U.uI, m.I * o.ex);
+  gl.uniform1f(U.uType, m.type);
+  gl.uniform1f(U.uBeamR, m.beamR);
+  gl.uniform2f(U.uCone, m.cone[0], m.cone[1]);
+  gl.uniform1f(U.uAmb, o.amb);
+  gl.uniform1f(U.uMode, o.mode);
+  gl.uniform1f(U.uStep, S.step);
+  gl.uniform1f(U.uHaze, S.haze ? S.hazeD / 100 * 0.9 : 0);
+  gl.uniform1f(U.uMarks, S.marks && !isCam() ? 1 : 0);
+  gl.uniform1f(U.uShowLamp, 1);
+  gl.uniform2f(U.uBY, Math.cos(bya), Math.sin(bya));
+  gl.uniform2f(U.uPY, Math.cos(bya), Math.sin(bya));
+  gl.uniform3fv(U.uMeter, meterPos());
+  gl.uniform1f(U.uScene, isCam() ? 1 : 0);
+  gl.uniform1f(U.uTone, o.tone);
+  gl.uniform1f(U.uNoise, o.noise);
+  gl.uniform3fv(U.uBMin, B[0]); gl.uniform3fv(U.uBMax, B[1]);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+function sizeCanvas(scale) {
+  const rc = cv.getBoundingClientRect();
+  const w = Math.max(2, Math.round(rc.width * scale)), h = Math.max(2, Math.round(rc.height * scale));
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  return [w, h];
+}
+const prevCv = $("prevCv"), prevCtx = prevCv.getContext("2d");
+/* render the photo camera's view into the bottom-left of the GL canvas, then copy it to the preview card */
+function drawPreview(scale) {
+  const W = cv.width, H = cv.height;
+  const pw = Math.min(W, Math.max(60, Math.round(prevCv.clientWidth * scale * 1.2))), ph = Math.min(H, Math.round(pw / 1.5));
+  const m = lightModel();
+  renderView(0, 0, pw, ph, photoCam(pw, ph), viewOpts("photo", m), m);
+  if (prevCv.width !== pw || prevCv.height !== ph) { prevCv.width = pw; prevCv.height = ph; }
+  prevCtx.drawImage(cv, 0, H - ph, pw, ph, 0, 0, pw, ph);
+}
+function draw(scale) {
+  const [w, h] = sizeCanvas(scale);
+  const m = lightModel();
+  if (isCam() && S.view !== "camera") drawPreview(scale);
+  const cam = camera(w, h);
+  renderView(0, 0, w, h, cam, viewOpts(isCam() && S.view === "camera" ? "photo" : "observer", m), m);
+  return cam;
+}
+function frame() {
+  requestAnimationFrame(frame);
+  if (!dirty || capturing) return;
+  dirty = false;
+  const scale = (interacting ? scaleLive : scaleFull) * (S.haze && interacting ? 0.7 : 1);
+  const t0 = performance.now();
+  draw(scale);
+  placeLabels();
+  if (interacting) {
+    gl.finish();
+    const dt = performance.now() - t0;
+    if (dt > 40 && scaleLive > 0.25) scaleLive *= 0.85;
+    else if (dt < 14 && scaleLive < 0.8) scaleLive *= 1.08;
+  }
+}
+function touch() {
+  interacting = true; dirty = true;
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => { interacting = false; dirty = true; }, 200);
+}
+requestAnimationFrame(frame);
+new ResizeObserver(() => { dirty = true; drawPlan(); drawProfile(); }).observe(cv);
+
+/* ---------- labels in the viewport ---------- */
+const labelBox = $("labels");
+const mkEls = [];
+function makeLabel(i) {
+  const b = document.createElement("button");
+  b.className = "mk"; b.type = "button";
+  b.addEventListener("click", () => setMeter(i));
+  labelBox.appendChild(b); return b;
+}
+MARKERS.forEach((_, i) => mkEls.push(makeLabel(i)));
+const centreEl = makeLabel(-1);
+const subjEl = document.createElement("div"); subjEl.className = "mk meter"; subjEl.style.pointerEvents = "none"; labelBox.appendChild(subjEl);
+const lampTag = document.createElement("div"); lampTag.className = "lampTag"; labelBox.appendChild(lampTag);
+
+function setMeter(i) {
+  if (locked()) {   // keep the camera setting; just move where we read the meter
+    const before = E_LOCK; S.meter = i; E_LOCK = before;
+  } else S.meter = i;
+  changed();
+}
+const fmtStops = s => { const r = Math.abs(s) < 0.05 ? 0 : s; return (r >= 0 ? "+" : "−") + Math.abs(r).toFixed(1); };
+const fmtDist = d => d < 0.995 ? `${Math.round(d * 100)} cm` : d >= 999.5 ? "1 km" : d >= 100 ? `${Math.round(d)} m` : d >= 10 ? `${d.toFixed(1)} m` : `${d.toFixed(2)} m`;
+
+/* exposure breakdown for the camera scene, in stops vs. the reference */
+function exposureTerms(m = lightModel()) {
+  const E = subjE(m);
+  const light = E > 0 ? Math.log2(E / E_CAL) : -Infinity;
+  const distance = -2 * Math.log2(S.dist);
+  const power = S.pow;
+  const t = { distance, power, modifier: light - distance - power, light,
+              aperture: apStops(), shutter: shStops(), iso: isoStops(), nd: ndStops() };
+  t.camera = t.aperture + t.shutter + t.iso + t.nd;
+  t.total = light + t.camera;
+  return t;
+}
+
+function placeLabels() {
+  const rc = cv.getBoundingClientRect();
+  const cam = camera(rc.width, rc.height);
+  const m = lightModel();
+  const Em = refE(m);
+  const all = MARKERS.map((p, i) => [p, mkEls[i], i]).concat([[CENTRE, centreEl, -1]]);
+  for (const [p, el, i] of all) {
+    const pr = !isCam() && (S.marks || i === -1) ? project(cam, p) : null;
+    if (!pr || pr.x < -40 || pr.x > rc.width + 40 || pr.y < -10 || pr.y > rc.height + 40) { el.style.display = "none"; continue; }
+    el.style.display = "";
+    el.style.left = pr.x + "px"; el.style.top = pr.y + "px";
+    const E = irr(p, m);
+    const st = E > 0 ? fmtStops(Math.log2(E / Em)) : "dark";
+    const dl = len(sub(p, m.lamp));
+    const isM = i === S.meter;
+    el.classList.toggle("meter", isM);
+    el.innerHTML = isM ? `◎ meter${locked() ? " " + st + (st === "dark" ? "" : " EV") : ""}<br><span class="d">${fmtDist(dl)}</span>` :
+      `${i === -1 ? "centre " : ""}${st}${st === "dark" ? "" : " EV"}<br><span class="d">${fmtDist(dl)}</span>`;
+    el.title = isM ? "Meter point" : "Click to meter here";
+  }
+  // subject label (camera scene)
+  const ps = isCam() && S.view !== "camera" ? project(cam, [BALL[0], BALL[1] + BALL_R + 0.02, BALL[2]]) : null;
+  if (ps) {
+    const t = exposureTerms(m);
+    subjEl.style.display = ""; subjEl.style.left = ps.x + "px"; subjEl.style.top = ps.y + "px";
+    subjEl.innerHTML = `subject ${isFinite(t.total) ? fmtStops(t.total) + " EV" : "dark"}<br><span class="d">light ${fmtDist(S.dist)}</span>`;
+  } else subjEl.style.display = "none";
+  // lamp tag when the light is off-screen or too far to see
+  const pl = project(cam, m.lamp);
+  const onScreen = pl && pl.x > 0 && pl.x < rc.width && pl.y > 0 && pl.y < rc.height;
+  const visible = onScreen && (dispR(m) / pl.z) * rc.height / cam.th > 3;
+  if (visible || (isCam() && S.view === "camera")) { lampTag.style.display = "none"; return; }
+  lampTag.style.display = "";
+  let dx, dy;
+  const d = sub(m.lamp, cam.cp);
+  dx = dot(d, cam.r); dy = -dot(d, cam.u);
+  if (pl && onScreen) { lampTag.style.left = pl.x + "px"; lampTag.style.top = pl.y + "px"; }
+  else {
+    const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
+    const cx = rc.width / 2, cy = rc.height / 2;
+    const k = Math.min((cx - 70) / Math.max(Math.abs(dx), 1e-3), (cy - 60) / Math.max(Math.abs(dy), 1e-3));
+    lampTag.style.left = (cx + dx * k) + "px"; lampTag.style.top = (cy + dy * k) + "px";
+  }
+  const arrow = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "←" : "→") : (dy < 0 ? "↑" : "↓");
+  lampTag.textContent = `${onScreen ? "●" : arrow} light · ${fmtDist(S.dist)}`;
+}
+
+/* ---------- readouts ---------- */
+const MODE_NOTES = {
+  metered: "The camera re-meters every time the light moves, so the meter point stays mid-grey. Overall brightness holds steady and you see only the <b>shape</b> of the falloff: steep up close, flat far away.",
+  fixed: "Exposure is locked to your last reading, like a manual camera. Move the light and the whole frame changes by the inverse-square law: twice the distance, ¼ the light, −2 stops. Add power to win it back.",
+  map: "False-colour bands, each a set number of stops above or below your reading. With re-metering off, the reading stays put, so moving the light shifts the whole map: double the distance and every band drops 2 stops. Turn re-metering on to see only the shape of the falloff."
+};
+function holeSpread(m) {
+  if (m.type === 3) return 0;
+  const a = S.face ? S.az * DEG : 0;
+  const ex = [Math.cos(a), 0, Math.sin(a)];
+  const hp = s => add([BLOCK_C[0], HOLE_Y, BLOCK_C[2]], mul(ex, s * 0.3));
+  const d1 = norm(sub(hp(-1), m.virt)), d2 = norm(sub(hp(1), m.virt));
+  return Math.acos(clamp(dot(d1, d2), -1, 1)) / DEG;
+}
+function updateReadouts() {
+  const m = lightModel();
+  const Em = meterE(m);
+  // falloff across the set
+  const Ef = irr(MARKERS[0], m), Eb = irr(MARKERS[MARKERS.length - 1], m);
+  const fall = Ef > 0 && Eb > 0 ? Math.log2(Ef / Eb) : NaN;
+  $("roFall").textContent = isFinite(fall) ? `${Math.abs(fall).toFixed(2)} stops` : "out of beam";
+  const sp = holeSpread(m);
+  $("roSpread").textContent = `${sp < 1 ? sp.toFixed(2) : sp.toFixed(1)}°`;
+  $("roSpreadS").textContent = sp < 0.05 ? "rays effectively parallel" : sp < 1 ? "nearly parallel" : sp < 8 ? "gently diverging" : "strongly fanning";
+  let ang;
+  if (S.mod === "collim") ang = 0;
+  else ang = 2 * Math.atan(m.R / S.dist) / DEG;
+  $("roAng").textContent = S.mod === "collim" ? "parallel" : `${ang < 1 ? ang.toFixed(2) : ang < 10 ? ang.toFixed(1) : Math.round(ang)}° wide`;
+  $("roAngS").textContent = S.mod === "collim" ? "hard edge" : ang < 1 ? "Crisp shadow edge" : ang < 5 ? "Hard edge" : ang < 15 ? "Medium edge" : ang < 40 ? "Soft edge" : "Very soft";
+
+  if (locked()) {
+    const diff = Em > 0 && E_LOCK ? Math.log2(Em / E_LOCK) : -Infinity;
+    $("roExpK").textContent = "vs. your reading";
+    $("roExp").textContent = isFinite(diff) ? `${fmtStops(diff)} EV` : "dark";
+    $("roExpS").textContent = !isFinite(diff) ? "meter point unlit" : Math.abs(diff) < 0.17 ? "correctly exposed" : diff < 0 ? "under-exposed" : "over-exposed";
+    $("lockNote").textContent = isFinite(diff) && Math.abs(diff) >= 0.17 ? `Needs ${fmtStops(-diff)} EV power to match` : "Matches the reading";
+  } else {
+    const m1 = lightModel(1); const E1 = meterE(m1);
+    const need = Em > 0 && E1 > 0 ? Math.log2(E1 / Em) : NaN;
+    $("roExpK").textContent = "Camera vs. light at 1 m";
+    $("roExp").textContent = isFinite(need) ? `${fmtStops(need)} EV` : "—";
+    $("roExpS").textContent = Em > 0 ? "re-metered automatically" : "meter point is outside the beam";
+  }
+
+  setOut("oDist", fmtDist(S.dist));
+  const a = Math.round(S.az);
+  if (isCam()) {
+    const rr = Math.round(relR());
+    setOut("oAz", rr === 0 ? "on camera axis" : Math.abs(rr) === 180 ? "behind subject" : `${Math.abs(rr)}° camera ${rr > 0 ? "R" : "L"}`);
+  } else setOut("oAz", a === 0 ? "end-on" : `${Math.abs(a)}° ${a > 0 ? "far side" : "camera side"}`);
+  $("lDist").textContent = isCam() ? "Distance to subject" : "Distance";
+  setOut("oEl", `${S.el}° up`);
+  const cm = S.size;
+  setOut("oSize", cm >= 100 ? `${(cm / 100).toFixed(cm >= 1000 ? 0 : 1)} m` : cm >= 10 ? `${Math.round(cm)} cm` : `${cm.toFixed(1)} cm`);
+  $("lSize").textContent = MODS[S.mod].size;
+  setOut("oPow", `${fmtStops(S.pow)} EV`);
+  setOut("oAmb", `${S.amb}%`);
+  setOut("oHaze", `${S.hazeD}%`);
+  if (S.mod === "fresnel") {
+    setOut("oFocus", `${Math.round(m.half * 2)}° beam`);
+    $("modNote").innerHTML = `Moving the bulb toward the lens's focal point narrows the beam and pushes the <b>apparent source ${fmtDist(m.v)} behind the lamp</b>. That makes the rays more parallel and the falloff slower: this is why spotlights "throw".`;
+  } else $("modNote").textContent = MODS[S.mod].note;
+  $("modeNote").innerHTML = MODE_NOTES[S.mode];
+
+  // badge
+  $("bEyebrow").textContent = { metered: "Metered exposure", fixed: "Fixed exposure", map: "Stop map" }[S.mode] + " · " + MODS[S.mod].name;
+  $("bTitle").textContent = `Light at ${fmtDist(S.dist)}`;
+  let desc = "";
+  if (isFinite(fall)) desc += Math.abs(fall) < 0.15 ? "Light is practically even from the front of the set to the back. " : `The floor drops ${Math.abs(fall).toFixed(1)} stops from front to back of the set. `;
+  else desc += "Part of the set is outside the beam. ";
+  desc += sp < 0.05 ? "Rays through the holes run parallel." : `Rays through the outer holes spread ${sp < 1 ? sp.toFixed(2) : sp.toFixed(1)}° apart.`;
+  if (locked() && E_LOCK) {
+    const diff = Em > 0 ? Math.log2(Em / E_LOCK) : -Infinity;
+    if (isFinite(diff) && Math.abs(diff) >= 0.17) desc += ` The frame is ${Math.abs(diff).toFixed(1)} stops ${diff < 0 ? "darker" : "brighter"} than your reading.`;
+  }
+  $("bDesc").textContent = desc;
+  if (isCam()) updateCamera(m);
+}
+/* camera scene: angle of the light measured from the lens axis, + = camera right */
+const relR = () => { let r = -(S.az + 90); return ((r + 540) % 360) - 180; };
+
+/* ---------- camera panel ---------- */
+function evScaleHTML(v) {
+  let h = '<div class="track"></div>';
+  for (let i = -9; i <= 9; i++) {
+    const x = 50 + i / 9 * 47;
+    h += `<span class="tk${i % 3 === 0 ? " major" : ""}" style="left:${x}%"></span>`;
+    if (i % 3 === 0) h += `<span class="tl" style="left:${x}%">${i === 0 ? "0" : (i > 0 ? "+" : "−") + Math.abs(i / 3)}</span>`;
+  }
+  if (!isFinite(v)) return h + `<span class="out" style="left:0">◀ no light</span>`;
+  const c = clamp(v, -3, 3), x = 50 + c / 3 * 47;
+  h += `<span class="ptr" style="left:${x}%"></span>`;
+  if (v < -3) h += `<span class="out" style="left:0">◀ ${fmtStops(v)}</span>`;
+  if (v > 3) h += `<span class="out" style="right:0">${fmtStops(v)} ▶</span>`;
+  return h;
+}
+function bdRow(lbl, v, cls = "") {
+  const fin = isFinite(v), c = fin ? clamp(v, -6, 6) : -6, w = Math.abs(c) / 6 * 50;
+  const bar = Math.abs(c) < 0.02 ? "" : `<i class="${c > 0 ? "pos" : "neg"}" style="${c > 0 ? `left:50%;width:${w}%` : `left:${50 - w}%;width:${w}%`}"></i>`;
+  return `<div class="row ${cls}"><span class="lab">${lbl}</span><span class="bar">${bar}</span><span class="val">${fin ? fmtStops(v) : "—"}</span></div>`;
+}
+function updateCamera(m) {
+  const t = exposureTerms(m);
+  setOut("oDist2", fmtDist(S.dist));
+  setOut("oPow2", `${S.pow > 0.01 ? "+" : S.pow < -0.01 ? "−" : ""}${thirds(S.pow)} stop${Math.abs(Math.abs(S.pow) - 1) < 0.01 ? "" : "s"}`);
+  setOut("oAp", `f/${AP_LBL[S.ap]}`);
+  setOut("oSh", fmtSh(S.sh));
+  setOut("oIso", `ISO ${ISO_LBL[S.iso]}`);
+  setOut("oNd", fmtNd());
+  $("cpSet").textContent = camLabel();
+  $("evScale").innerHTML = evScaleHTML(t.total);
+  const modLbl = S.mod === "bare" ? "Beam & modifier" : `${MODS[S.mod].name} & beam`;
+  $("bd").innerHTML =
+    bdRow(`Distance ${fmtDist(S.dist)}`, t.distance, "light") +
+    bdRow("Light intensity", t.power, "light") +
+    bdRow(modLbl, Math.abs(t.modifier) < 0.005 ? 0 : t.modifier, "light") +
+    bdRow(`Aperture f/${AP_LBL[S.ap]}`, t.aperture) +
+    bdRow(`Shutter ${fmtSh(S.sh)}`, t.shutter) +
+    bdRow(`ISO ${ISO_LBL[S.iso]}`, t.iso) +
+    bdRow(S.nd ? `ND ${(S.nd / 10).toFixed(1)} (ND${fmtNdFactor(S.nd / 10)})` : "No ND", t.nd) +
+    bdRow("On the subject", t.total, "total");
+  // what an incident meter would tell you to set
+  const need = -(t.light + t.shutter + t.iso + t.nd);
+  const iIdeal = 18 - 3 * need;
+  let note;
+  if (!isFinite(iIdeal)) note = "The ball isn't in the light, so the meter has nothing to read.";
+  else {
+    const i = Math.round(iIdeal);
+    if (i < 0) note = `Meter wants wider than f/1 (${thirds((0 - iIdeal) / 3)} stops short). Slow the shutter, raise ISO or add light.`;
+    else if (i > 30) note = `Meter wants smaller than f/32 (${thirds((iIdeal - 30) / 3)} stops too bright). Add ND, or use a faster shutter or lower ISO.`;
+    else note = `Incident meter at the ball, for ${fmtSh(S.sh)} · ISO ${ISO_LBL[S.iso]}${S.nd ? " · ND " + (S.nd / 10).toFixed(1) : ""}: <b>f/${AP_LBL[i]}</b>${i === S.ap ? " (you're there)" : ""}.`;
+  }
+  $("meterNote").innerHTML = note;
+  // badge
+  $("bEyebrow").textContent = "Camera & subject · " + MODS[S.mod].name;
+  const tot = t.total;
+  $("bTitle").textContent = !isFinite(tot) ? "No light on subject" : Math.abs(tot) < 0.17 ? "Correctly exposed" : `${Math.abs(tot) < 0.05 ? "" : fmtStops(tot)} EV ${tot > 0 ? "over" : "under"}`;
+  $("bDesc").textContent = `Light ${fmtDist(S.dist)} from the subject · ${camLabel()}. ` +
+    (!isFinite(tot) ? "" : Math.abs(tot) < 0.17 ? "The ball's lit side records as middle grey." :
+      `The ball's lit side records ${Math.abs(tot).toFixed(1)} stops ${tot > 0 ? "brighter" : "darker"} than middle grey${tot > 2.4 ? " and is clipping" : ""}.`);
+}
+
+/* ---------- typed values ---------- */
+function setOut(id, text) { const el = $(id); if (document.activeElement !== el) el.value = text; }
+const num = t => { const m = String(t).replace(",", ".").match(/[-+−]?\d*\.?\d+/); return m ? parseFloat(m[0].replace("−", "-")) : NaN; };
+const EDIT = {
+  oDist: { hint: "e.g. 35 cm, 2.5 m, 400 m, 1 km", parse: t => {
+    const n = num(t); if (!isFinite(n)) return;
+    const k = /km/i.test(t) ? 1000 : /mm/i.test(t) ? 0.001 : /cm/i.test(t) ? 0.01 : 1;
+    S.dist = clamp(Math.abs(n) * k, DMIN, DMAX); } },
+  oAz: { hint: "degrees (lab: 0 end-on, + far side, − camera side; camera scene: 0 on axis, 45 R, 45 L)", parse: t => {
+    if (isCam()) {
+      if (/axis|on/i.test(t) && !/\d/.test(t)) { S.az = -90; return; }
+      let n = num(t); if (!isFinite(n)) return;
+      if (/\bl\b|left|\dl/i.test(t)) n = -Math.abs(n); else if (/\br\b|right|\dr/i.test(t)) n = Math.abs(n);
+      S.az = Math.round(((-90 - n + 540) % 360) - 180); return;
+    }
+    if (/end/i.test(t)) { S.az = 0; return; }
+    let n = num(t); if (!isFinite(n)) return;
+    if (/cam/i.test(t)) n = -Math.abs(n); else if (/far/i.test(t)) n = Math.abs(n);
+    S.az = Math.round(((n + 540) % 360) - 180); } },
+  oEl: { hint: "degrees above the floor, 3–88", parse: t => { const n = num(t); if (isFinite(n)) S.el = Math.round(clamp(n, 3, 88)); } },
+  oSize: { hint: "e.g. 5 mm, 4 cm, 1.5 m (cm if no unit)", parse: t => {
+    const n = num(t); if (!isFinite(n)) return;
+    const k = /mm/i.test(t) ? 0.1 : /cm/i.test(t) ? 1 : /m/i.test(t) ? 100 : 1;
+    S.size = clamp(Math.abs(n) * k, SMIN, SMAX); } },
+  oPow: { hint: "EV, −4 to +22", parse: t => { const n = num(t); if (isFinite(n)) S.pow = Math.round(clamp(n, -4, 22) * 10) / 10; } },
+  oFocus: { hint: "beam angle in degrees, 12–60", parse: t => { const n = num(t); if (isFinite(n)) S.focus = clamp((30 - clamp(n, 12, 60) / 2) / 24 * 100, 0, 100); } },
+  oHaze: { hint: "percent, 5–100", parse: t => { const n = num(t); if (isFinite(n)) S.hazeD = Math.round(clamp(n, 5, 100)); } },
+  oDist2: { hint: "metres to the subject, e.g. 1.41, 70 cm, 3 m", parse: t => {
+    const n = num(t); if (!isFinite(n)) return;
+    const k = /km/i.test(t) ? 1000 : /mm/i.test(t) ? 0.001 : /cm/i.test(t) ? 0.01 : 1;
+    S.dist = clamp(Math.abs(n) * k, DMIN, DMAX); } },
+  oPow2: { hint: "stops, snaps to ⅓: e.g. +1, -⅔ as -0.67, 2.33", parse: t => {
+    let n = num(t); if (!isFinite(n)) return;
+    if (/⅓/.test(t)) n += Math.sign(n || 1) * 1 / 3; if (/⅔/.test(t)) n += Math.sign(n || 1) * 2 / 3;
+    S.pow = clamp(Math.round(n * 3) / 3, -6, 22); } },
+  oAp: { hint: "f-number, e.g. f/5.6 (snaps to the nearest ⅓ stop)", parse: t => { const n = num(t); if (isFinite(n) && n > 0) S.ap = clamp(Math.round(6 * Math.log2(n)), 0, 30); } },
+  oSh: { hint: "1/250, 250 (= 1/250), 0.5, 2″ or 2s (snaps to ⅓ stop)", parse: t => {
+    let secs; const fr = String(t).match(/(\d*\.?\d+)\s*\/\s*(\d*\.?\d+)/);
+    if (fr) secs = parseFloat(fr[1]) / parseFloat(fr[2]);
+    else { const n = num(t); if (!isFinite(n) || n <= 0) return;
+      secs = /["″']|s\b|sec/i.test(t) || n < 1 || (n < 2 && /\./.test(t)) ? n : 1 / n; }
+    S.sh = clamp(Math.round(15 - 3 * Math.log2(secs)), 0, 54); } },
+  oIso: { hint: "e.g. 400 (snaps to ⅓ stop)", parse: t => { const n = num(t); if (isFinite(n) && n > 0) S.iso = clamp(Math.round(3 * Math.log2(n / 100)) + 6, 0, 30); } },
+  oNd: { hint: "density 0.6 · factor ND4 or 4x · or 2 stops", parse: t => {
+    const s0 = String(t).toLowerCase(); if (/none|off/.test(s0)) { S.nd = 0; return; }
+    const n = num(s0); if (!isFinite(n) || n < 0) return;
+    let od;
+    if (/stop/.test(s0)) od = n * Math.log10(2);
+    else if (/x|×|\//.test(s0) || (n >= 2 && !/\./.test(s0))) od = Math.log10(n);
+    else od = n;
+    S.nd = clamp(Math.round(od * 10), 0, 30); } },
+  oAmb: { hint: "percent, 0–30", parse: t => { const n = num(t); if (isFinite(n)) S.amb = Math.round(clamp(n, 0, 30)); } }
+};
+for (const id in EDIT) {
+  const el = $(id), ed = EDIT[id];
+  el.title = "Type a value: " + ed.hint;
+  el.setAttribute("aria-label", el.parentNode.querySelector("label").textContent + " value");
+  // select the whole value on focus; stop the click's mouseup from dropping the selection (Safari/Chrome)
+  let fresh = false;
+  el.addEventListener("focus", () => { fresh = true; el.select(); });
+  el.addEventListener("mouseup", e => { if (fresh) { e.preventDefault(); el.select(); } fresh = false; });
+  el.addEventListener("input", () => { fresh = false; });
+  const commit = () => { ed.parse(el.value); changed(); el.blur(); updateReadouts(); };
+  el.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); commit(); }
+    if (e.key === "Escape") { e.preventDefault(); el.blur(); updateReadouts(); }
+    e.stopPropagation();
+  });
+  el.addEventListener("change", () => { ed.parse(el.value); changed(); });
+  el.addEventListener("blur", () => setTimeout(updateReadouts, 0));
+}
+
+/* ---------- controls ---------- */
+const sliders = {
+  sDist:  { get: () => sliderFromDist(S.dist), set: v => S.dist = distFromSlider(v) },
+  sAz:    { get: () => S.az, set: v => S.az = v },
+  sEl:    { get: () => S.el, set: v => S.el = v },
+  sSize:  { get: () => sliderFromSize(S.size), set: v => S.size = sizeFromSlider(v) },
+  sPow:   { get: () => S.pow, set: v => S.pow = v },
+  sFocus: { get: () => S.focus, set: v => S.focus = v },
+  sHaze:  { get: () => S.hazeD, set: v => S.hazeD = v },
+  sAmb:   { get: () => S.amb, set: v => S.amb = v },
+  sDist2: { get: () => clamp(Math.round(6 * Math.log2(S.dist)), -12, 24), set: v => S.dist = Math.pow(2, v / 6) },
+  sPow2:  { get: () => clamp(Math.round(S.pow * 3), -18, 36), set: v => S.pow = v / 3 },
+  sAp:    { get: () => S.ap, set: v => S.ap = Math.round(v) },
+  sSh:    { get: () => S.sh, set: v => S.sh = Math.round(v) },
+  sIso:   { get: () => S.iso, set: v => S.iso = Math.round(v) },
+  sNd:    { get: () => S.nd, set: v => S.nd = Math.round(v) }
+};
+for (const id in sliders) $(id).addEventListener("input", e => { sliders[id].set(parseFloat(e.target.value)); changed(); });
+$("tFace").addEventListener("change", e => { S.face = e.target.checked; changed(); });
+$("tMarks").addEventListener("change", e => { S.marks = e.target.checked; changed(); });
+$("tHaze").addEventListener("change", e => { S.haze = e.target.checked; changed(); });
+
+function syncControls() {
+  document.body.classList.toggle("cam", isCam());
+  [...$("scenes").children].forEach(b => b.classList.toggle("on", b.dataset.scene === S.scene));
+  $("powCtl").hidden = !powerActive();
+  $("prevCv").style.display = S.view === "camera" ? "none" : "";
+  $("tFalse").checked = S.falseCol;
+  for (const id in sliders) $(id).value = sliders[id].get();
+  $("tFace").checked = S.face; $("tMarks").checked = S.marks; $("tHaze").checked = S.haze;
+  $("hazeCtl").hidden = !S.haze;
+  [...$("modes").children].forEach(b => b.classList.toggle("on", b.dataset.mode === S.mode));
+  $("fixedCtl").hidden = !locked();
+  $("tAuto").checked = S.mapAuto;
+  $("mapCtl").hidden = S.mode !== "map";
+  [...$("steps").children].forEach(b => b.classList.toggle("on", Math.abs(parseFloat(b.dataset.step) - S.step) < 0.01));
+  [...$("mods").children].forEach(b => { const on = b.dataset.mod === S.mod; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+  $("gridCtl").hidden = S.mod !== "grid";
+  $("fresCtl").hidden = S.mod !== "fresnel";
+  [...$("grids").children].forEach(b => b.classList.toggle("on", +b.dataset.g === S.grid));
+  $("dmLight").setAttribute("aria-pressed", S.drag === "light");
+  $("dmCam").setAttribute("aria-pressed", S.drag === "camera");
+  document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === S.view));
+  $("hint").textContent = S.drag === "light"
+    ? "Drag: light · Shift-drag: orbit · scroll: zoom · arrows: walk · Shift+arrows: look · Alt/Option+↑↓: height"
+    : "Drag: orbit · Shift-drag: light · scroll: zoom · arrows: walk · Shift+arrows: look · Alt/Option+↑↓: height";
+  buildLegend();
+  updateReadouts(); markPreset(); drawPlan(); drawProfile();
+}
+function changed() { updateReadouts(); markPreset(); drawPlan(); drawProfile(); touch(); syncSlidersOnly(); }
+function syncSlidersOnly() { for (const id in sliders) { const el = $(id); if (document.activeElement !== el) el.value = sliders[id].get(); } }
+
+$("scenes").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || b.dataset.scene === S.scene) return;
+  S.scene = b.dataset.scene;
+  if (isCam()) camStart(true);
+  else { setViewDefaults("set"); syncControls(); touch(); }
+});
+/* the camera & subject starting position: middle-grey ball, default light, default viewpoint */
+function camStart(keepLook) {
+  Object.assign(S, CAM0, { dist: 1, az: -135, el: 30, mod: "bare", pow: 0, size: 4, focus: 70, grid: 20 });
+  if (!keepLook) Object.assign(S, { falseCol: false, haze: false, amb: 5 });
+  setViewDefaults("set");
+  syncControls(); touch();
+}
+$("bCamAll").addEventListener("click", () => camStart(false));
+$("bMeterAp").addEventListener("click", () => {
+  const t = exposureTerms(); const i = 18 + 3 * (t.light + t.shutter + t.iso + t.nd);
+  if (isFinite(i)) { S.ap = clamp(Math.round(i), 0, 30); changed(); }
+});
+$("bCamReset").addEventListener("click", () => { Object.assign(S, CAM0); changed(); });
+$("tFalse").addEventListener("change", e => { S.falseCol = e.target.checked; syncControls(); touch(); });
+$("prevCv").addEventListener("click", () => { setViewDefaults("camera"); syncControls(); touch(); });
+$("modes").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  const wasLocked = locked(); S.mode = b.dataset.mode;
+  if (locked() && !wasLocked) lockNow();
+  syncControls(); touch();
+});
+function lockNow() { S.pow = 0; E_LOCK = meterE(lightModel()) || 1e-9; }
+$("bMeter").addEventListener("click", () => { E_LOCK = meterE(lightModel()) || 1e-9; changed(); });
+$("tAuto").addEventListener("change", e => { S.mapAuto = e.target.checked; if (!S.mapAuto) lockNow(); syncControls(); touch(); });
+$("steps").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; S.step = parseFloat(b.dataset.step); syncControls(); touch(); });
+
+const modBox = $("mods");
+MOD_ORDER.forEach(k => {
+  const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.dataset.mod = k; b.textContent = MODS[k].name;
+  b.addEventListener("click", () => {
+    S.mod = k;
+    if (k === "collim" && S.size < 30) S.size = 120;
+    if (k === "snoot" && S.size > 15) S.size = 6;
+    if ((k === "softbox") && S.size < 40) S.size = 90;
+    if ((k === "reflector" || k === "grid") && (S.size < 12 || S.size > 40)) S.size = 18;
+    if (k === "fresnel" && (S.size < 8 || S.size > 40)) S.size = 15;
+    syncControls(); touch();
+  });
+  modBox.appendChild(b);
+});
+GRIDS.forEach(g => {
+  const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.dataset.g = g; b.textContent = `${g}° grid`;
+  b.addEventListener("click", () => { S.grid = g; syncControls(); touch(); });
+  $("grids").appendChild(b);
+});
+const presetBox = $("presets");
+PRESETS.forEach(p => {
+  const b = document.createElement("button"); b.className = "chip"; b.type = "button"; b.textContent = p.name;
+  b.addEventListener("click", () => {
+    Object.assign(S, p.s);
+    if (p.view && p.view !== S.view) setViewDefaults(p.view);
+    if (locked()) { S.pow = 0; E_LOCK = meterE(lightModel()) || 1e-9; }
+    syncControls(); touch();
+  });
+  presetBox.appendChild(b);
+});
+function markPreset() {
+  [...presetBox.children].forEach((b, i) => {
+    const s = PRESETS[i].s;
+    const on = Object.keys(s).every(k => typeof s[k] === "number" ? Math.abs(S[k] - s[k]) < (k === "dist" ? s[k] * 0.01 : k === "size" ? s[k] * 0.02 : 0.01) : S[k] === s[k]);
+    b.classList.toggle("on", on);
+  });
+}
+$("dmLight").addEventListener("click", () => { S.drag = "light"; syncControls(); });
+$("dmCam").addEventListener("click", () => { S.drag = "camera"; syncControls(); });
+document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => { setViewDefaults(b.dataset.view); syncControls(); touch(); }));
+
+/* viewport drag */
+let drag = null;
+cv.addEventListener("pointerdown", e => {
+  cv.setPointerCapture(e.pointerId);
+  drag = { x: e.clientX, y: e.clientY, mode: e.shiftKey ? (S.drag === "light" ? "camera" : "light") : S.drag, az: S.az, el: S.el };
+  cv.classList.add("dragging");
+});
+cv.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.x = e.clientX; drag.y = e.clientY;
+  if (drag.mode === "light") {
+    drag.az += dx * 0.35; drag.az = ((drag.az + 540) % 360) - 180;
+    drag.el = clamp(drag.el - dy * 0.3, 3, 88);
+    S.az = Math.round(drag.az); S.el = Math.round(drag.el);
+    changed();
+  } else {
+    S.camYaw -= dx * 0.006;
+    S.camPitch = clamp(S.camPitch + dy * 0.005, Math.min(0.05, S.camPitch), 1.5);
+    touch();
+  }
+});
+const endDrag = () => { drag = null; cv.classList.remove("dragging"); };
+cv.addEventListener("pointerup", endDrag);
+cv.addEventListener("pointercancel", endDrag);
+cv.addEventListener("wheel", e => {
+  e.preventDefault();
+  S.camD = clamp(S.camD * Math.exp(e.deltaY * 0.0012), 0.8, 40);
+  touch();
+}, { passive: false });
+
+/* ---------- floor plan (log distance) ---------- */
+const plan = $("plan"), pctx = plan.getContext("2d");
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function planGeom() { const w = plan.clientWidth || 300; return { w, c: w / 2, R: w / 2 - 16, R0: 40 }; }
+// linear inside the set (to 0.9 m), logarithmic beyond
+const PLIN = 0.9;
+const rOf = (d, G) => d <= PLIN ? d / PLIN * G.R0 : G.R0 + (G.R - G.R0) * Math.log(d / PLIN) / Math.log(DMAX / PLIN);
+const dOf = (r, G) => r <= G.R0 ? Math.max(DMIN, r / G.R0 * PLIN) : PLIN * Math.pow(DMAX / PLIN, clamp((r - G.R0) / (G.R - G.R0), 0, 1));
+function drawPlan() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const G = planGeom(); const { w, c, R } = G;
+  if (plan.width !== Math.round(w * dpr)) { plan.width = Math.round(w * dpr); plan.height = Math.round(w * dpr); }
+  const g = pctx; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, w);
+  const line = tok("--line"), muted = tok("--muted"), fg = tok("--fg"), acc = tok("--accent"), mono = tok("--font-data");
+  g.lineWidth = 1; g.font = `10px ${mono}`; g.textBaseline = "middle"; g.textAlign = "left";
+  [[1, "1 m"], [3, "3 m"], [10, "10 m"], [30, "30 m"], [100, "100 m"], [300, "300 m"], [1000, "1 km"]].forEach(([d, t]) => {
+    const r = rOf(d, G);
+    g.strokeStyle = line; g.beginPath(); g.arc(c, c, r, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = muted; g.fillText(t, c + r * 0.72 + 3, c + r * 0.72 + 2);
+  });
+  // set footprint (to scale inside R0)
+  const sc = G.R0 / PLIN;
+  const P = (x, z) => [c + x * sc, c + z * sc];   // plan: +x right, +z down; light at az=0 sits up (−z)
+  if (isCam()) {
+    // ball at the centre, camera 1.8 m away on the left
+    g.fillStyle = "#8f8d88"; g.beginPath(); g.arc(c, c, Math.max(3, BALL_R * sc), 0, Math.PI * 2); g.fill();
+    const pr = rOf(-PCAM[0] - 0.1, G), px = c - pr, py = c;
+    g.strokeStyle = "#55575d"; g.setLineDash([2, 3]); g.beginPath(); g.moveTo(px + 8, py); g.lineTo(c - BALL_R * sc - 2, c); g.stroke(); g.setLineDash([]);
+    g.fillStyle = fg; g.fillRect(px - 9, py - 6, 11, 12); g.fillRect(px + 2, py - 4, 6, 8);
+    g.fillStyle = muted; g.textAlign = "center"; g.fillText("camera", px, py + 16);
+    g.textAlign = "left";
+  } else {
+  g.fillStyle = "#2c2e33"; g.fillRect(c - 0.8 * sc, c - 0.7 * sc, 1.6 * sc, 1.4 * sc);
+  const a = S.face ? S.az * DEG : 0;
+  const seg = (cx, cz) => { const ex = [Math.cos(a), Math.sin(a)]; const p1 = P(cx - ex[0] * 0.32, cz - ex[1] * 0.32), p2 = P(cx + ex[0] * 0.32, cz + ex[1] * 0.32); g.beginPath(); g.moveTo(...p1); g.lineTo(...p2); g.stroke(); };
+  g.strokeStyle = fg; g.lineWidth = 2; seg(BLOCK_C[0], BLOCK_C[2]);
+  g.setLineDash([1.5, 2.5]); seg(PEG_C[0], PEG_C[2]); g.setLineDash([]);
+  g.lineWidth = 1;
+  }
+  // light
+  const la = S.az * DEG, r = rOf(S.dist + (isCam() ? BALL_R : 0), G);
+  const lx = c + Math.sin(la) * r, ly = c - Math.cos(la) * r;
+  const grad = g.createLinearGradient(lx, ly, c, c);
+  grad.addColorStop(0, acc + "77"); grad.addColorStop(1, acc + "00");
+  g.strokeStyle = grad; g.lineWidth = 6; g.beginPath(); g.moveTo(lx, ly); g.lineTo(c, c); g.stroke();
+  g.lineWidth = 1;
+  g.fillStyle = acc; g.strokeStyle = tok("--field"); g.lineWidth = 2;
+  g.beginPath(); g.arc(lx, ly, 6, 0, Math.PI * 2); g.fill(); g.stroke();
+  // camera direction
+  const cy = S.camYaw;
+  const cx2 = c + Math.sin(cy) * (G.R0 + 10), cz2 = c + Math.cos(cy) * (G.R0 + 10);
+  g.fillStyle = muted; g.save(); g.translate(cx2, cz2); g.rotate(-cy); g.fillRect(-6, -2, 12, 7); g.fillRect(-3, -5, 6, 4); g.restore();
+  g.fillStyle = fg; g.textAlign = "center"; g.font = `600 10px ${mono}`;
+  const ty = ly < c ? ly - 14 : ly + 15;
+  g.fillText(fmtDist(S.dist), clamp(lx, 24, w - 24), clamp(ty, 8, w - 8));
+}
+let pdrag = false;
+function planPick(e) {
+  const rc = plan.getBoundingClientRect(); const G = planGeom();
+  const x = e.clientX - rc.left - G.c, y = e.clientY - rc.top - G.c;
+  S.az = Math.round(Math.atan2(x, -y) / DEG);
+  const d = Math.max(DMIN, dOf(Math.hypot(x, y), G) - (isCam() ? BALL_R : 0));
+  S.dist = d < 10 ? Math.round(d * 100) / 100 : d < 100 ? Math.round(d * 10) / 10 : Math.round(d);
+  changed();
+}
+plan.addEventListener("pointerdown", e => { pdrag = true; plan.setPointerCapture(e.pointerId); planPick(e); });
+plan.addEventListener("pointermove", e => { if (pdrag) planPick(e); });
+plan.addEventListener("pointerup", () => pdrag = false);
+plan.addEventListener("pointercancel", () => pdrag = false);
+
+/* ---------- profile chart ---------- */
+const prof = $("prof"), qctx = prof.getContext("2d");
+function profileCurve(m, Eref) {
+  const lp = m.lamp; const hd = norm([-lp[0], 0, -lp[2]]);   // horizontal direction away from light
+  const Em = Eref || meterE(m);
+  const pts = [];
+  for (let i = 0; i <= 120; i++) {
+    const s = -0.8 + 2.6 * i / 120;
+    const p = [hd[0] * s, 0, hd[2] * s];
+    const E = irr(p, m);
+    pts.push([s, E > 0 && Em > 0 ? Math.log2(E / Em) : -99]);
+  }
+  return pts;
+}
+function drawProfile() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = prof.clientWidth || 300, h = prof.clientHeight || 150;
+  if (prof.width !== Math.round(w * dpr)) { prof.width = Math.round(w * dpr); prof.height = Math.round(h * dpr); }
+  const g = qctx; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  const muted = tok("--muted"), line = tok("--line"), acc = tok("--accent"), fg = tok("--fg"), mono = tok("--font-data");
+  const L = 34, Rr = 10, T = 10, B = 24;
+  const X = s => L + (s + 0.8) / 2.6 * (w - L - Rr);
+  const lk = locked() && E_LOCK;
+  const top = lk ? 6 : 3, bot = lk ? -22 : -6, tick = lk ? 4 : 1, lab = lk ? 4 : 2;
+  const Y = st => T + (top - clamp(st, bot, top)) / (top - bot) * (h - T - B);
+  g.font = `10px ${mono}`; g.textBaseline = "middle"; g.textAlign = "right"; g.lineWidth = 1;
+  for (let st = bot; st <= top; st += tick) {
+    g.strokeStyle = st === 0 ? "#4a4c52" : line; g.beginPath(); g.moveTo(L, Y(st)); g.lineTo(w - Rr, Y(st)); g.stroke();
+    if (st % lab === 0) { g.fillStyle = muted; g.fillText(st > 0 ? `+${st}` : `${st}`, L - 5, Y(st)); }
+  }
+  g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillStyle = muted;
+  g.fillText("← toward light", L + 44, h - 7); g.fillText("away →", w - Rr - 22, h - 7);
+  for (let s = -0.5; s <= 1.5; s += 0.5) { g.fillText(`${s}`, X(s), h - 7 - 10 + 0); }
+  const plot = (pts, color, lw) => {
+    g.strokeStyle = color; g.lineWidth = lw; g.beginPath(); let pen = false;
+    for (const [s, st] of pts) { if (st < -50) { pen = false; continue; } if (!pen) { g.moveTo(X(s), Y(st)); pen = true; } else g.lineTo(X(s), Y(st)); }
+    g.stroke();
+  };
+  const E0 = lk ? E_LOCK : 0;
+  [1, 10, 1000].forEach(d => plot(profileCurve(lightModel(d), E0), "#55575d", 1));
+  plot(profileCurve(lightModel(), E0), acc, 2.2);
+  g.fillStyle = muted; g.textAlign = "left"; g.textBaseline = "middle";
+  [1, 10, 1000].forEach(d => {
+    const ref = profileCurve(lightModel(d), E0); const endSt = ref[ref.length - 1][1];
+    if (endSt > -50 && (lk || d === 1)) g.fillText(d === 1000 ? "1 km" : `${d} m`, w - Rr - 30, clamp(Y(endSt) + 9, T + 4, h - B - 4));
+  });
+}
+
+/* ---------- stop-map legend ---------- */
+const PAL = [[-5,[0.30,0.16,0.52]],[-4,[0.20,0.28,0.70]],[-3,[0.13,0.47,0.82]],[-2,[0.16,0.66,0.74]],[-1,[0.38,0.76,0.44]],[0,[0.80,0.80,0.76]],[1,[0.97,0.84,0.30]],[2,[0.97,0.55,0.20]],[3,[0.90,0.20,0.20]]];
+function palJS(s) {
+  s = clamp(s, -5, 3);
+  for (let i = 0; i < PAL.length - 1; i++) {
+    const [a, ca] = PAL[i], [b, cb] = PAL[i + 1];
+    if (s <= b) { const t = (s - a) / (b - a); return ca.map((v, k) => v + (cb[k] - v) * t); }
+  }
+  return PAL[PAL.length - 1][1];
+}
+function buildLegend() {
+  const el = $("legend");
+  // camera scene: compact strip under the preview, full chart when looking through the camera
+  const camFC = isCam() && S.falseCol;
+  const strip = $("cpLegend");
+  strip.classList.toggle("on", camFC && S.view !== "camera");
+  if (camFC) {
+    let h = "";
+    for (let s = -5; s <= 3; s++) {
+      const c = palJS(s).map(v => Math.round(v * 255));
+      h += `<span style="background:rgb(${c})">${s === 0 ? "0" : (s > 0 ? "+" : "−") + Math.abs(s)}</span>`;
+    }
+    h += `<span style="background:rgb(242,51,191)" title="clipped">clip</span>`;
+    strip.innerHTML = h;
+  }
+  const showChart = isCam() ? camFC && S.view === "camera" : S.mode === "map";
+  el.classList.toggle("on", showChart);
+  if (!showChart) return;
+  const rows = [];
+  for (let s = 3; s >= -5; s--) {
+    const c = palJS(s).map(v => Math.round(v * 255));
+    rows.push(`<div class="row"><span class="sw" style="background:rgb(${c})"></span>${s === 0 ? (isCam() ? "0 middle grey" : locked() ? "0 reading" : "0 meter") : (s > 0 ? "+" : "−") + Math.abs(s) + (s === -5 ? " or less" : "")}</div>`);
+  }
+  if (isCam()) rows.unshift(`<div class="row"><span class="sw" style="background:rgb(242,51,191)"></span>clipped</div>`);
+  rows.push(`<div class="row"><span class="sw" style="background:#17171a;border:1px solid #333"></span>${isCam() ? "black" : "shadow"}</div>`);
+  el.innerHTML = rows.join("");
+}
+
+/* ---------- captures ---------- */
+const caps = []; let capIdx = 0; let capturing = false;
+const work = document.createElement("canvas"), wctx = work.getContext("2d");
+function captionText() {
+  if (isCam()) {
+    const t = exposureTerms();
+    let mod = MODS[S.mod].name; if (S.pow) mod += ` ${fmtStops(S.pow)} EV`;
+    return `${camLabel()} · light ${fmtDist(S.dist)} · ${mod} · ${isFinite(t.total) ? fmtStops(t.total) + " EV" : "dark"}`;
+  }
+  const mode = { metered: "Metered", fixed: `Fixed ${S.pow ? fmtStops(S.pow) + " EV" : ""}`.trim(), map: `Stop map${locked() ? (S.pow ? " " + fmtStops(S.pow) + " EV" : " (locked)") : ""}` }[S.mode];
+  let mod = MODS[S.mod].name;
+  if (S.mod === "grid") mod = `${S.grid}° grid`;
+  if (S.mod === "fresnel") mod = `Fresnel ${Math.round(lightModel().half * 2)}°`;
+  const sz = S.size >= 100 ? `${(S.size / 100).toFixed(1)} m` : `${Math.round(S.size)} cm`;
+  return `${fmtDist(S.dist)} · ${S.el}° up · ${mod} ${sz} · ${mode}`;
+}
+function grab() {
+  capturing = true;
+  const sc = Math.min(Math.max(scaleFull, 1), 1.5);
+  let cam = draw(sc);
+  let W = cv.width, H = cv.height;
+  if (isCam()) {
+    // capture what the camera records, at 3:2
+    let cw = Math.min(W, 1500), ch = Math.round(cw / 1.5);
+    if (ch > H) { ch = H; cw = Math.round(ch * 1.5); }
+    const m = lightModel();
+    cam = photoCam(cw, ch);
+    renderView(0, 0, cw, ch, cam, viewOpts("photo", m), m);
+    work.width = cw; work.height = ch;
+    wctx.drawImage(cv, 0, H - ch, cw, ch, 0, 0, cw, ch);
+    W = cw; H = ch;
+  } else {
+    work.width = W; work.height = H;
+    wctx.drawImage(cv, 0, 0);
+  }
+  // burn the floor-marker readings into the frame
+  if (S.marks && !isCam()) {
+    const m = lightModel(); const Em = refE(m);
+    const lf = Math.max(10, Math.round(H / 60));
+    wctx.font = `600 ${lf}px "JetBrains Mono", monospace`; wctx.textAlign = "center"; wctx.textBaseline = "middle";
+    MARKERS.forEach((p, i) => {
+      const pr = project(cam, p); if (!pr || pr.x < 0 || pr.x > W || pr.y < 0 || pr.y > H) return;
+      const E = irr(p, m);
+      const t = i === S.meter && !locked() ? "meter" : E > 0 ? fmtStops(Math.log2(E / Em)) : "dark";
+      const tw = wctx.measureText(t).width + lf;
+      wctx.fillStyle = "rgba(18,19,21,0.75)"; wctx.fillRect(pr.x - tw / 2, pr.y - lf * 2.4, tw, lf * 1.5);
+      wctx.fillStyle = i === S.meter ? "#e7bd6a" : "#e9e6df"; wctx.fillText(t, pr.x, pr.y - lf * 1.65);
+    });
+    wctx.textAlign = "left";
+  }
+  // caption strip
+  const fs = Math.max(13, Math.round(H / 42));
+  wctx.font = `600 ${fs}px "JetBrains Mono", monospace`;
+  const txt = captionText();
+  const tw = wctx.measureText(txt).width;
+  wctx.fillStyle = "rgba(18,19,21,0.78)";
+  wctx.fillRect(fs * 0.8, H - fs * 2.6, tw + fs * 1.2, fs * 1.8);
+  wctx.fillStyle = "#e7bd6a"; wctx.textBaseline = "middle";
+  wctx.fillText(txt, fs * 1.4, H - fs * 1.7);
+  const url = work.toDataURL("image/jpeg", 0.88);
+  const tc = document.createElement("canvas"); const th = 92; tc.height = th; tc.width = Math.round(W / H * th);
+  tc.getContext("2d").drawImage(work, 0, 0, tc.width, th);
+  const snap = JSON.parse(JSON.stringify(S));
+  caps.push({ url, thumb: tc.toDataURL("image/jpeg", 0.7), label: txt, snap, lock: E_LOCK });
+  if (caps.length > 60) caps.shift();
+  capturing = false; dirty = true;
+  $("capCount").textContent = caps.length;
+}
+function flash() { const f = $("flash"); f.classList.add("go"); requestAnimationFrame(() => requestAnimationFrame(() => f.classList.remove("go"))); }
+$("bCap").addEventListener("click", () => { grab(); flash(); });
+document.addEventListener("keydown", e => {
+  if (e.target.closest && e.target.closest("input")) return;
+  if ($("viewer").classList.contains("on")) {
+    if (e.key === "ArrowRight") { showCap(capIdx + 1); e.preventDefault(); }
+    if (e.key === "ArrowLeft") { showCap(capIdx - 1); e.preventDefault(); }
+    if (e.key === "Escape") closeViewer();
+    return;
+  }
+  if (e.key === "c" || e.key === "C") { grab(); flash(); }
+  if (ARROWS.has(e.key) && !e.metaKey && !e.ctrlKey) {
+    e.preventDefault();
+    mods.shift = e.shiftKey; mods.alt = e.altKey;
+    if (!walkKeys.size) { walkT = performance.now(); walkKeys.add(e.key); requestAnimationFrame(walk); }
+    else walkKeys.add(e.key);
+  }
+});
+/* Keyboard camera:
+   arrows            walk forwards/back, step left/right
+   Shift + arrows    look: pan left/right, tilt up/down (camera stays where it is)
+   Alt/⌥ + ↑ ↓       raise/lower the camera (← → still step sideways)
+   orbit, zoom and the view buttons work as before */
+const ARROWS = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+const walkKeys = new Set(); let walkT = 0;
+const mods = { shift: false, alt: false };
+document.addEventListener("keyup", e => { walkKeys.delete(e.key); mods.shift = e.shiftKey; mods.alt = e.altKey; });
+document.addEventListener("keydown", e => { mods.shift = e.shiftKey; mods.alt = e.altKey; }, true);
+window.addEventListener("blur", () => walkKeys.clear());
+function walk(t) {
+  if (!walkKeys.size) return;
+  const dt = Math.min(0.05, (t - walkT) / 1000); walkT = t;
+  let f = 0, r = 0;
+  if (walkKeys.has("ArrowUp")) f += 1;
+  if (walkKeys.has("ArrowDown")) f -= 1;
+  if (walkKeys.has("ArrowRight")) r += 1;
+  if (walkKeys.has("ArrowLeft")) r -= 1;
+  if (mods.shift) {
+    // look around from a fixed camera position
+    const cp = camera(1, 1).cp;
+    S.camYaw -= r * 1.1 * dt;
+    S.camPitch = clamp(S.camPitch - f * 0.8 * dt, -1.3, 1.5);
+    const b = baseTarget();
+    const tgt = [cp[0] - S.camD * Math.sin(S.camYaw) * Math.cos(S.camPitch),
+                 cp[1] - S.camD * Math.sin(S.camPitch),
+                 cp[2] - S.camD * Math.cos(S.camYaw) * Math.cos(S.camPitch)];
+    S.camX = tgt[0] - b[0]; S.camY = tgt[1] - b[1]; S.camZ = tgt[2] - b[2];
+  } else {
+    const sp = 0.45 * Math.max(S.camD, 1) * dt;              // farther out = bigger strides
+    const fx = -Math.sin(S.camYaw), fz = -Math.cos(S.camYaw);   // forward along the floor
+    const rx = Math.cos(S.camYaw), rz = -Math.sin(S.camYaw);    // to the right
+    if (mods.alt) {
+      const cpY = camera(1, 1).cp[1];
+      S.camY += clamp(f * sp * 0.6, 0.02 - cpY, 60 - cpY);      // crane up/down, never through the floor
+      f = 0;
+    }
+    S.camX = clamp(S.camX + (fx * f + rx * r) * sp, -60, 60);
+    S.camZ = clamp(S.camZ + (fz * f + rz * r) * sp, -60, 60);
+  }
+  touch(); drawPlan();
+  requestAnimationFrame(walk);
+}
+const nextFrame = () => new Promise(r => requestAnimationFrame(() => r()));
+$("bSweep").addEventListener("click", async () => {
+  const btn = $("bSweep"); if (btn.disabled) return;
+  btn.disabled = true; $("bCap").disabled = true;
+  const keep = S.dist;
+  const ds = isCam() ? [0.25, 0.35, 0.5, 0.71, 1, 1.41, 2, 2.83, 4, 5.66, 8, 11.3, 16] : [0.1, 0.2, 0.35, 0.5, 0.7, 1, 1.4, 2, 3, 5, 8, 15, 30, 60, 150, 400, 1000];
+  for (let i = 0; i < ds.length; i++) {
+    btn.textContent = `Sweeping ${i + 1}/${ds.length}`;
+    S.dist = ds[i]; syncControls();
+    await nextFrame();
+    grab();
+    await nextFrame();
+  }
+  S.dist = keep; syncControls(); touch();
+  btn.textContent = "Sweep distance"; btn.disabled = false; $("bCap").disabled = false;
+  openViewer(caps.length - ds.length);
+});
+
+const viewer = $("viewer"), vImg = $("vImg"), vScrub = $("vScrub");
+function renderThumbs() {
+  const box = $("vThumbs"); box.innerHTML = "";
+  caps.forEach((c, i) => {
+    const b = document.createElement("button"); b.type = "button"; b.title = c.label;
+    b.innerHTML = `<img alt="${c.label}" src="${c.thumb}">`;
+    b.addEventListener("click", () => showCap(i));
+    box.appendChild(b);
+  });
+}
+function showCap(i) {
+  const n = caps.length;
+  $("vEmpty").style.display = n ? "none" : "";
+  vImg.style.display = n ? "" : "none";
+  ["vApply", "vDel", "vClear", "vPlay"].forEach(id => $(id).disabled = !n);
+  vScrub.max = Math.max(0, n - 1);
+  if (!n) { $("vCap").textContent = ""; $("vPos").textContent = "0 / 0"; return; }
+  capIdx = (i + n) % n;
+  vImg.src = caps[capIdx].url; vImg.alt = caps[capIdx].label;
+  $("vCap").textContent = caps[capIdx].label;
+  vScrub.value = capIdx;
+  $("vPos").textContent = `${capIdx + 1} / ${n}`;
+  [...$("vThumbs").children].forEach((b, k) => b.classList.toggle("on", k === capIdx));
+  const t = $("vThumbs").children[capIdx]; if (t && t.scrollIntoView) t.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
+function openViewer(i = caps.length - 1) { viewer.classList.add("on"); renderThumbs(); showCap(Math.max(0, i)); }
+function closeViewer() { viewer.classList.remove("on"); stopPlay(); }
+$("bView").addEventListener("click", () => openViewer());
+$("vClose").addEventListener("click", closeViewer);
+vScrub.addEventListener("input", () => showCap(+vScrub.value));
+let playT = 0;
+function stopPlay() { clearInterval(playT); playT = 0; $("vPlay").textContent = "Play"; }
+$("vPlay").addEventListener("click", () => {
+  if (playT) return stopPlay();
+  $("vPlay").textContent = "Pause";
+  playT = setInterval(() => showCap(capIdx + 1), 450);
+});
+$("vApply").addEventListener("click", () => {
+  const c = caps[capIdx]; if (!c) return;
+  const keepCam = { view: S.view };
+  Object.assign(S, c.snap); E_LOCK = c.lock; void keepCam;
+  closeViewer(); syncControls(); touch();
+});
+$("vDel").addEventListener("click", () => { caps.splice(capIdx, 1); $("capCount").textContent = caps.length; renderThumbs(); showCap(Math.min(capIdx, caps.length - 1)); });
+$("vClear").addEventListener("click", () => { caps.length = 0; $("capCount").textContent = 0; renderThumbs(); showCap(0); stopPlay(); });
+
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { drawPlan(); drawProfile(); });
+syncControls();
+window.__S = S;
+  /* fth-adapter */
+  if (window.fthStore) {
+    const keys = Object.keys(S).filter(k => typeof S[k] !== 'object' || S[k] === null);
+    fthStore.get('settings').then(o => {
+      if (o) { for (const k of keys) if (k in o && typeof o[k] === typeof S[k]) S[k] = o[k]; syncControls(); touch(); if (typeof drawPlan === 'function') drawPlan(); if (typeof drawProfile === 'function') drawProfile(); }
+      fthAutosave(() => { const o2 = {}; for (const k of keys) o2[k] = S[k]; fthStore.set('settings', o2); }, 800);
+    });
+  } window.__redraw = () => { dirty = true; }; window.__ok = true;
+})();
+</script>
+</body>
+</html>

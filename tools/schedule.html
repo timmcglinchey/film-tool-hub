@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Production Schedule Builder</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font:14px/1.4 Arial,Helvetica,sans-serif;color:#000;background:#fff}
+.app{display:grid;grid-template-columns:minmax(420px,42%) 1fr;min-height:100vh}
+.ed{padding:18px;border-right:2px solid #000;overflow:auto;max-height:100vh}
+.pvw{padding:14px;background:#e9edf0;overflow:auto;max-height:100vh}
+h1{font-size:20px;margin:0 0 4px}h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid #000;padding-bottom:3px;margin:22px 0 8px;display:flex;align-items:center;gap:4px}
+.sub{color:#555;margin:0 0 10px}.small{font-size:12px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}.g .w{grid-column:1/-1}
+label{font-weight:700;font-size:12px;display:block}input,select,textarea{width:100%;font:inherit;padding:5px 6px;border:1px solid #000;border-radius:0;background:#fff}
+textarea{min-height:56px}input[type=checkbox]{width:auto}
+.i{display:inline-block;width:15px;height:15px;line-height:13px;text-align:center;border:1.5px solid #1a6fd4;color:#1a6fd4;border-radius:50%;font-size:10px;font-weight:700;cursor:pointer;margin-left:4px;user-select:none;text-transform:none;letter-spacing:0}
+.tip{display:none;background:#eaf2fd;border-left:3px solid #1a6fd4;padding:5px 8px;font-size:12px;margin:3px 0;font-weight:400}.tip.on{display:block}
+button{font:inherit;border:1px solid #000;background:#fff;padding:6px 12px;cursor:pointer}button:hover{background:#000;color:#fff}
+button.p{background:#000;color:#fff}.bar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.bar.s button{padding:4px 9px;font-size:13px}
+.x{padding:2px 8px}.warn{background:#fff6d6;border:1px solid #c79a00;padding:8px 10px;margin:8px 0;font-size:12px}.warn b{display:block}
+.tw{overflow-x:auto}table.t{border-collapse:collapse;min-width:100%}.t td,.t th{padding:2px}.t th{font-size:11px;text-align:left;white-space:nowrap}
+/* key in the form */
+.fkey{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 2px}.fkey span{font-size:11px;padding:3px 7px;border:1px solid #0002}
+/* day cards in the form */
+.day{border:2px solid #000;margin:14px 0;background:#fafafa}
+.dh{background:#404e5c;color:#fff;padding:6px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.dh b{font-size:14px}.dh .dt{font-size:12px;opacity:.85}.dh button{background:transparent;color:#fff;border-color:#fff;padding:2px 8px;font-size:12px}.dh button:hover{background:#fff;color:#000}
+.db{padding:8px}.dg{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px 8px;margin-bottom:8px}
+.st{border:1px solid #000;border-left:9px solid #ccc;background:#fff;padding:6px;margin:6px 0;display:grid;grid-template-columns:1fr auto;gap:6px}
+.st .f{display:grid;gap:5px}.st .r{display:grid;gap:5px}
+.r1{grid-template-columns:58px 70px 1fr 90px 46px}.r2{grid-template-columns:1fr 60px 1fr 58px 128px}
+.bn{grid-template-columns:1fr 128px 128px 46px}
+.st label{font-size:10px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st input,.st select{padding:3px 5px;font-size:13px}
+.stt{font-weight:400;color:#1a6fd4;text-transform:none;letter-spacing:0}
+.dur{display:flex;align-items:center;gap:3px;font-size:12px}.dur input{width:46px}.dur select{width:52px;padding:3px 2px}
+.sw{width:100%;height:27px;border:1px solid #000;padding:0;cursor:pointer;position:relative}.sw:hover{outline:2px solid #1a6fd4;background:inherit}
+.sw.auto::after{content:"A";position:absolute;right:2px;bottom:0;font:700 9px Arial;opacity:.55}
+.ctl{display:flex;flex-direction:column;gap:3px}.ctl button{padding:1px 7px;font-size:12px;line-height:1.3}
+.df{display:flex;gap:3px}.df input{flex:1;min-width:0}.inh{color:#8a8f94!important;background:#f3f5f7!important;font-style:italic}.rs{padding:0 7px;font-size:13px}
+table.ds td{padding:2px}table.ds td:first-child{font-weight:700;white-space:nowrap;padding-right:8px}table.ds tr.cur td:first-child{color:#1a6fd4}
+.empty{font-size:12px;color:#666;font-style:italic;padding:4px 0}
+/* colour picker */
+.cp{position:fixed;z-index:50;background:#fff;border:2px solid #000;box-shadow:0 6px 20px #0003;padding:10px;width:262px;font-size:12px;max-height:calc(100vh - 12px);overflow:auto}
+.cp h4{margin:6px 0 4px;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#555}.cp h4:first-child{margin-top:0}
+.cp .row{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+.cp .c{height:30px;border:1px solid #0003;padding:0;cursor:pointer;position:relative}.cp .c:hover{outline:2px solid #1a6fd4;background:inherit}
+.cp .c.on{outline:3px solid #000;outline-offset:1px}
+.cp .auto{display:block;width:100%;margin-bottom:4px;text-align:left;font-size:12px;padding:5px 8px}
+.cp .more{width:100%;margin-top:8px;font-size:12px;padding:4px}
+.cp .sl{display:none;margin-top:8px}.cp .sl.on{display:block}
+.cp .sl label{font-size:11px;font-weight:700;display:flex;justify-content:space-between;margin-top:6px}
+.cp input[type=range]{-webkit-appearance:none;appearance:none;height:12px;border:1px solid #0004;padding:0;margin:3px 0}
+.cp input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:18px;background:#fff;border:2px solid #000;cursor:pointer}
+.cp input[type=range]::-moz-range-thumb{width:10px;height:16px;background:#fff;border:2px solid #000;border-radius:0;cursor:pointer}
+.cp .hx{display:flex;gap:6px;align-items:center;margin-top:8px}.cp .hx div{width:40px;height:26px;border:1px solid #0004}.cp .hx input{flex:1}
+/* ---------- preview (StudioBinder-inspired) ---------- */
+#pv{background:#fff;font:9.5px/1.35 "Open Sans",Arial,sans-serif;color:#4b5a6b;width:760px;margin:0 auto;box-shadow:0 1px 8px #0003}
+#pv .tt{background:#dce2e6;font:600 17px "Quicksand",Arial,sans-serif;color:#4b5a6b;padding:10px 12px}
+#pv .tt small{font:600 10px "Open Sans",Arial;letter-spacing:.12em;display:block;color:#6c7780;margin-bottom:2px}
+#pv .meta{display:flex;flex-wrap:wrap;gap:4px 18px;padding:7px 12px;background:#f2f5f7;color:#6c7780;border-bottom:1px solid #dce2e6}
+#pv .meta b{color:#4b5a6b;font-weight:600}
+#pv table{border-collapse:collapse;width:100%}
+#pv th{background:#f2f5f7;color:#6c7780;font-size:7.5px;font-weight:700;letter-spacing:.05em;text-align:left;padding:5px 6px;border-bottom:1px solid #dce2e6}
+#pv td{padding:5px 6px;vertical-align:middle;border-bottom:1px solid #fff}
+#pv tr{break-inside:avoid;page-break-inside:avoid}
+#pv .c{text-align:center}#pv .num{text-align:right;white-space:nowrap}
+#pv .hd b{display:block;font-weight:700;text-transform:uppercase}#pv .hd i{font-style:normal;opacity:.9}
+#pv .stc{font-weight:700;white-space:nowrap;text-align:center;border-left:1px solid rgba(255,255,255,.55)}
+#pv .lt td{border-bottom-color:#eef1f3}#pv .lt .stc{border-left-color:#e3e8ec}
+#pv .ban td{text-align:center;letter-spacing:.06em;font-weight:600}
+#pv .dayh td{background:#ebeff2;color:#4b5a6b;font-weight:700;font-size:8.5px;letter-spacing:.04em;padding:5px 6px;border-top:6px solid #fff}
+#pv .dayh span{font-weight:400;color:#6c7780;margin-left:10px}#pv .dayh em{font-style:normal;font-weight:700;background:#fff;border:1px solid #dce2e6;padding:1px 5px;margin-left:8px;color:#4b5a6b}
+#pv .eod td{background:#404e5c;color:#ebeff2;font-size:10.5px;padding:7px 6px}
+#pv .eod .lab{font-size:8px;opacity:.75;display:block;letter-spacing:.06em}
+#pv .ph td{color:#a3abb3;font-style:italic;text-align:center;padding:10px;background:#fff}
+#pv .sec{padding:12px}#pv h3{font:600 11px "Quicksand",Arial;color:#4b5a6b;margin:0 0 6px;letter-spacing:.04em}
+#pv .leg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;padding:12px;background:#fff;break-inside:avoid}
+#pv .leg table td{border-bottom:1px solid #eef1f3;padding:3px 5px;color:#6c7780}
+#pv .leg .key td{padding:4px 6px;color:inherit}
+#pv .dood th,#pv .dood td{text-align:center;border:1px solid #eef1f3;padding:3px 4px}#pv .dood td:first-child,#pv .dood th:first-child{text-align:left}
+#pv .dood .S,#pv .dood .SW{background:#dff0e4}#pv .dood .F,#pv .dood .WF{background:#fbe3e0}#pv .dood .SWF{background:#e6e0f5}#pv .dood .H{background:#f2f5f7;color:#a3abb3}#pv .dood .W{background:#fff8d9}
+#pv .notes{padding:10px 12px;border-top:1px solid #dce2e6;color:#4b5a6b;white-space:pre-wrap}
+#pv .foot{display:flex;justify-content:space-between;background:#f2f5f7;color:#a3abb3;padding:6px 12px;font-size:8px}
+@media screen and (max-width:900px){.app{grid-template-columns:1fr}.ed,.pvw{max-height:none}.r2{grid-template-columns:1fr 1fr}.r1{grid-template-columns:58px 70px 1fr}.bn{grid-template-columns:1fr 1fr}}
+@media print{@page{size:A4;margin:8mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}.ed,.cp{display:none!important}.app{display:block}.pvw{padding:0;background:#fff;overflow:visible;max-height:none}#pv{box-shadow:none;width:auto;zoom:1!important;font-size:9px}#pv thead{display:table-header-group}}
+
+/* ═════ Film Tool Hub kit: builder layout (editor left, printed page right) ═════ */
+html,body{height:100%}
+body{margin:0;font:14px/1.45 var(--fth-display);color:var(--fth-text);background:var(--fth-bg);display:flex;flex-direction:column}
+.app{flex:1;min-height:0;min-height:0}
+.ed{padding:6px 22px 48px;border-right:1px solid var(--fth-line);max-height:none;overflow:auto;background:var(--fth-bg)}
+.pvw{padding:28px 24px 40px;max-height:none;overflow:auto;background:var(--fth-paper-backdrop)}
+.ed h1{display:none}
+.intro,.ed>.sub:first-of-type{color:var(--fth-muted);margin:16px 0 4px;font-size:13.5px;max-width:64ch}
+.sub{color:var(--fth-muted)}
+.status{font:500 11px var(--fth-mono);letter-spacing:.04em;color:var(--fth-faint);white-space:nowrap}
+:where(.ed) h2{display:flex;align-items:center;gap:10px;margin:26px 0 12px;padding:0;border:0;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em;color:var(--fth-text)}
+:where(.ed) h2::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+:where(.ed) h3{font:600 12px/1.3 var(--fth-display);color:var(--fth-muted);margin:14px 0 6px}
+:where(.ed) label{font:500 10.5px/1.3 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted);margin-bottom:5px}
+:where(.ed) label.ck{font:400 13.5px/1.4 var(--fth-display);letter-spacing:0;text-transform:none;color:var(--fth-text)}
+:where(.ed,.cp) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),select,textarea){background:var(--fth-bg2);color:var(--fth-text);border:1px solid var(--fth-line2);border-radius:8px;padding:7px 10px;font:14px/1.35 var(--fth-display);outline:none;transition:border-color .15s,box-shadow .15s}
+:where(.ed,.cp) :is(input,select,textarea):hover{border-color:var(--fth-line3)}
+:where(.ed,.cp) :is(input,select,textarea):focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+:where(.ed) textarea{min-height:64px;resize:vertical}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-accent)}
+:where(.ed,.cp) button{height:auto;min-height:30px;padding:6px 12px;border-radius:8px;border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);font:600 13px/1.1 var(--fth-display);cursor:pointer;transition:background-color .15s,border-color .15s}
+:where(.ed,.cp) button:hover:not(:disabled){background:var(--fth-surface2);border-color:var(--fth-line3);color:var(--fth-text)}
+:where(.ed,.cp) button.p{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+:where(.ed,.cp) button.p:hover:not(:disabled){background:color-mix(in srgb,var(--fth-accent) 82%,#fff);border-color:color-mix(in srgb,var(--fth-accent) 82%,#fff);color:var(--fth-on-accent)}
+:where(.ed,.cp) button:disabled{opacity:.45;cursor:not-allowed}
+:where(.ed) button.x,:where(.ed) .x{background:transparent;border-color:transparent;color:var(--fth-faint);padding:4px 8px}
+:where(.ed) button.x:hover{color:var(--fth-bad)!important;background:var(--fth-surface2)!important}
+.i{display:inline-grid!important;place-items:center;width:16px!important;height:16px!important;line-height:1!important;border-radius:50%;border:1px solid var(--fth-line3)!important;color:var(--fth-muted)!important;font:600 10px/1 var(--fth-mono)!important;text-transform:none!important;letter-spacing:0!important;cursor:pointer;margin-left:6px;vertical-align:1px;transition:.15s}
+.i:hover{border-color:var(--fth-accent)!important;color:var(--fth-accent-ink)!important;background:var(--fth-accent-soft)}
+.tip{background:var(--fth-accent-soft)!important;border-left:2px solid var(--fth-accent)!important;color:var(--fth-text)!important;padding:7px 10px!important;border-radius:0 7px 7px 0;font:400 12.5px/1.45 var(--fth-display)!important;letter-spacing:0!important;text-transform:none!important;margin:2px 0 8px!important}
+.warn{background:color-mix(in srgb,var(--fth-warn) 10%,var(--fth-surface))!important;border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent)!important;color:var(--fth-text)!important;border-radius:10px;padding:10px 12px!important;font-size:13px!important;margin:14px 0 0!important}
+.warn b{color:var(--fth-warn);margin-bottom:3px}
+.warn.ok{background:var(--fth-accent-soft)!important;border-color:var(--fth-accent-line)!important}
+.warn.ok b{color:var(--fth-accent-ink)}
+.bar{margin:10px 0 0}
+.tw{border:1px solid var(--fth-line);border-radius:11px;background:var(--fth-bg2)}
+:where(.ed) table.t th{font:500 10px/1.2 var(--fth-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--fth-muted);padding:9px 6px 7px;border-bottom:1px solid var(--fth-line);background:var(--fth-surface)}
+:where(.ed) table.t td{padding:3px;border-bottom:1px solid var(--fth-line)}
+:where(.ed) table.t tr:last-child td{border-bottom:0}
+:where(.ed) table.t :is(input,select){padding:5px 7px;font-size:13px;border-radius:6px;background:var(--fth-surface);border-color:var(--fth-line)}
+.pvw #pv{box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55)}
+.pvlabel{margin:0 auto 10px;display:flex;justify-content:space-between;gap:10px}
+@media(max-width:900px){html,body{height:auto}body{display:block}.ed{border-right:0;border-bottom:1px solid var(--fth-line)}.ed,.pvw{overflow:visible}}
+@media print{html,body{height:auto}body{display:block;background:#fff}.pvw{background:#fff!important;padding:0}.pvw #pv{box-shadow:none}.pvlabel{display:none}}
+:where(.ed) label:has(input[type=checkbox]){font:400 13.5px/1.4 var(--fth-display);letter-spacing:0;text-transform:none;color:var(--fth-text)}
+
+/* schedule-specific, on the kit */
+.fkey span{border-color:var(--fth-line2)!important;border-radius:5px}
+.day{border:1px solid var(--fth-line)!important;border-radius:var(--fth-radius);background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%)!important;overflow:hidden;margin:16px 0!important}
+.dh{background:var(--fth-surface2)!important;color:var(--fth-text)!important;border-bottom:1px solid var(--fth-line);padding:9px 12px!important}
+.dh b{font-weight:800;font-variation-settings:"wdth" 74;text-transform:uppercase;letter-spacing:.03em;font-size:15px!important}
+.dh .dt{font:500 11px var(--fth-mono)!important;color:var(--fth-muted);opacity:1!important}
+.dh button{background:transparent!important;color:var(--fth-muted)!important;border:1px solid var(--fth-line2)!important;min-height:26px;padding:3px 9px!important;font-size:12px!important}
+.dh button:hover{color:var(--fth-text)!important;border-color:var(--fth-line3)!important}
+.db{padding:10px 12px!important}
+.st{background:var(--fth-surface)!important;border-top:1px solid var(--fth-line)!important;border-right:1px solid var(--fth-line)!important;border-bottom:1px solid var(--fth-line)!important;border-radius:8px;padding:8px!important}
+.st label{font:500 9.5px/1.2 var(--fth-mono)!important;letter-spacing:.07em!important;color:var(--fth-muted)!important}
+.st :is(input,select){padding:4px 7px!important;font-size:13px!important;border-radius:6px!important}
+.stt{color:var(--fth-accent-ink)!important}
+.sw{border:1px solid var(--fth-line3)!important;border-radius:6px;min-height:0!important;padding:0!important}
+.sw:hover{outline:2px solid var(--fth-accent)!important}
+.ctl button{min-height:0!important;padding:1px 7px!important;font-size:12px!important}
+.inh{color:var(--fth-faint)!important;background:var(--fth-surface2)!important;font-style:italic}
+.rs{min-height:0!important;padding:0 8px!important}
+table.ds tr.cur td:first-child{color:var(--fth-accent-ink)!important}
+.empty{color:var(--fth-muted)!important}
+.cp{background:var(--fth-surface2)!important;border:1px solid var(--fth-line2)!important;border-radius:12px;box-shadow:var(--fth-shadow)!important;color:var(--fth-text)}
+.cp h4{color:var(--fth-muted)!important;font:500 10px var(--fth-mono)!important;letter-spacing:.08em!important}
+.cp .c{border-radius:5px;border:1px solid rgba(0,0,0,.2)!important;min-height:0!important}
+.cp .c.on{outline:2px solid var(--fth-text)!important}
+.cp .sl label{font:500 10.5px var(--fth-mono)!important;color:var(--fth-muted)}
+.pvlabel{width:760px;max-width:100%}
+</style></head><body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>02 · Planning &amp; Scheduling</span><h1 class="fth-title">Production Schedule Builder</h1></div>
+  <div class="fth-actions">
+    <span class="status" id="saveState"></span>
+    <button class="fth-btn ghost" onclick="loadEx()">Load example</button>
+    <button class="fth-btn ghost" onclick="clearAll()">Start again</button>
+    <span class="fth-vsep"></span>
+    <button class="fth-btn" onclick="xl()">Download Excel</button>
+    <button class="fth-btn primary" onclick="print()">Save as PDF</button>
+  </div>
+</header>
+<div class="app"><div class="ed" id="ed"></div><div class="pvw"><div class="pvlabel" id="pvlabel"><span class="fth-label">Preview</span></div><div id="pv"></div></div></div>
+<div class="cp" id="cp" hidden></div>
+
+<script>
+/* Film Tool Hub: autosave in this browser (replaces "download a copy" saving) */
+(function(){
+  const KEY='fth-schedule-v1';var savedAt=0,t;
+  window.fthLoad=function(){try{if(document.getElementById("sv").textContent.trim())return null;const o=JSON.parse(localStorage.getItem(KEY)||"null");if(o){savedAt=o.at||0;return o.S}}catch(e){}return null};
+  window.fthShow=function(){const el=document.getElementById("saveState");if(el)el.textContent=savedAt?"Saved in this browser · "+new Date(savedAt).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""};
+  window.fthPersist=function(){clearTimeout(t);t=setTimeout(function(){try{savedAt=Date.now();localStorage.setItem(KEY,JSON.stringify({S:S,at:savedAt}));fthShow()}catch(e){const el=document.getElementById("saveState");if(el)el.textContent="Couldn’t save in this browser"}},400)};
+})();
+</script>
+<script id="sv" type="application/json"></script>
+<script>
+/* ---------- colours ---------- */
+const KEY={id:{n:"INT + Day",bg:"#ffffff",fg:"#6c7780"},ed:{n:"EXT + Day",bg:"#fff8d9",fg:"#6c7780"},in:{n:"INT + Night",bg:"#709aba",fg:"#ffffff"},en:{n:"EXT + Night",bg:"#65a5a8",fg:"#ffffff"}};
+const SWATCH=[["Taupe","#7a6c6c"],["Slate","#404e5c"],["Terracotta","#b5654a"],["Sage","#6f8f6a"],["Mustard","#c99a2e"],["Plum","#7e6491"]];
+const BAN_DEF="#7a6c6c";
+const hex2rgb=h=>{h=h.replace("#","");return[0,2,4].map(i=>parseInt(h.substr(i,2),16))};
+const lum=h=>{const c=hex2rgb(h).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*c[0]+.7152*c[1]+.0722*c[2]};
+const fgFor=h=>lum(h)>.45?"#4b5a6b":"#ffffff";
+function rgb2hsl([r,g,b]){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h=0,s=0;const l=(mx+mn)/2;if(mx!=mn){const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);h=mx==r?(g-b)/d+(g<b?6:0):mx==g?(b-r)/d+2:(r-g)/d+4;h*=60}return[Math.round(h),Math.round(s*100),Math.round(l*100)]}
+function hsl2hex(h,s,l){s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return"#"+[0,8,4].map(n=>Math.round(f(n)*255).toString(16).padStart(2,"0")).join("")}
+const okHex=h=>/^#[0-9a-f]{6}$/i.test(h||"");
+function colOf(r){if(r.t=="b"){const bg=okHex(r.col)?r.col:BAN_DEF;return{bg,fg:fgFor(bg),hd:fgFor(bg)}}
+const c=r.col;let k=KEY[c]||(!okHex(c)?KEY[kind(r)]:null);if(k)return{bg:k.bg,fg:k.fg,hd:k.fg=="#ffffff"?"#ffffff":"#4b5a6b"};const f=fgFor(c);return{bg:c,fg:f,hd:f}}
+const borderCol=b=>b.toLowerCase()=="#ffffff"?"#d5d9dd":b;
+
+/* ---------- state ---------- */
+const blankScene=()=>({t:"s",sc:"",ie:"INT",hd:"",desc:"",dn:"DAY",cast:"",loc:"",pg:"",h:"",m:"0",col:""});
+const banner=(txt,bk,h,m,col)=>({t:"b",txt,bk,h:String(h),m:String(m),col:col||BAN_DEF});
+const blank=()=>({title:"",company:"",director:"",producer:"",ad:"",start:"",skipWk:false,dayHrs:11,notes:"",cast:[{n:"1",name:"",ch:""}],locs:[{name:"",addr:""}],days:[{date:"",call:"",max:"",items:[blankScene()]}]});
+let S=blank();
+try{const t=document.getElementById("sv").textContent.trim();if(t)S=JSON.parse(t)}catch(e){}
+{const l=fthLoad();if(l)S=l}
+/* upgrade work saved by the first version (times typed as 1:30 / 1.5) */
+function mig(){S.days.forEach(d=>d.items.forEach(r=>{if("hrs" in r){const x=oldHrs(r.hrs);const t=Math.round((isNaN(x)?0:x)*60);r.h=r.hrs?String(Math.floor(t/60)):"";r.m=String(Math.round(t%60/5)*5%60);delete r.hrs}
+if(r.t=="b"){if(!r.bk)r.bk=/MEAL|LUNCH|BREAK|DINNER|BREAKFAST|TEA/i.test(r.txt)?"break":/MOVE/i.test(r.txt)?"move":"other";if(!r.col)r.col=BAN_DEF}if(r.t=="s"&&r.col==null)r.col=""}));if(S.dayHrs==null)S.dayHrs=11;if(S.days[0].date){if(!S.start)S.start=S.days[0].date;S.days[0].date=""}S.days.forEach(d=>{if(d.max==null)d.max=""})}
+function oldHrs(v){const s=String(v||"").trim();if(!s)return 0;let m=s.match(/^(\d+):(\d{1,2})$/);if(m)return +m[1]+m[2]/60;m=s.match(/^(\d*\.?\d+)\s*h?$/i);return m?+m[1]:NaN}
+mig();
+const sc=(sc,ie,hd,desc,dn,cast,loc,pg,h,m)=>({t:"s",sc,ie,hd,desc,dn,cast,loc,pg,h:String(h),m:String(m),col:""});
+const EXAMPLE={title:"The Last Ferry",company:"E3 Studios, Belfast Met",director:"Aoife Byrne",producer:"Ciarán Doyle",ad:"Mark Lennon",start:"2026-11-14",skipWk:false,dayHrs:11,
+notes:"Ferry terminal access is via the staff gate on Corry Rd. Hi-vis required on the quayside at all times.",
+cast:[{n:"1",name:"Niamh Kelly",ch:"Rose"},{n:"2",name:"Tom Harper",ch:"Danny"},{n:"3",name:"Grace Allen",ch:"Ticket Clerk"}],
+locs:[{name:"FERRY TERMINAL",addr:"Corry Rd, Belfast BT3 9AW"},{name:"ROSE'S FLAT",addr:"12 Ormeau Ave, Belfast"}],
+days:[{date:"",call:"09:30",items:[
+sc("1","EXT","Quayside","Rose arrives as the last ferry is boarding.","DAY","1","FERRY TERMINAL","1 2/8",1,30),
+sc("2","INT","Terminal - ticket desk","Rose argues with the clerk about her ticket.","DAY","1,3","FERRY TERMINAL","2 3/8",2,30),
+banner("// LUNCH //","break",1,0,BAN_DEF),
+sc("4","EXT","Quayside","Danny watches the ferry leave without her.","NIGHT","1,2","FERRY TERMINAL","1 4/8",2,0)]},
+{date:"",call:"09:00",items:[
+sc("5","INT","Rose's flat - kitchen","Rose packs a bag in silence.","DAY","1","ROSE'S FLAT","6/8",1,30),
+banner("// COMPANY MOVE TO HALLWAY SET //","move",0,30,"#404e5c"),
+sc("3","INT","Rose's flat - hallway","Danny knocks; Rose doesn't answer.","NIGHT","1,2","ROSE'S FLAT","1",2,0),
+banner("// MEAL BREAK //","break",1,0,BAN_DEF),
+sc("6","INT","Rose's flat - living room","Rose and Danny finally talk.","NIGHT","1,2","ROSE'S FLAT","3 1/8",3,0)]}]};
+
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const INFO={
+title:"The name of your production. It appears as the heading of the schedule.",
+company:"The studio, college or production company, e.g. 'E3 Studios, Belfast Met'.",
+start:"The first shoot day. Each day after that is dated automatically (the next calendar day), unless you type a specific date on a day.",
+skipWk:"Tick this if you don't shoot at weekends; automatic dates will jump from Friday to Monday.",
+daysets:"Day 1 sets the defaults. Every other day copies Day 1’s call time and max day length, and its date follows on from the day before (skipping weekends if ticked). Copied values show in grey italics. Type over any of them to change just that day; click ↺ to go back to the default. These are the same fields as at the top of each day in Shoot days, so you can edit them in either place.",
+dayHrs:"Your own cap on how long a day can run, call to wrap, in hours. You'll get a warning if a day goes over it. The working-day break rules below still apply whatever you set here.",
+wd:"Each day is classed by its length (call time to estimated wrap, breaks included):\n• up to 10 hours = Continuous Working Day (CWD): at least 20 min break\n• up to 10½ hours = Semi-Continuous Working Day (SCWD): at least 30 min break\n• up to 11 hours = Standard Working Day (SWD): at least 60 min break\nOnly banners with the type 'Break / meal' count towards break time.",
+cast:"Give each actor a number. In the schedule you only type the numbers (e.g. 1,2) in the Cast box, which keeps the strips short. The legend and 'Day out of days' are built from this list.",
+locs:"Your shooting locations. These become a drop-down in each scene, and the addresses are listed on the schedule.",
+days:"Each box is one shoot day. Add scenes in the order you'll shoot them, not script order. Use ↑ ↓ to move a strip; moving past the top or bottom of a day pushes it into the day before or after.",
+strip:"Sc # is the script scene number. Pages is the scene length in eighths, e.g. 1 3/8. Duration is how long the scene will take to shoot, in hours and minutes. Once the day has a call time, each strip shows the time it should start.",
+colour:"Strip colours follow the key automatically from INT/EXT and DAY/NIGHT (the swatch shows a small 'A' when it's automatic). Click a scene's swatch to pick a key colour yourself, choose one of the extra colours, or use 'More colours' to set any hue.",
+call:"Call time is when the crew arrives. The first strip starts at call time, and every strip after it starts when the one before finishes. The wrap time is worked out the same way.",
+banners:"Banners are non-shooting blocks: meal breaks, company moves between locations, or anything else that takes time. Set the type to 'Break / meal' for breaks so they count towards the working-day break check. Click the swatch to change a banner's colour.",
+notes:"Anything everyone should know across the whole shoot: access, parking, safety, contacts.",
+dood:"'Day out of days' shows which days each actor works. S = start (first day), W = work, F = finish (last day), SWF = only works one day, H = hold (between their first and last day but not shooting)."};
+const info=()=>`<b class="i" data-tip>i</b>`,tip=k=>`<div class="tip">${esc(INFO[k]||"").replace(/\n/g,"<br>")}</div>`;
+const F=(l,p,t="text",ik,w,ex="")=>`<div class="${w?"w":""}"><label>${l}${ik?info():""}</label>${ik?tip(ik):""}${t=="area"?`<textarea data-p="${p}">${esc(get(p))}</textarea>`:`<input type="${t}" data-p="${p}" value="${esc(get(p))}" ${ex}>`}</div>`;
+function get(p){return p.split(".").reduce((o,k)=>o==null?o:o[k],S)}
+function setP(p,v){const k=p.split("."),l=k.pop();k.reduce((o,x)=>o[x],S)[l]=v}
+
+/* ---------- maths ---------- */
+const pv=v=>{const s=String(v||"").trim();if(!s)return 0;const m=s.match(/^(?:(\d+)\s+)?(\d+)\/(\d+)$|^(\d+(?:\.\d+)?)$/);if(!m)return 0;return m[4]?+m[4]:(+m[1]||0)+m[2]/m[3]};
+const fp=x=>{const e=Math.round(x*8),w=Math.floor(e/8),r=e%8;return ((w?w+" ":"")+(r?r+"/8":"")).trim()||"0"};
+const mins=r=>Math.max(0,(parseInt(r.h)||0)*60+(parseInt(r.m)||0));
+const hasDur=r=>(r.h!==""&&r.h!=null)||(parseInt(r.m)||0)>0;
+const dur=m=>{m=Math.round(m||0);const h=Math.floor(m/60),mm=m%60;return h&&mm?`${h}h ${String(mm).padStart(2,"0")}m`:h?`${h}h`:`${mm}m`};
+const clk=m=>String(Math.floor(m/60)%24).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+const t2m=t=>{if(!t)return null;const[a,b]=t.split(":").map(Number);return a*60+b};
+const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+function dates(){const out=[];S.days.forEach((d,i)=>{if(d.date){out.push(d.date);return}let base=i?out[i-1]:S.start;if(!base){out.push("");return}
+const x=new Date(base+"T12:00");if(i){x.setDate(x.getDate()+1)}if(S.skipWk)while(x.getDay()==0||x.getDay()==6)x.setDate(x.getDate()+1);out.push(iso(x))});return out}
+const nice=(ds,long)=>ds?new Date(ds+"T12:00").toLocaleDateString("en-GB",long?{weekday:"long",day:"numeric",month:"long",year:"numeric"}:{weekday:"short",day:"numeric",month:"short",year:"numeric"}):"";
+const kind=r=>{const n=/NIGHT|DUSK|EVENING/.test(r.dn);return (r.ie=="EXT"?"e":"i")+(n?"n":"d")};
+const castNums=s=>String(s||"").split(/[,\s/]+/).map(x=>x.trim()).filter(Boolean);
+/* working-day classes: length in minutes (call to wrap) → required break */
+const WD=[{c:"CWD",n:"Continuous Working Day",max:600,need:20},{c:"SCWD",n:"Semi-Continuous Working Day",max:630,need:30},{c:"SWD",n:"Standard Working Day",max:660,need:60}];
+const wdOf=m=>m<=0?null:WD.find(w=>m<=w.max)||{c:"OVER SWD",n:"longer than a Standard Working Day",max:Infinity,need:60,over:1};
+const callOf=i=>(S.days[i]&&S.days[i].call)||(i?S.days[0].call:"")||"";
+const maxOf=i=>+(i&&S.days[i]?S.days[i].max:"")||+S.dayHrs||0;
+function dayStats(d,i){if(typeof i!="number")i=S.days.indexOf(d);let p=0,m=0,n=0,brk=0;d.items.forEach(r=>{const x=mins(r);m+=x;if(r.t=="s"){p+=pv(r.pg);n++}else if(r.bk=="break")brk+=x});
+const c=t2m(callOf(i)),wrap=c==null?null:c+m;return{p,m,n,brk,wrap,over:wrap!=null&&wrap>=1440,wd:wdOf(m)}}
+function starts(d){let t=t2m(callOf(S.days.indexOf(d)));if(t==null)return d.items.map(()=>"");return d.items.map(r=>{const s=clk(t);t+=mins(r);return s})}
+function dood(){const cols=S.days.map(d=>new Set(d.items.filter(r=>r.t=="s").flatMap(r=>castNums(r.cast))));
+const nums=[...new Set([...S.cast.map(c=>String(c.n).trim()).filter(Boolean),...cols.flatMap(s=>[...s])])];
+return nums.map(n=>{const w=cols.map(s=>s.has(n)),f=w.indexOf(true),l=w.lastIndexOf(true),c=S.cast.find(c=>String(c.n).trim()==n)||{};
+const cells=w.map((x,i)=>f<0?"":f==l&&i==f?"SWF":i==f?"S":i==l?"F":x?"W":(i>f&&i<l)?"H":"");return{n,name:c.name||"",ch:c.ch||"",cells,tot:w.filter(Boolean).length}})}
+const headTxt=(di,ds,st)=>`${ds[di]?nice(ds[di]):"no date yet"} · ${st.n} scene${st.n==1?"":"s"} · ${fp(st.p)} pgs · ${dur(st.m)}${st.wd?" ("+st.wd.c+")":""}${st.wrap!=null?" · wrap "+clk(st.wrap)+(st.over?" (+1 day)":""):""}`;
+
+/* ---------- form ---------- */
+const durF=p=>{const r=get(p);return `<div class="dur"><input type="number" min="0" max="23" data-p="${p}.h" value="${esc(r.h)}" placeholder="0" aria-label="hours">h<select data-p="${p}.m" aria-label="minutes">${Array.from({length:12},(_,i)=>i*5).map(v=>`<option value="${v}" ${+r.m==v?"selected":""}>${String(v).padStart(2,"0")}</option>`).join("")}</select>m</div>`};
+function swatchBtn(r,p){const c=colOf(r),auto=r.t=="s"&&!r.col;return `<button class="sw ${auto?"auto":""}" data-cp="${p}" style="background:${c.bg};color:${c.fg}" title="Change colour"></button>`}
+function stripForm(r,d,i,start){const p=`days.${d}.items.${i}`,c=colOf(r),stt=`<span class="stt" data-stt="${d}-${i}">${start?" · starts "+start:""}</span>`,
+ctl=`<div class="ctl"><button data-mv="-1" data-d="${d}" data-i="${i}" title="Move up">↑</button><button data-mv="1" data-d="${d}" data-i="${i}" title="Move down">↓</button><button data-del="${d}" data-i="${i}" title="Remove">✕</button></div>`;
+if(r.t=="b")return `<div class="st" data-strip="${p}" style="border-left-color:${borderCol(c.bg)}"><div class="f r bn"><div><label>Banner text</label><input data-p="${p}.txt" value="${esc(r.txt)}"></div>
+<div><label>Type</label><select data-p="${p}.bk">${[["break","Break / meal"],["move","Company move"],["other","Other"]].map(o=>`<option value="${o[0]}" ${r.bk==o[0]?"selected":""}>${o[1]}</option>`).join("")}</select></div>
+<div><label>Duration${stt}</label>${durF(p)}</div><div><label>Colour</label>${swatchBtn(r,p)}</div></div>${ctl}</div>`;
+const sel=(k,o)=>`<select data-p="${p}.${k}">${o.map(x=>`<option ${x==r[k]?"selected":""}>${x}</option>`).join("")}</select>`;
+return `<div class="st" data-strip="${p}" style="border-left-color:${borderCol(c.bg)}"><div class="f">
+<div class="r r1"><div><label>Sc #</label><input data-p="${p}.sc" value="${esc(r.sc)}"></div><div><label>Int/Ext</label>${sel("ie",["INT","EXT","I/E"])}</div><div><label>Scene heading</label><input data-p="${p}.hd" value="${esc(r.hd)}" placeholder="e.g. Kitchen"></div><div><label>Day/Night</label>${sel("dn",["DAY","NIGHT","DAWN","DUSK","MORNING","EVENING"])}</div><div><label>Colour</label>${swatchBtn(r,p)}</div></div>
+<div class="r r2"><div><label>Description</label><input data-p="${p}.desc" value="${esc(r.desc)}"></div><div><label>Cast #</label><input data-p="${p}.cast" value="${esc(r.cast)}" placeholder="1,2"></div><div><label>Location</label><input list="locs" data-p="${p}.loc" value="${esc(r.loc)}"></div><div><label>Pages</label><input data-p="${p}.pg" value="${esc(r.pg)}" placeholder="1 3/8"></div><div><label>Duration${stt}</label>${durF(p)}</div></div>
+</div>${ctl}</div>`}
+function dField(di,k,ds){const own=di==0?{date:"start",call:"days.0.call",max:"dayHrs"}[k]:`days.${di}.${k}`,v=get(own),inh=di>0&&(v===""||v==null),
+eff=k=="date"?ds[di]:k=="call"?callOf(di):maxOf(di),type=k=="date"?"date":k=="call"?"time":"number";
+return `<div class="df"><input type="${type}" data-p="${own}" ${inh?`data-inh="${k}" data-di="${di}" class="inh"`:""} value="${esc(inh?eff:v)}" ${k=="max"?'min="1" step="0.5"':""} aria-label="Day ${di+1} ${k}">${di>0?`<button class="rs" data-reset="${own}" title="Go back to the default" ${inh?"hidden":""}>↺</button>`:""}</div>`}
+function listTbl(n,cols){return `<div class="tw"><table class="t"><tr>${cols.map(c=>`<th>${c[1]}</th>`).join("")}<th></th></tr>`+S[n].map((r,i)=>`<tr>${cols.map(c=>`<td style="${c[2]?"width:"+c[2]:""}"><input data-p="${n}.${i}.${c[0]}" value="${esc(r[c[0]])}"></td>`).join("")}<td><button class="x" data-ldel="${n}" data-i="${i}" title="Remove">✕</button></td></tr>`).join("")+`</table></div><div class="bar s"><button data-ladd="${n}">+ Add row</button></div>`}
+function form(){const act=document.activeElement,ap=act&&act.dataset?act.dataset.p:null,ss=act&&act.selectionStart,ds=dates();
+$("#ed").innerHTML=`
+<p class="intro">Fill in each section and the schedule builds live on the right. Click the <b class="i" style="cursor:default">i</b> icons for help. For a PDF, choose “Save as PDF” as the printer and turn on “Background graphics” so the strip colours print. Excel needs an internet connection.</p><div id="warn"></div>
+<h2>Production</h2><div class="g">${F("Title","title","text","title",1)}${F("Studio / company","company","text","company")}${F("Director","director")}${F("Producer","producer")}${F("1st AD","ad")}</div>
+<h2>Dates &amp; working day ${info()}</h2>${tip("daysets")}
+<div class="tw"><table class="t ds"><tr><th></th><th>Date</th><th>Call time</th><th>Max day length (hrs) ${info()}</th></tr>${S.days.map((d,di)=>`<tr><td>Day ${di+1}</td><td>${dField(di,"date",ds)}</td><td>${dField(di,"call",ds)}</td><td>${dField(di,"max",ds)}</td></tr>`).join("")}</table></div>${tip("dayHrs")}
+<div class="bar s"><button data-dup="${S.days.length-1}">+ Add shoot day</button></div><div class="g">
+<div class="w"><label style="font-weight:400"><input type="checkbox" data-p="skipWk" ${S.skipWk?"checked":""}> Skip weekends when dating days automatically ${info()}</label>${tip("skipWk")}</div>
+<div class="w"><label style="font-weight:400">Break rules: CWD ≤ 10h → 20 min · SCWD ≤ 10½h → 30 min · SWD ≤ 11h → 60 min ${info()}</label>${tip("wd")}</div></div>
+<h2>Cast legend ${info()}</h2>${tip("cast")}${listTbl("cast",[["n","#","52px"],["name","Actor"],["ch","Character"]])}
+<h2>Locations ${info()}</h2>${tip("locs")}${listTbl("locs",[["name","Location name"],["addr","Address"]])}
+<datalist id="locs">${S.locs.filter(l=>l.name).map(l=>`<option value="${esc(l.name)}">`).join("")}</datalist>
+<h2>Shoot days ${info()}</h2>${tip("days")}
+<p class="sub small" style="margin:0">Scene fields ${info()}</p>${tip("strip")}<p class="sub small" style="margin:4px 0 0">Banners ${info()}</p>${tip("banners")}
+<p class="sub small" style="margin:4px 0 0">Strip colours ${info()}</p>${tip("colour")}
+<div class="fkey">${Object.values(KEY).map(k=>`<span style="background:${k.bg};color:${k.fg}">${k.n}</span>`).join("")}<span style="background:${BAN_DEF};color:#fff">Banner</span></div>
+${S.days.map((d,di)=>{const st=dayStats(d),sts=starts(d);return `<div class="day"><div class="dh"><div><b>Day ${di+1}</b> <span class="dt">${headTxt(di,ds,st)}</span></div>
+<div><button data-dup="${di}" title="Insert a new day after this one">+ Day after</button> <button data-ddel="${di}">Remove day</button></div></div><div class="db">
+<div class="dg"><div><label>Date</label>${dField(di,"date",ds)}</div><div><label>Call time ${info()}</label>${tip("call")}${dField(di,"call",ds)}</div><div><label>Max length (hrs)</label>${dField(di,"max",ds)}</div></div>
+${d.items.length?d.items.map((r,i)=>stripForm(r,di,i,sts[i])).join(""):`<div class="empty">No strips yet. Add a scene below.</div>`}
+<div class="bar s"><button data-add="s" data-d="${di}">+ Scene</button><button data-add="meal" data-d="${di}">+ Meal break</button><button data-add="move" data-d="${di}">+ Company move</button><button data-add="b" data-d="${di}">+ Other banner</button></div></div></div>`}).join("")}
+<div class="bar"><button class="p" data-dup="${S.days.length-1}">+ Add shoot day</button></div>
+<h2>Notes ${info()}</h2>${tip("notes")}<div class="g">${F("General notes","notes","area","",1)}</div>
+<p class="sub small" style="margin-top:20px">Day out of days on the schedule ${info()}</p>${tip("dood")}`;
+if(ap){const n=document.querySelector(`[data-p="${ap}"]`);if(n){n.focus();try{if(ss!=null&&n.setSelectionRange)n.setSelectionRange(ss,ss)}catch(e){}}}}
+function refreshHeads(){const ds=dates();document.querySelectorAll("[data-inh]").forEach(x=>{if(x===document.activeElement)return;const i=+x.dataset.di,k=x.dataset.inh;x.value=k=="date"?ds[i]:k=="call"?callOf(i):maxOf(i)});document.querySelectorAll(".day").forEach((el,di)=>{const d=S.days[di];if(!d)return;el.querySelector(".dt").textContent=headTxt(di,ds,dayStats(d));
+starts(d).forEach((s,i)=>{const x=el.querySelector(`[data-stt="${di}-${i}"]`);if(x)x.textContent=s?" · starts "+s:""})})}
+
+/* ---------- preview ---------- */
+function prev(){const ds=dates(),all=S.days.map(dayStats),tp=all.reduce((a,s)=>a+s.p,0),tm=all.reduce((a,s)=>a+s.m,0),nsc=all.reduce((a,s)=>a+s.n,0);
+const valid=ds.filter(Boolean),range=valid.length?nice(valid[0])+(valid.length>1?" – "+nice(valid[valid.length-1]):""):"";
+const m=(l,v)=>v?`<span>${l} <b>${esc(v)}</b></span>`:"";
+let rows="";S.days.forEach((d,di)=>{const st=all[di],sts=starts(d);
+rows+=`<tr class="dayh"><td colspan="9">DAY ${di+1} ${ds[di]?"· "+esc(nice(ds[di],1).toUpperCase()):""}<span>${callOf(di)?"Call "+callOf(di):""}${st.wrap!=null?" · Est. wrap "+clk(st.wrap)+(st.over?" (+1)":""):""}</span>${st.wd?`<em title="${st.wd.n}">${st.wd.c}</em>`:""}</td></tr>`;
+if(!d.items.length)rows+=`<tr class="ph"><td colspan="9">No scenes scheduled</td></tr>`;
+d.items.forEach((r,i)=>{const c=colOf(r),lt=lum(c.bg)>.8?" lt":"",sty=`style="background:${c.bg};color:${c.fg}"`,dt=hasDur(r)?dur(mins(r)):"";
+if(r.t=="b"){rows+=`<tr class="ban${lt}" ${sty}><td colspan="7" style="color:${c.fg}">${esc(r.txt)}</td><td class="num">${dt}</td><td class="stc">${sts[i]}</td></tr>`;return}
+rows+=`<tr class="${lt}" ${sty}><td class="c"><b>${esc(r.sc)}</b></td><td class="c">${esc(r.ie)}</td><td class="hd"><b style="color:${c.hd}">${esc(r.hd)||"&nbsp;"}</b><i>${esc(r.desc)}</i></td><td class="c">${esc(r.dn)}</td><td class="c">${esc(r.cast)}</td><td>${esc(r.loc)}</td><td class="num">${esc(r.pg)}</td><td class="num">${dt}</td><td class="stc" style="color:${c.hd}">${sts[i]}</td></tr>`});
+rows+=`<tr class="eod"><td colspan="3"><b>— END OF DAY ${di+1} —</b></td><td colspan="3">${ds[di]?esc(nice(ds[di])):""}</td><td class="num"><span class="lab">PAGES</span>${fp(st.p)}</td><td class="num"><span class="lab">TOTAL</span>${dur(st.m)}</td><td class="c"><span class="lab">WRAP</span>${st.wrap!=null?clk(st.wrap):"—"}</td></tr>`});
+const D=dood();
+$("#pv").innerHTML=`<div class="tt"><small>SHOOTING SCHEDULE</small>${esc(S.title)||"Your Project Title"}</div>
+<div class="meta">${m("Company",S.company)}${m("Director",S.director)}${m("Producer",S.producer)}${m("1st AD",S.ad)}${m("Dates",range)}<span><b>${S.days.length}</b> shoot day${S.days.length==1?"":"s"}</span><span><b>${nsc}</b> scenes</span><span><b>${fp(tp)}</b> pages</span><span><b>${dur(tm)}</b> total</span></div>
+<table><thead><tr><th class="c" style="width:6%">SCENE #</th><th class="c" style="width:7%">INT / EXT</th><th>SCENE HEADING</th><th class="c" style="width:8%">DAY / NIGHT</th><th class="c" style="width:6%">CAST</th><th style="width:16%">SHOOTING LOCATION</th><th class="num" style="width:7%">PAGE COUNT</th><th class="num" style="width:8%">DURATION</th><th class="c" style="width:7%">START</th></tr></thead><tbody>${rows}</tbody></table>
+<div class="leg"><div><h3>CAST LEGEND</h3><table>${S.cast.filter(c=>c.n||c.name).map(c=>`<tr><td style="width:24px"><b>${esc(c.n)}</b></td><td>${esc(c.name)}</td><td>${esc(c.ch)}</td></tr>`).join("")||`<tr><td>—</td></tr>`}</table></div>
+<div><h3>SET LOCATIONS</h3><table>${S.locs.filter(l=>l.name||l.addr).map(l=>`<tr><td><b>${esc(l.name)}</b><br>${esc(l.addr)}</td></tr>`).join("")||`<tr><td>—</td></tr>`}</table></div>
+<div><h3>STRIP COLOUR KEY</h3><table class="key">${[["INT + DAY / MORNING",KEY.id],["EXT + DAY / MORNING",KEY.ed],["INT + NIGHT / EVENING",KEY.in],["EXT + NIGHT / EVENING",KEY.en],["BANNER (break / move)",{bg:BAN_DEF,fg:"#fff"}],["END OF DAY",{bg:"#404e5c",fg:"#ebeff2"}]].map(k=>`<tr><td style="background:${k[1].bg};color:${k[1].fg};${k[1].bg=="#ffffff"?"border-bottom:1px solid #eef1f3":""}">${k[0]}</td></tr>`).join("")}</table></div></div>
+${D.length?`<div class="sec" style="break-inside:avoid"><h3>DAY OUT OF DAYS</h3><table class="dood"><tr><th>#  CAST</th>${S.days.map((d,i)=>`<th>D${i+1}${ds[i]?"<br>"+new Date(ds[i]+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}):""}</th>`).join("")}<th>DAYS</th></tr>
+${D.map(r=>`<tr><td><b>${esc(r.n)}</b> ${esc(r.name)}${r.ch?" ("+esc(r.ch)+")":""}</td>${r.cells.map(c=>`<td class="${c}">${c}</td>`).join("")}<td><b>${r.tot}</b></td></tr>`).join("")}</table></div>`:""}
+${S.notes?`<div class="notes"><b>NOTES</b><br>${esc(S.notes)}</div>`:""}
+<div class="foot"><span>${esc(S.title)}${S.company?" · "+esc(S.company):""}</span><span>Printed ${new Date().toLocaleDateString("en-GB")}</span></div>`;
+const w=warns(ds,all);$("#warn").innerHTML=w.length?`<div class="warn"><b>⚠️ Sense checks</b>${w.map(x=>"• "+esc(x)).join("<br>")}</div>`:"";fit()}
+function warns(ds,all){const w=[],seen={},castOK=new Set(S.cast.map(c=>String(c.n).trim()).filter(Boolean)),locOK=new Set(S.locs.map(l=>l.name.trim().toUpperCase()).filter(Boolean));
+if(!S.title)w.push("No title yet.");if(!ds[0])w.push("No first shoot day, so days can't be dated automatically.");
+S.days.forEach((d,di)=>{const D="Day "+(di+1),st=all[di];
+if(!st.n)w.push(D+" has no scenes.");
+if(!callOf(di)&&st.n)w.push(D+" has no call time, so start and wrap times can't be worked out.");
+if(st.wd){if(st.wd.over)w.push(`${D} runs ${dur(st.m)}, longer than an 11-hour Standard Working Day. Move a scene or plan for overtime.`);
+else if(st.brk<st.wd.need)w.push(`${D} runs ${dur(st.m)}, a ${st.wd.n} (${st.wd.c}), so it needs at least ${st.wd.need} min of breaks. It currently has ${st.brk} min. Add or lengthen a meal break.`)}
+const lim=maxOf(di)*60;if(lim&&st.m>lim&&!(st.wd&&st.wd.over&&lim>=660))w.push(`${D} runs ${dur(st.m)}, over its ${maxOf(di)}-hour max day length.`);
+if(st.over)w.push(D+" is estimated to wrap after midnight.");
+if(di&&ds[di]&&ds[di-1]&&ds[di]<=ds[di-1])w.push(D+"'s date is on or before Day "+di+"'s.");
+d.items.forEach((r,i)=>{if(r.t!="s"){if(!hasDur(r))w.push(`${D}: banner “${r.txt||"untitled"}” has no duration.`);return}
+const n=r.sc?"Scene "+r.sc:"Strip "+(i+1);
+if(!r.sc)w.push(`${D}: strip ${i+1} has no scene number.`);
+if(!hasDur(r)||!mins(r))w.push(`${D}: ${n} has no duration.`);
+if(!r.desc.trim())w.push(`${D}: ${n} has no description.`);
+if(!r.loc.trim())w.push(`${D}: ${n} has no location.`);
+else if(locOK.size&&!locOK.has(r.loc.trim().toUpperCase()))w.push(`${D}: ${n} location “${r.loc}” isn't in your locations list.`);
+if(r.pg&&!pv(r.pg))w.push(`${D}: ${n} page count “${r.pg}” should look like 1 3/8.`);
+if(r.sc){(seen[r.sc]=seen[r.sc]||[]).push(di+1)}
+castNums(r.cast).forEach(c=>{if(castOK.size&&!castOK.has(c))w.push(`${D}: ${n} uses cast #${c}, who isn't in the cast legend.`)})})});
+Object.entries(seen).forEach(([k,v])=>{if(v.length>1)w.push(`Scene ${k} is scheduled ${v.length} times (days ${v.join(", ")}). Fine if it's split, otherwise check.`)});
+return [...new Set(w)]}
+/* scale the preview page to fit whatever space the right-hand pane has */
+function fit(){const p=$(".pvw"),v=$("#pv");if(!p||!v)return;const z=Math.max(.4,Math.min(2.2,(p.clientWidth-28)/760));v.style.zoom=z}
+new ResizeObserver(fit).observe(document.querySelector(".pvw"));addEventListener("resize",fit);
+
+/* ---------- colour picker ---------- */
+let CP=null;
+function openCP(btn){const p=btn.dataset.cp,r=get(p),isS=r.t=="s",cur=isS?(r.col||""):(r.col||BAN_DEF),cp=$("#cp");CP={p,btn};
+const curHex=colOf(r).bg,[h,s,l]=rgb2hsl(hex2rgb(curHex));
+const chip=(v,bg,name)=>`<button class="c ${cur.toLowerCase()==v.toLowerCase()?"on":""}" data-pick="${v}" title="${name}" style="background:${bg}"></button>`;
+cp.innerHTML=`${isS?`<button class="auto ${!cur?"p":""}" data-pick="">Automatic (follow the key)</button><h4>Strip colour key</h4><div class="row">${Object.entries(KEY).map(([k,o])=>chip(k,o.bg,o.n)).join("")}</div>`:""}
+<h4>${isS?"Extra colours":"Banner colours"}</h4><div class="row">${SWATCH.map(c=>chip(c[1],c[1],c[0])).join("")}</div>
+<button class="more">More colours ▾</button>
+<div class="sl"><label>Hue <span id="cvH">${h}°</span></label><input type="range" id="cH" min="0" max="360" value="${h}" style="background:linear-gradient(90deg,${[0,60,120,180,240,300,360].map(x=>hsl2hex(x,80,50)).join(",")})">
+<label>Saturation <span id="cvS">${s}%</span></label><input type="range" id="cS" min="0" max="100" value="${s}">
+<label>Lightness <span id="cvL">${l}%</span></label><input type="range" id="cL" min="5" max="97" value="${l}">
+<div class="hx"><div id="cPrev" style="background:${curHex}"></div><input id="cHex" value="${curHex}" maxlength="7" aria-label="Hex colour"></div></div>
+<div class="bar s" style="margin:8px 0 0;justify-content:flex-end"><button data-cpclose>Done</button></div>`;
+cp.hidden=false;paintSliders();placeCP()}
+function placeCP(){if(!CP)return;const cp=$("#cp"),b=CP.btn.getBoundingClientRect(),W=cp.offsetWidth,H=cp.offsetHeight;
+cp.style.left=Math.max(6,Math.min(b.right-W,innerWidth-W-6))+"px";cp.style.top=Math.max(6,b.bottom+H+6>innerHeight?Math.min(b.top-H-4,innerHeight-H-6):b.bottom+4)+"px"}
+function paintSliders(){const H=+$("#cH").value,Sx=+$("#cS").value,L=+$("#cL").value;
+$("#cS").style.background=`linear-gradient(90deg,${hsl2hex(H,0,L)},${hsl2hex(H,100,L)})`;$("#cL").style.background=`linear-gradient(90deg,${hsl2hex(H,Sx,5)},${hsl2hex(H,Sx,50)},${hsl2hex(H,Sx,97)})`}
+function applyCol(v){if(!CP)return;const r=get(CP.p);r.col=v;const c=colOf(r),b=CP.btn;
+b.style.background=c.bg;b.classList.toggle("auto",r.t=="s"&&!v);const st=b.closest(".st");if(st)st.style.borderLeftColor=borderCol(c.bg);
+document.querySelectorAll("#cp .c").forEach(x=>x.classList.toggle("on",x.dataset.pick.toLowerCase()==String(v).toLowerCase()));const a=$("#cp .auto");if(a)a.classList.toggle("p",!v);prev()}
+function closeCP(){$("#cp").hidden=true;CP=null}
+document.addEventListener("input",e=>{const t=e.target;if(!t.closest||!t.closest("#cp"))return;
+if(t.type=="range"){const h=hsl2hex(+$("#cH").value,+$("#cS").value,+$("#cL").value);$("#cvH").textContent=$("#cH").value+"°";$("#cvS").textContent=$("#cS").value+"%";$("#cvL").textContent=$("#cL").value+"%";$("#cHex").value=h;$("#cPrev").style.background=h;paintSliders();applyCol(h)}
+if(t.id=="cHex"){let v=t.value.trim();if(!v.startsWith("#"))v="#"+v;if(okHex(v)){const[h,s,l]=rgb2hsl(hex2rgb(v));$("#cH").value=h;$("#cS").value=s;$("#cL").value=l;$("#cPrev").style.background=v;paintSliders();applyCol(v.toLowerCase())}}});
+document.addEventListener("mousedown",e=>{if(CP&&!e.target.closest("#cp")&&!e.target.closest("[data-cp]"))closeCP()});
+document.addEventListener("keydown",e=>{if(e.key=="Escape"&&CP)closeCP()});
+
+/* ---------- events ---------- */
+document.addEventListener("input",e=>{const t=e.target,p=t.dataset.p;if(!p)return;setP(p,t.type=="checkbox"?t.checked:t.value);
+document.querySelectorAll(`[data-p="${p}"]`).forEach(x=>{if(x!==t&&x.type!="checkbox")x.value=t.value;if(x.dataset.inh&&t.value!==""){x.classList.remove("inh");delete x.dataset.inh;const b=x.parentNode.querySelector(".rs");if(b)b.hidden=false}});
+prev();refreshHeads();
+if(/^locs\./.test(p))$("#locs").innerHTML=S.locs.filter(l=>l.name).map(l=>`<option value="${esc(l.name)}">`).join("")});
+document.addEventListener("change",e=>{const p=e.target.dataset.p;if(p&&(/\.(ie|dn)$/.test(p)||(/^days\.\d+\.(date|call|max)$/.test(p)&&e.target.value===""))){form();prev()}});
+document.addEventListener("click",e=>{const t=e.target.closest("button,[data-tip]");if(!t)return;const q=t.dataset;
+if("tip" in q){let n=t.closest("label,h2,p");n=n&&n.nextElementSibling;if(n&&n.classList.contains("tip"))n.classList.toggle("on");return}
+if(q.reset){setP(q.reset,"");form();prev();return}
+if(q.cp){CP&&CP.btn==t?closeCP():openCP(t);return}
+if("pick" in q){applyCol(q.pick);return}
+if(t.classList.contains("more")){const s=$("#cp .sl");s.classList.toggle("on");t.textContent=s.classList.contains("on")?"Fewer colours ▴":"More colours ▾";placeCP();return}
+if("cpclose" in q){closeCP();return}
+let ch=1;if(q.add){const d=S.days[+q.d];d.items.push(q.add=="s"?blankScene():q.add=="move"?banner("// COMPANY MOVE //","move",0,30,"#404e5c"):q.add=="meal"?banner("// MEAL BREAK //","break",1,0,BAN_DEF):banner("// //","other","",0,"#6f8f6a"))}
+else if(q.mv){const d=+q.d,i=+q.i,dir=+q.mv,it=S.days[d].items,ni=i+dir;
+if(ni>=0&&ni<it.length){[it[i],it[ni]]=[it[ni],it[i]]}else if(dir<0&&d>0){S.days[d-1].items.push(it.splice(i,1)[0])}else if(dir>0&&d<S.days.length-1){S.days[d+1].items.unshift(it.splice(i,1)[0])}else ch=0}
+else if(q.del!=null&&q.i!=null){if(!confirm("Remove this strip?"))return;S.days[+q.del].items.splice(+q.i,1)}
+else if(q.dup!=null){S.days.splice(+q.dup+1,0,{date:"",call:"",max:"",items:[blankScene()]})}
+else if(q.ddel!=null){if(S.days.length==1)return alert("You need at least one shoot day.");if(!confirm("Remove Day "+(+q.ddel+1)+" and all its strips?"))return;S.days.splice(+q.ddel,1)}
+else if(q.ladd){S[q.ladd].push(q.ladd=="cast"?{n:String(S.cast.length+1),name:"",ch:""}:{name:"",addr:""})}
+else if(q.ldel){S[q.ldel].splice(+q.i,1)}else ch=0;
+if(ch){closeCP();form();prev()}});
+function loadEx(){if(!confirm("Replace everything with the example schedule?"))return;S=JSON.parse(JSON.stringify(EXAMPLE));form();prev()}
+function clearAll(){if(!confirm("Clear everything and start a blank schedule?"))return;S=blank();form();prev()}
+function dl(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+const fname=()=>(S.title||"Production").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"_")||"Production";
+function saveProg(){closeCP();const s=document.getElementById("sv"),z=$("#pv").style.zoom;s.textContent=JSON.stringify(S).replace(/</g,"\\u003c");
+dl(new Blob(["<!DOCTYPE html>\n"+document.documentElement.outerHTML],{type:"text/html"}),"Production_Schedule_Builder_"+fname()+".html");s.textContent=""}
+
+/* ---------- Excel (styled, StudioBinder-like) ---------- */
+async function xl(){if(typeof ExcelJS=="undefined")return alert("The Excel library couldn't load. Check your internet connection and try again.");
+const ds=dates(),wb=new ExcelJS.Workbook();wb.creator="Production Schedule Builder";
+const ws=wb.addWorksheet("Schedule",{views:[{showGridLines:false,state:"frozen",ySplit:3}],pageSetup:{paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:.3,right:.3,top:.4,bottom:.4,header:.2,footer:.2},printTitlesRow:"3:3"}});
+ws.columns=[{width:1.5},{width:8},{width:9},{width:38},{width:10},{width:8},{width:22},{width:9},{width:11},{width:9},{width:1.5}];
+const A=h=>"FF"+h.replace("#","").toUpperCase();
+const fill=c=>({type:"pattern",pattern:"solid",fgColor:{argb:A(c)}}),font=(c,o={})=>({name:"Open Sans",size:9,color:{argb:A(c)},...o}),line={style:"thin",color:{argb:"FFE3E8EC"}};
+const LAST=10,paint=(r,bg,fc,o={},from=2,to=LAST)=>{for(let c=from;c<=to;c++){const x=r.getCell(c);x.fill=fill(bg);x.font=font(fc,o);x.alignment={vertical:"middle",wrapText:true,...(x.alignment||{})}}};
+const DUR='[h]"h" mm"m"',CLK="hh:mm",ctr={horizontal:"center",vertical:"middle",wrapText:true};
+let r=ws.addRow([]);ws.mergeCells(1,2,1,LAST);r.getCell(2).value="SHOOTING SCHEDULE · "+(S.title||"Your Project Title");paint(r,"#DCE2E6","#4B5A6B");r.getCell(2).font={name:"Quicksand",size:16,color:{argb:"FF4B5A6B"}};r.height=30;
+const valid=ds.filter(Boolean);
+r=ws.addRow([]);ws.mergeCells(2,2,2,LAST);r.getCell(2).value=[S.company,S.director&&"Director: "+S.director,S.producer&&"Producer: "+S.producer,S.ad&&"1st AD: "+S.ad,valid.length&&(nice(valid[0])+(valid.length>1?" – "+nice(valid[valid.length-1]):""))].filter(Boolean).join("   ·   ");paint(r,"#F2F5F7","#6C7780");r.height=20;
+r=ws.addRow(["","SCENE #","INT / EXT","SCENE HEADING","DAY / NIGHT","CAST","SHOOTING LOCATION","PAGE COUNT","DURATION","START"]);paint(r,"#F2F5F7","#6C7780",{bold:true,size:8});r.height=26;
+[2,3,5,6,8,9,10].forEach(c=>r.getCell(c).alignment=ctr);
+const endRows=[];
+S.days.forEach((d,di)=>{const st=dayStats(d,di),call=t2m(callOf(di));
+r=ws.addRow([]);ws.mergeCells(r.number,2,r.number,LAST);r.getCell(2).value=`DAY ${di+1}${ds[di]?"  ·  "+nice(ds[di],1).toUpperCase():""}${callOf(di)?"   ·   Call "+callOf(di):""}${st.wrap!=null?"   ·   Est. wrap "+clk(st.wrap):""}${st.wd?"   ·   "+st.wd.c+" ("+dur(st.m)+")":""}`;paint(r,"#EBEFF2","#4B5A6B",{bold:true,size:9});r.height=20;
+const first=r.number+1;let t=call;
+d.items.forEach((it,i)=>{const m=mins(it),tv=hasDur(it)?m/1440:null,c=colOf(it);
+if(it.t=="b"){r=ws.addRow([]);ws.mergeCells(r.number,2,r.number,8);r.getCell(2).value=it.txt;r.getCell(9).value=tv;paint(r,c.bg,c.fg);r.getCell(2).alignment={horizontal:"center",vertical:"middle"}}
+else{const scn=it.sc!==""&&!isNaN(+it.sc)?+it.sc:it.sc;r=ws.addRow(["",scn,it.ie,"",it.dn,it.cast,it.loc,it.pg,tv]);paint(r,c.bg,c.fg);
+r.getCell(4).value={richText:[{text:(it.hd||"").toUpperCase(),font:font(c.hd,{bold:true})},...(it.desc?[{text:"\n"+it.desc,font:font(c.hd)}]:[])]};
+[2,3,5,6,8].forEach(cc=>r.getCell(cc).alignment=ctr);r.height=it.desc?(it.desc.length>50?44:32):20}
+const s=r.getCell(10);if(call!=null){s.value=i==0?call/1440:{formula:`J${r.number-1}+I${r.number-1}`,result:(t%1440)/1440};s.numFmt=CLK}
+s.font=font(c.hd,{bold:true});s.alignment=ctr;r.getCell(9).numFmt=DUR;r.getCell(9).alignment=ctr;if(call!=null)t+=m;
+for(let cc=2;cc<=LAST;cc++)r.getCell(cc).border={bottom:line}});
+const last=r.number;
+r=ws.addRow([]);const n=r.number;ws.mergeCells(n,2,n,4);ws.mergeCells(n,5,n,7);
+r.getCell(2).value=`— END OF DAY ${di+1} —`;r.getCell(5).value=(ds[di]?nice(ds[di]):"")+`   ·   ${fp(st.p)} pgs`;r.getCell(8).value="Total / wrap:";
+r.getCell(9).value=d.items.length?{formula:`SUM(I${first}:I${last})`,result:st.m/1440}:0;r.getCell(9).numFmt=DUR;
+if(call!=null&&d.items.length){r.getCell(10).value={formula:`J${last}+I${last}`,result:(st.wrap%1440)/1440};r.getCell(10).numFmt=CLK}
+paint(r,"#404E5C","#EBEFF2",{size:11});r.getCell(8).font=font("#EBEFF2",{size:8});r.getCell(8).alignment={horizontal:"right",vertical:"middle"};[9,10].forEach(c=>r.getCell(c).alignment=ctr);r.height=26;endRows.push(n);
+ws.addRow([]).height=6});
+r=ws.addRow([]);ws.mergeCells(r.number,2,r.number,8);r.getCell(2).value="TOTAL ACROSS ALL DAYS";r.getCell(9).value={formula:endRows.map(x=>"I"+x).join("+")||"0",result:S.days.reduce((a,d)=>a+dayStats(d).m,0)/1440};r.getCell(9).numFmt=DUR;
+paint(r,"#DCE2E6","#4B5A6B",{bold:true});r.getCell(2).alignment={horizontal:"right",vertical:"middle"};r.getCell(9).alignment=ctr;r.height=22;
+if(S.notes){ws.addRow([]);r=ws.addRow([]);ws.mergeCells(r.number,2,r.number,LAST);r.getCell(2).value="NOTES: "+S.notes;paint(r,"#FFFFFF","#4B5A6B");r.height=Math.max(20,Math.ceil(S.notes.length/110)*14)}
+/* legend sheet */
+const lg=wb.addWorksheet("Legend",{views:[{showGridLines:false}],pageSetup:{paperSize:9,orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0}});
+lg.columns=[{width:1.5},{width:6},{width:24},{width:22},{width:2},{width:26},{width:36},{width:2},{width:28}];
+const hd=(row,c1,c2,txt)=>{if(c2>c1)lg.mergeCells(row,c1,row,c2);const x=lg.getRow(row).getCell(c1);x.value=txt;for(let c=c1;c<=c2;c++){const y=lg.getRow(row).getCell(c);y.fill=fill("#404E5C");y.font=font("#FFFFFF",{size:10})}};
+hd(1,2,4,"CAST LEGEND");hd(1,6,7,"SET LOCATIONS");hd(1,9,9,"STRIP COLOUR KEY");
+const castL=S.cast.filter(c=>c.n||c.name),locL=S.locs.filter(l=>l.name||l.addr);
+const keys=[["INT  +  DAY / MORNING",KEY.id.bg,KEY.id.fg],["EXT  +  DAY / MORNING",KEY.ed.bg,KEY.ed.fg],["INT  +  NIGHT / EVENING",KEY.in.bg,KEY.in.fg],["EXT  +  NIGHT / EVENING",KEY.en.bg,KEY.en.fg],["BANNER",BAN_DEF,"#FFFFFF"],["— END OF DAY —","#404E5C","#EBEFF2"]];
+const mx=Math.max(castL.length,locL.length,keys.length);
+for(let i=0;i<mx;i++){const row=lg.getRow(i+2),c=castL[i],l=locL[i],k=keys[i];
+if(c){row.getCell(2).value=isNaN(+c.n)||c.n===""?c.n:+c.n;row.getCell(3).value=c.name;row.getCell(4).value=c.ch}
+if(l){row.getCell(6).value=l.name;row.getCell(7).value=l.addr}
+if(k){const x=row.getCell(9);x.value=k[0];x.fill=fill(k[1]);x.font=font(k[2],{size:10})}
+[2,3,4,6,7].forEach(cc=>{const x=row.getCell(cc);x.font=font("#6C7780",{size:10});x.border={bottom:line}});row.getCell(2).alignment={horizontal:"center"}}
+const wr=mx+3;hd(wr,2,7,"WORKING DAY BREAK RULES");[["CWD","Continuous Working Day","up to 10 hours","20 min break"],["SCWD","Semi-Continuous Working Day","up to 10½ hours","30 min break"],["SWD","Standard Working Day","up to 11 hours","60 min break"]].forEach((x,i)=>{const row=lg.getRow(wr+1+i);row.getCell(2).value=x[0];row.getCell(3).value=x[1];row.getCell(4).value=x[2];row.getCell(6).value=x[3];[2,3,4,6].forEach(c=>{row.getCell(c).font=font("#6C7780",{size:10,bold:c==2});row.getCell(c).border={bottom:line}})});
+const D=dood(),lg2=wb.addWorksheet("Day Out of Days",{views:[{showGridLines:false}],pageSetup:{paperSize:9,orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0}});const s0=1;
+lg2.columns=[{width:1.5},{width:6},{width:24},{width:22}];
+if(D.length){const lg=lg2,n=S.days.length;lg.mergeCells(s0,2,s0,5+n);const t=lg.getRow(s0).getCell(2);t.value="DAY OUT OF DAYS   (S = start, W = work, H = hold, F = finish, SWF = one day only)";for(let c=2;c<=5+n;c++){const y=lg.getRow(s0).getCell(c);y.fill=fill("#404E5C");y.font=font("#FFFFFF",{size:10})}
+const hr=lg.getRow(s0+1);hr.getCell(2).value="#";hr.getCell(3).value="CAST";hr.getCell(4).value="CHARACTER";
+S.days.forEach((d,i)=>{hr.getCell(5+i).value="Day "+(i+1)+(ds[i]?"\n"+new Date(ds[i]+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"")});
+hr.getCell(5+n).value="TOTAL";for(let c=2;c<=5+n;c++){const x=hr.getCell(c);x.fill=fill("#F2F5F7");x.font=font("#6C7780",{bold:true,size:8});x.alignment=ctr}hr.height=28;
+const CF={S:"#DFF0E4",SW:"#DFF0E4",F:"#FBE3E0",WF:"#FBE3E0",SWF:"#E6E0F5",H:"#F2F5F7",W:"#FFF8D9"};
+D.forEach((p,j)=>{const row=lg.getRow(s0+2+j);row.getCell(2).value=isNaN(+p.n)?p.n:+p.n;row.getCell(3).value=p.name;row.getCell(4).value=p.ch;
+p.cells.forEach((c,i)=>{const x=row.getCell(5+i);x.value=c||null;if(CF[c])x.fill=fill(CF[c])});
+const fc=lg.getColumn(5).letter,lc=lg.getColumn(4+n).letter,rg=`${fc}${row.number}:${lc}${row.number}`;row.getCell(5+n).value={formula:`COUNTIF(${rg},"S")+COUNTIF(${rg},"W")+COUNTIF(${rg},"F")+COUNTIF(${rg},"SWF")`,result:p.tot};
+for(let c=2;c<=5+n;c++){const x=row.getCell(c);x.font=font("#4B5A6B",{size:10,bold:c==5+n});x.border={bottom:line,right:c>=5?line:undefined};if(c!=3&&c!=4)x.alignment={horizontal:"center"}}});
+for(let i=0;i<=n;i++)lg.getColumn(5+i).width=10}
+const buf=await wb.xlsx.writeBuffer();dl(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),"Production_Schedule_"+fname()+".xlsx")}
+{const p0=prev;prev=function(){p0.apply(this,arguments);fthPersist()}}
+form();prev();fthShow();
+</script></body></html>

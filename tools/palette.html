@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Colour Palette Studio</title>
+<style>
+:root{
+  --bg:#0f1013; --panel:#16181d; --panel2:#1d2027; --field:#1f2229;
+  --line:#272b33; --line2:#383e48;
+  --fg:#f0ece5; --muted:#9aa0aa; --faint:#6b717b;
+  --accent:#ffb547; --accent-ink:#1a1206; --accent-soft:rgba(255,181,71,.12);
+  --good:#7fd6a2; --ok:#ffcf6e; --bad:#ff8f7a;
+  --shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root{
+  --bg:#f3f0ea; --panel:#ffffff; --panel2:#f4f1ea; --field:#f7f4ee;
+  --line:#e3ded4; --line2:#cfc8bb;
+  --fg:#16181c; --muted:#565c66; --faint:#878c95;
+  --accent:#a35f00; --accent-ink:#ffffff; --accent-soft:rgba(163,95,0,.09);
+  --good:#1f8a50; --ok:#9a6400; --bad:#c0392b;
+  --shadow:0 14px 30px -16px rgba(70,50,20,.28);
+  color-scheme:light;
+}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--display);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{max-width:1440px;margin:0 auto;padding:18px 20px 48px}
+
+/* header */
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:3px;margin-right:6px}
+.eyebrow{font:600 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.brand h1{margin:0;font-stretch:72%;font-weight:800;font-size:26px;line-height:1;letter-spacing:.03em;text-transform:uppercase}
+.proj{flex:1;min-width:180px;max-width:380px;height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:var(--field);font-size:14px}
+.proj::placeholder{color:var(--faint)}
+.acts{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.btn{height:36px;padding:0 13px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn:hover{border-color:var(--fg)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.sm{height:30px;padding:0 10px;font-size:12.5px}
+.btn.ghost{background:none}
+.btn svg{width:15px;height:15px;flex:none}
+
+/* control bar */
+.bar{display:flex;align-items:center;gap:14px 22px;flex-wrap:wrap;margin:16px 0 18px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:13px}
+.seg{display:inline-flex;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:none;color:var(--muted);padding:6px 12px;border-radius:7px;font-size:13px;font-weight:600;white-space:nowrap}
+.seg button:hover{color:var(--fg)}
+.seg button.on{background:var(--panel2);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line2)}
+.seg.modes button{padding:7px 14px;font-size:13.5px}
+.seg.modes button.on{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+.seg .n{font:500 11px var(--mono);opacity:.75;margin-left:4px}
+.ctl{display:flex;align-items:center;gap:10px}
+.ctl>label,.lbl{font:600 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ctl input[type=range]{width:150px;accent-color:var(--accent)}
+.kval{font:600 15px var(--mono);min-width:22px;text-align:center}
+.vsep{width:1px;height:26px;background:var(--line2)}
+.hint{font-size:12.5px;color:var(--muted)}
+
+/* layout */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:18px;align-items:start}
+@media (max-width:1000px){.cols{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.card h2{margin:0 0 10px;font:600 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.card h2 .r{margin-left:auto}
+.stack{display:grid;gap:18px}
+
+/* drop zone */
+.drop{display:grid;place-items:center;text-align:center;min-height:52vh;border:1.5px dashed var(--line2);border-radius:16px;background:var(--panel);padding:30px;cursor:pointer;transition:border-color .2s,background .2s}
+.drop:hover{border-color:var(--accent);background:var(--accent-soft)}
+.drop h3{margin:14px 0 6px;font-stretch:80%;font-weight:750;font-size:26px;letter-spacing:-.005em}
+.drop p{margin:0;color:var(--muted);max-width:460px}
+.drop .chips{display:flex;gap:4px;justify-content:center}
+.drop .chips i{width:30px;height:46px;border-radius:5px;display:block}
+kbd{font:500 11px var(--mono);border:1px solid var(--line2);border-bottom-width:2px;border-radius:5px;padding:1px 5px;background:var(--field)}
+
+/* still */
+.still{padding:14px}
+.still .img{background:#000;border-radius:9px;overflow:hidden;display:grid;place-items:center}
+.still img{display:block;max-width:100%;max-height:60vh;object-fit:contain}
+.still .foot{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.fname{font:500 12px var(--mono);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:120px}
+
+/* palette strip */
+.strip{display:flex;height:92px;border-radius:9px;overflow:hidden;margin-top:12px;box-shadow:inset 0 0 0 1px rgba(127,127,127,.18)}
+.strip .sw{flex:1 1 0;min-width:0;border:0;padding:8px 9px;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;text-align:left;font:600 11.5px/1.25 var(--mono);transition:flex-grow .2s ease}
+.strip .sw:hover{flex-grow:1.35}
+.strip .sw small{font-weight:400;font-size:10.5px;opacity:.78}
+.strip.lg{height:112px}
+.cov{display:flex;height:7px;border-radius:4px;overflow:hidden;margin-top:7px}
+.cov span{display:block;min-width:2px}
+.covlbl{display:flex;justify-content:space-between;font-size:11.5px;color:var(--faint);margin-top:5px}
+
+/* palette list */
+.plist{list-style:none;margin:0;padding:0}
+.plist li{display:grid;grid-template-columns:30px 1fr auto;gap:11px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.plist li:first-child{border-top:0}
+.plist .chip{width:30px;height:30px;border-radius:7px;box-shadow:inset 0 0 0 1px rgba(127,127,127,.25);border:0;padding:0}
+.plist .hx{font:600 13px var(--mono)}
+.plist .rgb{font:400 11px var(--mono);color:var(--muted)}
+.plist .pc{font:500 12.5px var(--mono);text-align:right}
+.plist .pcbar{height:3px;border-radius:2px;background:var(--line);margin-top:4px;width:70px;margin-left:auto;overflow:hidden}
+.plist .pcbar i{display:block;height:100%;background:var(--muted)}
+.copyall{margin-top:10px;display:flex;gap:8px}
+
+/* 60/30/10 */
+.ratio .head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:12px}
+.ratio .head h2{margin:0}
+.ratio .head p{margin:6px 0 0;font-size:12px;color:var(--muted);max-width:220px}
+.score{text-align:right;line-height:1}
+.score b{display:block;font-stretch:72%;font-weight:800;font-size:40px;letter-spacing:-.01em}
+.score span{font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.score.good b{color:var(--good)}.score.ok b{color:var(--ok)}.score.bad b{color:var(--bad)}
+.rbar{display:flex;height:30px;border-radius:7px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(127,127,127,.2)}
+.rbar span{display:flex;align-items:center;padding:0 7px;font:600 11px var(--mono);min-width:0;overflow:hidden;white-space:nowrap}
+.tbar{display:flex;height:17px;margin-top:5px;gap:2px}
+.tbar span{display:flex;align-items:center;justify-content:center;border:1px dashed var(--line2);border-radius:4px;font:500 9.5px var(--mono);color:var(--faint);letter-spacing:.06em}
+.tlbl{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:4px}
+.roles{list-style:none;margin:12px 0 0;padding:0}
+.roles li{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.roles .chip{width:26px;height:26px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(127,127,127,.25);border:0;padding:0}
+.roles .nm{font-weight:650;font-size:13px}
+.roles .nm small{display:block;font:400 11px var(--mono);color:var(--muted)}
+.roles .v{text-align:right;font:600 13px var(--mono)}
+.roles .v small{display:block;font-weight:400;font-size:10.5px;color:var(--muted)}
+.roles .d.up{color:var(--ok)}.roles .d.dn{color:var(--ok)}.roles .d.eq{color:var(--good)}
+.verdict{margin:12px 0 0;padding:9px 11px;border-radius:9px;background:var(--panel2);font-size:12.5px;color:var(--fg)}
+.verdict b{font-weight:650}
+
+/* deck */
+.deckhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:22px 0 12px}
+.deckhead h3{margin:0;font-stretch:80%;font-weight:750;font-size:19px}
+.deckhead .hint{flex:1;min-width:200px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.ref{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:opacity .2s,border-color .2s}
+.ref .thumb{position:relative;aspect-ratio:16/10;background:#000}
+.ref .thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:filter .25s,opacity .25s}
+.ref.off .thumb img{filter:grayscale(1);opacity:.32}
+.ref.off .mini{opacity:.35}
+.ref.off{border-style:dashed}
+.inc{position:absolute;left:8px;top:8px;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px 0 6px;border-radius:7px;border:0;background:rgba(10,11,13,.72);color:#f0ece5;font:600 11px var(--mono);backdrop-filter:blur(6px)}
+.inc .bx{width:15px;height:15px;border-radius:4px;border:1.5px solid #f0ece5;display:grid;place-items:center}
+.inc .bx svg{width:11px;height:11px}
+.ref:not(.off) .inc .bx{background:#ffb547;border-color:#ffb547;color:#1a1206}
+.ref.off .inc .bx svg{display:none}
+.rm{position:absolute;right:8px;top:8px;width:26px;height:26px;border-radius:7px;border:0;background:rgba(10,11,13,.72);color:#f0ece5;display:grid;place-items:center;opacity:0;transition:opacity .15s}
+.ref:hover .rm,.rm:focus-visible{opacity:1}
+.rm svg{width:13px;height:13px}
+.ref .meta{padding:9px 10px 10px}
+.ref .nm{font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini{display:flex;height:14px;border-radius:4px;overflow:hidden;margin-top:7px}
+.mini span{flex:1}
+.ref .sc{display:flex;justify-content:space-between;margin-top:7px;font:500 11px var(--mono);color:var(--muted)}
+.addtile{display:grid;place-items:center;text-align:center;border:1.5px dashed var(--line2);border-radius:12px;min-height:200px;background:none;color:var(--muted);padding:16px}
+.addtile:hover{border-color:var(--accent);color:var(--fg);background:var(--accent-soft)}
+.addtile b{display:block;font-size:14px;color:var(--fg);margin-top:6px}
+.empty{padding:26px 10px;text-align:center;color:var(--muted)}
+
+/* overlay + toast */
+#dragOv{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(10,11,13,.6);backdrop-filter:blur(3px);pointer-events:none}
+#dragOv div{border:2px dashed var(--accent);border-radius:18px;padding:34px 46px;background:var(--panel);font-stretch:80%;font-weight:750;font-size:22px}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:60;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--shadow);transition:all .25s;pointer-events:none;max-width:90vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ═════ Film Tool Hub kit mapping ═════ */
+:root:root:root{--bg:var(--fth-bg);--panel:var(--fth-surface);--panel2:var(--fth-surface2);--field:var(--fth-bg2);--line:var(--fth-line);--line2:var(--fth-line2);--fg:var(--fth-text);--muted:var(--fth-muted);--faint:var(--fth-faint);--accent:var(--fth-accent);--accent-ink:var(--fth-on-accent);--accent-soft:var(--fth-accent-soft);--good:var(--fth-good);--ok:var(--fth-warn);--bad:var(--fth-bad);--shadow:var(--fth-shadow);--display:var(--fth-display);--mono:var(--fth-mono);}
+.fth-head .proj{flex:1;min-width:180px;max-width:380px;height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--fth-line2);background:var(--fth-bg2);font-size:14px;color:var(--fth-text);outline:none}
+.fth-head .proj:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+.fth-head .fth-btn svg{width:15px;height:15px;flex:none}
+.app{padding-top:16px}
+
+</style>
+</head>
+<body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>03 · Visual Planning</span><h1 class="fth-title">Colour Palette Studio</h1></div>
+  <span class="fth-vsep"></span><input id="proj" class="proj" placeholder="Project title (used on exports)" aria-label="Project title">
+  <div class="fth-actions">
+      <button class="fth-btn" id="openBtn" title="Open a saved .json project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5V18a1.5 1.5 0 0 0 1.5 1.5h15A1.5 1.5 0 0 0 21 18V9a1.5 1.5 0 0 0-1.5-1.5H12L10 5H4.5A1.5 1.5 0 0 0 3 6.5z"/></svg>Open .json</button>
+      <button class="fth-btn" id="saveBtn" title="Save stills and settings as a .json project file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M4.5 19.5h15"/></svg>Download .json</button>
+      <button class="fth-btn primary" id="pdfBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 13h6M9 16.5h4"/></svg><span id="pdfLbl">Export PDF</span></button>
+    </div>
+</header>
+<div class="app">
+  
+
+  <div class="bar">
+    <div class="seg modes" role="tablist">
+      <button data-mode="single" role="tab">Single still</button>
+      <button data-mode="deck" role="tab">Reference deck<span class="n" id="deckN"></span></button>
+    </div>
+    <div class="vsep"></div>
+    <div class="ctl">
+      <label for="k">Colours</label>
+      <input type="range" id="k" min="3" max="10" step="1" value="5">
+      <span class="kval" id="kval">5</span>
+    </div>
+    <div class="vsep"></div>
+    <div class="ctl">
+      <span class="lbl">Pick by</span>
+      <div class="seg" id="methodSeg">
+        <button data-method="coverage" title="Colours ranked by how much of the frame they cover">Coverage</button>
+        <button data-method="distinct" title="Favours colours that differ from each other, so small standout colours make it in">Distinct</button>
+      </div>
+    </div>
+    <span class="hint" id="methodHint"></span>
+  </div>
+
+  <main id="main"></main>
+</div>
+
+<div id="dragOv" hidden><div id="dragTxt">Drop to add</div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="fileImg" accept="image/*" multiple hidden>
+<input type="file" id="fileJson" accept=".json,application/json" hidden>
+
+<script>
+'use strict';
+/* ───────────── colour maths (OKLab) ───────────── */
+const s2l = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+const l2s = c => { const v = c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055; return Math.max(0, Math.min(255, Math.round(v * 255))); };
+const LUT = new Float64Array(256); for (let i = 0; i < 256; i++) LUT[i] = s2l(i);
+function rgb2ok(r, g, b) {
+  const R = typeof r === 'number' && Number.isInteger(r) ? LUT[r] : s2l(r), G = Number.isInteger(g) ? LUT[g] : s2l(g), B = Number.isInteger(b) ? LUT[b] : s2l(b);
+  const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B);
+  const m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B);
+  const s = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B);
+  return { L: 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, a: 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, b: 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s };
+}
+function ok2rgb(p) {
+  const l = (p.L + 0.3963377774 * p.a + 0.2158037573 * p.b) ** 3;
+  const m = (p.L - 0.1055613458 * p.a - 0.0638541728 * p.b) ** 3;
+  const s = (p.L - 0.0894841775 * p.a - 1.2914855480 * p.b) ** 3;
+  return [l2s(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s), l2s(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s), l2s(-0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)];
+}
+const d2 = (p, q) => { const x = p.L - q.L, y = p.a - q.a, z = p.b - q.b; return x * x + y * y + z * z; };
+const chroma = p => Math.hypot(p.a, p.b);
+const hex = rgb => '#' + rgb.map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+const lumOf = rgb => { const [r, g, b] = rgb.map(v => LUT[v]); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+const inkFor = rgb => lumOf(rgb) > 0.36 ? '#111214' : '#f6f3ee';
+
+/* Weighted k-means with deterministic farthest-point seeding (same input → same palette every time). */
+function kmeans(pts, k, iters = 20) {
+  pts = pts.filter(p => p.w > 0);
+  if (!pts.length) return { centers: [], asg: [] };
+  k = Math.min(k, pts.length);
+  let first = pts[0]; for (const p of pts) if (p.w > first.w) first = p;
+  const C = [{ L: first.L, a: first.a, b: first.b }];
+  const dd = pts.map(p => d2(p, first));
+  while (C.length < k) {
+    let bi = -1, bv = 0;
+    for (let i = 0; i < pts.length; i++) { const v = pts[i].w * dd[i]; if (v > bv) { bv = v; bi = i; } }
+    if (bi < 0) break;
+    const c = pts[bi]; C.push({ L: c.L, a: c.a, b: c.b });
+    for (let i = 0; i < pts.length; i++) { const v = d2(pts[i], c); if (v < dd[i]) dd[i] = v; }
+  }
+  const asg = new Int32Array(pts.length).fill(-1);
+  for (let it = 0; it < iters; it++) {
+    let moved = 0;
+    for (let i = 0; i < pts.length; i++) {
+      let bj = 0, bv = Infinity;
+      for (let j = 0; j < C.length; j++) { const v = d2(pts[i], C[j]); if (v < bv) { bv = v; bj = j; } }
+      if (asg[i] !== bj) { asg[i] = bj; moved++; }
+    }
+    const S = C.map(() => ({ L: 0, a: 0, b: 0, w: 0 }));
+    for (let i = 0; i < pts.length; i++) { const s = S[asg[i]], p = pts[i]; s.L += p.L * p.w; s.a += p.a * p.w; s.b += p.b * p.w; s.w += p.w; }
+    S.forEach((s, j) => { if (s.w > 0) C[j] = { L: s.L / s.w, a: s.a / s.w, b: s.b / s.w }; });
+    if (!moved) break;
+  }
+  const W = C.map(() => 0); for (let i = 0; i < pts.length; i++) W[asg[i]] += pts[i].w;
+  const centers = C.map((c, j) => ({ ...c, w: W[j], j })).filter(c => c.w > 0).sort((x, y) => y.w - x.w);
+  return { centers, asg, pts };
+}
+const norm = arr => { const t = arr.reduce((s, p) => s + p.w, 0) || 1; return arr.map(p => ({ ...p, w: p.w / t })); };
+const toSwatch = c => { const rgb = ok2rgb(c); return { rgb, hex: hex(rgb), share: c.w, ok: { L: c.L, a: c.a, b: c.b } }; };
+
+/* Pixels → 32 fine colour clusters (stored per still; everything else is built from these). */
+function fineClusters(data) {
+  const N = 32768, cnt = new Uint32Array(N), sr = new Float64Array(N), sg = new Float64Array(N), sb = new Float64Array(N);
+  let total = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 128) continue;
+    const r = data[i], g = data[i + 1], b = data[i + 2], key = (r >> 3) << 10 | (g >> 3) << 5 | (b >> 3);
+    cnt[key]++; sr[key] += r; sg[key] += g; sb[key] += b; total++;
+  }
+  if (!total) return [{ L: 0.5, a: 0, b: 0, w: 1 }];
+  const pts = [];
+  for (let k = 0; k < N; k++) if (cnt[k]) { const n = cnt[k]; pts.push({ ...rgb2ok(Math.round(sr[k] / n), Math.round(sg[k] / n), Math.round(sb[k] / n)), w: n / total }); }
+  return norm(kmeans(pts, 32, 24).centers.map(({ L, a, b, w }) => ({ L, a, b, w })));
+}
+
+/* Palette in one of two modes. */
+function palette(pts, k, method) {
+  if (!pts.length) return [];
+  if (method === 'coverage') return norm(kmeans(pts, k).centers).map(toSwatch);
+  // Distinct: greedy pick that trades coverage against difference from colours already chosen.
+  const fam = norm(kmeans(pts, 24).centers);
+  let pool = fam.filter(f => f.w >= 0.003); if (pool.length < Math.min(k, fam.length)) pool = fam.slice();
+  const sel = [pool[0]]; const used = new Set([0]);
+  while (sel.length < k && used.size < pool.length) {
+    let bi = -1, bv = -1;
+    pool.forEach((p, i) => { if (used.has(i)) return; const md = Math.sqrt(Math.min(...sel.map(s => d2(s, p)))); const v = Math.pow(p.w, 0.3) * md; if (v > bv) { bv = v; bi = i; } });
+    if (bi < 0) break; used.add(bi); sel.push(pool[bi]);
+  }
+  const share = sel.map(() => 0);
+  for (const f of fam) { let bj = 0, bv = Infinity; sel.forEach((s, j) => { const v = d2(s, f); if (v < bv) { bv = v; bj = j; } }); share[bj] += f.w; }
+  return sel.map((s, j) => ({ ...s, w: share[j] })).sort((x, y) => y.w - x.w).map(toSwatch);
+}
+
+/* 60/30/10: dominant + secondary by area, accent = the colour that stands out most. */
+const TARGET = [0.6, 0.3, 0.1];
+function ratio(pts) {
+  const fam = norm(kmeans(pts, 12, 24).centers);
+  if (!fam.length) return null;
+  const M = fam.reduce((m, f) => ({ L: m.L + f.L * f.w, a: m.a + f.a * f.w, b: m.b + f.b * f.w }), { L: 0, a: 0, b: 0 });
+  const sal = f => (Math.sqrt(d2(f, M)) + 0.6 * chroma(f)) * Math.sqrt(Math.min(1, f.w / 0.015));
+  let cand = fam.filter((f, i) => i > 0 && f.w <= 0.25); if (!cand.length) cand = fam.slice(1);
+  let A = null; for (const f of cand) if (!A || sal(f) > sal(A)) A = f;
+  // Grow three groups from three seeds: heaviest family, the standout accent, and the heaviest family far from both.
+  let D = fam[0], S = null;
+  if (A) {
+    let Sd = null, bv = 0;
+    for (const f of fam) { if (f === D || f === A) continue; const v = f.w * Math.min(d2(f, D), d2(f, A)); if (v > bv) { bv = v; Sd = f; } }
+    const seeds = Sd ? [D, Sd, A] : [D, A];
+    const C = seeds.map(s => ({ L: s.L, a: s.a, b: s.b }));
+    let asg = [];
+    for (let it = 0; it < 25; it++) {
+      asg = fam.map(f => { let bj = 0, bb = Infinity; C.forEach((c, j) => { const v = d2(f, c); if (v < bb) { bb = v; bj = j; } }); return bj; });
+      C.forEach((c, j) => { const g = fam.filter((_, i) => asg[i] === j), w = g.reduce((s, f) => s + f.w, 0); if (w > 0) { c.L = g.reduce((s, f) => s + f.L * f.w, 0) / w; c.a = g.reduce((s, f) => s + f.a * f.w, 0) / w; c.b = g.reduce((s, f) => s + f.b * f.w, 0) / w; } });
+    }
+    const W = C.map((_, j) => fam.reduce((s, f, i) => s + (asg[i] === j ? f.w : 0), 0));
+    const grp = C.map((c, j) => ({ ...c, w: W[j] }));
+    const acc = grp[grp.length - 1];
+    // keep the standout colour itself for the accent swatch (the group mean can turn muddy)
+    A = { L: A.L, a: A.a, b: A.b, w: acc.w };
+    const others = grp.slice(0, -1).filter(g => g.w > 0).sort((x, y) => y.w - x.w);
+    D = others[0] || D; S = others[1] || null;
+    if (!A.w) A = null;
+  }
+  const shares = [D.w, S ? S.w : 0, A ? A.w : 0];
+  const diff = shares.reduce((s, v, i) => s + Math.abs(v - TARGET[i]), 0);
+  const score = Math.max(0, Math.round(100 * (1 - diff / 0.8)));
+  const label = score >= 85 ? 'Very close to 60/30/10' : score >= 65 ? 'Broadly balanced' : score >= 45 ? 'Loosely balanced' : 'Far from 60/30/10';
+  const hints = [];
+  if (shares[0] > 0.72) hints.push('one colour takes over most of the frame');
+  else if (shares[0] < 0.48) hints.push('no single colour really dominates');
+  if (shares[2] < 0.04) hints.push('the accent is very subtle');
+  else if (shares[2] > 0.17) hints.push('the accent is unusually strong');
+  else if (shares[1] < 0.2) hints.push('the secondary colour is light on coverage');
+  const mk = (c, key, name, i) => c ? { key, name, target: TARGET[i], ...toSwatch(c) } : { key, name, target: TARGET[i], rgb: [128, 128, 128], hex: '—', share: 0, none: true };
+  return {
+    roles: [mk(D, 'dom', 'Dominant', 0), mk(S, 'sec', 'Secondary', 1), mk(A, 'acc', 'Accent', 2)],
+    score, label, hint: hints.join(', and ')
+  };
+}
+
+/* ───────────── state ───────────── */
+const state = { mode: 'single', k: 5, method: 'coverage', single: null, deck: [] };
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 10);
+let toastT;
+function toast(msg, ms = 2600) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms); }
+
+function loadImg(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('Could not read image')); i.src = src; }); }
+function analyseImg(img, name, keepUrl) {
+  const w0 = img.naturalWidth, h0 = img.naturalHeight;
+  let dataUrl = keepUrl, w = w0, h = h0;
+  if (!dataUrl) {
+    const sc = Math.min(1, 1800 / Math.max(w0, h0)); w = Math.max(1, Math.round(w0 * sc)); h = Math.max(1, Math.round(h0 * sc));
+    const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
+    x.fillStyle = '#ffffff'; x.fillRect(0, 0, w, h); x.drawImage(img, 0, 0, w, h);
+    dataUrl = c.toDataURL('image/jpeg', 0.9);
+  }
+  const as = Math.min(1, 240 / Math.max(w0, h0)), aw = Math.max(1, Math.round(w0 * as)), ah = Math.max(1, Math.round(h0 * as));
+  const c2 = document.createElement('canvas'); c2.width = aw; c2.height = ah; const x2 = c2.getContext('2d', { willReadFrequently: true });
+  x2.drawImage(img, 0, 0, aw, ah);
+  const pts = fineClusters(x2.getImageData(0, 0, aw, ah).data);
+  return { id: uid(), name, dataUrl, w, h, pts, ratio: ratio(pts), included: true };
+}
+async function analyseFile(file) {
+  const url = URL.createObjectURL(file);
+  try { return analyseImg(await loadImg(url), file.name || 'Pasted still'); }
+  finally { URL.revokeObjectURL(url); }
+}
+async function addFiles(files, target) {
+  files = [...files].filter(f => /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|bmp|avif|tiff?)$/i.test(f.name));
+  if (!files.length) { toast('That doesn’t look like an image file.'); return; }
+  target = target || state.mode;
+  if (target === 'single') files = files.slice(0, 1);
+  if (files.length > 1) toast(`Analysing ${files.length} stills…`, 60000);
+  let bad = 0;
+  for (const f of files) {
+    try {
+      const it = await analyseFile(f);
+      if (target === 'single') state.single = it; else state.deck.push(it);
+      if (target === 'deck') render();
+    } catch (e) { bad++; }
+  }
+  render();
+  if (bad) toast(`${bad} file${bad > 1 ? 's' : ''} couldn’t be read by this browser (HEIC/RAW won’t open — export a JPEG or PNG).`, 5000);
+  else if (files.length > 1) toast(`Added ${files.length} stills to the deck.`);
+}
+
+/* ───────────── deck maths ───────────── */
+const deckIncluded = () => state.deck.filter(d => d.included);
+function deckPts() { const inc = deckIncluded(); if (!inc.length) return []; return inc.flatMap(d => d.pts.map(p => ({ ...p, w: p.w / inc.length }))); }
+
+/* ───────────── rendering ───────────── */
+const ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const ICON_TICK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const pct = v => (v * 100 >= 9.95 ? Math.round(v * 100) : (v * 100).toFixed(1).replace(/\.0$/, '')) + '%';
+
+function stripHTML(pal, big) {
+  return `<div class="strip${big ? ' lg' : ''}">${pal.map(s => `<button class="sw" data-copy="${s.hex}" title="Copy ${s.hex}" style="background:${s.hex};color:${inkFor(s.rgb)}">${s.hex}<small>${pct(s.share)}</small></button>`).join('')}</div>
+  <div class="cov" title="How much of the frame each colour covers">${pal.map(s => `<span style="flex:${Math.max(s.share, 0.004)};background:${s.hex}"></span>`).join('')}</div>
+  <div class="covlbl"><span>Coverage across the frame</span><span>Click a swatch to copy its HEX</span></div>`;
+}
+function listHTML(pal) {
+  const mx = Math.max(...pal.map(s => s.share), 0.0001);
+  return `<ul class="plist">${pal.map(s => `<li><button class="chip" data-copy="${s.hex}" title="Copy ${s.hex}" style="background:${s.hex}"></button>
+    <div><div class="hx">${s.hex}</div><div class="rgb">RGB ${s.rgb.join(' ')}</div></div>
+    <div><div class="pc">${pct(s.share)}</div><div class="pcbar"><i style="width:${(s.share / mx) * 100}%"></i></div></div></li>`).join('')}</ul>
+    <div class="copyall"><button class="btn sm" data-copyall="hex">Copy all HEX</button><button class="btn sm ghost" data-copyall="rgb">Copy all RGB</button></div>`;
+}
+const scoreCls = s => s >= 80 ? 'good' : s >= 60 ? 'ok' : 'bad';
+function ratioHTML(r, sub) {
+  if (!r) return '';
+  const R = r.roles;
+  return `<div class="card ratio">
+    <div class="head"><div><h2>60 / 30 / 10</h2><p>${sub}</p></div>
+      <div class="score ${scoreCls(r.score)}"><b>${r.score}%</b><span>match</span></div></div>
+    <div class="rbar">${R.map(x => `<span style="flex:${Math.max(x.share, 0.006)};background:${x.none ? 'transparent' : x.hex};color:${inkFor(x.rgb)}">${x.share >= 0.07 ? pct(x.share) : ''}</span>`).join('')}</div>
+    <div class="tbar"><span style="flex:60">60</span><span style="flex:30">30</span><span style="flex:10">10</span></div>
+    <div class="tlbl"><span>Actual split (top) against the target (dashed)</span></div>
+    <ul class="roles">${R.map(x => { const dv = Math.round((x.share - x.target) * 100); return `<li><button class="chip" ${x.none ? '' : `data-copy="${x.hex}" title="Copy ${x.hex}"`} style="background:${x.none ? 'transparent' : x.hex}"></button>
+      <div class="nm">${x.name}<small>${x.hex}</small></div>
+      <div class="v">${pct(x.share)}<small>target ${Math.round(x.target * 100)}% · <span class="d ${dv > 0 ? 'up' : dv < 0 ? 'dn' : 'eq'}">${dv > 0 ? '+' : ''}${dv}</span></small></div></li>`; }).join('')}</ul>
+    <p class="verdict"><b>${r.label}</b>${r.hint ? ' — ' + r.hint + '.' : '.'}</p>
+  </div>`;
+}
+function dropHTML(title, body) {
+  return `<div class="drop" data-act="pick" tabindex="0" role="button">
+    <div><div class="chips"><i style="background:#1d2a3a"></i><i style="background:#3f5e78"></i><i style="background:#c9a27a"></i><i style="background:#e7d8bf"></i><i style="background:#c2412f"></i></div>
+    <h3>${title}</h3><p>${body}</p></div></div>`;
+}
+
+function renderSingle() {
+  const it = state.single;
+  if (!it) return dropHTML('Drop a still to pull its palette', 'Drag an image here, click to choose one, or paste with <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>V</kbd>. JPEG, PNG and WebP all work. Nothing leaves your computer.');
+  const pal = palette(it.pts, state.k, state.method);
+  return `<div class="cols">
+    <section class="card still">
+      <div class="img"><img src="${it.dataUrl}" alt=""></div>
+      ${stripHTML(pal, true)}
+      <div class="foot"><span class="fname" title="${esc(it.name)}">${esc(it.name)}</span>
+        <button class="btn sm" data-act="pick">Replace still</button>
+        <button class="btn sm" data-act="toDeck">Add to deck</button>
+        <button class="btn sm ghost" data-act="clearSingle">Clear</button></div>
+    </section>
+    <div class="stack">
+      <section class="card"><h2>Palette <span class="r">${pal.length} colours</span></h2>${listHTML(pal)}</section>
+      ${ratioHTML(it.ratio, 'Dominant and secondary by area; the accent is the colour that stands out most.')}
+    </div></div>`;
+}
+function renderDeck() {
+  const D = state.deck, inc = deckIncluded();
+  if (!D.length) return dropHTML('Build a reference deck', 'Drop in as many stills as you like, all at once or a few at a time. The deck palette updates as each one lands, and every still counts equally. Click to choose files or paste with <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>V</kbd>.');
+  let top;
+  if (inc.length) {
+    const pts = deckPts(), pal = palette(pts, state.k, state.method), r = ratio(pts);
+    top = `<div class="cols">
+      <section class="card"><h2>Deck palette <span class="r">built from ${inc.length} of ${D.length} still${D.length > 1 ? 's' : ''}</span></h2>
+        ${stripHTML(pal, true)}<div style="margin-top:14px">${listHTML(pal)}</div></section>
+      ${ratioHTML(r, 'Across every included still, each weighted equally.')}</div>`;
+  } else top = `<section class="card"><div class="empty">Every still is unticked. Tick at least one to build the deck palette.</div></section>`;
+  const cards = D.map(d => {
+    const mp = palette(d.pts, state.k, state.method);
+    return `<article class="ref${d.included ? '' : ' off'}" data-id="${d.id}">
+      <div class="thumb"><img src="${d.dataUrl}" alt="" loading="lazy">
+        <button class="inc" data-act="toggle" aria-pressed="${d.included}" title="${d.included ? 'Untick to leave this still out of the deck palette' : 'Tick to include this still again'}"><span class="bx">${ICON_TICK}</span>${d.included ? 'Included' : 'Left out'}</button>
+        <button class="rm" data-act="remove" title="Remove from deck" aria-label="Remove from deck">${ICON_X}</button></div>
+      <div class="meta"><div class="nm" title="${esc(d.name)}">${esc(d.name)}</div>
+        <div class="mini">${mp.map(s => `<span style="background:${s.hex}" title="${s.hex} · ${pct(s.share)}"></span>`).join('')}</div>
+        <div class="sc"><span>60/30/10</span><span>${d.ratio ? d.ratio.score + '%' : '—'}</span></div></div></article>`;
+  }).join('');
+  return `${top}
+    <div class="deckhead"><h3>Stills</h3><span class="hint">Untick a still to see how the palette shifts without it. Unticked stills stay in the project but are left out of the palette and the PDF.</span>
+      <button class="btn sm" data-act="all">Include all</button><button class="btn sm ghost" data-act="clearDeck">Clear deck</button></div>
+    <div class="grid">${cards}<button class="addtile" data-act="pick"><div><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="display:inline"><path d="M12 5v14M5 12h14"/></svg><b>Add stills</b>or drop them anywhere</div></button></div>`;
+}
+function render() {
+  document.querySelectorAll('[data-mode]').forEach(b => { b.classList.toggle('on', b.dataset.mode === state.mode); b.setAttribute('aria-selected', b.dataset.mode === state.mode); });
+  document.querySelectorAll('[data-method]').forEach(b => b.classList.toggle('on', b.dataset.method === state.method));
+  $('#k').value = state.k; $('#kval').textContent = state.k;
+  $('#deckN').textContent = state.deck.length ? state.deck.length : '';
+  $('#methodHint').textContent = state.method === 'coverage' ? 'Ranked by how much of the frame each colour covers.' : 'Favours colours that differ from each other, so small standouts make the cut.';
+  $('#pdfLbl').textContent = state.mode === 'single' ? 'Export PDF' : 'Export deck PDF';
+  $('#main').innerHTML = state.mode === 'single' ? renderSingle() : renderDeck();
+}
+
+/* ───────────── interactions ───────────── */
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (_) {} ta.remove(); }
+}
+function currentPalette() {
+  if (state.mode === 'single') return state.single ? palette(state.single.pts, state.k, state.method) : [];
+  return deckIncluded().length ? palette(deckPts(), state.k, state.method) : [];
+}
+function pick() { $('#fileImg').multiple = state.mode === 'deck'; $('#fileImg').value = ''; $('#fileImg').click(); }
+
+$('#main').addEventListener('click', async e => {
+  const c = e.target.closest('[data-copy]'); if (c) { await copyText(c.dataset.copy); toast(`Copied ${c.dataset.copy}`); return; }
+  const ca = e.target.closest('[data-copyall]');
+  if (ca) { const pal = currentPalette(); const txt = ca.dataset.copyall === 'hex' ? pal.map(s => s.hex).join(', ') : pal.map(s => `rgb(${s.rgb.join(', ')})`).join('\n'); await copyText(txt); toast(`Copied ${pal.length} colours`); return; }
+  const a = e.target.closest('[data-act]'); if (!a) return;
+  const card = a.closest('.ref'), item = card && state.deck.find(d => d.id === card.dataset.id);
+  switch (a.dataset.act) {
+    case 'pick': pick(); break;
+    case 'toDeck': if (state.single) { state.deck.push({ ...state.single, id: uid(), included: true }); render(); toast(`Added to the deck (${state.deck.length} still${state.deck.length > 1 ? 's' : ''})`); } break;
+    case 'clearSingle': state.single = null; render(); break;
+    case 'toggle': if (item) { item.included = !item.included; render(); } break;
+    case 'remove': if (item) { state.deck = state.deck.filter(d => d !== item); render(); toast('Removed from the deck'); } break;
+    case 'all': state.deck.forEach(d => d.included = true); render(); break;
+    case 'clearDeck': if (confirmInline(a)) { state.deck = []; render(); } break;
+  }
+});
+function confirmInline(btn) { // two-click confirm, no browser dialogs
+  if (btn.dataset.arm) return true;
+  btn.dataset.arm = '1'; const t = btn.textContent; btn.textContent = 'Click again to clear'; btn.classList.add('primary');
+  setTimeout(() => { if (btn.isConnected) { delete btn.dataset.arm; btn.textContent = t; btn.classList.remove('primary'); } }, 2500);
+  return false;
+}
+$('#main').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.drop')) { e.preventDefault(); pick(); } });
+$('#fileImg').addEventListener('change', e => { if (e.target.files.length) addFiles(e.target.files); });
+document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { state.mode = b.dataset.mode; render(); });
+document.querySelectorAll('[data-method]').forEach(b => b.onclick = () => { state.method = b.dataset.method; render(); });
+$('#k').addEventListener('input', e => { state.k = +e.target.value; render(); });
+
+// drag & drop anywhere
+let dragDepth = 0;
+const hasFiles = e => [...(e.dataTransfer?.types || [])].includes('Files');
+window.addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; $('#dragTxt').textContent = state.mode === 'single' ? 'Drop a still to analyse it' : 'Drop stills to add them to the deck'; $('#dragOv').hidden = false; });
+window.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+window.addEventListener('dragleave', e => { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; $('#dragOv').hidden = true; } });
+window.addEventListener('drop', e => {
+  if (!hasFiles(e)) return; e.preventDefault(); dragDepth = 0; $('#dragOv').hidden = true;
+  const files = [...e.dataTransfer.files];
+  if (files.length === 1 && /\.json$/i.test(files[0].name)) { openProject(files[0]); return; }
+  addFiles(files);
+});
+window.addEventListener('paste', e => {
+  if (e.target.matches('input')) return;
+  const files = [...(e.clipboardData?.items || [])].filter(i => i.kind === 'file' && i.type.startsWith('image/')).map(i => i.getAsFile());
+  if (files.length) { e.preventDefault(); addFiles(files); }
+});
+
+/* ───────────── project save / open ───────────── */
+const slug = s => (s || '').trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').slice(0, 60) || 'colour-palette';
+function download(name, blob) { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }
+function fthData() {
+  return {
+    app: 'colour-palette-studio', version: 1, saved: new Date().toISOString(), title: $('#proj').value.trim(),
+    settings: { colours: state.k, pickBy: state.method, mode: state.mode },
+    single: state.single ? { name: state.single.name, image: state.single.dataUrl } : null,
+    deck: state.deck.map(d => ({ name: d.name, included: d.included, image: d.dataUrl }))
+  };
+}
+$('#saveBtn').onclick = () => {
+  if (!state.single && !state.deck.length) { toast('Nothing to save yet. Add a still first.'); return; }
+  const data = fthData();
+  download(slug($('#proj').value) + '.json', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+  toast('Project saved');
+};
+$('#openBtn').onclick = () => { $('#fileJson').value = ''; $('#fileJson').click(); };
+$('#fileJson').addEventListener('change', e => { if (e.target.files[0]) openProject(e.target.files[0]); });
+async function openProject(file) {
+  let data;
+  try { data = JSON.parse(await file.text()); } catch (e) { toast('That file isn’t a readable project (.json).'); return; }
+  if (!data || data.app !== 'colour-palette-studio') { toast('That .json wasn’t saved from Colour Palette Studio.'); return; }
+  toast('Opening project…', 60000);
+  const load = async o => { const img = await loadImg(o.image); const it = analyseImg(img, o.name || 'Still', o.image); it.w = img.naturalWidth; it.h = img.naturalHeight; it.included = o.included !== false; return it; };
+  try {
+    const single = data.single && data.single.image ? await load(data.single) : null;
+    const deck = []; for (const d of data.deck || []) { if (d.image) deck.push(await load(d)); }
+    state.single = single; state.deck = deck;
+    const s = data.settings || {};
+    state.k = Math.min(10, Math.max(3, +s.colours || 5)); state.method = s.pickBy === 'distinct' ? 'distinct' : 'coverage';
+    state.mode = s.mode === 'deck' ? 'deck' : (single || !deck.length ? 'single' : 'deck');
+    $('#proj').value = data.title || '';
+    render(); toast(`Opened ${data.title ? '“' + data.title + '”' : 'project'}`);
+  } catch (e) { toast('Some images in that project couldn’t be read.'); }
+}
+
+/* ───────────── PDF export (jsPDF) ───────────── */
+let jspdfP;
+function loadJsPDF() {
+  if (window.jspdf) return Promise.resolve(window.jspdf);
+  return jspdfP || (jspdfP = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = () => window.jspdf ? res(window.jspdf) : rej(); s.onerror = () => { jspdfP = null; rej(); }; document.head.appendChild(s);
+  }));
+}
+const PW = 297, PH = 210, PM = 14, INK = [24, 25, 28], MUTED = [112, 116, 124], RULE = [220, 216, 208];
+const BLOCK_H = 26 + 11 + 3 + 7 + 15; // strip + labels + coverage bar + gap + 60/30/10 row
+function pdfHeader(doc, title, sub, page) {
+  doc.setTextColor(...INK); doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.text(title, PM, PM + 5);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED); doc.text(sub, PM, PM + 10.5);
+  doc.setFontSize(7.5); doc.text('Colour Palette Studio', PW - PM, PM + 5, { align: 'right' });
+  if (page) doc.text(page, PW - PM, PM + 10.5, { align: 'right' });
+  doc.setDrawColor(...RULE); doc.setLineWidth(0.25); doc.line(PM, PM + 14, PW - PM, PM + 14);
+  return PM + 19;
+}
+function pdfStrip(doc, pal, x, y, w) {
+  const h = 26, n = pal.length, sw = w / n;
+  pal.forEach((s, i) => { doc.setFillColor(...s.rgb); doc.rect(x + i * sw, y, sw + 0.05, h, 'F'); });
+  doc.setDrawColor(...RULE); doc.setLineWidth(0.2); doc.rect(x, y, w, h, 'S');
+  pal.forEach((s, i) => {
+    const cx = x + i * sw + sw / 2;
+    doc.setTextColor(...INK); doc.setFont('helvetica', 'bold'); doc.setFontSize(n > 8 ? 7 : 8); doc.text(s.hex, cx, y + h + 4.6, { align: 'center' });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(6.6); doc.setTextColor(...MUTED); doc.text(sw >= 30 ? `RGB ${s.rgb.join(' ')}  ·  ${pct(s.share)}` : pct(s.share), cx, y + h + 8.4, { align: 'center' });
+  });
+  let cx = x; const by = y + h + 11;
+  pal.forEach(s => { const bw = w * s.share; doc.setFillColor(...s.rgb); doc.rect(cx, by, bw + 0.05, 2.2, 'F'); cx += bw; });
+  return by + 3;
+}
+function pdfRatio(doc, r, x, y, w) {
+  if (!r) return y;
+  doc.setDrawColor(...RULE); doc.setLineWidth(0.2); doc.line(x, y, x + w, y);
+  const ty = y + 6.5;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...INK); doc.text('60 / 30 / 10', x, ty);
+  doc.setFontSize(14); const sc = r.score >= 80 ? [31, 138, 80] : r.score >= 60 ? [154, 100, 0] : [192, 57, 43];
+  doc.setTextColor(...sc); doc.text(r.score + '%', x, ty + 6.5);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...MUTED); doc.text('match · ' + r.label, x + 15, ty + 6.3);
+  const colW = (w - 80) / 3; let rx = x + 80;
+  r.roles.forEach(ro => {
+    if (!ro.none) { doc.setFillColor(...ro.rgb); doc.setDrawColor(...RULE); doc.rect(rx, ty - 3.4, 9, 9, 'FD'); }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...INK);
+    doc.text(`${ro.name}  ${pct(ro.share)}`, rx + 11.5, ty);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...MUTED);
+    doc.text(`${ro.hex}  ·  target ${Math.round(ro.target * 100)}%`, rx + 11.5, ty + 4.2);
+    rx += colW;
+  });
+  return ty + 9;
+}
+function fit(w, h, bw, bh) { const s = Math.min(bw / w, bh / h); return [w * s, h * s]; }
+function pdfStillPage(doc, it, title, sub, page) {
+  const top = pdfHeader(doc, title, sub, page);
+  const availH = PH - PM - top - BLOCK_H - 5, availW = PW - 2 * PM;
+  const [iw, ih] = fit(it.w, it.h, availW, availH);
+  const ix = PM + (availW - iw) / 2;
+  doc.addImage(it.dataUrl, 'JPEG', ix, top, iw, ih, 'img' + it.id, 'FAST');
+  const sw = Math.max(iw, Math.min(availW, 190)), sx = PM + (availW - sw) / 2;
+  const pal = palette(it.pts, state.k, state.method);
+  const y = pdfStrip(doc, pal, sx, top + ih + 5, sw);
+  pdfRatio(doc, it.ratio, sx, y + 4, sw);
+}
+const subLine = () => `${state.k} colours · picked by ${state.method} · ${new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}`;
+$('#pdfBtn').onclick = async () => {
+  const title = $('#proj').value.trim();
+  if (state.mode === 'single' && !state.single) { toast('Add a still first.'); return; }
+  if (state.mode === 'deck' && !deckIncluded().length) { toast(state.deck.length ? 'Tick at least one still to export.' : 'Add some stills to the deck first.'); return; }
+  let lib; toast('Building PDF…', 30000);
+  try { lib = await loadJsPDF(); } catch (e) { toast('Couldn’t load the PDF library — check your internet connection and try again.', 5000); return; }
+  const doc = new lib.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+  if (state.mode === 'single') {
+    const it = state.single;
+    doc.setProperties({ title: title || it.name });
+    pdfStillPage(doc, it, title || it.name, (title ? it.name + '  ·  ' : '') + subLine());
+    doc.save(slug(title || it.name.replace(/\.[^.]+$/, '')) + '-palette.pdf');
+  } else {
+    const inc = deckIncluded(), total = inc.length + 1, T = title || 'Reference deck';
+    doc.setProperties({ title: T });
+    const top = pdfHeader(doc, T, `Deck palette from ${inc.length} still${inc.length > 1 ? 's' : ''}  ·  ${subLine()}`, `Page 1 of ${total}`);
+    const gw = PW - 2 * PM, gh = PH - PM - top - BLOCK_H - 5, gap = 3;
+    let best = null;
+    for (let cols = 1; cols <= inc.length; cols++) {
+      const rows = Math.ceil(inc.length / cols), cw = (gw - (cols - 1) * gap) / cols, ch = (gh - (rows - 1) * gap) / rows;
+      if (ch <= 0) continue; const cell = Math.min(cw, ch * 1.6);
+      if (!best || cell > best.cell) best = { cols, rows, cw, ch, cell };
+    }
+    // pack rows from the top: each row is only as tall as its tallest fitted still
+    let ry = top;
+    for (let r0 = 0; r0 < inc.length; r0 += best.cols) {
+      const row = inc.slice(r0, r0 + best.cols), sizes = row.map(it => fit(it.w, it.h, best.cw, best.ch));
+      const rh = Math.max(...sizes.map(s => s[1])), rowW = best.cols * best.cw + (best.cols - 1) * gap;
+      row.forEach((it, c) => {
+        const [iw, ih] = sizes[c];
+        const x = PM + (gw - rowW) / 2 + c * (best.cw + gap) + (best.cw - iw) / 2, y = ry + (rh - ih) / 2;
+        doc.addImage(it.dataUrl, 'JPEG', x, y, iw, ih, 'img' + it.id, 'FAST');
+      });
+      ry += rh + gap;
+    }
+    const usedH = ry - gap - top;
+    const pts = deckPts();
+    const y = pdfStrip(doc, palette(pts, state.k, state.method), PM, top + usedH + 5, gw);
+    pdfRatio(doc, ratio(pts), PM, y + 4, gw);
+    inc.forEach((it, i) => { doc.addPage(); pdfStillPage(doc, it, it.name, `Still ${i + 1} of ${inc.length}  ·  ${T}  ·  ${subLine()}`, `Page ${i + 2} of ${total}`); });
+    doc.save(slug(T) + '-deck.pdf');
+  }
+  toast('PDF exported');
+};
+
+render();
+</script>
+<script>/* fth-adapter */
+(function(){
+  if (!window.fthStore) return;
+  let restoring = false;
+  const save = () => { if (restoring) return; const has = state.single || state.deck.length; fthStore.set('project', has ? fthData() : null); };
+  fthAutosave(save, 1500);
+  fthStore.get('project').then(async d => {
+    if (!d || !d.app) return;
+    restoring = true; const t = toast; toast = () => {};
+    try { await openProject({ text: async () => JSON.stringify(d) }); } finally { toast = t; restoring = false; }
+  });
+})();
+</script>
+</body>
+</html>

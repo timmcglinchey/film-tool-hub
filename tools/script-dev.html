@@ -1,0 +1,2470 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scaffolded Scriptwriting</title>
+<style>
+:root{
+  --ui:"Instrument Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --mono:"Courier Prime","Courier New",Courier,monospace;
+  --bg:#f3f0e9; --panel:#faf8f3; --card:#ffffff; --sunk:#efebe2;
+  --ink:#1d1b18; --ink2:#57514a; --ink3:#8b847a; --line:#e2dcd0; --line2:#cfc7b8;
+  --accent:#2c4f84; --accent2:#e8eef8; --accent-ink:#fff;
+  --paper:#fffefb; --paper-ink:#151412; --paper-edge:#e6e0d4;
+  --shadow:0 1px 2px rgba(50,35,10,.05),0 6px 20px rgba(50,35,10,.06);
+  --shadow2:0 10px 40px rgba(30,20,0,.18);
+  --lie:#a8475a; --truth:#c48a12; --tragic:#5d6a7e;
+  --cs:#2c8a78; --pr:#cf8526; --ch:#cc5638; --a2:#4a6fb5; --mid:#8a5cc2;
+  --warn-bg:#fff3d6; --warn-ink:#6f4700; --warn-line:#efd39a;
+  --tip-bg:#eaf0f9; --tip-ink:#26436d; --tip-line:#c8d7ee;
+  --ok:#2f7d4f;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131417; --panel:#191a1e; --card:#202227; --sunk:#16171a;
+    --ink:#ecebe6; --ink2:#b4afa6; --ink3:#7f7b74; --line:#2c2e34; --line2:#3a3d44;
+    --accent:#8fb0e6; --accent2:#1f2a3c; --accent-ink:#0f1520;
+    --paper:#1c1d21; --paper-ink:#e9e7e1; --paper-edge:#2c2e34;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+    --lie:#d77689; --truth:#e2b04a; --tragic:#8f9db3;
+    --cs:#4fb8a3; --pr:#e6a24c; --ch:#e9785b; --a2:#7d9ee0; --mid:#ad86e0;
+    --warn-bg:#33290f; --warn-ink:#f3d58f; --warn-line:#5a4a1d;
+    --tip-bg:#18243a; --tip-ink:#b9cdf0; --tip-line:#2a3c5c;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131417; --panel:#191a1e; --card:#202227; --sunk:#16171a;
+  --ink:#ecebe6; --ink2:#b4afa6; --ink3:#7f7b74; --line:#2c2e34; --line2:#3a3d44;
+  --accent:#8fb0e6; --accent2:#1f2a3c; --accent-ink:#0f1520;
+  --paper:#1c1d21; --paper-ink:#e9e7e1; --paper-edge:#2c2e34;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25);
+  --lie:#d77689; --truth:#e2b04a; --tragic:#8f9db3;
+  --cs:#4fb8a3; --pr:#e6a24c; --ch:#e9785b; --a2:#7d9ee0; --mid:#ad86e0;
+  --warn-bg:#33290f; --warn-ink:#f3d58f; --warn-line:#5a4a1d;
+  --tip-bg:#18243a; --tip-ink:#b9cdf0; --tip-line:#2a3c5c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--ui);-webkit-font-smoothing:antialiased;overflow:hidden}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+::selection{background:color-mix(in srgb,var(--accent) 30%,transparent)}
+a{color:var(--accent)}
+.fam-cs{--c:var(--cs)} .fam-pr{--c:var(--pr)} .fam-ch{--c:var(--ch)} .fam-a2{--c:var(--a2)} .fam-mid{--c:var(--mid)}
+
+/* ---------- top bar ---------- */
+#app{height:100%;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:14px;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);flex:none;position:relative;z-index:20}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--ink);color:var(--bg);display:grid;place-items:center;font:600 15px var(--serif);flex:none}
+.brand-txt{display:flex;flex-direction:column;line-height:1.1;min-width:0}
+.brand-txt small{font-size:11px;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase}
+.proj-title{border:1px solid transparent;background:transparent;font:600 17px var(--serif);padding:2px 6px;margin-left:-6px;border-radius:6px;width:min(320px,30vw);text-overflow:ellipsis}
+.proj-title:hover{border-color:var(--line)} .proj-title:focus{outline:none;border-color:var(--accent);background:var(--card)}
+.tabs{display:flex;gap:4px;margin:0 auto;background:var(--sunk);padding:4px;border-radius:999px;border:1px solid var(--line)}
+.tab{border:0;background:transparent;padding:7px 16px 7px 10px;border-radius:999px;display:flex;align-items:center;gap:8px;color:var(--ink2);font-weight:600;font-size:14px}
+.tab .n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;background:var(--line);color:var(--ink2)}
+.tab:hover{color:var(--ink)}
+.tab.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.tab.on .n{background:var(--ink);color:var(--bg)}
+.tab-arrow{color:var(--ink3);align-self:center;font-size:12px}
+.top-actions{display:flex;align-items:center;gap:8px}
+.save-state{font-size:12px;color:var(--ink3);text-align:right;line-height:1.25;max-width:190px}
+.save-state b{color:var(--ink2);font-weight:600}
+.save-state.nag b{color:var(--warn-ink)}
+.btn{border:1px solid var(--line2);background:var(--card);padding:7px 12px;border-radius:9px;font-weight:600;font-size:13.5px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn:hover{border-color:var(--ink3)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.primary:hover{opacity:.9}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:var(--sunk)}
+.btn.sm{padding:4px 9px;font-size:12.5px;border-radius:7px}
+.btn.icon{padding:7px 9px}
+.btn.on{background:var(--accent2);border-color:var(--accent);color:var(--accent)}
+.btn .dot{width:8px;height:8px;border-radius:50%;background:var(--warn-ink);display:none}
+.btn.nag .dot{display:inline-block;animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.btn svg,.ico{width:16px;height:16px;flex:none}
+
+#view{flex:1;overflow:auto;position:relative;scroll-behavior:auto}
+
+/* ---------- generic UI ---------- */
+.wrap{max-width:1180px;margin:0 auto;padding:26px 24px 80px}
+h1,h2,h3{font-family:var(--serif);font-weight:600;letter-spacing:-.01em;margin:0}
+h2{font-size:24px} h3{font-size:18px}
+.eyebrow{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);font-weight:600}
+.muted{color:var(--ink3)} .small{font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.sec{padding:24px 26px;margin-bottom:22px;scroll-margin-top:20px}
+.sec-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:6px}
+.sec-num{font:600 13px var(--ui);width:28px;height:28px;border-radius:8px;background:var(--sunk);border:1px solid var(--line);display:grid;place-items:center;flex:none;color:var(--ink2)}
+.sec-head h2{flex:1}
+.lede{color:var(--ink2);margin:4px 0 18px 42px;max-width:70ch}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;min-width:0}
+.flabel{font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:6px;color:var(--ink)}
+.fhint{font-size:12.5px;color:var(--ink3);margin-top:-2px}
+.field input,.field textarea,.field select,.inp{border:1px solid var(--line2);background:var(--panel);border-radius:9px;padding:9px 11px;width:100%;line-height:1.45;transition:border-color .15s,box-shadow .15s}
+.field textarea{resize:vertical;min-height:44px;overflow:hidden}
+.field input:focus,.field textarea:focus,.field select:focus,.inp:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent);background:var(--card)}
+.field.big textarea{font-size:16px}
+.field.lie textarea{border-left:4px solid var(--lie)} .field.truth textarea{border-left:4px solid var(--truth)} .field.tragic textarea{border-left:4px solid var(--tragic)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);background:var(--panel);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600;color:var(--ink2)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button.chip:hover{border-color:var(--ink3)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--sunk);color:var(--ink2);border:1px solid var(--line)}
+.also{font-size:11px;color:var(--ink3);font-weight:500}
+.also b{color:var(--ink2);font-weight:600}
+.info{width:18px;height:18px;border-radius:50%;border:1px solid var(--line2);background:var(--card);color:var(--ink3);font:italic 700 11px/1 Georgia,serif;display:inline-grid;place-items:center;padding:0;flex:none}
+.info:hover{color:var(--accent);border-color:var(--accent)}
+.msgs{display:flex;flex-direction:column;gap:8px}
+.msgs:empty{display:none}
+.msg{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;font-size:13.5px;line-height:1.45;border:1px solid}
+.msg .mi{flex:none;width:18px;height:18px;margin-top:1px}
+.msg.warn{background:var(--warn-bg);color:var(--warn-ink);border-color:var(--warn-line)}
+.msg.tip,.msg.info{background:var(--tip-bg);color:var(--tip-ink);border-color:var(--tip-line)}
+.msg .mact{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
+.msg .mact button{border:1px solid currentColor;background:transparent;border-radius:7px;padding:2px 9px;font-size:12px;font-weight:600;color:inherit}
+.hint{background:var(--tip-bg);color:var(--tip-ink);border:1px solid var(--tip-line);border-radius:10px;padding:10px 13px;font-size:13.5px;display:flex;gap:10px}
+.hint b{font-weight:700}
+body.no-tips .hint,body.no-tips .teach{display:none!important}
+.row{display:flex;gap:10px;align-items:center}
+.spacer{flex:1}
+.divider{height:1px;background:var(--line);margin:18px 0}
+.empty{padding:22px;text-align:center;color:var(--ink3);border:1.5px dashed var(--line2);border-radius:12px;font-size:14px}
+.kbd{font:600 11.5px var(--mono);border:1px solid var(--line2);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--panel)}
+.seg{display:inline-flex;background:var(--sunk);border:1px solid var(--line);border-radius:9px;padding:3px}
+.seg button{border:0;background:transparent;padding:5px 11px;border-radius:7px;font-size:13px;font-weight:600;color:var(--ink2)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;user-select:none;white-space:nowrap}
+.switch input{appearance:none;width:34px;height:20px;border-radius:999px;background:var(--line2);position:relative;transition:.2s;margin:0;cursor:pointer;flex:none}
+.switch input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.switch input:checked{background:var(--accent)}
+.switch input:checked::after{left:16px}
+
+/* ---------- develop ---------- */
+.dev{display:grid;grid-template-columns:210px minmax(0,1fr);gap:28px;max-width:1180px;margin:0 auto;padding:26px 24px 120px}
+.dnav{position:sticky;top:22px;align-self:start;display:flex;flex-direction:column;gap:2px}
+.dnav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;text-decoration:none;color:var(--ink2);font-weight:600;font-size:14px}
+.dnav a:hover{background:var(--sunk);color:var(--ink)}
+.dnav a.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.dnav .cdot{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--line2);flex:none}
+.dnav .cdot.half{background:linear-gradient(90deg,var(--ok) 50%,transparent 50%);border-color:var(--ok)}
+.dnav .cdot.full{background:var(--ok);border-color:var(--ok)}
+.dnav .navfoot{margin-top:14px;padding:12px;font-size:12.5px;color:var(--ink3);border-top:1px solid var(--line)}
+.welcome{padding:22px 26px;margin-bottom:22px;background:linear-gradient(135deg,var(--card),var(--accent2));position:relative}
+.welcome h2{font-size:26px;margin-bottom:6px}
+.welcome .flow{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:14px 0 6px}
+.welcome .flow div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13.5px;color:var(--ink2)}
+.welcome .flow b{display:block;color:var(--ink);font-family:var(--serif);font-size:16px;margin-bottom:2px}
+.xbtn{position:absolute;top:12px;right:12px}
+.spark{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;padding:16px;border-radius:12px;background:var(--sunk);border:1px solid var(--line)}
+.spark .field{margin-bottom:8px}
+.logline-preview{font:500 18px/1.5 var(--serif);padding:16px 18px;border-radius:12px;background:var(--sunk);border:1px solid var(--line);margin:4px 0 12px}
+.logline-preview .slot{border-bottom:2px solid var(--accent);color:var(--ink)}
+.logline-preview .slot.empty{color:var(--ink3);border-bottom-style:dashed;font-style:italic}
+.lb{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.lb .field{margin:0}
+.lb .lbk{font:700 11px var(--ui);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.lbex{font-size:13.5px;color:var(--ink2);margin:0 0 12px;padding:8px 12px;border-left:3px solid var(--accent);background:var(--sunk);border-radius:0 8px 8px 0;font-style:italic}
+.lbex b{font-style:normal;color:var(--ink)}
+.lbconn{border:1px solid var(--line2);background:var(--card);border-radius:6px;font:700 11px var(--ui);text-transform:uppercase;letter-spacing:.06em;color:var(--accent);padding:1px 2px;margin-right:4px}
+.lbk{display:flex;align-items:center;min-height:22px}
+.field select.lbconn{width:auto;padding:1px 4px;border-radius:6px;line-height:1.2;background:var(--card)}
+.wc{font-size:12px;color:var(--ink3);text-align:right;margin-top:-8px}
+.lt{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.lt .ltcol{border-radius:12px;padding:14px 16px 4px;border:1px solid var(--line)}
+.lt .ltcol.l{background:color-mix(in srgb,var(--lie) 7%,var(--card))}
+.lt .ltcol.t{background:color-mix(in srgb,var(--truth) 8%,var(--card))}
+.ltlab{font:700 12px var(--ui);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ltcol.l .ltlab{color:var(--lie)} .ltcol.t .ltlab{color:var(--truth)}
+.checks{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:6px}
+.checks h4{margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.checks label{display:flex;gap:8px;font-size:13px;color:var(--ink2);padding:3px 0;cursor:pointer;align-items:flex-start}
+.checks input{margin-top:3px;accent-color:var(--accent)}
+.topics{max-height:220px;overflow:auto;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.topics .chip{font-size:11.5px;padding:2px 8px}
+details.disc>summary{cursor:pointer;font-weight:600;font-size:13.5px;color:var(--accent);list-style:none;display:inline-flex;gap:6px;align-items:center;margin:2px 0 10px}
+details.disc>summary::-webkit-details-marker{display:none}
+details.disc>summary::before{content:"▸";transition:.15s;display:inline-block}
+details.disc[open]>summary::before{transform:rotate(90deg)}
+.arcs{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.arc-opt{border:1.5px solid var(--line);background:var(--panel);border-radius:12px;padding:10px 10px 10px;text-align:left;display:flex;flex-direction:column;gap:4px;transition:.15s}
+.arc-opt:hover{border-color:var(--line2)}
+.arc-opt.on{border-color:var(--accent);background:var(--accent2);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
+.arc-opt b{font-size:13.5px}
+.arc-opt .ft{font:700 10.5px var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.arc-opt svg{width:100%;height:38px;display:block}
+.arc-opt .st{font-size:11.5px;color:var(--ink2);line-height:1.35}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.ccard{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px 16px 4px;position:relative}
+.ccard.prot{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));box-shadow:inset 4px 0 0 var(--accent)}
+.ccard-head{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.ccard-head input{font:600 17px var(--serif);border:0;background:transparent;padding:2px 0;flex:1;min-width:0;border-bottom:1.5px dashed var(--line2);border-radius:0}
+.ccard-head input:focus{outline:none;border-bottom-color:var(--accent)}
+.ccard-head select{border:1px solid var(--line2);background:var(--card);border-radius:7px;padding:3px 6px;font-size:12.5px;font-weight:600}
+.ccard .field{margin-bottom:10px}
+.ccard .field textarea,.ccard .field input{background:var(--card)}
+.cycle{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;align-items:end}
+.cycle .field{margin:0}
+.cycle .flabel{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3)}
+.addcard{border:1.5px dashed var(--line2);border-radius:12px;background:transparent;min-height:120px;color:var(--ink3);font-weight:600;display:grid;place-items:center}
+.addcard:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- outline ---------- */
+.ol{max-width:1280px;margin:0 auto;padding:22px 24px 120px}
+.glance{padding:18px 22px 16px;margin-bottom:18px}
+.glance-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.arcchart{position:relative;height:190px;margin:8px 0 0}
+.arcchart svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.arcchart .zone{position:absolute;left:0;right:0;pointer-events:none}
+.arcchart .zl{position:absolute;left:8px;font:700 10.5px var(--ui);letter-spacing:.1em;text-transform:uppercase;max-width:46%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arcchart .zl span{font:500 12.5px var(--serif);letter-spacing:0;text-transform:none;color:var(--ink2);margin-left:6px}
+.adot{position:absolute;width:13px;height:13px;border-radius:50%;transform:translate(-50%,-50%);border:2.5px solid var(--card);box-shadow:0 0 0 1px var(--line2)}
+.adot.sm{width:8px;height:8px;border-width:1.5px}
+.atip{position:absolute;transform:translate(-50%,8px);font-size:11px;color:var(--ink2);white-space:nowrap;background:var(--card);border:1px solid var(--line);padding:1px 6px;border-radius:6px;pointer-events:none;opacity:0;transition:.12s}
+.adot:hover+.atip{opacity:1}
+.alegend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:6px}
+.alegend i{display:inline-block;width:18px;height:0;border-top:2.5px solid var(--ink);vertical-align:middle;margin-right:5px}
+.tl{position:relative;margin-top:8px}
+.tl-row{display:flex;height:96px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.tl-seg{position:relative;display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--card)}
+.tl-seg:last-child{border-right:0}
+.tl-part{flex:1;min-height:0;overflow:hidden;padding:7px 10px;background:color-mix(in srgb,var(--c) 13%,var(--card));border-top:4px solid var(--c);cursor:pointer;transition:background .15s}
+.tl-part:hover{background:color-mix(in srgb,var(--c) 22%,var(--card))}
+.tl-part.sel{background:color-mix(in srgb,var(--c) 28%,var(--card));box-shadow:inset 0 0 0 2px var(--c)}
+.tl-seg.grp .tl-part{padding:3px 8px}
+.tl-seg.grp .tl-part+.tl-part{border-top:3px solid var(--c)}
+.tl-seg.grp .ts{-webkit-line-clamp:1}
+.tl-part .tn{font:700 11px var(--ui);letter-spacing:.04em;text-transform:uppercase;color:color-mix(in srgb,var(--c) 70%,var(--ink));white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-part .ts{font-size:12px;color:var(--ink2);line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
+.tl-part .ts.e{color:var(--ink3);font-style:italic}
+.tl-m.sel .dia{box-shadow:0 0 0 4px color-mix(in srgb,var(--mid) 40%,transparent)}
+.tl-m{position:absolute;top:-8px;bottom:-8px;width:0;z-index:2;cursor:pointer}
+.tl-m::before{content:"";position:absolute;top:0;bottom:0;left:-1.5px;border-left:3px solid var(--c)}
+.tl-m .dia{position:absolute;top:50%;left:0;width:18px;height:18px;transform:translate(-50%,-50%) rotate(45deg);background:var(--c);border:3px solid var(--card);border-radius:3px}
+.tl-m.filled .dia{box-shadow:0 0 0 2px var(--c)}
+.tl-mlab{position:absolute;top:0;transform:translateX(-50%);margin-top:6px;width:150px;text-align:center;font-size:11.5px;color:var(--ink2);line-height:1.3;cursor:pointer}
+.tl-mlab b{display:block;font:700 10.5px var(--ui);letter-spacing:.05em;text-transform:uppercase;color:color-mix(in srgb,var(--c) 70%,var(--ink))}
+.tl-mlab span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tl-scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink3);margin-top:4px;position:relative;height:14px}
+.tl-scale span{position:absolute;transform:translateX(-50%)}
+.tl-under{height:58px}
+.steps{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0 18px}
+.step{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 13px 6px 6px;display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:var(--ink2)}
+.step .sn{width:22px;height:22px;border-radius:50%;background:var(--sunk);border:1px solid var(--line2);display:grid;place-items:center;font-size:11.5px}
+.step.done .sn{background:var(--ok);border-color:var(--ok);color:#fff}
+.step.on{border-color:var(--ink);color:var(--ink);box-shadow:var(--shadow)}
+.step.on .sn{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.step.half .sn{background:linear-gradient(90deg,var(--ok) 50%,var(--sunk) 50%);border-color:var(--ok);color:var(--ink)}
+.step.on.half .sn{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.passcap{font-size:12px;color:var(--ink3);margin-left:8px}
+.passcap b{color:var(--ink2)}
+.bcard.later{opacity:.55;transition:opacity .15s}
+.bcard.later:hover,.bcard.later:focus-within{opacity:1}
+.halfhead b{color:var(--ink)}
+.stepbody{padding:24px 26px}
+.stephead{display:flex;gap:16px;align-items:flex-start;margin-bottom:16px}
+.stephead p{margin:6px 0 0;color:var(--ink2);max-width:75ch}
+.pairs{display:grid;grid-template-columns:1fr 46px 1fr;gap:0;align-items:stretch}
+.pairs .mir{display:grid;place-items:center;color:var(--ink3)}
+.pairs .mir span{writing-mode:vertical-rl;font-size:11px;letter-spacing:.15em;text-transform:uppercase;border-left:1.5px dashed var(--line2);padding-left:8px;height:80%;display:flex;align-items:center;justify-content:center}
+.halfhead{font:700 11px var(--ui);letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+.bcard{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:14px 16px 6px;border-top:4px solid var(--c);margin-bottom:14px}
+.bcard-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.bcard-head h3{font-size:17px;flex:1}
+.bcard-head .rng{font-size:12px;color:var(--ink3);font-weight:600}
+.bdesc{font-size:13.5px;color:var(--ink2);margin:0 0 8px;line-height:1.5}
+.barc{font-size:12.5px;padding:6px 10px;border-radius:8px;background:var(--sunk);margin-bottom:8px;display:flex;gap:8px;align-items:center}
+.barc .bdot{width:10px;height:10px;border-radius:50%;flex:none}
+.bprompt{font:italic 500 14px/1.45 var(--serif);color:var(--ink);margin:2px 0 10px;padding-left:10px;border-left:3px solid var(--c)}
+.bfrom{font-size:12.5px;color:var(--ink2);background:var(--card);border:1px dashed var(--line2);border-radius:8px;padding:7px 10px;margin-bottom:10px}
+.bfrom b{color:var(--ink)}
+.mid-wrap{max-width:640px;margin:0 auto}
+.stepnav{display:flex;justify-content:space-between;margin-top:8px;gap:10px}
+/* toggle list */
+.tgl{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:10px;overflow:hidden;transition:box-shadow .15s}
+.tgl.hl{box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 45%,transparent)}
+.tgl-h{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-left:5px solid var(--c);user-select:none}
+.tgl-h:hover{background:var(--sunk)}
+.tgl-h .car{transition:.15s;color:var(--ink3);width:14px;flex:none}
+.tgl.open>.tgl-h .car{transform:rotate(90deg)}
+.tgl-h .tt{font-weight:700;font-size:14.5px;white-space:nowrap}
+.tgl-h .tsum{flex:1;color:var(--ink2);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tgl-h .tsum.e{color:var(--ink3);font-style:italic}
+.tgl-h .mirtag{font-size:11px;color:var(--ink3);white-space:nowrap}
+.tgl-b{display:none;padding:6px 14px 14px 33px;border-left:5px solid var(--c)}
+.tgl.open>.tgl-b{display:block}
+.items{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.item{border:1px solid var(--line);border-radius:9px;background:var(--card)}
+.item-h{display:flex;align-items:center;gap:6px;padding:4px 6px 4px 4px}
+.item-h .car{border:0;background:transparent;color:var(--ink3);width:24px;height:24px;border-radius:6px;transition:.15s;padding:0}
+.item.open .item-h .car{transform:rotate(90deg)}
+.item-h input{flex:1;border:0;background:transparent;padding:5px 4px;font-weight:600;min-width:0}
+.item-h input:focus{outline:none}
+.item-h .ib{border:0;background:transparent;color:var(--ink3);width:26px;height:26px;border-radius:6px;opacity:.0;transition:.12s;padding:0}
+.item:hover .ib,.item:focus-within .ib{opacity:1}
+.item-h .ib:hover{background:var(--sunk);color:var(--ink)}
+.item-b{display:none;padding:0 10px 10px 34px}
+.item.open .item-b{display:block}
+.item-b textarea{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:8px 10px;resize:vertical;min-height:60px;line-height:1.45}
+.item-b textarea:focus{outline:none;border-color:var(--accent)}
+.letter{font:700 11px var(--mono);color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);border-radius:5px;padding:1px 5px;min-width:24px;text-align:center}
+/* mirror */
+.mirror{display:flex;flex-direction:column}
+.mpair,.mconn{display:grid;grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr)}
+.mcard{border:1.5px solid color-mix(in srgb,var(--c) 55%,var(--line));border-radius:14px;padding:12px 14px;background:color-mix(in srgb,var(--c) 6%,var(--card));min-width:0;transition:box-shadow .15s}
+.mcard.hl{box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 45%,transparent)}
+.mpair>.mcard:first-child{border-left-width:4px}
+.mpair>.mcard:last-child{border-right-width:4px}
+.mch{height:28px;display:flex;align-items:center;gap:8px}
+.mch .mname{font:700 12px var(--ui);letter-spacing:.06em;text-transform:uppercase;color:color-mix(in srgb,var(--c) 75%,var(--ink));flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mch .rng{font-size:11px;color:var(--ink3);font-weight:600;white-space:nowrap}
+.mpair>.mcard:last-child .mch{flex-direction:row-reverse;text-align:right}
+.msl{height:22px;margin-bottom:8px;font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msl.e{color:var(--ink3);font-style:italic}
+.mpair>.mcard:last-child .msl{text-align:right}
+.mcell{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:9px;background:var(--card);padding:0 8px;height:38px;margin-bottom:6px}
+.mcell:last-child{margin-bottom:0}
+.mcell input{flex:1;border:0;background:transparent;padding:5px 2px;min-width:0;font-weight:500}
+.mcell input:focus{outline:none}
+.mcell.ph{border-style:dashed;background:transparent;color:var(--ink3);justify-content:center;cursor:pointer;font-size:13px}
+.mcell.ph:hover{color:var(--accent);border-color:var(--accent)}
+.mbreak{border:1.5px solid transparent;padding:12px 0;text-align:center;color:var(--ink3)}
+.mbreak .msl{color:var(--ink3);overflow:visible}
+.mbreak .mx{height:38px;line-height:38px;margin-bottom:6px;font-size:15px}
+.mbreak::before{content:"";display:block}
+.mcard.jtop{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-width:0}
+.mcard.jbot{border-top-left-radius:0;border-top-right-radius:0;border-top:2px dashed color-mix(in srgb,var(--c) 45%,var(--line))}
+.mpair.jtop .mcard{background:color-mix(in srgb,var(--pr) 7%,var(--card))}
+.mconn{height:44px;color:var(--ink3)}
+.mconn>div{display:flex;justify-content:center;align-items:center}
+.marrow svg{display:block;width:22px;height:32px}
+.mconn.final{height:46px}
+.mconn.final>div:first-child{justify-content:flex-end;padding-right:6px}
+.mconn.final>div:last-child{justify-content:flex-start;padding-left:6px}
+.mconn.final .marrow svg{width:52px;height:38px}
+.mhinge{text-align:center;padding:14px 18px;border-radius:14px;border:2px solid var(--mid);background:color-mix(in srgb,var(--mid) 9%,var(--card));margin:0 auto;width:min(440px,100%)}
+.mhinge b{font:700 12px var(--ui);letter-spacing:.1em;text-transform:uppercase;color:var(--mid)}
+
+/* ---------- write ---------- */
+.write{min-height:100%}
+.wbar{position:sticky;top:0;z-index:15;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.wbar .grp{display:flex;align-items:center;gap:8px;padding-right:10px;border-right:1px solid var(--line)}
+.wbar .grp:last-child{border-right:0}
+.elsel{border:1px solid var(--line2);background:var(--card);border-radius:8px;padding:5px 8px;font-weight:600;font-size:13px;min-width:140px}
+.tgt{width:56px;border:1px solid var(--line2);background:var(--card);border-radius:7px;padding:4px 6px;text-align:center}
+.wstat{font-size:12.5px;color:var(--ink2);white-space:nowrap}
+.wstat b{color:var(--ink)}
+.badge{min-width:18px;height:18px;border-radius:999px;background:var(--warn-ink);color:var(--warn-bg);font-size:11px;display:inline-grid;place-items:center;padding:0 5px}
+.badge.z{background:var(--line2);color:var(--ink2)}
+.mtl{position:relative;height:30px;flex:1 0 100%;margin:4px 0 2px}
+.vrow{display:flex;gap:10px;align-items:flex-start;padding:7px 2px;cursor:pointer;border-top:1px solid var(--line)}
+.vrow b{display:block;color:var(--ink);font-size:13.5px}
+.vrow small{display:block;color:var(--ink3);font-size:12px;line-height:1.35}
+.viewpop{width:320px}
+.mtl-row{display:flex;height:12px;border-radius:6px;overflow:hidden;position:absolute;left:0;right:0;top:0}
+.mtl-row div{background:color-mix(in srgb,var(--c) 55%,var(--card));border-right:1px solid var(--bg)}
+.mtl-row div.m{flex:none;width:3px;background:var(--c)}
+.mtl-cur{position:absolute;top:-4px;width:2px;height:20px;background:var(--ink);border-radius:2px;transform:translateX(-1px)}
+.mtl-cur::after{content:attr(data-l);position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:700;white-space:nowrap;color:var(--ink)}
+.mtl-end{position:absolute;top:0;height:12px;border-right:2px dashed var(--ink2)}
+.mtl-over{position:absolute;top:0;height:12px;background:repeating-linear-gradient(45deg,var(--lie),var(--lie) 3px,transparent 3px,transparent 6px);border-radius:0 6px 6px 0}
+.wgrid{display:grid;grid-template-columns:minmax(220px,1fr) auto minmax(220px,1fr);gap:22px;padding:18px 16px 140px;align-items:start}
+.wcol{position:sticky;top:calc(var(--wbarh,64px) + 12px);max-height:calc(100vh - var(--wbarh,64px) - 100px);overflow:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:10px;max-width:330px;width:100%}
+.wcol.left{justify-self:end} .wcol.right{justify-self:start}
+.pcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 15px;box-shadow:var(--shadow);font-size:13.5px}
+.pcard.beat{border-top:5px solid var(--c)}
+.pcard h4{margin:0 0 4px;font:600 17px var(--serif)}
+.pcard .pk{font:700 10.5px var(--ui);letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;display:flex;justify-content:space-between;gap:6px}
+.pcard p{margin:6px 0;color:var(--ink2);line-height:1.5}
+.pcard .near{margin-top:10px;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,var(--c) 12%,transparent);border-left:3px solid var(--c)}
+.pcard .near b{font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.pcard ul{margin:6px 0;padding-left:18px;color:var(--ink2)}
+.pcard ul li{margin:2px 0}
+.pcard .next{font-size:12.5px;color:var(--ink3);margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+.scenes{display:flex;flex-direction:column;gap:1px;max-height:none}
+.scenes button{border:0;background:transparent;text-align:left;padding:5px 7px;border-radius:7px;font:12px/1.35 var(--mono);color:var(--ink2);display:flex;gap:8px}
+.scenes button:hover{background:var(--sunk);color:var(--ink)}
+.scenes button span:first-child{color:var(--ink3);min-width:22px}
+.checklist{display:flex;flex-direction:column;gap:8px}
+.checklist .msg{cursor:default;font-size:12.5px;padding:8px 10px}
+.checklist .msg.j{cursor:pointer}
+.pagewrap{position:relative}
+.page{--z:1;font-family:var(--mono);font-size:calc(15px * var(--z));--lh:1.25em;line-height:1.25;width:85ch;background:var(--paper);color:var(--paper-ink);box-shadow:0 0 0 1px var(--paper-edge),0 12px 40px rgba(40,30,10,.10);border-radius:3px;padding:calc(var(--lh)*4) 10ch calc(var(--lh)*4) 15ch;position:relative}
+.ovl{position:absolute;left:0;right:0;top:0;pointer-events:none;z-index:0}
+.ed{position:relative;z-index:1;outline:none;width:60ch;min-height:calc(var(--lh)*10);caret-color:var(--accent)}
+.ed.empty::before{content:attr(data-ph);position:absolute;top:0;left:0;color:var(--ink3);pointer-events:none;white-space:pre-wrap;font-style:italic}
+.ln{white-space:pre-wrap;overflow-wrap:break-word;min-height:var(--lh)}
+.ln.t-scene{font-weight:700;text-transform:uppercase}
+.ln.t-character{padding-left:22ch}
+.ln.t-dialogue{padding-left:10ch;padding-right:15ch}
+.ln.t-parenthetical{padding-left:16ch;padding-right:16ch}
+.ln.t-transition{text-align:right;text-transform:uppercase}
+.ln.t-centered{text-align:center}
+.ln.t-lyric{padding-left:10ch;font-style:italic}
+.ln.t-section{font-family:var(--ui);font-weight:700;color:var(--accent);font-size:.9em}
+.ln.t-synopsis{font-family:var(--ui);font-style:italic;color:var(--ink3);font-size:.9em}
+.ln.t-note{color:color-mix(in srgb,var(--truth) 70%,var(--paper-ink))}
+.ln.t-boneyard{color:var(--ink3);opacity:.6}
+.ln.t-pagebreak{color:var(--ink3);text-align:center}
+.ln .fm{opacity:.32}
+.ln .nt{background:color-mix(in srgb,var(--truth) 22%,transparent);border-radius:3px}
+.ln.cur{background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 5%,transparent) 0)}
+.ghostpages{position:relative;z-index:1;border-top:1.5px dashed var(--line2);color:var(--ink3);font:600 12px var(--ui);text-align:center;padding-top:8px}
+.ghostpages:empty{display:none}
+.band{position:absolute;left:0;right:0;background:color-mix(in srgb,var(--c) 7%,transparent)}
+.band .strip{position:absolute;left:1.4ch;width:5px;top:2px;bottom:2px;border-radius:3px;background:var(--c)}
+.band .blab{position:absolute;left:3.1ch;top:4px;font:700 9.5px/1.25 var(--ui);letter-spacing:.05em;text-transform:uppercase;color:color-mix(in srgb,var(--c) 75%,var(--paper-ink));width:11ch;white-space:normal}
+.band.grp{background:linear-gradient(180deg,color-mix(in srgb,var(--pr) 8%,transparent),color-mix(in srgb,var(--ch) 8%,transparent))}
+.band.grp .strip{width:9px;background:linear-gradient(90deg,var(--pr) 0 4px,transparent 4px 5px,var(--ch) 5px)}
+.band.grp .blab{left:3.7ch;width:10.5ch;color:color-mix(in srgb,var(--ch) 75%,var(--paper-ink))}
+.mtl-row div.grp{background:linear-gradient(180deg,color-mix(in srgb,var(--pr) 55%,var(--card)) 50%,color-mix(in srgb,var(--ch) 55%,var(--card)) 50%)}
+.pcard.beat.grp{border-top-color:transparent;position:relative}
+.pcard.beat.grp::before{content:"";position:absolute;left:-1px;right:-1px;top:-5px;height:5px;border-radius:12px 12px 0 0;background:linear-gradient(90deg,var(--pr),var(--ch))}
+.moment{position:absolute;left:0;right:0;height:0;border-top:2px dashed var(--c);z-index:0}
+.moment .mlab{position:absolute;right:0.6ch;top:-10px;font:700 9.5px var(--ui);letter-spacing:.05em;text-transform:uppercase;color:#fff;background:var(--c);padding:2px 7px;border-radius:999px;white-space:nowrap}
+.pline{position:absolute;left:0;right:0;height:0;border-top:1px solid var(--paper-edge)}
+.pline span{position:absolute;right:2ch;top:3px;font:12px var(--mono);color:var(--ink3)}
+.overband{position:absolute;left:0;right:0;background:repeating-linear-gradient(-45deg,color-mix(in srgb,var(--lie) 9%,transparent),color-mix(in srgb,var(--lie) 9%,transparent) 8px,transparent 8px,transparent 16px)}
+.overband span{position:absolute;right:1ch;top:6px;font:700 10px var(--ui);color:var(--lie);text-transform:uppercase;letter-spacing:.06em}
+.ac{position:fixed;z-index:60;background:var(--card);border:1px solid var(--line2);border-radius:9px;box-shadow:var(--shadow2);padding:4px;min-width:180px;font:13px var(--mono)}
+.ac div{padding:5px 9px;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;gap:14px}
+.ac div.on{background:var(--accent2);color:var(--accent)}
+.ac div small{font:11px var(--ui);color:var(--ink3)}
+.floatbeat{display:none}
+
+/* ---------- overlays ---------- */
+#layer{position:relative;z-index:50}
+.pop{position:fixed;z-index:70;background:var(--card);border:1px solid var(--line2);border-radius:12px;box-shadow:var(--shadow2);padding:14px 16px;max-width:380px;font-size:13.5px;line-height:1.55;color:var(--ink2)}
+.pop h4{margin:0 0 6px;font:600 16px var(--serif);color:var(--ink)}
+.pop p{margin:6px 0}
+.menu{position:fixed;z-index:70;background:var(--card);border:1px solid var(--line2);border-radius:12px;box-shadow:var(--shadow2);padding:6px;min-width:260px}
+.menu button{display:flex;width:100%;border:0;background:transparent;text-align:left;padding:8px 10px;border-radius:8px;gap:10px;align-items:center;font-size:14px}
+.menu button:hover{background:var(--sunk)}
+.menu button small{color:var(--ink3);margin-left:auto;font-size:12px}
+.menu hr{border:0;border-top:1px solid var(--line);margin:5px 4px}
+.scrim{position:fixed;inset:0;background:rgba(20,15,5,.35);z-index:80;display:grid;place-items:center;padding:20px}
+.modal{background:var(--card);border-radius:16px;box-shadow:var(--shadow2);max-width:620px;width:100%;max-height:86vh;overflow:auto;padding:22px 24px}
+.modal h3{font-size:21px;margin-bottom:8px}
+.modal .mb{color:var(--ink2);font-size:14px}
+.modal .mf{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.syntax{width:100%;border-collapse:collapse;font-size:13px}
+.syntax td{padding:7px 8px;border-top:1px solid var(--line);vertical-align:top}
+.syntax td:first-child{font-weight:700;color:var(--ink);white-space:nowrap}
+.syntax code{font:12.5px var(--mono);background:var(--sunk);padding:1px 5px;border-radius:4px;color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;font-weight:600;z-index:90;box-shadow:var(--shadow2);animation:tin .2s}
+@keyframes tin{from{opacity:0;transform:translate(-50%,8px)}}
+.banner{display:flex;gap:12px;align-items:center;padding:9px 18px;background:var(--warn-bg);color:var(--warn-ink);border-bottom:1px solid var(--warn-line);font-size:13.5px;flex:none}
+.banner .btn{background:transparent;border-color:currentColor;color:inherit}
+.plist{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.plist .pi{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.plist .pi.cur{border-color:var(--accent);background:var(--accent2)}
+#print{display:none}
+
+@media (max-width:1250px){
+  .wgrid{grid-template-columns:1fr;justify-items:center}
+  .wcol{display:none}
+  .floatbeat{display:block;position:fixed;right:16px;bottom:16px;max-width:300px;z-index:16}
+}
+@media (max-width:980px){
+  .dev{grid-template-columns:1fr}.dnav{display:none}
+  .grid2,.grid3,.lt,.checks,.spark,.lb,.welcome .flow{grid-template-columns:1fr}
+  .arcs{grid-template-columns:repeat(2,1fr)}
+  .tabs .tab span.lbl{display:none}
+  .save-state{display:none}
+  .pairs{grid-template-columns:1fr}.pairs .mir{display:none}
+}
+
+/* ---------- print ---------- */
+@media print{
+  @page{size:letter;margin:1in 1in 1in 1.5in;counter-increment:page;@top-right{content:counter(page) ".";font:12pt "Courier Prime","Courier New",monospace}}
+  @page :first{counter-reset:page -1;@top-right{content:none}}
+  html,body{height:auto;overflow:visible;background:#fff;color:#000}
+  #app,#layer>*:not(#print){display:none!important}
+  #layer{display:block}
+  #print{display:block!important;font:12pt/1 "Courier Prime","Courier New",Courier,monospace;color:#000;width:6in}
+  #print .tp{height:8.9in;display:flex;flex-direction:column;justify-content:space-between;break-after:page;text-align:center}
+  #print .tp .tt{margin-top:3in;font-weight:700;text-transform:uppercase;text-decoration:underline}
+  #print .tp .cr{margin-top:1em}
+  #print .tp .ct{text-align:left;white-space:pre-wrap}
+  #print p{margin:0;white-space:pre-wrap;orphans:2;widows:2}
+  #print .sc{font-weight:700;text-transform:uppercase;break-after:avoid;margin-top:1em}
+  #print .act{margin-top:1em}
+  #print .chr{margin:1em 0 0 2.2in;break-after:avoid}
+  #print .par{margin-left:1.6in;margin-right:1.4in;break-after:avoid}
+  #print .dlg{margin-left:1in;margin-right:1.5in}
+  #print .tr{text-align:right;text-transform:uppercase;margin-top:1em}
+  #print .cen{text-align:center;margin-top:1em}
+  #print .ly{margin-left:1in;font-style:italic}
+  #print .pb{break-after:page}
+  #print .dual{display:flex;gap:.3in;margin-top:1em}
+  #print .dual>div{flex:1}
+  #print .dual .chr{margin:0 0 0 1in}
+  #print .dual .dlg,#print .dual .par{margin:0 0 0 .1in}
+  #print .blank{height:1em}
+}
+
+/* ═════ Film Tool Hub kit mapping ═════ */
+:root:root:root{--ui:var(--fth-display);--serif:var(--fth-display);--mono:var(--fth-script);--bg:var(--fth-bg);--panel:var(--fth-bg2);--card:var(--fth-surface);--sunk:var(--fth-surface2);--ink:var(--fth-text);--ink2:var(--fth-muted);--ink3:var(--fth-faint);--line:var(--fth-line);--line2:var(--fth-line2);--accent:var(--fth-accent);--accent2:var(--fth-accent-soft);--accent-ink:var(--fth-on-accent);--shadow:var(--fth-shadow-sm);--r:var(--fth-radius);}
+.top.fth-head{position:relative;padding:10px 20px;background:color-mix(in srgb,var(--fth-bg) 88%,transparent)}
+.top .brand-txt{min-width:120px;flex:0 1 260px}
+.top .brand-txt input{font:700 16px var(--fth-display)}
+.btn{border-radius:9px;font:600 13px/1 var(--fth-display);padding:0 12px;height:34px;background:var(--fth-surface);border-color:var(--fth-line2)}
+.btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.btn.primary{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.btn.primary:hover{opacity:1;filter:brightness(1.08)}
+.btn.icon{width:34px;padding:0;justify-content:center}
+.tab.on,.tab[aria-selected="true"]{color:var(--fth-text)}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="layer"></div>
+<script type="application/json" id="project-data">null</script>
+<script>
+(function(){
+'use strict';
+/* =====================================================================
+   Scaffolded Scriptwriting — single-file app
+   Snapshot of pristine page (used by "Back up" to clone this file)
+   ===================================================================== */
+const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+/* ---------- tiny helpers ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const uid = () => Math.random().toString(36).slice(2, 9);
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const words = s => (String(s||'').trim().match(/\S+/g) || []);
+function h(tag, attrs, ...kids){
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs){
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    else if (k === 'style') el.setAttribute('style', v);
+    else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+    else if (k === 'html') el.innerHTML = v;
+    else if (k === 'value') el.value = v;
+    else if (k === 'checked') el.checked = !!v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat(Infinity)){
+    if (c == null || c === false) continue;
+    el.append(c.nodeType ? c : document.createTextNode(String(c)));
+  }
+  return el;
+}
+const svgIcon = (d, cls='ico') => { const s = document.createElementNS('http://www.w3.org/2000/svg','svg'); s.setAttribute('viewBox','0 0 24 24'); s.setAttribute('class',cls); s.setAttribute('fill','none'); s.setAttribute('stroke','currentColor'); s.setAttribute('stroke-width','2'); s.setAttribute('stroke-linecap','round'); s.setAttribute('stroke-linejoin','round'); s.innerHTML = d; return s; };
+const IC = {
+  save:'<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>',
+  more:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
+  warn:'<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4"/><path d="M12 17.5v.01"/>',
+  tip:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5v.01"/>',
+  bulb:'<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  up:'<path d="m18 15-6-6-6 6"/>', down:'<path d="m6 9 6 6 6-6"/>',
+  right:'<path d="m9 18 6-6-6-6"/>',
+  trash:'<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  print:'<path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v7H7z"/>',
+  file:'<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/>',
+  folder:'<path d="M3 6h6l2 2h10v11H3z"/>',
+  new:'<path d="M14 3H6v18h12V7z"/><path d="M12 11v6M9 14h6"/>',
+  upload:'<path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/>',
+  help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14"/><path d="M12 17.5v.01"/>',
+  mirror:'<path d="M12 3v18"/><path d="M8 7 4 12l4 5"/><path d="m16 7 4 5-4 5"/>',
+  scenes:'<path d="M4 6h16M4 12h16M4 18h10"/>',
+  check:'<path d="m5 12 5 5L20 7"/>',
+  eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
+};
+
+/* =====================================================================
+   TEACHING CONTENT (drafts — edit freely)
+   ===================================================================== */
+const BEATS = [
+  {id:'cs1', fam:'cs', name:'Character & Setting', sub:'Opening', s:0,    e:12.5, pair:'cs2'},
+  {id:'p1',  fam:'pr', name:'Problem',             sub:'1st',     s:12.5, e:25,   pair:'p2', cx:15.6},
+  {id:'c1',  fam:'ch', name:'Choice',              sub:'1st',     s:12.5, e:25,   pair:'c2', cx:21.9},
+  {id:'a2a', fam:'a2', name:'1st Half of Act 2',   sub:'',        s:25,   e:50,   pair:'a2b'},
+  {id:'mid', fam:'mid',name:'Midpoint',            sub:'',        s:50,   e:50,   m:true},
+  {id:'a2b', fam:'a2', name:'2nd Half of Act 2',   sub:'',        s:50,   e:75,   pair:'a2a'},
+  {id:'p2',  fam:'pr', name:'Problem',             sub:'2nd',     s:75,   e:87.5, pair:'p1', cx:78.1},
+  {id:'c2',  fam:'ch', name:'Choice',              sub:'2nd',     s:75,   e:87.5, pair:'c1', cx:84.4},
+  {id:'cs2', fam:'cs', name:'Character & Setting', sub:'Closing', s:87.5, e:100,  pair:'cs1'}
+];
+const BEAT = Object.fromEntries(BEATS.map(b => [b.id, b]));
+const BEAT_IDS = BEATS.map(b => b.id);
+const PAYOFF = new Set(['a2b','p2','c2','cs2']);
+/* stretches of story time: Problem and Choice share theirs (Problem › Choice) */
+const SPANS = [['cs1'],['p1','c1'],['a2a'],['a2b'],['p2','c2'],['cs2']].map(ids => ({ids, s:BEAT[ids[0]].s, e:BEAT[ids[0]].e, fam:BEAT[ids[0]].fam, grp: ids.length > 1}));
+const spanLabel = sp => sp.grp ? `${BEAT[sp.ids[0]].sub} Problem › Choice` : beatLabel(sp.ids[0]);
+const beatLabel = b => (typeof b === 'string' ? BEAT[b] : b).sub && !['Opening','Closing'].includes((typeof b==='string'?BEAT[b]:b).sub) ? (typeof b==='string'?BEAT[b]:b).sub + ' ' + (typeof b==='string'?BEAT[b]:b).name : (typeof b==='string'?BEAT[b]:b).name;
+const beatFull = id => { const b = BEAT[id]; return b.sub === 'Opening' || b.sub === 'Closing' ? `${b.name} (${b.sub.toLowerCase()})` : beatLabel(b); };
+const beatRange = b => b.m ? `at ${b.s}%` : `${b.s}–${b.e}%`;
+const beatPos = b => b.cx != null ? b.cx : b.m ? b.s : (b.s + b.e) / 2;
+
+const BEAT_DESC = {
+  cs1: 'Establish the norm: who your character is and the world they live in. Show the flaw in action, and let us see how this setting has allowed the Lie to fester. This is the "before" picture that the closing Character & Setting will mirror.',
+  p1:  'Something disrupts the norm: a problem or an opportunity (the inciting incident). It is the first real challenge to the Lie, an invitation to adopt the Truth instead, and it should matter to this character specifically because of their flaw. Problem and Choice share this stretch of the story.',
+  c1:  'The problem forces a decision. Somewhere in this same stretch your character makes a defining choice that commits them and crosses a path of no return, usually in line with the Lie. The conflict of the story begins with this choice: all layers of conflict (philosophical, emotional and external) are activated.',
+  a2a: 'Living with the consequences of the first choice. The character pursues their goal, still operating by what they believe. Complications build, and the Lie may even seem to be working, but its cost is quietly mounting.',
+  mid: 'The hinge of the whole story: a False Victory, Turning Point or Realisation. Something shifts the character\'s understanding: they glimpse the Truth, or seem to win by the Lie. Everything before this is setup; everything after is payoff.',
+  a2b: 'The fallout of the midpoint. Pressure mounts and the gap between Lie and Truth becomes impossible to ignore. Events here often mirror the first half of Act 2, now seen in a new light.',
+  p2:  'A second, greater problem that mirrors the first, often the moment where everything falls apart. The character is tested again, but this time the true cost of the Lie is unavoidable. Problem and Choice share this stretch of the story.',
+  c2:  'The decisive choice, mirroring the first, and the moment the conflict of the story ends. This is where theme is proven through character decision: does the character finally embrace the Truth, or cling to the Lie?',
+  cs2: 'The new norm. Return to the character and their world, mirroring the opening, so the audience can measure the change (or the lack of it). The final image expresses the philosophy your story communicates.'
+};
+const BEAT_PROMPT = {
+  cs1: 'How does the opening world let “{L}” go unchallenged? What does the flaw look like in action?',
+  p1:  'What problem or opportunity first challenges “{L}”?',
+  c1:  'What choice does your character make in response, and how does it reflect what they believe right now?',
+  a2a: 'How does pursuing this path put “{L}” and “{T}” in conflict?',
+  mid: 'What shifts at the hinge: a false victory, a turning point, or a realisation about “{T}”?',
+  a2b: 'Which events from the first half of Act 2 come back here, now seen differently?',
+  p2:  'How does this problem mirror the first, and why is the cost of “{L}” now unavoidable?',
+  c2:  'How does this choice mirror the first? Which belief wins out?',
+  cs2: 'How does the closing image mirror the opening, and show what your story believes?'
+};
+const ARCS = {
+  positive:       {name:'Positive Change', from:'Lie',   to:'Truth',        states:['Believes Lie','Overcomes Lie','Believes Truth']},
+  flat:           {name:'Flat',            from:'Truth', to:'Truth',        states:['Believes Truth','Truth is Tested','Clings to Truth']},
+  corruption:     {name:'Corruption',      from:'Truth', to:'Lie',          states:['Believes Truth','Rejects Truth','Believes Lie']},
+  fall:           {name:'Fall',            from:'Lie',   to:'Lie',          states:['Believes Lie','Rejects Truth','Clings to Lie']},
+  disillusionment:{name:'Disillusionment', from:'Lie',   to:'Tragic Truth', states:['Believes Lie','Overcomes Lie','Believes Tragic Truth']}
+};
+/* belief: 0 = Lie, 1 = Truth (or Tragic Truth) — one entry per beat in BEATS order */
+const ARC_BEATS = {
+  positive: [[.05,'Believes the Lie; the norm enables it.'],[.12,'The Truth is offered, and resisted.'],[.05,'Chooses in line with the Lie.'],[.2,'Pursues the goal by the Lie; cracks begin to show.'],[.5,'Realisation: glimpses the Truth.'],[.62,'Wrestles between Lie and Truth.'],[.35,'The Lie\'s consequences peak. All seems lost.'],[.9,'Chooses the Truth.'],[1,'Believes the Truth: a new norm.']],
+  flat: [[.95,'Already holds the Truth; the world around them believes the Lie.'],[.85,'The world challenges the Truth.'],[.95,'Chooses to act on the Truth.'],[.82,'The Truth is tested; others resist it.'],[.78,'Turning point: the cost of holding the Truth becomes clear.'],[.72,'Pressure to abandon the Truth intensifies.'],[.58,'The greatest test: the Truth looks like it\'s failing.'],[.95,'Clings to the Truth.'],[.97,'The Truth holds, and the world (or someone in it) is changed.']],
+  corruption: [[.95,'Believes the Truth.'],[.85,'The Lie tempts.'],[.75,'A compromising choice.'],[.62,'Drifts toward the Lie; it brings rewards.'],[.48,'False victory: the Lie seems to work.'],[.35,'The Truth slips away.'],[.32,'A last chance to return to the Truth.'],[.06,'Chooses the Lie.'],[.03,'Believes the Lie: a darker norm.']],
+  fall: [[.05,'Believes the Lie.'],[.16,'The Truth is offered, and rejected.'],[.05,'Chooses in line with the Lie.'],[.14,'Doubles down on the Lie.'],[.4,'The Truth is glimpsed.'],[.28,'Resists the Truth.'],[.45,'Last chance: the Truth is undeniable.'],[.03,'Rejects the Truth and clings to the Lie.'],[.02,'Destroyed or trapped by the Lie.']],
+  disillusionment: [[.05,'Believes the Lie.'],[.12,'The Lie is challenged.'],[.05,'Chooses in line with the Lie.'],[.2,'Pursues the Lie; doubts surface.'],[.5,'Realisation: the Lie begins to unravel.'],[.62,'Sees more clearly, at growing cost.'],[.38,'Everything they relied on collapses.'],[.88,'Lets go of the Lie, accepting a hard truth.'],[1,'Believes the Tragic Truth: clear-eyed, but at a cost.']]
+};
+const TOPICS = 'LOVE|JUDGEMENT|BIAS|REVENGE|POWER/CONTROL|VALUE/WORTH|PROGRESS|RESPONSIBILITY|HISTORY|GREED|HEALING|DIS/CONTENTMENT|WEALTH|HUMILITY|CHALLENGE/SUFFERING|AUTHORITY|TECHNOLOGY|HATE|FEAR|TRUST|IGNORANCE|OBSESSION|ARROGANCE|ISOLATION/COMMUNITY|LONGING|FREEDOM|HOPE|ALIENATION|REBELLION|AMBITION|SELF-AWARENESS|SUCCESS/FAILURE|DESPOTISM|PATRIOTISM|VALIDATION|ETERNITY/MORTALITY|REALITY|VIOLENCE/RAGE|FAITH|SACRIFICE|INDIVIDUALITY/INDIVIDUALISM|CHANGE|CONSCIOUSNESS/PERSONHOOD|TIME|GRIEF|SURVIVAL|DENIAL|OUT-OF-PLACE-NESS|VULNERABILITY|HIERARCHY|RECKLESSNESS|REALISATION|JUSTICE|BETRAYAL|DECEPTION/TRUTH-TELLING|HONOUR/SHAME|INTEGRITY|PRIDE|RESPECT|TRAUMA|FATE|RADICALISATION|HERO WORSHIP/WORSHIP|LOSS|ENVY|CLOSE-MINDEDNESS|DEPRESSION/DEFEATISM|UNITY|PURPOSE|REGRET|IDEALISM|CYNICISM|NIHILISM|FUNCTION|DOUBT|DESPAIR|BALANCE|BIGOTRY|CONNECTION|DESIRE|UNDERSTANDING/SENSE/SENSIBILITY|PERFECTIONISM|REPRESSION|ACCEPTANCE|POLITICS|BEAUTY/UGLINESS|SELF-IMAGE|MATERIALISM|CONFORMITY/NONCONFORMITY|MASCULINITY/FEMININITY|PRESSURE|SELFISHNESS/SELFLESSNESS|INTELLIGENCE|PEER-PRESSURE|BARGAINING/COMPROMISE|ANXIETY|PREPAREDNESS|EMBARRASSMENT|ABILITY/DISABILITY|RISK|PRIVACY|NATURE'.split('|');
+
+const GLOSS = {
+  logline: ['Logline','A one- or two-sentence summary of your story\'s plot: who it\'s about, what happens to them, what they must do and what\'s at stake. A logline is about <b>plot</b>; theme lives elsewhere. Describe your protagonist rather than naming them ("a reclusive lighthouse keeper", not "Tom").'],
+  theme: ['Theme','The goal of story is to integrate every element to communicate a specific philosophy. That philosophy is your theme. Story is about theme; theme is expressed through character decision; character decision is instigated by plot.'],
+  topic: ['Thematic topic','A broad subject like <i>revenge</i>, <i>trust</i> or <i>grief</i>. A topic is a starting point, not a theme. Your theme is a specific moral statement <i>about</i> a topic, e.g. "Revenge will only exacerbate hurt".'],
+  lie: ['The Lie','The misaligned philosophy your character begins with (the anti-theme). A strong Lie:<br>• is a direct negation of the Truth<br>• is not totally unreasonable or inherently evil<br>• is specifically justifiable given the character\'s personal context and history.<br><br>e.g. "Revenge is a necessary route to healing", "Personal worth must be earned".'],
+  truth: ['The Truth','The philosophy your story ultimately communicates (the theme). A strong Truth:<br>• is the specific solution to the Lie<br>• is not obvious, self-evident or universally accepted<br>• though positive once accepted, is at first deeply unappealing to the character because of their context and history.<br><br>e.g. "Revenge will only exacerbate hurt", "Personal worth is inherent".'],
+  tragic: ['Tragic Truth','Used in a Disillusionment arc: the character overcomes the Lie, but what they come to believe is a harder, sadder truth. They see clearly, at a cost.'],
+  arc: ['Character arcs','Using the Lie and Truth we can iterate the possible arcs:<br>• <b>Positive Change</b>: Lie → Truth<br>• <b>Flat</b>: Truth → Truth (the character\'s Truth is tested and changes the world around them)<br>• <b>Corruption</b>: Truth → Lie<br>• <b>Fall</b>: Lie → Lie<br>• <b>Disillusionment</b>: Lie → Tragic Truth<br><br>Even when a character ends believing the Lie, the Truth is still communicated to the audience through their rejection of it.'],
+  flaw: ['Flaw','Your character\'s defining negative personality trait. The flaw is a manifestation of the Lie they believe. Ask: what philosophy makes sense of this flaw?'],
+  norm: ['The norm','The setting that has been enabling your character\'s flaw. Before we present the Truth, we want to establish a norm where the Lie has been able to fester.'],
+  cycle: ['Stimulus › Emotion › Belief › Reaction','Story is life. We experience change (stimulus), process it emotionally, and that informs and is informed by what we believe, which drives how we react back into the world. e.g. New assignment › Apathy › "Testing is pointless" › Don\'t submit.'],
+  history: ['History','The Lie should be specifically justifiable given the character\'s personal context and history. What happened to them that makes the Lie make sense?'],
+  want: ['Want','What your character is consciously trying to get. Often the Lie shapes how they go about getting it, and the Truth shows them what they really need.'],
+  structure: ['Story structure','• Character & Setting: 0–12.5%<br>• 1st Problem › Choice: 12.5–25%<br>• 1st Half of Act 2: 25–50%<br>• Midpoint: 50%<br>• 2nd Half of Act 2: 50–75%<br>• 2nd Problem › Choice: 75–87.5%<br>• Character & Setting: 87.5–100%<br><br>The conflict of the story begins and ends with a Choice. Each Problem and its Choice share the same stretch of story. Notice the symmetry: every beat in the first half has a partner in the second, hinged on the Midpoint.'],
+  chiasmus: ['Chiastic structure','Mirroring in the plot events of a story (A B C … C′ B′ A′). It creates a sense of completeness and intention, so each element "earns its place" when it returns. It helps the audience draw meaning by reaffirming or transforming what an earlier moment meant, and it gives the Midpoint its significance as the hinge between setup and payoff.'],
+  midpoint: ['Midpoint','Also known as a False Victory, Turning Point or Realisation. It is the hinge between the setup half and the payoff half of your story.'],
+  live: ['Live Outline','Shows where each stage of your structure should roughly fall, based on your target length (or on the current length if you haven\'t set one). It doesn\'t judge. It lets you see for yourself whether, say, your first Problem is arriving late or your Midpoint is missing.'],
+  pageminute: ['Page a minute','In standard screenplay format, one page roughly equals one minute of screen time. Page counts here are estimates based on industry formatting (Courier 12pt, about 55 lines per page).'],
+  refs: ['References','Films that inspire your tone, structure, visuals or theme. Try identifying the Lie and Truth of each one: it\'s great practice for spotting theme at work.'],
+  setting: ['Settings','Your locations. Name them the way they\'ll appear in scene headings (e.g. KITCHEN, BUS STOP) so the Write tab can match them.']
+};
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+const LS = 'scaffold-script:';
+const lsGet = k => { try { return localStorage.getItem(k); } catch(e){ return null; } };
+const lsSet = (k,v) => { try { localStorage.setItem(k,v); return true; } catch(e){ return false; } };
+const lsDel = k => { try { localStorage.removeItem(k); } catch(e){} };
+
+function newChar(role){ return {id:uid(), name:'', role:role||'Supporting', desc:'', flaw:'', want:'', history:'', cycle:{s:'',e:'',b:'',r:''}, arcOn:false, arc:'flat', lie:'', truth:''}; }
+function blankProject(){
+  return {
+    v:1, id:uid()+uid(), created:Date.now(), savedAt:0, backedUpAt:0,
+    title:'', author:'', contact:'',
+    develop:{ idea:'', genre:'', targetPages:'', logline:'', lb:{incident:'',protagonist:'',goal:'',stakes:''}, lb2:{incident:'',protagonist:'',action:'',antagonist:''}, lbMode:'when', lbConn:'or else',
+      topic:'', lie:'', truth:'', tragic:'', arc:'positive', themeNotes:'', checks:{}, norm:'',
+      characters:[newChar('Protagonist')], settings:[], refs:[], notes:'' },
+    outline:{ step:0, view:'toggle', beats:Object.fromEntries(BEAT_IDS.map(id => [id, {summary:'', items:[]}])) },
+    script:{ text:'', basedOn:'' },
+    drafts:[],
+    ui:{ tab:'develop', live:true, bar:true, checks:true, togo:true, scenes:true, smart:true, zoom:1, welcomed:false, tips:true }
+  };
+}
+function mergeDefaults(d, t){
+  if (Array.isArray(t)) return Array.isArray(d) ? d : t;
+  if (t && typeof t === 'object'){
+    const o = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
+    for (const k in t) o[k] = (k in o) ? mergeDefaults(o[k], t[k]) : t[k];
+    return o;
+  }
+  return d === undefined ? t : d;
+}
+function normaliseProject(p){
+  const b = blankProject();
+  p = mergeDefaults(p, b);
+  for (const id of BEAT_IDS){ p.outline.beats[id] = mergeDefaults(p.outline.beats[id], {summary:'', items:[]}); }
+  p.develop.characters = p.develop.characters.map(c => mergeDefaults(c, newChar()));
+  return p;
+}
+
+let S;            // current project
+let embedded = null;
+try { const t = $('#project-data').textContent.trim(); if (t && t !== 'null') embedded = JSON.parse(t); } catch(e){ embedded = null; }
+
+let bootNotice = null;
+(function boot(){
+  let local = null;
+  const readLocal = id => { try { const r = lsGet(LS+'p:'+id); return r ? JSON.parse(r) : null; } catch(e){ return null; } };
+  if (embedded && embedded.id){
+    local = readLocal(embedded.id);
+    if (local && (local.savedAt||0) > (embedded.savedAt||0) + 1000){
+      S = normaliseProject(local);
+      bootNotice = {kind:'newer', when: local.savedAt};
+    } else S = normaliseProject(embedded);
+  } else {
+    const last = lsGet(LS+'last');
+    local = last ? readLocal(last) : null;
+    if (local){ S = normaliseProject(local); bootNotice = {kind:'continue'}; }
+    else S = blankProject();
+  }
+})();
+
+/* ---------- saving ---------- */
+let saveTimer = null, dirtySinceBackup = 0;
+const derived = [];        // view-scoped updaters
+const gDerived = [];       // global updaters (header etc.)
+let derivedTimer = null;
+function touch(){
+  S.savedAt = Date.now();
+  dirtySinceBackup++;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveLocal, 350);
+  scheduleDerived();
+}
+function saveLocal(){
+  clearTimeout(saveTimer);
+  const ok = lsSet(LS+'p:'+S.id, JSON.stringify(S));
+  lsSet(LS+'last', S.id);
+  storageOK = ok;
+  updateSaveState();
+}
+let storageOK = true;
+function scheduleDerived(){ clearTimeout(derivedTimer); derivedTimer = setTimeout(runDerived, 140); }
+function runDerived(){ for (const f of gDerived) try{ f(); }catch(e){ console.error(e); } for (const f of derived) try{ f(); }catch(e){ console.error(e); } }
+window.addEventListener('pagehide', () => { flushEditor && flushEditor(); saveLocal(); });
+window.addEventListener('beforeunload', () => { flushEditor && flushEditor(); saveLocal(); });
+let flushEditor = null;
+
+function stamp(d){ const p = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`; }
+function slug(s){ return (String(s||'').trim().replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_').slice(0,50)) || 'Untitled_Script'; }
+function download(name, content, type){
+  const blob = new Blob([content], {type});
+  const a = h('a', {href: URL.createObjectURL(blob), download: name});
+  document.body.append(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+function backupHTML(){
+  flushEditor && flushEditor();
+  S.backedUpAt = Date.now();
+  const json = JSON.stringify(S).replace(/</g, '\\u003c').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
+  const open = '<script type="application/json" id="project-data">';
+  const i = TEMPLATE.indexOf(open);
+  const j = TEMPLATE.indexOf('</' + 'script>', i);
+  if (i < 0 || j < 0){ toast('Sorry, the backup failed (template not found).'); return; }
+  const html = (TEMPLATE.slice(0, i + open.length) + json + TEMPLATE.slice(j)).replace(/<title>[\s\S]*?<\/title>/, '<title>' + esc(S.title || 'Untitled script') + '</title>');
+  download(`${slug(S.title)}_${stamp(new Date())}.html`, html, 'text/html');
+  dirtySinceBackup = 0;
+  saveLocal();
+  toast('Backup downloaded. Keep it somewhere safe (your SSD, OneDrive…). Open it any time to carry on.');
+}
+function ago(t){
+  if (!t) return 'never';
+  const s = (Date.now() - t) / 1000;
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.round(s/60) + ' min ago';
+  if (s < 86400) return Math.round(s/3600) + ' hr ago';
+  const d = Math.round(s/86400); return d + (d === 1 ? ' day ago' : ' days ago');
+}
+
+/* ---------- UI primitives ---------- */
+function toast(msg, ms=3200){ $$('.toast').forEach(x => x.remove()); const t = h('div', {class:'toast'}, msg); $('#layer').append(t); setTimeout(() => t.remove(), ms); }
+let popEl = null;
+function closePop(){ if (popEl){ popEl.remove(); popEl = null; } }
+document.addEventListener('mousedown', e => { if (popEl && !popEl.contains(e.target) && !e.target.closest('[data-pop]')) closePop(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape'){ closePop(); } });
+function placePop(el, anchor, prefer='below'){
+  $('#layer').append(el);
+  const r = anchor.getBoundingClientRect(), w = el.offsetWidth, ht = el.offsetHeight;
+  let x = clamp(r.left, 10, innerWidth - w - 10), y = r.bottom + 8;
+  if (prefer === 'below-right') x = clamp(r.right - w, 10, innerWidth - w - 10);
+  if (y + ht > innerHeight - 10) y = Math.max(10, r.top - ht - 8);
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+}
+function infoBtn(key){
+  const b = h('button', {class:'info', type:'button', title:'What does this mean?', 'data-pop':'1', onclick: e => {
+    e.preventDefault(); e.stopPropagation();
+    if (popEl && popEl._k === key){ closePop(); return; }
+    closePop();
+    const g = GLOSS[key]; if (!g) return;
+    popEl = h('div', {class:'pop'}, h('h4', null, g[0]), h('div', {html:g[1]}));
+    popEl._k = key; placePop(popEl, b);
+  }}, 'i');
+  return b;
+}
+function menu(anchor, items){
+  closePop();
+  popEl = h('div', {class:'menu'}, items.map(it => it === '-' ? h('hr') : h('button', {onclick: () => { closePop(); it.fn(); }}, it.icon ? svgIcon(IC[it.icon]) : null, it.label, it.sub ? h('small', null, it.sub) : null)));
+  placePop(popEl, anchor, 'below-right');
+}
+function modal(title, body, buttons){
+  const scrim = h('div', {class:'scrim', onmousedown: e => { if (e.target === scrim) close(); }});
+  const close = () => scrim.remove();
+  const m = h('div', {class:'modal', role:'dialog'}, h('h3', null, title), h('div', {class:'mb'}, body),
+    h('div', {class:'mf'}, (buttons || [{label:'Close'}]).map(b => h('button', {class:'btn' + (b.primary ? ' primary' : ''), onclick: () => { if (b.fn && b.fn() === false) return; close(); }}, b.label))));
+  scrim.append(m); $('#layer').append(scrim);
+  return close;
+}
+function confirmBox(title, text, okLabel, fn){ modal(title, h('p', null, text), [{label:'Cancel'}, {label:okLabel, primary:true, fn}]); }
+
+/* messages: [{level:'warn'|'tip', text, actions:[{label, fn}], line}] */
+function msgEl(m, onClick){
+  const el = h('div', {class:'msg ' + (m.level || 'tip') + (onClick ? ' j' : '')},
+    svgIcon(m.level === 'warn' ? IC.warn : IC.bulb, 'mi'),
+    h('div', null, h('div', {html: m.text}), m.actions && m.actions.length ? h('div', {class:'mact'}, m.actions.map(a => h('button', {type:'button', onclick: e => { e.stopPropagation(); a.fn(); }}, a.label))) : null));
+  if (onClick) el.addEventListener('click', onClick);
+  return el;
+}
+function msgSlot(fn){
+  const el = h('div', {class:'msgs'});
+  let last = '';
+  const upd = () => { const ms = fn() || []; const key = JSON.stringify(ms.map(m => [m.level, m.text])); if (key === last) return; last = key; el.replaceChildren(...ms.map(m => msgEl(m))); };
+  derived.push(upd); setTimeout(upd);
+  return el;
+}
+function autosize(t){ if (!t || t.tagName !== 'TEXTAREA') return; t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; }
+function bindInput(input, obj, key, onInput){
+  input.value = obj[key] ?? '';
+  input.addEventListener('input', () => { obj[key] = input.value; autosize(input); touch(); onInput && onInput(input.value); });
+  derived.push(() => { if (document.activeElement !== input && input.value !== (obj[key] ?? '')){ input.value = obj[key] ?? ''; autosize(input); } });
+  return input;
+}
+function field(label, obj, key, o={}){
+  const id = 'f' + uid();
+  const input = o.multi ? h('textarea', {id, rows: o.rows || 2, placeholder: o.ph || ''}) : h('input', {id, type: o.type || 'text', placeholder: o.ph || '', min: o.min, max: o.max});
+  bindInput(input, obj, key, o.onInput);
+  return h('div', {class: 'field' + (o.cls ? ' ' + o.cls : '')},
+    label ? h('label', {class:'flabel', for:id}, label, o.info ? infoBtn(o.info) : null, o.also ? h('span', {class:'also', html:o.also}) : null) : null,
+    o.hint ? h('span', {class:'fhint' + (o.teach ? ' teach' : ''), html:o.hint}) : null,
+    input,
+    o.msgs ? msgSlot(o.msgs) : null);
+}
+function hint(html){ return h('div', {class:'hint'}, svgIcon(IC.bulb), h('div', {html})); }
+
+/* =====================================================================
+   SHELL
+   ===================================================================== */
+const TABS = [['develop','Develop'],['outline','Outline'],['write','Write']];
+let saveStateEl, backupBtn;
+function applyTheme(){ /* light / dark is set by Film Tool Hub */ }
+function applyTips(){ document.body.classList.toggle('no-tips', S.ui.tips === false); }
+function protagonist(){ return S.develop.characters.find(c => c.role === 'Protagonist'); }
+function ensureProtagonist(){ let p = protagonist(); if (!p){ p = newChar('Protagonist'); S.develop.characters.unshift(p); } return p; }
+const targetPages = () => { const n = parseFloat(S.develop.targetPages); return n > 0 ? n : 0; };
+
+function renderShell(){
+  const app = $('#app'); app.replaceChildren();
+  gDerived.length = 0;
+  const title = h('input', {class:'proj-title', placeholder:'Untitled script', 'aria-label':'Project title'});
+  title.value = S.title;
+  title.addEventListener('input', () => { S.title = title.value; touch(); });
+  gDerived.push(() => { if (document.activeElement !== title && title.value !== S.title) title.value = S.title; });
+
+  const tabs = h('nav', {class:'tabs', role:'tablist'});
+  TABS.forEach(([id, label], i) => {
+    if (i) tabs.append(h('span', {class:'tab-arrow'}, '›'));
+    tabs.append(h('button', {class:'tab' + (S.ui.tab === id ? ' on' : ''), role:'tab', 'data-tab':id, onclick: () => go(id)}, h('span', {class:'n'}, i+1), h('span', {class:'lbl'}, label)));
+  });
+  saveStateEl = h('div', {class:'save-state'});
+  backupBtn = h('button', {class:'btn primary', title:'Download a dated copy of this file with all your work inside', onclick: backupHTML}, h('span', {class:'dot'}), svgIcon(IC.save), 'Back up');
+  const more = h('button', {class:'btn icon ghost', title:'More', 'data-pop':'1', onclick: () => menu(more, [
+    
+    {label:'Export script as Fountain', sub:'.fountain', icon:'file', fn: exportFountain},
+    {label:'Export script for Final Draft', sub:'.fdx', icon:'file', fn: exportFDX},
+    {label:'Print / save script as PDF', icon:'print', fn: printScript},
+    {label:'Script drafts…', icon:'folder', fn: () => draftsModal()},
+    {label:'Import a Fountain script…', icon:'upload', fn: importFountain},
+    '-',
+    {label:'Projects saved in this browser…', icon:'folder', fn: projectsModal},
+    {label:'Start a new project', icon:'new', fn: newProject},
+    '-',
+    {label: S.ui.tips === false ? 'Show teaching tips' : 'Hide teaching tips', icon:'bulb', fn: () => { S.ui.tips = S.ui.tips === false; applyTips(); touch(); }},
+    {label:'How saving works', icon:'help', fn: savingHelp}
+  ])}, svgIcon(IC.more));
+
+  const top = h('header', {class:'top fth-head'}, h('div', {class:'fth-id'}, h('span', {class:'fth-eyebrow'}, window.__fthCat ? __fthCat.num + ' · ' + __fthCat.name : '01 · Writing & Script Prep'), h('h1', {class:'fth-title'}, 'Script Development')), h('span', {class:'fth-vsep'}), h('div', {class:'brand-txt'}, title), tabs, h('div', {class:'top-actions'}, saveStateEl, more));
+  app.append(top);
+  if (bootNotice) app.append(bootBanner());
+  if (!storageOK) app.append(h('div', {class:'banner'}, 'This browser isn\'t letting the page save automatically, so your work will be lost when you close it.'));
+  app.append(h('main', {id:'view'}));
+  gDerived.push(updateSaveState);
+  const setDocTitle = () => { const t = S.title.trim() || 'Scaffolded Scriptwriting'; if (document.title !== t) document.title = t; };
+  gDerived.push(setDocTitle); setDocTitle();
+  updateSaveState();
+}
+function bootBanner(){
+  const n = bootNotice; bootNotice = null;
+  const bar = h('div', {class:'banner'});
+  if (n.kind === 'newer'){
+    bar.append(h('span', null, `This browser has newer changes to this project (from ${ago(n.when)}) than the file you opened, so those are shown.`), h('span', {class:'spacer'}),
+      h('button', {class:'btn sm', onclick: () => { S = normaliseProject(JSON.parse(JSON.stringify(embedded))); S.savedAt = Date.now(); saveLocal(); bar.remove(); renderAll(); toast('Switched to the version saved in the file.'); }}, 'Use the file\'s version instead'),
+      h('button', {class:'btn sm', onclick: () => bar.remove()}, 'OK'));
+  } else {
+    bar.append(h('span', null, 'Carrying on with ', h('b', null, S.title || 'your last project'), ' from this browser.'), h('span', {class:'spacer'}),
+      h('button', {class:'btn sm', onclick: () => { bar.remove(); newProject(true); }}, 'Start a new project'),
+      h('button', {class:'btn sm', onclick: () => bar.remove()}, 'OK'));
+  }
+  return bar;
+}
+function updateSaveState(){
+  if (!saveStateEl) return;
+  const nag = S.savedAt > S.backedUpAt && (dirtySinceBackup > 30 || (S.backedUpAt && Date.now() - S.backedUpAt > 86400000) || (!S.backedUpAt && dirtySinceBackup > 15));
+  saveStateEl.className = 'save-state' + (nag ? ' nag' : '');
+  saveStateEl.innerHTML = `${storageOK ? 'Saved in this browser' : 'Not auto-saving'}`;
+  backupBtn.classList.toggle('nag', !!nag);
+}
+setInterval(updateSaveState, 60000);
+function savingHelp(){
+  modal('How saving works', h('div', null,
+    h('p', null, 'Your work saves automatically ', h('b', null, 'in this browser on this computer'), '. That is handy, but it is not a backup: it disappears if the browser data is cleared, and it won\'t follow you to another computer.'),
+    h('p', null, 'Good habits: back up at the end of every session, keep your backups on your SSD and a second place (e.g. OneDrive), and always open the most recent one.'),
+    h('p', {class:'muted small'}, 'If you open an older backup on a computer that has newer changes saved, you\'ll be told and can choose which version to use.')));
+}
+function projectsModal(){
+  const list = h('div', {class:'plist'});
+  const keys = [];
+  try { for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if (k && k.startsWith(LS+'p:')) keys.push(k); } } catch(e){}
+  const projs = keys.map(k => { try { return JSON.parse(lsGet(k)); } catch(e){ return null; } }).filter(Boolean).sort((a,b) => (b.savedAt||0) - (a.savedAt||0));
+  if (!projs.length) list.append(h('div', {class:'empty'}, 'No projects saved in this browser yet.'));
+  const close = modal('Projects saved in this browser', h('div', null, h('p', null, 'These are stored in this browser only. Open one to switch to it, then back it up to keep a safe copy.'), list));
+  projs.forEach(p => list.append(h('div', {class:'pi' + (p.id === S.id ? ' cur' : '')},
+    h('div', {style:'flex:1;min-width:0'}, h('b', null, p.title || 'Untitled script'), h('div', {class:'small muted'}, 'Last edited ' + ago(p.savedAt) + ' · backed up ' + ago(p.backedUpAt))),
+    p.id === S.id ? h('span', {class:'pill'}, 'Open now') : h('button', {class:'btn sm', onclick: () => { flushEditor && flushEditor(); saveLocal(); S = normaliseProject(p); saveLocal(); close(); renderAll(); }}, 'Open'),
+    p.id === S.id ? null : h('button', {class:'btn sm ghost', title:'Remove from this browser', onclick: e => { const row = e.target.closest('.pi'); confirmBox('Remove from this browser?', `“${p.title || 'Untitled script'}” will be deleted from this browser. Any backup files you have are unaffected.`, 'Remove', () => { lsDel(LS+'p:'+p.id); row.remove(); }); }}, svgIcon(IC.trash)))));
+}
+function newProject(skipConfirm){
+  const go2 = () => { flushEditor && flushEditor(); saveLocal(); S = blankProject(); S.ui.welcomed = false; S.savedAt = Date.now(); saveLocal(); dirtySinceBackup = 0; renderAll(); toast('New project started. Your previous one is still saved in this browser.'); };
+  if (skipConfirm === true) return go2();
+  confirmBox('Start a new project?', 'Your current project stays saved in this browser (see “Projects saved in this browser”), but make sure you have a backup of it.', 'Start new project', go2);
+}
+
+let viewCleanup = null;
+function go(tab){
+  if (S.ui.tab === tab && $('#view').childElementCount) return;
+  flushEditor && flushEditor();
+  S.ui.tab = tab; touch();
+  $$('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === tab));
+  renderView();
+}
+function renderView(){
+  if (viewCleanup){ try{ viewCleanup(); }catch(e){} viewCleanup = null; }
+  closePop();
+  derived.length = 0;
+  flushEditor = null; reloadEditor = null;
+  const v = $('#view'); v.replaceChildren(); v.scrollTop = 0;
+  ({develop: renderDevelop, outline: renderOutline, write: renderWrite})[S.ui.tab](v);
+  requestAnimationFrame(() => { $$('textarea', v).forEach(autosize); runDerived(); });
+}
+function renderAll(){ applyTips(); renderShell(); renderView(); }
+
+/* =====================================================================
+   DEVELOP TAB
+   ===================================================================== */
+function isStatement(s){ return words(s).length >= 3; }
+function lieTruthMsgs(kind){
+  return () => {
+    const d = S.develop, v = (d[kind] || '').trim(); if (!v) return [];
+    const out = [], w = words(v), name = {lie:'Lie', truth:'Truth', tragic:'Tragic Truth'}[kind];
+    const isTopic = TOPICS.some(t => t.split('/').some(x => x.toLowerCase() === v.toLowerCase().replace(/[.!]$/,'')));
+    if (w.length <= 2) out.push({level:'warn', text: `Being ${w.length === 1 ? 'a single word' : 'only a couple of words'}, “${esc(v)}” ${isTopic ? 'is more of a thematic <b>topic</b>' : 'reads more like a larger thematic topic'} than a specific ${name} a character believes. Try turning it into a moral statement, e.g. not “revenge” but “Revenge won’t bring you peace”.`});
+    if (/\?\s*$/.test(v)) out.push({level:'tip', text:`Your ${name} is phrased as a question. A ${name} works best as a statement your character could believe.`});
+    if (kind !== 'lie' && d.lie.trim() && d.lie.trim().toLowerCase() === v.toLowerCase()) out.push({level:'warn', text:'Your Lie and Truth are identical. The Truth should be the specific solution to the Lie.'});
+    return out;
+  };
+}
+function charThreshold(p){ return Math.floor(p/2) + 2; }
+function locThreshold(p){ return Math.floor(p/3) + 2; }
+function namedChars(){ return S.develop.characters.filter(c => c.name.trim()); }
+
+function renderDevelop(v){
+  const d = S.develop;
+  const secs = [['idea','The Idea'],['logline','Logline'],['theme','Theme'],['characters','Characters'],['settings','Settings'],['refs','References'],['notes','Notes']];
+  const nav = h('nav', {class:'dnav'});
+  const dots = {};
+  secs.forEach(([id, label]) => { dots[id] = h('span', {class:'cdot'}); nav.append(h('a', {href:'#dev-'+id, 'data-s':id, onclick: e => { e.preventDefault(); $('#dev-'+id).scrollIntoView({behavior:'smooth', block:'start'}); }}, dots[id], label)); });
+  nav.append(h('div', {class:'navfoot teach'}, 'Work top to bottom, or jump around. Everything here feeds the Outline and Write tabs.'));
+  derived.push(() => {
+    const fill = {
+      idea: [d.idea, d.targetPages, S.title].filter(x => String(x).trim()).length / 3,
+      logline: d.logline.trim() ? 1 : ([...Object.values(d.lb), ...Object.values(d.lb2)].some(x => x.trim()) ? .5 : 0),
+      theme: [d.lie, d.truth].filter(x => x.trim()).length / 2,
+      characters: namedChars().length ? (protagonist() && protagonist().flaw.trim() ? 1 : .5) : 0,
+      settings: d.settings.filter(s => s.name.trim()).length ? 1 : 0,
+      refs: d.refs.length ? 1 : 0, notes: d.notes.trim() ? 1 : 0 };
+    for (const k in dots) dots[k].className = 'cdot' + (fill[k] >= 1 ? ' full' : fill[k] > 0 ? ' half' : '');
+  });
+  const main = h('div', null);
+  v.append(h('div', {class:'dev'}, nav, main));
+
+  if (!S.ui.welcomed){
+    const w = h('section', {class:'card welcome'},
+      h('button', {class:'btn icon ghost xbtn', title:'Dismiss', onclick: () => { S.ui.welcomed = true; touch(); w.remove(); }}, svgIcon(IC.x)),
+      h('div', {class:'eyebrow'}, 'Welcome'),
+      h('h2', null, 'From first idea to finished script'),
+      h('p', {class:'muted', style:'margin:0;max-width:70ch'}, 'Work through three stages. Anything you write in one tab is carried into the others, so your Lie and Truth, characters and outline follow you all the way to the page.'),
+      h('div', {class:'flow'},
+        h('div', null, h('b', null, '1 · Develop'), 'Shape the idea: logline, theme (the Lie and the Truth), characters, settings and references.'),
+        h('div', null, h('b', null, '2 · Outline'), 'Build your structure step by step, from the character\'s arc to every mirrored beat.'),
+        h('div', null, h('b', null, '3 · Write'), 'Write in proper screenplay format, with your outline shown live against the page.')),
+      h('p', {class:'small', style:'margin:10px 0 0'}, h('b', null, 'Important: '), 'work saves in this browser automatically.'));
+    main.append(w);
+  }
+
+  /* 1 — Idea */
+  const protFlawProxy = { get flaw(){ const p = protagonist(); return p ? p.flaw : ''; }, set flaw(v){ ensureProtagonist().flaw = v; } };
+  const beats = S.outline.beats;
+  main.append(h('section', {class:'card sec', id:'dev-idea'},
+    h('div', {class:'sec-head'}, h('div', {class:'sec-num'}, '1'), h('h2', null, 'The Idea')),
+    h('p', {class:'lede'}, 'Get the idea down however it comes. You\'ll refine it as you go.'),
+    h('div', {class:'grid3'},
+      field('Working title', S, 'title', {ph:'e.g. The Lighthouse Keeper'}),
+      field('Writer', S, 'author', {ph:'Your name'}),
+      field('Genre / tone', d, 'genre', {ph:'e.g. Drama, dark comedy…'})),
+    h('div', {class:'grid2'},
+      field('Target length (pages)', d, 'targetPages', {type:'number', min:1, ph:'e.g. 5', info:'pageminute', hint:'Optional. A page is roughly a minute. Leave blank if the length is open; the Live Outline will then scale to whatever you write.', msgs: () => { const p = targetPages(); if (!p) return []; const out = []; if (p > 40 && p < 70) out.push({level:'tip', text:'That\'s an unusual length: longer than most shorts, shorter than a feature. Check it matches your brief.'}); return out; }}),
+      field('Contact (for the title page)', S, 'contact', {ph:'Email / phone (optional)'})),
+    field('The idea', d, 'idea', {multi:true, rows:4, cls:'big', ph:'What\'s the idea? An image, a character, a situation, a “what if…”'}),
+    h('div', {class:'divider'}),
+    h('div', {class:'row', style:'margin-bottom:10px'}, h('h3', null, 'Story-inspired idea generation'), h('span', {class:'pill teach'}, 'From the deck')),
+    h('p', {class:'muted small teach', style:'margin:-4px 0 12px'}, 'Build an idea out of story itself. Each answer here also appears in the matching place in your Characters, Settings or Outline.'),
+    h('div', {class:'spark'},
+      field('Imagine a character with a defining negative personality trait (their flaw)', protFlawProxy, 'flaw', {multi:true, info:'flaw', hint:'Your character\'s flaw is a manifestation of the Lie they believe. What philosophy makes sense of this flaw?', teach:true, also:'Also in: <b>Characters › protagonist</b>'}),
+      field('Imagine a setting that could have been enabling that flaw (their norm)', d, 'norm', {multi:true, info:'norm', hint:'Before we present the Truth, establish a norm where the Lie has been able to fester.', teach:true, also:'Also in: <b>Outline › Character & Setting</b>'}),
+      field('Imagine a problem or opportunity that could disrupt their norm', beats.p1, 'summary', {multi:true, hint:'It should provide the first challenge (or opportunity) for your character to adopt the Truth instead.', teach:true, also:'Also in: <b>Outline › 1st Problem</b>'}),
+      field('Imagine a choice that sends them into a cycle of conflict', beats.c1, 'summary', {multi:true, hint:'All layers of conflict (philosophical, emotional and external) are activated as they choose the Lie and cross a path of no return.', teach:true, also:'Also in: <b>Outline › 1st Choice</b>'}))));
+
+  /* 2 — Logline */
+  const FORMULAS = {
+    when: {name:'When… must… or else', src:d.lb,
+      fields:[['incident','When… (inciting incident)','a young clownfish is captured by a diver','the inciting incident'],['protagonist','a… (specific protagonist)','his anxious father','the protagonist'],['goal','must… (objective)','face the perilous ocean to find his son','the objective'],['stakes','or else / before… (stakes)','he is lost forever','the stakes']],
+      example:'When a young clownfish is captured by a diver, his anxious father must face the perilous ocean to find his son before he is lost forever.', exampleFilm:'Finding Nemo'},
+    after: {name:'After… sets out… against', src:d.lb2,
+      fields:[['incident','After… (inciting incident)','being rescued by a German bounty hunter','the inciting incident'],['protagonist','a… (protagonist)','freed slave','the protagonist'],['action','(action)','sets out to rescue his wife from','the action'],['antagonist','(antagonist)','a brutal Mississippi plantation owner','the antagonist']],
+      example:'After being rescued by a German bounty hunter, a freed slave sets out to rescue his wife from a brutal Mississippi plantation owner.', exampleFilm:'Django Unchained'}
+  };
+  const clean = v => v.trim().replace(/[.,]$/, '');
+  const DET = /^(a|an|the|his|her|their|its|my|our|two|three|one)\s/i;
+  const withArt = p => !p ? '' : DET.test(p) ? p : (/^[aeiou]/i.test(p) ? 'an ' : 'a ') + p;
+  const slot = (v, ph) => v.trim() ? `<span class="slot">${esc(clean(v))}</span>` : `<span class="slot empty">${ph}</span>`;
+  const artSlot = (v, ph) => { const p = clean(v); if (!p) return 'a ' + slot('', ph); const m = p.match(DET); return m ? esc(m[1]) + ' ' + slot(p.slice(m[0].length), ph) : (/^[aeiou]/i.test(p) ? 'an ' : 'a ') + slot(p, ph); };
+  const build = (mode, html) => {
+    const F = FORMULAS[mode], v = F.src;
+    if (mode === 'when'){
+      const conn = d.lbConn || 'or else';
+      if (html) return `When ${slot(v.incident,'[inciting incident]')}, ${artSlot(v.protagonist,'[specific protagonist]')} must ${slot(v.goal,'[objective]')} ${conn} ${slot(v.stakes,'[stakes]')}.`;
+      return `When ${clean(v.incident)}, ${withArt(clean(v.protagonist))} must ${clean(v.goal)} ${conn} ${clean(v.stakes)}.`.replace(/\s+/g, ' ');
+    }
+    if (html) return `After ${slot(v.incident,'[inciting incident]')}, ${artSlot(v.protagonist,'[protagonist]')} ${slot(v.action,'[action]')} ${slot(v.antagonist,'[antagonist]')}.`;
+    return `After ${clean(v.incident)}, ${withArt(clean(v.protagonist))} ${clean(v.action)} ${clean(v.antagonist)}.`.replace(/\s+/g, ' ');
+  };
+  const prev = h('div', {class:'logline-preview'});
+  derived.push(() => { prev.innerHTML = build(d.lbMode, true); });
+  const lbWrap = h('div');
+  const exEl = h('div', {class:'lbex'});
+  const drawFormula = () => {
+    const F = FORMULAS[d.lbMode];
+    const cols = F.fields.map(([key, label, ex]) => {
+      const f = field(null, F.src, key, {multi:true, ph:'e.g. ' + ex});
+      const head = h('div', {class:'lbk'}, label);
+      if (d.lbMode === 'when' && key === 'stakes'){
+        const sel = h('select', {class:'lbconn', title:'Connecting word', onchange: () => { d.lbConn = sel.value; touch(); runDerived(); }}, ['or else','before'].map(x => h('option', {value:x, selected: (d.lbConn || 'or else') === x ? 'selected' : null}, x)));
+        head.replaceChildren(sel, h('span', null, '… (stakes)'));
+      }
+      f.prepend(head); return f;
+    });
+    lbWrap.replaceChildren(h('div', {class:'lb'}, cols));
+    exEl.innerHTML = `<b>Example (${esc(F.exampleFilm)}):</b> ${esc(F.example)}`;
+    requestAnimationFrame(() => $$('textarea', lbWrap).forEach(autosize));
+    runDerived();
+  };
+  const modeSeg = h('div', {class:'seg'}, Object.entries(FORMULAS).map(([k, F]) => h('button', {class: d.lbMode === k ? 'on' : '', onclick: e => { d.lbMode = k; touch(); $$('button', modeSeg).forEach(b => b.classList.toggle('on', b === e.currentTarget)); drawFormula(); }}, F.name)));
+  drawFormula();
+  const loglineArea = field('Your logline', d, 'logline', {multi:true, cls:'big', ph:'Write your logline here, or build one above and press “Use this”.',
+    msgs: () => {
+      const t = d.logline.trim(); if (!t) return [];
+      const out = [], n = words(t).length;
+      if (n > 50) out.push({level:'warn', text:`At ${n} words this is long for a logline. Aim for one or two sentences (roughly 25–50 words).`});
+      const names = namedChars().map(c => c.name.trim()).filter(x => x.length > 1);
+      const hit = names.find(nm => new RegExp('\\b' + nm.split(/\s+/)[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b', 'i').test(t));
+      if (hit) out.push({level:'tip', text:`Loglines usually <b>describe</b> characters rather than name them. Instead of “${esc(hit)}”, try something like “his anxious father” or “a freed slave”.`});
+      if (/\b(lie|truth|theme|learns that|realises that|realizes that)\b/i.test(t)) out.push({level:'tip', text:'Keep the logline focused on <b>plot</b>: what happens and what\'s at stake. Leave the theme for the story to reveal.'});
+      return out;
+    }});
+  const wc = h('div', {class:'wc'}); derived.push(() => { const n = words(d.logline).length; wc.textContent = n ? n + ' words' : ''; });
+  main.append(h('section', {class:'card sec', id:'dev-logline'},
+    h('div', {class:'sec-head'}, h('div', {class:'sec-num'}, '2'), h('h2', null, 'Logline'), infoBtn('logline')),
+    h('p', {class:'lede'}, 'Sum up the plot in a sentence. Try a formula (or both), then polish it in your own words.'),
+    h('div', {class:'row', style:'margin-bottom:10px;flex-wrap:wrap'}, h('span', {class:'small muted'}, 'Formula:'), modeSeg),
+    exEl,
+    lbWrap,
+    h('div', {class:'row', style:'margin-top:12px'}, h('span', {class:'eyebrow'}, 'Preview'), h('span', {class:'spacer'}),
+      h('button', {class:'btn sm', onclick: () => { const v = FORMULAS[d.lbMode].src; if (!Object.values(v).some(x => x.trim())) return toast('Fill in the formula first.'); d.logline = build(d.lbMode, false); touch(); runDerived(); $$('#dev-logline textarea').forEach(autosize); toast('Copied into your logline. Now polish it!'); }}, 'Use this ↓')),
+    prev,
+    msgSlot(() => { const F = FORMULAS[d.lbMode], v = F.src; const filled = F.fields.filter(([k]) => v[k].trim()).length; if (filled === 0 || filled === F.fields.length) return []; return [{level:'tip', text:'Still missing: ' + F.fields.filter(([k]) => !v[k].trim()).map(f => f[3]).join(', ') + '.'}]; }),
+    h('div', {style:'margin-top:12px'}), loglineArea, wc,
+    hint('<b>Tip:</b> a strong logline makes us want to see the film. Look for irony or contrast, like the unlikeliest person facing the very problem they\'re worst equipped for.')));
+
+  /* 3 — Theme */
+  const tragicWrap = h('div');
+  const syncTragic = () => { tragicWrap.style.display = d.arc === 'disillusionment' ? '' : 'none'; };
+  derived.push(syncTragic);
+  tragicWrap.append(field('Tragic Truth', d, 'tragic', {multi:true, cls:'tragic', info:'tragic', ph:'e.g. Some losses can never be repaired', msgs: lieTruthMsgs('tragic')}));
+  syncTragic();
+  const topicChips = h('div', {class:'chips'});
+  const drawTopics = () => topicChips.replaceChildren(...TOPICS.map(t => h('button', {class:'chip' + (d.topic.toUpperCase() === t ? ' on' : ''), type:'button', onclick: () => { d.topic = d.topic.toUpperCase() === t ? '' : t.charAt(0) + t.slice(1).toLowerCase(); touch(); drawTopics(); runDerived(); }}, t.toLowerCase())));
+  drawTopics();
+  const checkGroups = [
+    ['Both', ['A specific moral assessment of an idea or concept','Philosophically universal, not situation dependent','Distinct from, and deeper than, social or political commentary','Not exclusive to the story world; as relevant to the audience as to the characters']],
+    ['The Lie', ['Is a direct negation of the Truth','Is not totally unreasonable or inherently evil','Is specifically justifiable given the character\'s context and history']],
+    ['The Truth', ['Is the specific solution to the Lie','Is not obvious, self-evident or universally accepted','Though positive once accepted, is at first deeply unappealing to the character']]];
+  const checks = h('div', {class:'checks'}, checkGroups.map(([g, items], gi) => h('div', null, h('h4', null, g), items.map((t, i) => { const k = gi + '.' + i; const cb = h('input', {type:'checkbox', checked: !!d.checks[k], onchange: () => { d.checks[k] = cb.checked; touch(); }}); return h('label', null, cb, t); }))));
+  main.append(h('section', {class:'card sec', id:'dev-theme'},
+    h('div', {class:'sec-head'}, h('div', {class:'sec-num'}, '3'), h('h2', null, 'Theme'), infoBtn('theme')),
+    h('p', {class:'lede'}, 'Story is about theme, the specific philosophy your story communicates. Your protagonist begins believing a misaligned philosophy (the Lie) and the story tests it against the Truth.'),
+    field('Thematic topic', d, 'topic', {ph:'e.g. Revenge', info:'topic', hint:'The broad subject your story explores. Pick from the list or type your own.', onInput: drawTopics}),
+    h('details', {class:'disc'}, h('summary', null, 'Browse thematic topics'), h('div', {class:'topics'}, topicChips)),
+    h('div', {class:'lt', style:'margin-top:6px'},
+      h('div', {class:'ltcol l'}, h('div', {class:'ltlab'}, 'The Lie', infoBtn('lie')), field(null, d, 'lie', {multi:true, ph:'e.g. Revenge is a necessary route to healing', msgs: lieTruthMsgs('lie')})),
+      h('div', {class:'ltcol t'}, h('div', {class:'ltlab'}, 'The Truth', infoBtn('truth')), field(null, d, 'truth', {multi:true, ph:'e.g. Revenge will only exacerbate hurt', msgs: lieTruthMsgs('truth')}))),
+    h('div', {style:'margin-top:16px'}),
+    h('div', {class:'row', style:'margin-bottom:8px'}, h('h3', null, 'Protagonist\'s character arc'), infoBtn('arc'), h('span', {class:'also'}, 'Also in: ', h('b', null, 'Outline › The Arc'))),
+    arcPicker(d, 'arc', () => { syncTragic(); }),
+    h('div', {style:'margin-top:14px'}), tragicWrap,
+    h('details', {class:'disc', style:'margin-top:10px'}, h('summary', null, 'Check your Lie & Truth against the criteria'), checks),
+    h('div', {style:'margin-top:8px'}),
+    field('Theme notes', d, 'themeNotes', {multi:true, ph:'Where does your Lie come from? What truths has your own experience convinced you of?'}),
+    hint('<b>Activity:</b> think about a favourite film. Can you name its Lie and its Truth? Add it to your References below.')));
+
+  /* 4 — Characters */
+  const cwrap = h('div', {class:'cards'});
+  const drawChars = () => { cwrap.replaceChildren(...d.characters.map(c => charCard(c, drawChars)), h('button', {class:'addcard', onclick: () => { d.characters.push(newChar(d.characters.some(c => c.role === 'Protagonist') ? 'Supporting' : 'Protagonist')); touch(); drawChars(); requestAnimationFrame(() => { const ins = $$('.ccard-head input', cwrap); ins[ins.length-1]?.focus(); }); }}, '+ Add a character')); requestAnimationFrame(() => $$('textarea', cwrap).forEach(autosize)); runDerived(); };
+  drawChars();
+  main.append(h('section', {class:'card sec', id:'dev-characters'},
+    h('div', {class:'sec-head'}, h('div', {class:'sec-num'}, '4'), h('h2', null, 'Characters')),
+    h('p', {class:'lede'}, 'Who\'s in your story? Start with your protagonist. Supporting characters can have arcs of their own too.'),
+    msgSlot(() => {
+      const out = [], n = namedChars().length, p = targetPages();
+      if (p && n > charThreshold(p)) out.push({level:'warn', text:`${n} named characters could be a lot for a ${p}-page script. Ask whether each one is totally necessary to the story, or whether two or more could be merged into one without losing anything vital.`});
+      if (n && !protagonist()) out.push({level:'tip', text:'None of your characters is marked as the <b>Protagonist</b>. Set one using the role menu on their card.'});
+      const pr = protagonist();
+      if (pr && d.lie.trim() && !pr.flaw.trim()) out.push({level:'tip', text:'Your protagonist doesn\'t have a <b>flaw</b> yet. Their flaw is how the Lie (“' + esc(d.lie.trim()) + '”) shows up in their behaviour.'});
+      if (pr && d.lie.trim() && pr.flaw.trim() && !pr.history.trim()) out.push({level:'tip', text:'What in your protagonist\'s <b>history</b> makes the Lie make sense? A strong Lie is justifiable given their personal context.'});
+      return out;
+    }),
+    h('div', {style:'height:12px'}), cwrap));
+
+  /* 5 — Settings */
+  const swrap = h('div', {class:'cards'});
+  const drawSettings = () => { swrap.replaceChildren(...d.settings.map(st => settingCard(st, drawSettings)), h('button', {class:'addcard', onclick: () => { d.settings.push({id:uid(), name:'', ie:'INT.', desc:''}); touch(); drawSettings(); requestAnimationFrame(() => { const ins = $$('.ccard-head input', swrap); ins[ins.length-1]?.focus(); }); }}, '+ Add a setting')); requestAnimationFrame(() => $$('textarea', swrap).forEach(autosize)); runDerived(); };
+  drawSettings();
+  main.append(h('section', {class:'card sec', id:'dev-settings'},
+    h('div', {class:'sec-head'}, h('div', {class:'sec-num'}, '5'), h('h2', null, 'Settings'), infoBtn('setting')),
+    h('p', {class:'lede'}, 'Where does your story happen? Remember, your opening setting is the norm in which the Lie has been able to fester.'),
+    msgSlot(() => { const n = d.settings.filter(s => s.name.trim()).length, p = targetPages(); return (p && n > locThreshold(p)) ? [{level:'warn', text:`${n} locations is a lot for a ${p}-page script, both for the story and for your shoot. Could any scenes share a location?`}] : []; }),
+    h('div', {style:'height:12px'}), swrap));
+
+  /* 6 — References */
+  const rwrap = h('div', {class:'cards'});
+  const drawRefs = () => { rwrap.replaceChildren(...d.refs.map(r => refCard(r, drawRefs)), h('button', {class:'addcard', onclick: () => { d.refs.push({id:uid(), title:'', year:'', takes:[], note:'', lie:'', truth:''}); touch(); drawRefs(); }}, '+ Add a reference film')); requestAnimationFrame(() => $$('textarea', rwrap).forEach(autosize)); runDerived(); };
+  drawRefs();
+  main.append(h('section', {class:'card sec', id:'dev-refs'},
+    h('div', {class:'sec-head'}, h('div', {class:'sec-num'}, '6'), h('h2', null, 'References'), infoBtn('refs')),
+    h('p', {class:'lede'}, 'Films (shorts especially) that inspire what you\'re making, and what exactly you\'re taking from each.'),
+    rwrap));
+
+  /* 7 — Notes */
+  main.append(h('section', {class:'card sec', id:'dev-notes'},
+    h('div', {class:'sec-head'}, h('div', {class:'sec-num'}, '7'), h('h2', null, 'Notes')),
+    h('p', {class:'lede'}, 'Research, images you have in mind, overheard dialogue: anything else.'),
+    field(null, d, 'notes', {multi:true, rows:6})));
+
+  // scroll spy
+  const view = v;
+  const spy = () => { let cur = secs[0][0]; for (const [id] of secs){ const el = $('#dev-'+id); if (el && el.getBoundingClientRect().top < 160) cur = id; } $$('.dnav a').forEach(a => a.classList.toggle('on', a.dataset.s === cur)); };
+  view.addEventListener('scroll', spy, {passive:true}); setTimeout(spy, 50);
+  viewCleanup = () => view.removeEventListener('scroll', spy);
+}
+
+function arcSpark(arc){
+  const pts = ARC_BEATS[arc].map((b, i) => [beatPos(BEATS[i]) , b[0]]);
+  const d = pts.map(([x, y], i) => (i ? 'L' : 'M') + (x * 1.2).toFixed(1) + ' ' + (34 - y * 28).toFixed(1)).join(' ');
+  const endCol = arc === 'disillusionment' ? 'var(--tragic)' : (ARC_BEATS[arc][8][0] > .5 ? 'var(--truth)' : 'var(--lie)');
+  const startCol = ARC_BEATS[arc][0][0] > .5 ? 'var(--truth)' : 'var(--lie)';
+  return `<svg viewBox="-4 0 128 38" preserveAspectRatio="none"><line x1="0" y1="6" x2="120" y2="6" stroke="var(--line)" stroke-dasharray="2 3"/><line x1="0" y1="34" x2="120" y2="34" stroke="var(--line)" stroke-dasharray="2 3"/><path d="${d}" fill="none" stroke="var(--ink2)" stroke-width="2" vector-effect="non-scaling-stroke"/><circle cx="${pts[0][0]*1.2}" cy="${34-pts[0][1]*28}" r="3.5" fill="${startCol}"/><circle cx="${pts[8][0]*1.2}" cy="${34-pts[8][1]*28}" r="3.5" fill="${endCol}"/></svg>`;
+}
+function arcPicker(obj, key, onChange){
+  const wrap = h('div', {class:'arcs'});
+  const draw = () => wrap.replaceChildren(...Object.entries(ARCS).map(([id, a]) => h('button', {type:'button', class:'arc-opt' + (obj[key] === id ? ' on' : ''), onclick: () => { obj[key] = id; touch(); draw(); onChange && onChange(id); runDerived(); }},
+    h('b', null, a.name), h('span', {class:'ft'}, a.from + ' → ' + a.to), h('div', {html: arcSpark(id)}), h('span', {class:'st'}, a.states.join(' › ')))));
+  draw();
+  derived.push(() => { const on = wrap.querySelector('.arc-opt.on b'); if (!on || on.textContent !== ARCS[obj[key]]?.name) draw(); });
+  return wrap;
+}
+function charCard(c, redraw){
+  const d = S.develop;
+  const nameIn = h('input', {placeholder: c.role === 'Protagonist' ? 'Protagonist\'s name' : 'Character name'});
+  bindInput(nameIn, c, 'name');
+  const role = h('select', {onchange: () => { if (role.value === 'Protagonist'){ d.characters.forEach(o => { if (o !== c && o.role === 'Protagonist') o.role = 'Supporting'; }); } c.role = role.value; touch(); redraw(); }},
+    ['Protagonist','Antagonist','Supporting','Minor'].map(r => h('option', {value:r, selected: c.role === r ? 'selected' : null}, r)));
+  const del = h('button', {class:'btn icon ghost sm', title:'Remove character', onclick: () => confirmBox('Remove character?', `Remove ${c.name || 'this character'}?`, 'Remove', () => { d.characters.splice(d.characters.indexOf(c), 1); touch(); redraw(); })}, svgIcon(IC.trash));
+  const isP = c.role === 'Protagonist';
+  const arcBox = h('div');
+  const drawArc = () => {
+    arcBox.replaceChildren();
+    if (isP){ arcBox.append(h('div', {class:'small muted', style:'margin:2px 0 12px'}, 'Arc: ', h('b', null, ARCS[d.arc].name), ' (from your story\'s Lie and Truth in Theme).')); return; }
+    const sw = h('input', {type:'checkbox', checked: c.arcOn, onchange: () => { c.arcOn = sw.checked; touch(); drawArc(); runDerived(); }});
+    arcBox.append(h('label', {class:'switch', style:'margin:2px 0 10px'}, sw, 'Give this character their own arc'));
+    if (c.arcOn){
+      const sel = h('select', {class:'inp', onchange: () => { c.arc = sel.value; touch(); runDerived(); }}, Object.entries(ARCS).map(([id, a]) => h('option', {value:id, selected: c.arc === id ? 'selected' : null}, `${a.name} (${a.from} → ${a.to})`)));
+      arcBox.append(h('div', {class:'field'}, h('label', {class:'flabel'}, 'Arc type', infoBtn('arc')), sel),
+        h('div', {class:'grid2', style:'gap:10px'},
+          field('Their Lie', c, 'lie', {multi:true, cls:'lie', ph: d.lie ? 'Leave blank to use: ' + d.lie : 'Leave blank to use the story\'s Lie'}),
+          field('Their Truth', c, 'truth', {multi:true, cls:'truth', ph: d.truth ? 'Leave blank to use: ' + d.truth : 'Leave blank to use the story\'s Truth'})),
+        h('div', {class:'fhint teach', style:'margin:-6px 0 10px'}, 'Many supporting characters embody either the Lie or the Truth. A flat-arc mentor, for example, already holds the Truth.'));
+      requestAnimationFrame(() => $$('textarea', arcBox).forEach(autosize));
+    }
+  };
+  drawArc();
+  return h('div', {class:'ccard' + (isP ? ' prot' : '')},
+    h('div', {class:'ccard-head'}, nameIn, role, del),
+    field('Description', c, 'desc', {multi:true, ph:'Age, look, job, how they carry themselves…'}),
+    field('Flaw', c, 'flaw', {multi:true, info:'flaw', ph:'Their defining negative trait', hint: isP ? 'A manifestation of the Lie they believe.' : null, teach:true, also: isP ? 'Also in: <b>The Idea</b>' : null}),
+    h('div', {class:'grid2', style:'gap:10px'},
+      field('Want', c, 'want', {multi:true, info:'want', ph:'What they\'re trying to get'}),
+      field('History', c, 'history', {multi:true, info:'history', ph:'What makes their belief make sense?'})),
+    h('details', {class:'disc'}, h('summary', null, 'Belief cycle'), h('div', {class:'row', style:'margin:-4px 0 6px'}, h('span', {class:'small muted'}, 'Stimulus › Emotion › Belief › Reaction'), infoBtn('cycle')),
+      h('div', {class:'cycle'}, field('Stimulus', c.cycle, 's', {ph:'New assignment'}), field('Emotion', c.cycle, 'e', {ph:'Apathy'}), field('Belief', c.cycle, 'b', {ph:'“Testing is pointless”'}), field('Reaction', c.cycle, 'r', {ph:'Don\'t submit'}))),
+    arcBox);
+}
+function settingCard(st, redraw){
+  const nameIn = h('input', {placeholder:'LOCATION NAME', style:'text-transform:uppercase'});
+  bindInput(nameIn, st, 'name');
+  const ie = h('select', {onchange: () => { st.ie = ie.value; touch(); }}, ['INT.','EXT.','INT./EXT.'].map(x => h('option', {value:x, selected: st.ie === x ? 'selected' : null}, x)));
+  const del = h('button', {class:'btn icon ghost sm', title:'Remove setting', onclick: () => { S.develop.settings.splice(S.develop.settings.indexOf(st), 1); touch(); redraw(); }}, svgIcon(IC.trash));
+  return h('div', {class:'ccard'}, h('div', {class:'ccard-head'}, ie, nameIn, del),
+    field('Description', st, 'desc', {multi:true, ph:'What is it like? What does it say about the people in it? How might it enable the flaw?'}));
+}
+function refCard(r, redraw){
+  const t = h('input', {placeholder:'Film title'}); bindInput(t, r, 'title');
+  const y = h('input', {placeholder:'Year', style:'max-width:70px;font:500 14px var(--ui)'}); bindInput(y, r, 'year');
+  const del = h('button', {class:'btn icon ghost sm', title:'Remove', onclick: () => { S.develop.refs.splice(S.develop.refs.indexOf(r), 1); touch(); redraw(); }}, svgIcon(IC.trash));
+  const takes = h('div', {class:'chips', style:'margin-bottom:10px'});
+  const drawT = () => takes.replaceChildren(h('span', {class:'small muted', style:'align-self:center'}, 'Taking:'), ...['Tone','Structure','Character','Visual style','Theme','Dialogue','Sound'].map(k => h('button', {type:'button', class:'chip' + (r.takes.includes(k) ? ' on' : ''), onclick: () => { r.takes = r.takes.includes(k) ? r.takes.filter(x => x !== k) : [...r.takes, k]; touch(); drawT(); }}, k)));
+  drawT();
+  return h('div', {class:'ccard'}, h('div', {class:'ccard-head'}, t, y, del), takes,
+    field('What I\'m taking from it', r, 'note', {multi:true, ph:'Be specific: a shot, a structure, the way it handles…'}),
+    h('details', {class:'disc'}, h('summary', null, 'Its Lie & Truth'), h('div', {class:'grid2', style:'gap:10px'}, field('Lie', r, 'lie', {multi:true, cls:'lie'}), field('Truth', r, 'truth', {multi:true, cls:'truth'}))));
+}
+
+/* =====================================================================
+   OUTLINE TAB
+   ===================================================================== */
+const OSTEPS = [
+  {k:'arc', title:'The Arc', beats:[], intro:'Start with the big picture: where does your character begin, and where do they end? Every beat that follows moves them along this line.'},
+  {k:'cs',  title:'Character & Setting', beats:['cs1','cs2'],
+    intro1:'Start at the beginning. Establish your character and the norm in which the Lie has been able to fester.',
+    intro2:'The last stop on your way back up. Your closing Character & Setting mirrors the opening, so the audience can measure the change.'},
+  {k:'pr',  title:'The Problems', beats:['p1','p2'],
+    intro1:'Character decision is instigated by plot. What problem or opportunity disrupts the norm and challenges the Lie?',
+    intro2:'The second Problem mirrors the first, but the stakes are higher and the true cost of the Lie is now unavoidable.'},
+  {k:'ch',  title:'The Choices', beats:['c1','c2'],
+    intro1:'Theme is expressed through character decision. The conflict of your story begins with this Choice, made in the same stretch of story as the Problem that forces it.',
+    intro2:'The conflict of your story ends with this Choice. It answers the first: which belief wins out?'},
+  {k:'a2',  title:'Act 2', beats:['a2a','a2b'],
+    intro1:'Living with the first Choice: what happens in the first half of Act 2 as your character pursues their goal?',
+    intro2:'Now the payoff half. Coming out of the Midpoint, how do the events of the first half of Act 2 come back around, now seen in a new light?'},
+  {k:'mid', title:'Midpoint', beats:['mid'], intro:'The hinge between setup and payoff: a False Victory, Turning Point or Realisation. Once it\'s in place, you\'ll work back up through the payoff half of your story, mirroring each beat in reverse order.'},
+  {k:'det', title:'Detail & Mirror', beats:[], intro:'Break each stage into individual plot points, then check the symmetry. Each plot point in the setup half can find its partner in the payoff half.'}
+];
+const SI = k => OSTEPS.findIndex(s => s.k === k);
+/* Back / Next simply follow the step order; the Setup/Payoff switch chooses which half you're working on */
+function stepNext(i, pass){ return i < OSTEPS.length - 1 ? [i + 1, pass] : null; }
+function stepPrev(i, pass){ return i > 0 ? [i - 1, pass] : null; }
+function stepTargetLabel(i){ return OSTEPS[i].title; }
+const lieTxt = () => S.develop.lie.trim() || 'the Lie';
+const truthTxt = () => (S.develop.arc === 'disillusionment' && S.develop.tragic.trim()) ? S.develop.tragic.trim() : (S.develop.truth.trim() || 'the Truth');
+const fillPrompt = id => BEAT_PROMPT[id].replace('{L}', esc(lieTxt())).replace('{T}', esc(truthTxt()));
+function beatFilled(id){ const b = S.outline.beats[id]; return !!(b.summary.trim() || b.items.some(i => i.title.trim())); }
+
+function arcChart(){
+  const wrap = h('div', {class:'arcchart'});
+  const draw = () => {
+    const d = S.develop, arc = d.arc, topCol = arc === 'disillusionment' ? 'var(--tragic)' : 'var(--truth)';
+    const topLabel = arc === 'disillusionment' ? 'Tragic Truth' : 'Truth';
+    const topText = arc === 'disillusionment' ? (d.tragic.trim() || d.truth.trim()) : d.truth.trim();
+    const Y = b => 86 - b * 72;
+    const curve = (pts) => { // catmull-rom → bezier in viewBox 0..1000 x 0..100
+      let s = `M${pts[0][0]*10},${pts[0][1]}`;
+      for (let i = 0; i < pts.length - 1; i++){
+        const p0 = pts[i-1] || pts[i], p1 = pts[i], p2 = pts[i+1], p3 = pts[i+2] || p2, t = 6;
+        s += ` C${p1[0]*10 + (p2[0]-p0[0])*10/t},${p1[1] + (p2[1]-p0[1])/t} ${p2[0]*10 - (p3[0]-p1[0])*10/t},${p2[1] - (p3[1]-p1[1])/t} ${p2[0]*10},${p2[1]}`;
+      }
+      return s;
+    };
+    const main = ARC_BEATS[arc].map((b, i) => [beatPos(BEATS[i]), Y(b[0])]);
+    let svg = `<svg viewBox="0 0 1000 100" preserveAspectRatio="none">
+      <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${topCol}" stop-opacity=".16"/><stop offset=".5" stop-color="${topCol}" stop-opacity="0"/><stop offset=".5" stop-color="var(--lie)" stop-opacity="0"/><stop offset="1" stop-color="var(--lie)" stop-opacity=".14"/></linearGradient></defs>
+      <rect x="0" y="0" width="1000" height="100" fill="url(#ag)" rx="0"/>`;
+    [12.5, 25, 50, 75, 87.5].forEach(x => { svg += `<line x1="${x*10}" y1="0" x2="${x*10}" y2="100" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke" ${x === 50 ? '' : 'stroke-dasharray="3 4"'}/>`; });
+    const others = S.develop.characters.filter(c => c.role !== 'Protagonist' && c.arcOn && c.name.trim());
+    others.forEach((c, k) => { const pts = ARC_BEATS[c.arc].map((b, i) => [beatPos(BEATS[i]), Y(b[0])]); svg += `<path d="${curve(pts)}" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-dasharray="${['6 5','2 4','10 4 2 4','1 6'][k % 4]}" vector-effect="non-scaling-stroke"/>`; });
+    svg += `<path d="${curve(main)}" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`;
+    wrap.innerHTML = svg;
+    wrap.append(h('div', {class:'zl', style:`top:4px;color:${topCol}`}, topLabel, h('span', null, topText || '(set in Develop › Theme)')));
+    wrap.append(h('div', {class:'zl', style:'bottom:4px;color:var(--lie)'}, 'Lie', h('span', null, d.lie.trim() || '(set in Develop › Theme)')));
+    const mix = b => `color-mix(in srgb, ${topCol} ${Math.round(b*100)}%, var(--lie))`;
+    ARC_BEATS[arc].forEach((b, i) => {
+      const x = beatPos(BEATS[i]);
+      wrap.append(h('div', {class:'adot', style:`left:${x}%;top:${Y(b[0])}%;background:${mix(b[0])}`}), h('div', {class:'atip', style:`left:${x}%;top:${Y(b[0])}%`}, beatLabel(BEATS[i]) + ': ' + b[1]));
+    });
+    others.forEach(c => ARC_BEATS[c.arc].forEach((b, i) => { const x = beatPos(BEATS[i]); wrap.append(h('div', {class:'adot sm', style:`left:${x}%;top:${Y(b[0])}%;background:var(--ink3)`}), h('div', {class:'atip', style:`left:${x}%;top:${Y(b[0])}%`}, c.name + ' · ' + beatLabel(BEATS[i]) + ': ' + b[1])); }));
+  };
+  draw();
+  derived.push(draw);
+  return wrap;
+}
+function arcLegend(){
+  const el = h('div', {class:'alegend'});
+  const draw = () => {
+    const others = S.develop.characters.filter(c => c.role !== 'Protagonist' && c.arcOn && c.name.trim());
+    const p = protagonist();
+    el.replaceChildren(h('span', null, h('i'), (p && p.name.trim()) || 'Protagonist', ' · ', ARCS[S.develop.arc].name),
+      ...others.map((c, k) => h('span', null, h('i', {style:`border-top-style:dashed;border-color:var(--ink3)`}), c.name, ' · ', ARCS[c.arc].name)),
+      h('span', {class:'muted teach'}, 'Hover the dots to see what each character believes at each stage.'));
+  };
+  draw(); derived.push(draw);
+  return el;
+}
+function timeline(onPick, selFn){
+  const wrap = h('div', {class:'tl'});
+  const draw = () => {
+    const row = h('div', {class:'tl-row'});
+    const sel = selFn ? selFn() : [];
+    const sumOf = id => { const B = S.outline.beats[id]; return B.summary.trim() || B.items.map(i => i.title).filter(Boolean).join(' · '); };
+    const part = id => { const s = sumOf(id); return h('div', {class:`tl-part fam-${BEAT[id].fam}` + (sel.includes(id) ? ' sel' : ''), title: beatFull(id) + (s ? ': ' + s : ''), onclick: () => onPick(id)}, h('div', {class:'tn'}, beatLabel(id)), h('div', {class:'ts' + (s ? '' : ' e')}, s || 'Not outlined yet')); };
+    SPANS.forEach(sp => row.append(h('div', {class:'tl-seg' + (sp.grp ? ' grp' : ''), style:`width:${sp.e - sp.s}%`}, sp.ids.map(part))));
+    const tl = h('div', {style:'position:relative'}, row);
+    const M = S.outline.beats.mid, msum = M.summary.trim();
+    tl.append(h('div', {class:'tl-m fam-mid' + (msum ? ' filled' : '') + (sel.includes('mid') ? ' sel' : ''), style:'left:50%', title:'Midpoint' + (msum ? ': ' + msum : ''), onclick: () => onPick('mid')}, h('div', {class:'dia'})));
+    const under = h('div', {class:'tl-under', style:'position:relative'}, h('div', {class:'tl-mlab fam-mid', style:'left:50%', onclick: () => onPick('mid')}, h('b', null, 'Midpoint · 50%'), h('span', null, msum || '…')));
+    const scale = h('div', {class:'tl-scale'}, [0, 12.5, 25, 50, 75, 87.5, 100].map(x => h('span', {style:`left:${x}%`}, x + '%')));
+    wrap.replaceChildren(tl, scale, under);
+  };
+  draw(); derived.push(draw);
+  return wrap;
+}
+
+function renderOutline(v){
+  const O = S.outline;
+  if (O.pass !== 2) O.pass = 1;
+  if (!(O.step >= 0 && O.step < OSTEPS.length)) O.step = 0;
+  const root = h('div', {class:'ol'});
+  v.append(root);
+  const stepsEl = h('div', {class:'steps'});
+  const body = h('div', {class:'card stepbody'});
+  const selBeats = () => { const s = OSTEPS[O.step]; return s.beats.length === 2 ? [s.beats[O.pass === 2 ? 1 : 0]] : s.beats; };
+  const glance = h('section', {class:'card glance'},
+    h('div', {class:'glance-head'}, h('h2', null, 'Your story at a glance'), infoBtn('structure'), h('span', {class:'spacer'}),
+      h('span', {class:'pill'}, ARCS[S.develop.arc].from + ' → ' + ARCS[S.develop.arc].to), h('button', {class:'btn sm', onclick: () => go('write')}, 'Ready to write? Go to Write ', svgIcon(IC.right))),
+    arcChart(), arcLegend(),
+    timeline(id => { const i = OSTEPS.findIndex(s => s.beats.includes(id)); setStep(i >= 0 ? i : SI('det'), PAYOFF.has(id) ? 2 : 1, id); }, selBeats));
+  derived.push(() => { const p = glance.querySelector('.glance-head .pill'); if (p) p.textContent = ARCS[S.develop.arc].from + ' → ' + ARCS[S.develop.arc].to; });
+  root.append(glance, stepsEl, body);
+
+  const drawSteps = () => stepsEl.replaceChildren(...OSTEPS.map((s, i) => {
+    const done = s.k === 'arc' ? !!(S.develop.lie.trim() && S.develop.truth.trim()) : s.k === 'det' ? BEAT_IDS.some(id => S.outline.beats[id].items.length) : s.beats.every(beatFilled);
+    const half = s.beats.length === 2 && !done && beatFilled(s.beats[0]);
+    return h('button', {class:'step' + (i === O.step ? ' on' : '') + (done ? ' done' : '') + (half ? ' half' : ''), title: half ? 'Setup half done; payoff half still to come' : null, onclick: () => setStep(i, O.pass)}, h('span', {class:'sn'}, done && i !== O.step ? '✓' : i + 1), s.title);
+  }), h('span', {class:'passcap teach'}, h('b', null, '↓ Setup half'), ' first, then ', h('b', null, '↑ Payoff half'), ' after the Midpoint'));
+  derived.push(drawSteps);
+  function setStep(i, pass, focusBeat){
+    O.step = i; O.pass = pass === 2 ? 2 : 1; touch();
+    derived.length = 0;
+    const sc = v.scrollTop; v.replaceChildren(); renderOutline(v); v.scrollTop = sc;
+    requestAnimationFrame(() => { $$('textarea', v).forEach(autosize); runDerived();
+      const target = focusBeat || (OSTEPS[O.step].beats.length === 2 ? OSTEPS[O.step].beats[O.pass === 2 ? 1 : 0] : null);
+      const el = target && v.querySelector(`.stepbody [data-beat="${target}"], .stepbody .tgl[data-beat="${target}"]`);
+      if (el && focusBeat){ el.scrollIntoView({behavior:'smooth', block:'center'}); el.classList.add('hl'); setTimeout(() => el.classList.remove('hl'), 1400); }
+      if (el && OSTEPS[O.step].k !== 'det'){ const ta = el.querySelector('textarea'); if (ta) ta.focus({preventScroll:true}); }
+    });
+  }
+  drawSteps();
+
+  const s = OSTEPS[O.step], isPair = s.beats.length === 2;
+  const intro = isPair ? (O.pass === 2 ? s.intro2 : s.intro1) : s.intro;
+  body.append(h('div', {class:'stephead'}, h('div', {class:'sec-num'}, O.step + 1), h('div', {style:'flex:1'}, h('h2', null, s.title), h('p', null, intro)),
+    isPair ? h('div', {class:'seg', title:'Which half of the story you are filling in'},
+      h('button', {class: O.pass === 1 ? 'on' : '', onclick: () => setStep(O.step, 1)}, 'Setup half ↓'),
+      h('button', {class: O.pass === 2 ? 'on' : '', onclick: () => setStep(O.step, 2)}, 'Payoff half ↑')) : null));
+  if (s.k === 'arc') body.append(stepArc());
+  else if (s.k === 'det') body.append(stepDetail());
+  else if (!isPair) body.append(h('div', {class:'mid-wrap'}, beatCard('mid')));
+  else {
+    const L = beatCard(s.beats[0]), R = beatCard(s.beats[1]);
+    (O.pass === 2 ? L : R).classList.add('later');
+    body.append(h('div', {class:'pairs'},
+      h('div', null, h('div', {class:'halfhead'}, 'Setup half', O.pass === 1 ? h('b', null, ' · working on this now') : ' · for reference'), L),
+      h('div', {class:'mir'}, h('span', null, 'mirrors')),
+      h('div', null, h('div', {class:'halfhead', style:'text-align:right'}, 'Payoff half', O.pass === 2 ? h('b', null, ' · working on this now') : ' · comes after the Midpoint'), R)));
+  }
+  const nx = stepNext(O.step, O.pass), pv = stepPrev(O.step, O.pass);
+  const extra = s.k === 'mid' && O.pass === 1 ? h('button', {class:'btn', title:'Go back up through the payoff half, mirroring each beat', onclick: () => setStep(SI('a2'), 2)}, '↑ Now fill the Payoff half') : null;
+  body.append(h('div', {class:'stepnav'},
+    pv ? h('button', {class:'btn', onclick: () => setStep(...pv)}, '← ', stepTargetLabel(pv[0])) : h('span'),
+    h('div', {class:'row', style:'gap:8px'}, extra,
+      nx ? h('button', {class:'btn primary', onclick: () => setStep(...nx)}, 'Next: ', stepTargetLabel(nx[0]), ' →') : h('button', {class:'btn primary', onclick: () => go('write')}, 'Start writing →'))));
+}
+
+function beatCard(id){
+  const b = BEAT[id], B = S.outline.beats[id], d = S.develop;
+  const ai = BEAT_IDS.indexOf(id), ab = ARC_BEATS[d.arc][ai];
+  const topCol = d.arc === 'disillusionment' ? 'var(--tragic)' : 'var(--truth)';
+  const arcLine = h('div', {class:'barc'});
+  const drawArc = () => { const ab = ARC_BEATS[d.arc][ai]; arcLine.replaceChildren(h('span', {class:'bdot', style:`background:color-mix(in srgb, ${d.arc === 'disillusionment' ? 'var(--tragic)' : 'var(--truth)'} ${Math.round(ab[0]*100)}%, var(--lie))`}), h('span', null, h('b', null, ARCS[d.arc].name + ' arc: '), ab[1])); };
+  drawArc(); derived.push(drawArc);
+  const prompt = h('div', {class:'bprompt'}); const drawP = () => prompt.innerHTML = fillPrompt(id); drawP(); derived.push(drawP);
+  let from = null;
+  if (id === 'cs1'){
+    const p = protagonist();
+    const bits = [];
+    if (p && p.flaw.trim()) bits.push(`<b>Flaw:</b> ${esc(p.flaw.trim())}`);
+    if (d.norm.trim()) bits.push(`<b>Norm:</b> ${esc(d.norm.trim())}`);
+    const sets = d.settings.filter(s => s.name.trim()).map(s => s.name.trim().toUpperCase());
+    if (sets.length) bits.push(`<b>Settings:</b> ${esc(sets.join(', '))}`);
+    if (bits.length) from = h('div', {class:'bfrom', html:'From Develop: ' + bits.join(' · ')});
+  }
+  if (id === 'cs2' && S.outline.beats.cs1.summary.trim()) from = h('div', {class:'bfrom', html:`<b>Your opening:</b> ${esc(S.outline.beats.cs1.summary.trim())}`});
+  if (id === 'p2' && S.outline.beats.p1.summary.trim()) from = h('div', {class:'bfrom', html:`<b>Mirrors the 1st Problem:</b> ${esc(S.outline.beats.p1.summary.trim())}`});
+  if (id === 'c2' && S.outline.beats.c1.summary.trim()) from = h('div', {class:'bfrom', html:`<b>Mirrors the 1st Choice:</b> ${esc(S.outline.beats.c1.summary.trim())}`});
+  if (id === 'p1' && d.logline.trim()) from = h('div', {class:'bfrom', html:`<b>Your logline:</b> ${esc(d.logline.trim())}`});
+  const also = id === 'p1' ? 'Also in: <b>Develop › The Idea</b>' : id === 'c1' ? 'Also in: <b>Develop › The Idea</b>' : null;
+  return h('div', {class:`bcard fam-${b.fam}`, 'data-beat':id},
+    h('div', {class:'bcard-head'}, h('h3', null, beatFull(id)), h('span', {class:'rng'}, beatRange(b)), id === 'mid' ? infoBtn('midpoint') : null),
+    h('p', {class:'bdesc teach'}, BEAT_DESC[id]),
+    arcLine, prompt, from,
+    field(null, B, 'summary', {multi:true, rows:3, ph:'What happens here?', also, msgs: id === 'mid' ? null : null}),
+    B.items.length ? h('div', {class:'small muted', style:'margin:-6px 0 10px'}, `+ ${B.items.length} plot point${B.items.length > 1 ? 's' : ''} in Detail & Mirror`) : null);
+}
+
+function stepArc(){
+  const d = S.develop;
+  const tragic = h('div');
+  const syncT = () => { tragic.style.display = d.arc === 'disillusionment' ? '' : 'none'; };
+  tragic.append(field('Tragic Truth', d, 'tragic', {multi:true, cls:'tragic', info:'tragic', msgs: lieTruthMsgs('tragic')}));
+  syncT(); derived.push(syncT);
+  const others = d.characters.filter(c => c.role !== 'Protagonist');
+  return h('div', null,
+    h('div', {class:'lt'},
+      h('div', {class:'ltcol l'}, h('div', {class:'ltlab'}, 'The Lie', infoBtn('lie'), h('span', {class:'also'}, 'shared with Develop')), field(null, d, 'lie', {multi:true, ph:'e.g. Personal worth must be earned', msgs: lieTruthMsgs('lie')})),
+      h('div', {class:'ltcol t'}, h('div', {class:'ltlab'}, 'The Truth', infoBtn('truth'), h('span', {class:'also'}, 'shared with Develop')), field(null, d, 'truth', {multi:true, ph:'e.g. Personal worth is inherent', msgs: lieTruthMsgs('truth')}))),
+    h('div', {style:'height:16px'}),
+    h('div', {class:'row', style:'margin-bottom:8px'}, h('h3', null, 'Protagonist\'s arc'), infoBtn('arc')),
+    arcPicker(d, 'arc', syncT),
+    h('div', {style:'height:12px'}), tragic,
+    h('div', {class:'divider'}),
+    h('div', {class:'row', style:'margin-bottom:6px'}, h('h3', null, 'Supporting character arcs'), h('span', {class:'pill'}, 'Optional')),
+    h('p', {class:'muted small', style:'margin:0 0 10px'}, 'Turn on “Give this character their own arc” on any character card in Develop and their line appears (dashed) on the chart above.'),
+    others.length ? h('div', {class:'chips'}, others.map(c => h('span', {class:'chip' + (c.arcOn ? ' on' : '')}, (c.name || 'Unnamed') + (c.arcOn ? ' · ' + ARCS[c.arc].name : '')))) : h('div', {class:'empty'}, 'No supporting characters yet. Add them in Develop › Characters.'),
+    h('div', {style:'height:12px'}),
+    hint('<b>Look at the line above.</b> It is the journey your structure has to earn. Each beat you outline next should move your character believably from one belief to the next.'));
+}
+
+/* ---------- detail: toggle list + mirror ---------- */
+function stepDetail(){
+  const O = S.outline;
+  const wrap = h('div');
+  const area = h('div');
+  const bar = h('div', {class:'row', style:'margin-bottom:14px;flex-wrap:wrap'},
+    h('div', {class:'seg'}, [['toggle','Toggle list'],['mirror','Mirror view']].map(([k, l]) => h('button', {class: O.view === k ? 'on' : '', onclick: e => { O.view = k; touch(); $$('button', e.target.parentNode).forEach(b => b.classList.toggle('on', b === e.target)); draw(); }}, l))),
+    infoBtn('chiasmus'), h('span', {class:'spacer'}),
+    h('button', {class:'btn sm', onclick: () => { BEAT_IDS.forEach(id => S.outline.beats[id]._open = true); draw(); }}, 'Expand all'),
+    h('button', {class:'btn sm', onclick: () => { BEAT_IDS.forEach(id => S.outline.beats[id]._open = false); draw(); }}, 'Collapse all'));
+  const hintBox = h('div', {class:'teach', style:'margin-bottom:14px'});
+  const draw = () => {
+    hintBox.replaceChildren(hint(O.view === 'mirror'
+      ? '<b>Mirror view</b> folds your story in half at the Midpoint. Read down the left (the setup half), through the Midpoint, and back up the right (the payoff half). Plot points sit opposite their partners (A ↔ A′, B ↔ B′…), and inside each pair the order reverses: the first thing set up is the last thing paid off. Gaps are just places to think about, not mistakes.'
+      : '<b>Toggle list:</b> open a stage to break it into individual plot points. Each plot point can be expanded for more detail. Press <span class="kbd">Enter</span> in a plot point to add the next one. Hover a stage to highlight its mirror partner.'));
+    area.replaceChildren(O.view === 'mirror' ? mirrorView(draw) : toggleList(draw)); requestAnimationFrame(() => $$('textarea', area).forEach(autosize)); };
+  draw();
+  wrap.append(bar, hintBox, area);
+  return wrap;
+}
+function itemsEditor(id, redraw, opts={}){
+  const B = S.outline.beats[id];
+  const list = h('div', {class:'items'});
+  B.items.forEach((it, i) => {
+    const t = h('input', {placeholder:'Plot point…'}); bindInput(t, it, 'title');
+    t.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); B.items.splice(i + 1, 0, {id:uid(), title:'', notes:'', open:false}); touch(); redraw(); { const el = document.querySelector(`[data-item="${B.items[i+1].id}"] input`); el && el.focus(); } } if (e.key === 'Backspace' && !t.value && B.items.length){ e.preventDefault(); B.items.splice(i, 1); touch(); redraw(); requestAnimationFrame(() => { const prev = B.items[i-1]; const el = prev && document.querySelector(`[data-item="${prev.id}"] input`); el && el.focus(); }); } });
+    const notes = h('textarea', {placeholder:'Details: what we see, who\'s there, what changes…'}); bindInput(notes, it, 'notes');
+    const item = h('div', {class:'item' + (it.open ? ' open' : ''), 'data-item':it.id},
+      h('div', {class:'item-h'},
+        h('button', {class:'car', title:'Show details', onclick: () => { it.open = !it.open; item.classList.toggle('open', it.open); touch(); autosize(notes); }}, svgIcon(IC.right)),
+        opts.letter ? h('span', {class:'letter'}, opts.letter(i)) : null,
+        t,
+        h('button', {class:'ib', title:'Move up', onclick: () => { if (i > 0){ [B.items[i-1], B.items[i]] = [B.items[i], B.items[i-1]]; touch(); redraw(); } }}, svgIcon(IC.up)),
+        h('button', {class:'ib', title:'Move down', onclick: () => { if (i < B.items.length - 1){ [B.items[i+1], B.items[i]] = [B.items[i], B.items[i+1]]; touch(); redraw(); } }}, svgIcon(IC.down)),
+        h('button', {class:'ib', title:'Delete', onclick: () => { B.items.splice(i, 1); touch(); redraw(); }}, svgIcon(IC.trash))),
+      h('div', {class:'item-b'}, notes));
+    list.append(item);
+  });
+  const add = h('button', {class:'btn sm ghost', onclick: () => { const it = {id:uid(), title:'', notes:'', open:false}; B.items.push(it); touch(); redraw(); { const el = document.querySelector(`[data-item="${it.id}"] input`); el && el.focus(); } }}, svgIcon(IC.plus), 'Add plot point');
+  return h('div', null, list, add);
+}
+function toggleList(redraw){
+  const el = h('div');
+  BEATS.forEach(b => {
+    const B = S.outline.beats[b.id];
+    if (B._open === undefined) B._open = false;
+    const sumEl = h('span', {class:'tsum'});
+    const upd = () => { const s = B.summary.trim(); sumEl.textContent = s || 'Not outlined yet'; sumEl.className = 'tsum' + (s ? '' : ' e'); };
+    upd(); derived.push(upd);
+    const t = h('div', {class:`tgl fam-${b.fam}` + (B._open ? ' open' : ''), 'data-beat': b.id},
+      h('div', {class:'tgl-h', onclick: () => { B._open = !B._open; t.classList.toggle('open', B._open); requestAnimationFrame(() => $$('textarea', t).forEach(autosize)); },
+          onmouseenter: () => { if (b.pair) el.querySelector(`[data-beat="${b.pair}"]`)?.classList.add('hl'); },
+          onmouseleave: () => { if (b.pair) el.querySelector(`[data-beat="${b.pair}"]`)?.classList.remove('hl'); }},
+        svgIcon(IC.right, 'ico car'), h('span', {class:'tt'}, beatFull(b.id)), h('span', {class:'pill'}, beatRange(b)), sumEl,
+        h('span', {class:'pill'}, B.items.length + ''),
+        b.pair ? h('span', {class:'mirtag'}, '⇄ ' + beatLabel(b.pair)) : h('span', {class:'mirtag'}, 'hinge')),
+      h('div', {class:'tgl-b'},
+        h('p', {class:'bdesc teach', style:'margin-top:4px'}, BEAT_DESC[b.id]),
+        field('Summary', B, 'summary', {multi:true, ph:'What happens here, in a sentence or two?'}),
+        h('div', {class:'flabel', style:'margin-top:4px'}, 'Plot points'),
+        itemsEditor(b.id, redraw)));
+    el.append(t);
+  });
+  return el;
+}
+function mirrorArrow(dir){
+  const P = {
+    down:     ['0 0 24 34', 'M12 2v28M5 23l7 7 7-7'],
+    up:       ['0 0 24 34', 'M12 32V4M5 11l7-7 7 7'],
+    downright:['0 0 56 40', 'M4 2C4 22 20 30 48 30M41 23l7 7-7 7'],
+    upright:  ['0 0 56 40', 'M8 34C34 34 48 26 48 6M41 13l7-7 7 7']
+  }[dir];
+  return h('span', {class:'marrow', html:`<svg viewBox="${P[0]}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${P[1]}"/></svg>`});
+}
+function mirrorView(redraw){
+  const el = h('div', {class:'mirror'});
+  const pairs = [['cs1','cs2'],['p1','p2'],['c1','c2'],['a2a','a2b']];
+  const IND = 26;
+  let letter = 0;
+  const L = n => { let s = ''; n++; while (n > 0){ const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+  const newItem = () => ({id:uid(), title:'', notes:'', open:false});
+  const conn = (dl, dr, depth, final) => h('div', {class:'mconn' + (final ? ' final' : '')},
+    h('div', {style: final ? '' : `padding-left:${depth * IND}px`}, mirrorArrow(dl)), h('div'),
+    h('div', {style: final ? '' : `padding-right:${depth * IND}px`}, mirrorArrow(dr)));
+  const units = [[['cs1','cs2']], [['p1','p2'],['c1','c2']], [['a2a','a2b']]];
+  const flat = [];
+  units.forEach((u, depth) => u.forEach((pr, k) => flat.push({pr, depth, join: u.length > 1 ? (k === 0 ? 'jtop' : 'jbot') : '', first: k === 0})));
+  flat.forEach(({pr: [l, r], depth, join, first}) => {
+    if (depth && first) el.append(conn('down', 'up', depth));
+    const LB = S.outline.beats[l], RB = S.outline.beats[r];
+    const n = Math.max(LB.items.length, RB.items.length), rows = Math.max(n, 1), base = letter;
+    const side = (id, B, isR) => {
+      const b = BEAT[id];
+      const card = h('div', {class:`mcard fam-${b.fam} ${join}`, 'data-beat':id, style: isR ? `margin-right:${depth * IND}px` : `margin-left:${depth * IND}px`});
+      card.append(h('div', {class:'mch'}, h('span', {class:'mname'}, beatFull(id)), h('span', {class:'rng'}, beatRange(b))));
+      const sl = h('div', {class:'msl'}); const us = () => { const t = B.summary.trim(); sl.textContent = t || 'No summary yet'; sl.title = t; sl.classList.toggle('e', !t); }; us(); derived.push(us);
+      card.append(sl);
+      for (let i = 0; i < rows; i++){
+        const it = isR ? B.items[B.items.length - 1 - i] : B.items[i];
+        if (it){ const inp = h('input', {placeholder:'Plot point…'}); bindInput(inp, it, 'title'); card.append(h('div', {class:'mcell'}, h('span', {class:'letter'}, L(base + i) + (isR ? '′' : '')), inp)); }
+        else card.append(h('div', {class:'mcell ph', onclick: () => { if (isR) B.items.unshift(newItem()); else B.items.push(newItem()); touch(); redraw(); }}, n === 0 ? '+ add a plot point' : isR ? '+ add its mirror' : '+ add a setup'));
+      }
+      if (n > 0) card.append(h('div', {class:'mcell ph', onclick: () => { if (isR) B.items.unshift(newItem()); else B.items.push(newItem()); touch(); redraw(); }}, isR ? '+ add a payoff' : '+ add a setup'));
+      return card;
+    };
+    const brk = h('div', {class:'mbreak'}, h('div', {class:'mch'}), h('div', {class:'msl'}, '⇄'));
+    for (let i = 0; i < rows; i++) brk.append(h('div', {class:'mx'}, '⇄'));
+    el.append(h('div', {class:'mpair' + (join ? ' ' + join : '')}, side(l, LB, false), brk, side(r, RB, true)));
+    letter += n;
+  });
+  el.append(conn('downright', 'upright', 3, true));
+  const MB = S.outline.beats.mid;
+  const ms = h('div', {class:'small', style:'margin-top:4px;color:var(--ink2)'}); const um = () => ms.textContent = MB.summary.trim() || 'What happens at the hinge?'; um(); derived.push(um);
+  el.append(h('div', {class:'mhinge'}, h('b', null, 'Midpoint · the hinge'), ms,
+    MB.items.length ? h('ul', {style:'text-align:left;margin:8px 0 0'}, MB.items.map(i => h('li', null, i.title || '…'))) : null));
+  return el;
+}
+
+/* =====================================================================
+   WRITE TAB — Fountain / Slugline-style auto-formatting editor
+   ===================================================================== */
+const LPP = 55;                                    // printed lines per page
+const WIDTH = {scene:60, action:60, character:38, dialogue:35, parenthetical:28, transition:60, centered:60, lyric:50};
+const HIDDEN = new Set(['note','section','synopsis','boneyard','pagebreak']);
+const SCENE_RE = /^(INT\.?\/EXT|EXT\.?\/INT|INT|EXT|EST|I\/E)(\.|\s)/i;
+const TIMES = ['DAY','NIGHT','MORNING','AFTERNOON','EVENING','DUSK','DAWN','CONTINUOUS','LATER','MOMENTS LATER','SAME TIME'];
+const ELEMENTS = [['scene','Scene heading'],['action','Action'],['character','Character'],['dialogue','Dialogue'],['parenthetical','Parenthetical'],['transition','Transition'],['centered','Centred'],['lyric','Lyrics'],['section','Section (not printed)'],['synopsis','Synopsis (not printed)'],['note','Note (not printed)'],['blank','(blank line)']];
+const ELNAME = Object.fromEntries(ELEMENTS);
+
+function isUpperName(t){
+  const s = t.replace(/^@/, '').replace(/\^\s*$/, '').replace(/\([^)]*\)?/g, '').trim();
+  return /\p{L}/u.test(s) && s === s.toUpperCase();
+}
+function classify(lines, caret){
+  const n = lines.length, T = new Array(n);
+  let dlg = false, bone = false;
+  for (let i = 0; i < n; i++){
+    const raw = lines[i], t = raw.trim();
+    if (bone){ T[i] = 'boneyard'; if (t.includes('*/')) bone = false; continue; }
+    if (t.startsWith('/*')){ T[i] = 'boneyard'; if (!t.slice(2).includes('*/')) bone = true; dlg = false; continue; }
+    if (t === ''){
+      if (dlg && i === caret && raw.length < 2){ T[i] = 'dialogue'; dlg = false; continue; }
+      if (dlg && raw.length >= 2){ T[i] = 'dialogue'; continue; }   // Fountain: two spaces keep dialogue going
+      T[i] = 'blank'; dlg = false; continue;
+    }
+    if (dlg){ T[i] = t.startsWith('(') ? 'parenthetical' : 'dialogue'; continue; }
+    const prevBlank = i === 0 || lines[i-1].trim() === '';
+    const hasNext = i + 1 < n, nextBlank = !hasNext || lines[i+1].trim() === '';
+    const nextCaretEmpty = hasNext && caret === i + 1 && lines[i+1].trim() === '';
+    if (/^\[\[[\s\S]*\]\]$/.test(t)){ T[i] = 'note'; continue; }
+    if (/^={3,}$/.test(t)){ T[i] = 'pagebreak'; continue; }
+    if (t.startsWith('#')){ T[i] = 'section'; continue; }
+    if (t.startsWith('=')){ T[i] = 'synopsis'; continue; }
+    if (t.startsWith('!')){ T[i] = 'action'; continue; }
+    if (t.startsWith('~')){ T[i] = 'lyric'; continue; }
+    if (t.startsWith('>') && t.endsWith('<') && t.length > 1){ T[i] = 'centered'; continue; }
+    if (t.startsWith('>')){ T[i] = 'transition'; continue; }
+    if (/^\.[^.]/.test(t)){ T[i] = 'scene'; continue; }
+    if (prevBlank && SCENE_RE.test(t)){ T[i] = 'scene'; continue; }
+    if (t.startsWith('@')){ T[i] = 'character'; dlg = hasNext && (!nextBlank || nextCaretEmpty); continue; }
+    const up = isUpperName(t);
+    if (prevBlank && up && /TO:$/.test(t) && nextBlank){ T[i] = 'transition'; continue; }
+    if (prevBlank && up && !/:$/.test(t) && hasNext && (!nextBlank || nextCaretEmpty)){ T[i] = 'character'; dlg = true; continue; }
+    T[i] = 'action';
+  }
+  return T;
+}
+function cleanText(t, type){
+  let s = t.replace(/\[\[[\s\S]*?\]\]/g, '').replace(/\*\*|\*|_/g, '');
+  s = s.trim();
+  if (type === 'scene') s = s.replace(/^\./, '').replace(/\s*#[^#]*#\s*$/, '');
+  if (type === 'character') s = s.replace(/^@/, '').replace(/\s*\^$/, '');
+  if (type === 'action') s = s.replace(/^!/, '');
+  if (type === 'transition') s = s.replace(/^>\s*/, '');
+  if (type === 'centered') s = s.replace(/^>\s*/, '').replace(/\s*<$/, '');
+  if (type === 'lyric') s = s.replace(/^~\s*/, '');
+  return s;
+}
+function wrapCount(text, w){
+  if (!text) return 1;
+  let lines = 1, cur = 0;
+  for (const word of text.split(/\s+/)){
+    let L = word.length;
+    if (cur === 0){ while (L > w){ lines++; L -= w; } cur = L; }
+    else if (cur + 1 + L <= w) cur += 1 + L;
+    else { lines++; while (L > w){ lines++; L -= w; } cur = L; }
+  }
+  return lines;
+}
+function cueName(t){ return t.replace(/^@/, '').replace(/\^\s*$/, '').replace(/\([^)]*\)?/g, '').trim().toUpperCase(); }
+function parseHeading(t){
+  let s = t.trim().replace(/^\./, '').replace(/\s*#[^#]*#\s*$/, '');
+  const m = s.match(/^(INT\.?\/EXT\.?|EXT\.?\/INT\.?|I\/E\.?|INT\.?|EXT\.?|EST\.?)\s*/i);
+  const prefix = m ? m[1].toUpperCase() : '';
+  let rest = m ? s.slice(m[0].length) : s;
+  let time = '';
+  const k = rest.lastIndexOf(' - ');
+  if (k >= 0){ time = rest.slice(k + 3).trim().toUpperCase(); rest = rest.slice(0, k); }
+  return {prefix, loc: rest.trim().toUpperCase().replace(/[.\s]+$/, ''), time};
+}
+function parseScript(text, caret=-1){
+  const lines = text.split('\n');
+  const types = classify(lines, caret);
+  const starts = new Array(lines.length + 1);
+  let y = 0;
+  for (let i = 0; i < lines.length; i++){
+    starts[i] = y;
+    const t = types[i];
+    if (t === 'pagebreak'){ y = Math.ceil(y / LPP) * LPP; continue; }
+    if (HIDDEN.has(t)) continue;
+    if (t === 'blank'){ if (y % LPP !== 0) y += 1; continue; }
+    y += wrapCount(cleanText(lines[i], t), WIDTH[t] || 60);
+  }
+  starts[lines.length] = y;
+  return {lines, types, starts, total: y};
+}
+const mdLine = (raw) => {
+  if (raw === '') return '<br>';
+  let s = esc(raw);
+  s = s.replace(/^(\s*)(@|!|~|\.(?!\.)|&gt;|=+|#+)/, (m, sp, mk) => `${sp}<span class="fm">${mk}</span>`);
+  s = s.replace(/(&lt;)\s*$/, '<span class="fm">$1</span>').replace(/(\^)\s*$/, '<span class="fm">$1</span>').replace(/(#[^#\s][^#]*#)\s*$/, '<span class="fm">$1</span>');
+  s = s.replace(/\[\[(.*?)\]\]/g, '<span class="nt">[[$1]]</span>');
+  s = s.replace(/\*\*(.+?)\*\*/g, '<b><span class="fm">**</span>$1<span class="fm">**</span></b>');
+  s = s.replace(/(^|[^*])\*([^*]+?)\*(?!\*)/g, '$1<i><span class="fm">*</span>$2<span class="fm">*</span></i>');
+  s = s.replace(/(^|\W)_(.+?)_(?=\W|$)/g, '$1<u><span class="fm">_</span>$2<span class="fm">_</span></u>');
+  return s;
+};
+
+function knownChars(lines, types){
+  const set = new Set();
+  S.develop.characters.forEach(c => { if (c.name.trim()) set.add(c.name.trim().toUpperCase()); });
+  if (lines) lines.forEach((l, i) => { if (types[i] === 'character'){ const n = cueName(l); if (n) set.add(n); } });
+  return [...set].sort();
+}
+function knownLocs(lines, types){
+  const set = new Set();
+  S.develop.settings.forEach(s => { if (s.name.trim()) set.add(s.name.trim().toUpperCase()); });
+  if (lines) lines.forEach((l, i) => { if (types[i] === 'scene'){ const p = parseHeading(l); if (p.loc) set.add(p.loc); } });
+  return [...set].sort();
+}
+function locMatches(loc, name){ name = name.trim().toUpperCase(); return loc === name || loc.startsWith(name + ' ') || loc.startsWith(name + ' -') || name.startsWith(loc + ' '); }
+function charMatches(cue, name){ name = name.trim().toUpperCase(); return cue === name || cue === name.split(/\s+/)[0] || name === cue.split(/\s+/)[0]; }
+
+/* ---------- script checks ---------- */
+function scriptChecks(P){
+  const {lines, types, starts, total} = P;
+  const out = [];
+  const pg = i => Math.floor(starts[i] / LPP) + 1;
+  const devChars = S.develop.characters.filter(c => c.name.trim());
+  const cues = new Map();
+  lines.forEach((l, i) => { if (types[i] === 'character'){ const n = cueName(l); if (n && !cues.has(n)) cues.set(n, i); } });
+  const titleCase = n => n.toLowerCase().replace(/(^|[\s'-])\p{L}/gu, m => m.toUpperCase());
+  const addChar = n => { const c = newChar('Supporting'); c.name = titleCase(n); S.develop.characters.push(c); };
+  const unknownCues = [...cues].filter(([n]) => !devChars.some(c => charMatches(n, c.name)));
+  if (unknownCues.length > 3) out.push({level:'tip', line:unknownCues[0][1], text:`${unknownCues.length} speaking characters aren't in your Develop characters: <b>${unknownCues.map(x => esc(x[0])).join(', ')}</b>.`, actions:[{label:'Add them all to characters', fn: () => { unknownCues.forEach(([n]) => addChar(n)); touch(); toast(unknownCues.length + ' characters added to Develop'); }}]});
+  else for (const [n, i] of unknownCues) out.push({level:'tip', line:i, text:`<b>${esc(n)}</b> speaks (p.${pg(i)}) but isn't in your Develop characters.`, actions:[{label:'Add to characters', fn: () => { addChar(n); touch(); toast(titleCase(n) + ' added to Develop › Characters'); }}]});
+  const hasScene = types.includes('scene');
+  if (hasScene && total > LPP * 0.6){
+    const body = lines.join('\n').toUpperCase();
+    devChars.forEach(c => { const first = c.name.trim().split(/\s+/)[0].toUpperCase(); if (first.length > 1 && ![...cues.keys()].some(n => charMatches(n, c.name)) && !new RegExp('\\b' + first.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b').test(body)) out.push({level:'tip', text:`<b>${esc(c.name)}</b> is in your Develop characters but doesn't appear in the script yet.`}); });
+  }
+  const seenLoc = new Set(), newLocs = [], noTime = [];
+  lines.forEach((l, i) => {
+    if (types[i] !== 'scene') return;
+    const p = parseHeading(l);
+    if (p.loc && !seenLoc.has(p.loc)){ seenLoc.add(p.loc); if (!S.develop.settings.some(s => s.name.trim() && locMatches(p.loc, s.name))) newLocs.push([p, i]); }
+    if (p.prefix && !p.time) noTime.push(i);
+  });
+  const addLoc = p => S.develop.settings.push({id:uid(), name:p.loc, ie: p.prefix.startsWith('EXT') ? 'EXT.' : p.prefix.includes('/') ? 'INT./EXT.' : 'INT.', desc:''});
+  if (newLocs.length > 3) out.push({level:'tip', line:newLocs[0][1], text:`${newLocs.length} locations aren't in your Develop settings: <b>${newLocs.slice(0, 8).map(x => esc(x[0].loc)).join(', ')}</b>${newLocs.length > 8 ? ` and ${newLocs.length - 8} more` : ''}.`, actions:[{label:'Add them all to settings', fn: () => { newLocs.forEach(([p]) => addLoc(p)); touch(); toast(newLocs.length + ' settings added to Develop'); }}]});
+  else newLocs.forEach(([p, i]) => out.push({level:'tip', line:i, text:`Location <b>${esc(p.loc)}</b> isn't in your Develop settings.`, actions:[{label:'Add to settings', fn: () => { addLoc(p); touch(); toast(p.loc + ' added to Develop › Settings'); }}]}));
+  if (noTime.length) out.push({level:'tip', line:noTime[0], text:`${noTime.length === 1 ? 'A scene heading' : noTime.length + ' scene headings'} (first on p.${pg(noTime[0])}) ${noTime.length === 1 ? 'has' : 'have'} no time of day. Most headings end with one, e.g. <code>- DAY</code> or <code>- NIGHT</code>.`});
+  // long action paragraphs & monologues
+  let i = 0;
+  while (i < lines.length){
+    if (types[i] === 'action'){
+      let j = i, L = 0; while (j < lines.length && types[j] === 'action'){ L += starts[j+1] - starts[j]; j++; }
+      if (L > 4) out.push({level:'tip', line:i, text:`Action paragraph on p.${pg(i)} runs ${L} lines. Try to keep action to about four lines at most; a new paragraph often implies a new shot and keeps the read fast.`});
+      i = j; continue;
+    }
+    if (types[i] === 'character'){
+      let j = i + 1, L = 0; while (j < lines.length && (types[j] === 'dialogue' || types[j] === 'parenthetical')){ if (types[j] === 'dialogue') L += starts[j+1] - starts[j]; j++; }
+      if (L > 8) out.push({level:'tip', line:i, text:`${esc(cueName(lines[i]))}'s speech on p.${pg(i)} runs ${L} lines. Long speeches can stall a scene. Could it be shorter, broken up, or shown instead of told?`});
+      i = j; continue;
+    }
+    i++;
+  }
+  const nBlocks = types.filter(t => t === 'character').length;
+  const nPar = types.filter(t => t === 'parenthetical').length;
+  if (nBlocks >= 6 && nPar / nBlocks > 0.4) out.push({level:'tip', text:`${nPar} parentheticals across ${nBlocks} speeches is a lot. Use them sparingly, only when the delivery isn't clear from context. Let the actor (and the dialogue) do the work.`});
+  const weSee = []; const cam = [];
+  const CAM = /\b(CLOSE[- ]?UP|EXTREME CLOSE|ZOOMS?|PANS?|TRACKING SHOT|WIDE SHOT|MEDIUM SHOT|LONG SHOT|ANGLE ON|DOLLY|CRANE SHOT|CUTAWAY)\b/;
+  lines.forEach((l, i) => { if (types[i] !== 'action') return; if (/\bwe (see|hear|watch|notice|follow|pan|zoom)\b/i.test(l)) weSee.push(i); if (CAM.test(l) || /\bthe camera\b/i.test(l)) cam.push(i); });
+  if (weSee.length) out.push({level:'tip', line:weSee[0], text:`“We see / we hear” appears ${weSee.length} time${weSee.length > 1 ? 's' : ''} (first on p.${pg(weSee[0])}). Usually you can just describe what happens: not “We see Mia run”, but “Mia runs.”`});
+  if (cam.length) out.push({level:'tip', line:cam[0], text:`Camera directions found (first on p.${pg(cam[0])}). A spec script usually leaves shots to the director. Suggest them through how you write the action instead.`});
+  const firstEl = types.findIndex(t => !['blank','note','section','synopsis','boneyard'].includes(t));
+  if (firstEl >= 0 && types[firstEl] !== 'scene' && !/^FADE IN/i.test(lines[firstEl].trim()) && total > 10) out.push({level:'tip', line:firstEl, text:'Your script doesn\'t open with a scene heading. Most scripts start with one (e.g. <code>EXT. BEACH - DAY</code>), sometimes after <code>FADE IN:</code>.'});
+  const tp = targetPages(), pages = total / LPP;
+  if (tp && pages > tp * 1.1) out.push({level:'warn', text:`Your script is about <b>${pages.toFixed(1)} pages</b>, which is over your target of ${tp}. Every page is roughly a minute on screen.`});
+  if (tp && seenLoc.size > locThreshold(tp)) out.push({level:'tip', text:`${seenLoc.size} different locations in a ${tp}-page script could be tough to shoot. Could any scenes share a location?`});
+  const nChars = cues.size;
+  if (tp && nChars > charThreshold(tp)) out.push({level:'warn', text:`${nChars} speaking characters is a lot for ${tp} pages. Are they all necessary, or could any be merged?`});
+  return out;
+}
+
+/* ---------- the view ---------- */
+function renderWrite(v){
+  const U = S.ui;
+  const root = h('div', {class:'write'});
+  v.append(root);
+  // toolbar
+  const elSel = h('select', {class:'elsel', title:'Element type of the current line (auto-detected; choose to override)'}, ELEMENTS.map(([k, l]) => h('option', {value:k}, l)));
+  const liveSw = h('input', {type:'checkbox', checked: U.live});
+  const smartSw = h('input', {type:'checkbox', checked: U.smart});
+  const tgt = h('input', {class:'tgt', type:'number', min:1, placeholder:'—', title:'Target length in pages (shared with Develop)'});
+  bindInput(tgt, S.develop, 'targetPages', () => schedule());
+  const stat = h('div', {class:'wstat'});
+  const checkBadge = h('span', {class:'badge z'}, '0');
+  const draftCount = h('span', {class:'badge z'}, String((S.drafts || []).length));
+  derived.push(() => { draftCount.textContent = String((S.drafts || []).length); });
+  const VIEW_OPTS = [['live','Live Outline','Outline panels either side of the script, and the coloured stages on the page'],['bar','“You are here” bar','The structure bar along the top'],['checks','Script check panel','The list of tips on the right (the count stays in the toolbar)'],['togo','Pages-to-go note','“≈ X pages still to write” under the script'],['scenes','Scenes list','Your scene headings on the left']];
+  function applyView(){ liveSw.checked = U.live; leftCol._key = null; touch(); schedule(); }
+  function viewMenu(anchor){
+    if (popEl && popEl._k === 'view'){ closePop(); return; }
+    closePop();
+    const rows = VIEW_OPTS.map(([k, label, sub]) => { const cb = h('input', {type:'checkbox', checked: U[k] !== false, onchange: () => { U[k] = cb.checked; applyView(); }}); return h('label', {class:'vrow'}, h('span', {class:'switch'}, cb), h('span', null, h('b', null, label), h('small', null, sub))); });
+    popEl = h('div', {class:'pop viewpop'}, h('h4', null, 'Show around the page'), ...rows,
+      h('h4', {style:'margin-top:12px'}, 'Typing'),
+      h('label', {class:'vrow'}, h('span', {class:'switch'}, smartSw), h('span', null, h('b', null, 'Smart Enter'), h('small', null, 'Enter adds the right spacing for you. Shift+Enter always gives a plain new line.'))),
+      h('div', {class:'row', style:'margin-top:10px;gap:6px'},
+        h('button', {class:'btn sm', onclick: () => { VIEW_OPTS.forEach(([k]) => U[k] = false); applyView(); closePop(); toast('Distraction-free: just you and the page.'); }}, 'Hide everything'),
+        h('button', {class:'btn sm ghost', onclick: () => { VIEW_OPTS.forEach(([k]) => U[k] = true); applyView(); closePop(); }}, 'Show everything')));
+    popEl._k = 'view'; placePop(popEl, anchor);
+  }
+  const zoom = d => { U.zoom = clamp(Math.round((U.zoom + d) * 10) / 10, .7, 1.6); page.style.setProperty('--z', U.zoom); touch(); schedule(); };
+  const bar = h('div', {class:'wbar'},
+    h('div', {class:'grp'}, elSel, h('button', {class:'btn sm ghost', title:'How auto-formatting works', onclick: syntaxHelp}, svgIcon(IC.help), 'Formatting help')),
+    h('div', {class:'grp'}, h('label', {class:'switch', title:'Show your structure either side of the script and on the page'}, liveSw, 'Live Outline'), infoBtn('live'),
+      h('button', {class:'btn sm ghost', title:'Choose what is shown around the page', 'data-pop':'1', onclick: e => viewMenu(e.currentTarget)}, svgIcon(IC.eye), 'View')),
+    h('div', {class:'grp'}, h('span', {class:'small'}, 'Target'), tgt, h('span', {class:'small muted'}, 'pages')),
+    h('div', {class:'grp'}, h('button', {class:'btn sm ghost icon', title:'Zoom out', onclick: () => zoom(-.1)}, '−'), h('button', {class:'btn sm ghost icon', title:'Zoom in', onclick: () => zoom(.1)}, '+')),
+    h('div', {class:'grp'}, h('button', {class:'btn sm', title:'Save a snapshot of this script that you can come back to later', onclick: () => saveDraftPrompt()}, 'Save as draft'), h('button', {class:'btn sm ghost', title:'See, open or duplicate saved drafts', onclick: () => draftsModal()}, 'Drafts ', draftCount)),
+    h('span', {class:'spacer'}), stat,
+    h('button', {class:'btn sm', title:'Formatting & craft checks', onclick: () => showChecksModal()}, 'Script check ', checkBadge));
+  const mtl = h('div', {class:'mtl'});
+  bar.append(mtl);
+  const leftCol = h('aside', {class:'wcol left'}), rightCol = h('aside', {class:'wcol right'});
+  const page = h('div', {class:'page', style:`--z:${U.zoom}`});
+  const ovl = h('div', {class:'ovl'});
+  const ed = h('div', {class:'ed', contenteditable:'true', spellcheck:'true', 'data-ph':'Start with a scene heading, e.g.\n\nINT. KITCHEN - NIGHT\n\nThen just write. Formatting happens as you type.', 'aria-label':'Script editor'});
+  const ghost = h('div', {class:'ghostpages'});
+  page.append(ovl, ed, ghost);
+  const floatBeat = h('div', {class:'floatbeat'});
+  root.append(bar, h('div', {class:'wgrid'}, leftCol, h('div', {class:'pagewrap'}, page), rightCol), floatBeat);
+  try { document.execCommand('defaultParagraphSeparator', false, 'div'); } catch(e){}
+
+  /* ---- editor core ---- */
+  let P = parseScript(S.script.text);
+  let caretLine = -1, composing = false, forceSnap = false;
+  const mkLine = t => { const d = document.createElement('div'); d.className = 'ln'; d.innerHTML = mdLine(t); d._t = t; return d; };
+  const lineText = el => (el.textContent || '').replace(/ /g, ' ').replace(/[\r\n]/g, '');
+  function loadText(text, caret){
+    ed.replaceChildren(...text.split('\n').map(mkLine));
+    restyle(caret ? caret.line : -1);
+    if (caret) setCaret(caret.line, caret.off);
+  }
+  function lineOf(node){
+    if (!node) return null;
+    if (node === ed) return null;
+    while (node && node.parentNode !== ed) node = node.parentNode;
+    return node;
+  }
+  function getCaret(){
+    const sel = getSelection(); if (!sel.rangeCount) return null;
+    const r = sel.getRangeAt(0);
+    if (!ed.contains(r.startContainer)) return null;
+    let line, off;
+    if (r.startContainer === ed){
+      const kids = ed.children; if (!kids.length) return null;
+      if (r.startOffset >= kids.length){ line = kids[kids.length-1]; off = lineText(line).length; }
+      else { line = kids[r.startOffset]; off = 0; }
+    } else {
+      line = lineOf(r.startContainer); if (!line) return null;
+      const pre = document.createRange(); pre.selectNodeContents(line); pre.setEnd(r.startContainer, r.startOffset);
+      off = pre.toString().replace(/[\r\n]/g,'').length;
+    }
+    return {line: [...ed.children].indexOf(line), off, collapsed: r.collapsed};
+  }
+  function setCaret(idx, off){
+    const line = ed.children[clamp(idx, 0, ed.children.length - 1)]; if (!line) return;
+    const texts = []; const w = document.createTreeWalker(line, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) texts.push(n);
+    const r = document.createRange(); let rem = off, placed = false;
+    for (let k = 0; k < texts.length; k++){
+      const L = texts[k].length;
+      if (rem < L || (rem === L && k === texts.length - 1)){ r.setStart(texts[k], rem); placed = true; break; }
+      rem -= L;
+    }
+    if (!placed){ if (texts.length){ const t = texts[texts.length-1]; r.setStart(t, t.length); } else r.setStart(line, 0); }
+    r.collapse(true);
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+  }
+  function normalize(){
+    let changed = false;
+    const kids = [...ed.childNodes];
+    if (!kids.length){ ed.append(mkLine('')); return true; }
+    let buf = null;
+    for (const nd of kids){
+      if (nd.nodeType === 1 && (nd.tagName === 'DIV' || nd.tagName === 'P')){
+        buf = null;
+        if (nd.querySelector('div,p,br + *') && nd.querySelector('div,p')){
+          const parts = (nd.innerText || nd.textContent).replace(/\n$/, '').split('\n');
+          nd.replaceWith(...parts.map(mkLine)); changed = true;
+        } else if (nd.tagName === 'P' || !nd.classList.contains('ln')){ const ln = mkLine(lineText(nd)); nd.replaceWith(ln); changed = true; }
+      } else if (nd.nodeType === 1 && nd.tagName === 'BR'){ nd.replaceWith(mkLine('')); changed = true; buf = null; }
+      else if (nd.nodeType === 3 && !nd.textContent && buf === null){ nd.remove(); }
+      else { if (!buf){ buf = document.createElement('div'); buf.className = 'ln'; nd.before(buf); } buf.append(nd); changed = true; }
+    }
+    if (changed) $$(':scope > .ln', ed).forEach(d => { if (d._t === undefined) d._t = null; });
+    return changed;
+  }
+  function restyle(cl){
+    const els = ed.children, lines = [];
+    for (const el of els) lines.push(el._t != null ? el._t : lineText(el));
+    caretLine = cl;
+    P = parseScript(lines.join('\n'), cl);
+    for (let i = 0; i < els.length; i++){
+      const t = P.types[i];
+      let cls = 'ln t-' + t;
+      if (t === 'character' && /\^\s*$/.test(lines[i])) cls += ' dual';
+      if (els[i].className !== cls) els[i].className = cls;
+    }
+    ed.classList.toggle('empty', lines.length === 1 && lines[0] === '');
+    const cur = P.types[cl]; elSel.value = cur || 'action';
+  }
+  function sync(){
+    if (composing) return;
+    const c = getCaret();
+    const structural = normalize();
+    const els = [...ed.children];
+    let caretRerendered = false;
+    els.forEach((el, i) => {
+      const t = lineText(el);
+      if (el._t !== t || structural){
+        const html = mdLine(t);
+        if (el.innerHTML !== html){ el.innerHTML = html; if (c && i === c.line) caretRerendered = true; }
+        el._t = t;
+      }
+    });
+    if (c && (caretRerendered || structural)) setCaret(c.line, c.off);
+    restyle(c ? c.line : caretLine);
+    const text = els.map(el => el._t).join('\n');
+    if (text !== S.script.text){ S.script.text = text; touch(); pushHist(c); }
+    schedule();
+    updateAC();
+  }
+  flushEditor = () => { if (!ed.isConnected) return; const text = [...ed.children].map(el => el._t != null ? el._t : lineText(el)).join('\n'); if (text !== S.script.text){ S.script.text = text; S.savedAt = Date.now(); } };
+
+  /* ---- undo ---- */
+  let hist = [{text:S.script.text, caret:null}], hidx = 0, lastHist = 0;
+  function pushHist(c){
+    const now = Date.now(), text = S.script.text;
+    if (hist[hidx].text === text) return;
+    if (!forceSnap && hidx > 0 && hist[hidx].burst && now - lastHist < 900) hist[hidx] = {text, caret:c, burst:true};
+    else { hist = hist.slice(0, hidx + 1); hist.push({text, caret:c, burst:!forceSnap}); hidx++; if (hist.length > 400){ hist.shift(); hidx--; } }
+    lastHist = now; forceSnap = false;
+  }
+  function undo(dir){
+    const ni = hidx + dir; if (ni < 0 || ni >= hist.length) return;
+    const caretFrom = dir < 0 ? hist[hidx].caret : hist[ni].caret;
+    hidx = ni; const st = hist[hidx];
+    S.script.text = st.text; touch();
+    loadText(st.text, caretFrom || {line:0, off:0});
+    lastHist = 0; schedule();
+  }
+
+  /* ---- editing operations ---- */
+  function linesNow(){ return [...ed.children].map(el => el._t != null ? el._t : lineText(el)); }
+  function deleteSelection(){ const s = getSelection(); if (s.rangeCount && !s.isCollapsed){ document.execCommand('delete'); sync(); } }
+  function onEnter(shift){
+    deleteSelection();
+    const c = getCaret(); if (!c) return;
+    const els = [...ed.children], el = els[c.line], text = lineText(el);
+    const before = text.slice(0, c.off), after = text.slice(c.off);
+    let nl = 1;
+    if (!shift && U.smart && after.trim() === '' && before.trim() !== ''){
+      const L = linesNow(); L[c.line] = before; L.splice(c.line + 1, 0, '');
+      const tt = classify(L, c.line + 1)[c.line];
+      if (['scene','action','transition','dialogue','centered','lyric'].includes(tt)) nl = 2;
+    }
+    el.innerHTML = mdLine(before); el._t = before;
+    let ref = el;
+    for (let k = 1; k < nl; k++){ const b = mkLine(''); ref.after(b); ref = b; }
+    ref.after(mkLine(after));
+    setCaret(c.line + nl, 0);
+    forceSnap = true;
+    sync();
+    scrollCaretIntoView();
+  }
+  function insertText(t){
+    deleteSelection();
+    const c = getCaret(); if (!c) return;
+    const parts = t.split('\n');
+    const el = ed.children[c.line], text = lineText(el);
+    const before = text.slice(0, c.off), after = text.slice(c.off);
+    if (parts.length === 1){ const nt = before + t + after; el.innerHTML = mdLine(nt); el._t = nt; setCaret(c.line, c.off + t.length); }
+    else {
+      el.innerHTML = mdLine(before + parts[0]); el._t = before + parts[0];
+      let ref = el;
+      for (let k = 1; k < parts.length; k++){ const s = k === parts.length - 1 ? parts[k] + after : parts[k]; const d = mkLine(s); ref.after(d); ref = d; }
+      setCaret(c.line + parts.length - 1, parts[parts.length - 1].length);
+    }
+    forceSnap = true; sync(); scrollCaretIntoView();
+  }
+  function wrapSel(mk){
+    const s = getSelection(); const c = getCaret(); if (!c) return;
+    const txt = s.toString();
+    if (txt && !txt.includes('\n')) insertText(mk + txt + mk);
+    else { insertText(mk + mk); const c2 = getCaret(); setCaret(c2.line, c2.off - mk.length); }
+  }
+  function scrollCaretIntoView(){
+    const s = getSelection(); if (!s.rangeCount) return;
+    const line = lineOf(s.getRangeAt(0).startContainer); if (!line || !line.getBoundingClientRect) return;
+    const r = line.getBoundingClientRect(), vr = v.getBoundingClientRect();
+    if (r.bottom > vr.bottom - 80) v.scrollTop += r.bottom - vr.bottom + 140;
+    else if (r.top < vr.top + 70) v.scrollTop -= vr.top + 110 - r.top;
+  }
+  function setLineType(type){
+    const c = getCaret() || {line: Math.max(0, caretLine), off:0};
+    const L = linesNow(); let i = c.line; if (i < 0 || i >= L.length) return;
+    let t = L[i].trim().replace(/^[!@~>.=#]+\s*/, '').replace(/\s*<$/, '').replace(/^\[\[|\]\]$/g, '');
+    const before = L[i];
+    const ensureBlankBefore = () => { if (i > 0 && L[i-1].trim() !== ''){ L.splice(i, 0, ''); i++; } };
+    const natural = (txt) => { const T = L.slice(); T[i] = txt; return classify(T, i)[i]; };
+    switch (type){
+      case 'scene': ensureBlankBefore(); L[i] = SCENE_RE.test(t) ? t.toUpperCase() : '.' + t.toUpperCase(); break;
+      case 'action': L[i] = natural(t) === 'action' ? t : '!' + t; break;
+      case 'character': ensureBlankBefore(); t = t.toUpperCase().replace(/:$/, ''); L[i] = t; if (i + 1 >= L.length || L[i+1].trim() === '') L.splice(i + 1, 0, ''); if (natural(t) !== 'character') L[i] = '@' + t; break;
+      case 'dialogue': { const prev = classify(L, i)[i-1]; if (!['character','parenthetical','dialogue'].includes(prev)){ toast('Dialogue goes under a character name. Type the name in CAPS on the line above.'); return; } L[i] = t.replace(/^\(|\)$/g, ''); break; }
+      case 'parenthetical': { const prev = classify(L, i)[i-1]; if (!['character','parenthetical','dialogue'].includes(prev)){ toast('Parentheticals go under a character name, inside the dialogue.'); return; } L[i] = '(' + t.replace(/^\(|\)$/g, '') + ')'; break; }
+      case 'transition': ensureBlankBefore(); t = t.toUpperCase(); L[i] = /TO:$/.test(t) ? t : '>' + t; if (i + 1 < L.length && L[i+1].trim() !== '') L.splice(i + 1, 0, ''); break;
+      case 'centered': L[i] = '>' + t + '<'; break;
+      case 'lyric': L[i] = '~' + t; break;
+      case 'section': L[i] = '# ' + t; break;
+      case 'synopsis': L[i] = '= ' + t; break;
+      case 'note': L[i] = '[[' + t + ']]'; break;
+      case 'blank': L[i] = ''; break;
+    }
+    if (L.join('\n') === S.script.text && before === L[i]) return;
+    forceSnap = true;
+    S.script.text = L.join('\n'); touch(); pushHist({line:i, off:L[i].length});
+    loadText(S.script.text, {line:i, off:L[i].length});
+    ed.focus(); setCaret(i, L[i].length); restyle(i); schedule();
+  }
+  elSel.addEventListener('change', () => setLineType(elSel.value));
+  liveSw.addEventListener('change', () => { U.live = liveSw.checked; touch(); schedule(); });
+  smartSw.addEventListener('change', () => { U.smart = smartSw.checked; touch(); });
+
+  /* ---- autocomplete ---- */
+  let acEl = null, acItems = [], acIdx = 0;
+  function hideAC(){ if (acEl){ acEl.remove(); acEl = null; } acItems = []; }
+  function updateAC(){
+    const c = getCaret(); if (!c || !c.collapsed || document.activeElement !== ed) return hideAC();
+    const L = P.lines, t = L[c.line]; if (t == null || c.off !== t.length || !t.trim()) return hideAC();
+    const prevBlank = c.line === 0 || L[c.line-1].trim() === '';
+    if (!prevBlank) return hideAC();
+    let items = [], m;
+    if ((m = t.match(/^(\.?\s*(?:INT\.?\/EXT|EXT\.?\/INT|I\/E|INT|EXT|EST)[.\s]\s*)(.*)$/i))){
+      const rest = m[2], k = rest.lastIndexOf(' - ');
+      if (k >= 0){ const q = rest.slice(k + 3).toUpperCase(); items = TIMES.filter(x => x.startsWith(q) && x !== q).map(x => ({label:x, sub:'time', value: m[1] + rest.slice(0, k + 3) + x})); }
+      else { const q = rest.toUpperCase().trim(); items = knownLocs(P.lines, P.types).filter(x => x.startsWith(q) && x !== q).map(x => ({label:x, sub:'location', value: m[1] + x + ' - '})); }
+    } else {
+      const raw = t.replace(/^@/, ''); const q = raw.toUpperCase();
+      if (raw === q && /^\p{L}/u.test(raw.trim()) && !/[(:]/.test(raw)) items = knownChars(P.lines, P.types).filter(x => x.startsWith(q) && x !== q).map(x => ({label:x, sub:'character', value:(t.startsWith('@') ? '@' : '') + x}));
+    }
+    items = items.slice(0, 6);
+    if (!items.length) return hideAC();
+    acItems = items; acIdx = 0;
+    if (!acEl){ acEl = h('div', {class:'ac'}); $('#layer').append(acEl); }
+    acEl.replaceChildren(...items.map((it, k) => h('div', {class: k === acIdx ? 'on' : '', onmousedown: e => { e.preventDefault(); acceptAC(k); }}, it.label, h('small', null, it.sub + (k === 0 ? ' · Tab' : '')))));
+    const s = getSelection(); const r = s.getRangeAt(0).cloneRange(); let rect = r.getBoundingClientRect();
+    if (!rect || (!rect.width && !rect.height && !rect.left)){ const ln = ed.children[c.line]; rect = ln.getBoundingClientRect(); }
+    acEl.style.left = Math.min(rect.left, innerWidth - 260) + 'px'; acEl.style.top = (rect.bottom + 6) + 'px';
+  }
+  function acceptAC(k){
+    const it = acItems[k]; if (!it) return;
+    const c = getCaret(); if (!c) return;
+    const el = ed.children[c.line]; el.innerHTML = mdLine(it.value); el._t = it.value;
+    setCaret(c.line, it.value.length); hideAC(); forceSnap = true; sync();
+  }
+
+  /* ---- events ---- */
+  ed.addEventListener('keydown', e => {
+    const mod = e.ctrlKey || e.metaKey;
+    if (acEl && acItems.length){
+      if (e.key === 'Tab'){ e.preventDefault(); acceptAC(acIdx); return; }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); acIdx = (acIdx + (e.key === 'ArrowDown' ? 1 : -1) + acItems.length) % acItems.length; [...acEl.children].forEach((d, k) => d.classList.toggle('on', k === acIdx)); return; }
+      if (e.key === 'Escape'){ hideAC(); return; }
+    }
+    if (e.key === 'Enter' && !e.isComposing){ e.preventDefault(); hideAC(); onEnter(e.shiftKey); return; }
+    if (e.key === 'Tab'){ e.preventDefault(); return; }
+    if (mod && !e.altKey){
+      const k = e.key.toLowerCase();
+      if (k === 'z'){ e.preventDefault(); undo(e.shiftKey ? 1 : -1); return; }
+      if (k === 'y'){ e.preventDefault(); undo(1); return; }
+      if (k === 'b'){ e.preventDefault(); wrapSel('**'); return; }
+      if (k === 'i'){ e.preventDefault(); wrapSel('*'); return; }
+      if (k === 'u'){ e.preventDefault(); wrapSel('_'); return; }
+    }
+  });
+  ed.addEventListener('beforeinput', e => {
+    const it = e.inputType;
+    if (it === 'historyUndo'){ e.preventDefault(); undo(-1); }
+    else if (it === 'historyRedo'){ e.preventDefault(); undo(1); }
+    else if (it === 'insertParagraph' || it === 'insertLineBreak'){ e.preventDefault(); onEnter(it === 'insertLineBreak'); }
+    else if (it && it.startsWith('format')){ e.preventDefault(); }
+  });
+  ed.addEventListener('input', () => sync());
+  ed.addEventListener('compositionstart', () => { composing = true; });
+  ed.addEventListener('compositionend', () => { composing = false; sync(); });
+  ed.addEventListener('paste', e => { e.preventDefault(); const t = (e.clipboardData.getData('text/plain') || '').replace(/\r\n?/g, '\n').replace(/\t/g, '    '); if (t) insertText(t); });
+  ed.addEventListener('drop', e => { e.preventDefault(); const t = (e.dataTransfer.getData('text/plain') || '').replace(/\r\n?/g, '\n'); if (t) insertText(t); });
+  ed.addEventListener('blur', () => setTimeout(hideAC, 120));
+  const onSel = () => {
+    if (!ed.isConnected) return;
+    const c = getCaret();
+    if (c && c.line !== caretLine){ restyle(c.line); schedule(); }
+    if (c) updatePanels();
+  };
+  document.addEventListener('selectionchange', onSel);
+  const onScroll = () => { if (document.activeElement !== ed) updatePanels(); hideAC(); };
+  v.addEventListener('scroll', onScroll, {passive:true});
+  const onResize = () => schedule();
+  window.addEventListener('resize', onResize);
+  viewCleanup = () => { document.removeEventListener('selectionchange', onSel); v.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onResize); hideAC(); };
+
+  /* ---- layout: pages, live outline bands ---- */
+  let layoutTimer = null, geo = null;
+  function schedule(){ clearTimeout(layoutTimer); layoutTimer = setTimeout(() => requestAnimationFrame(layout), 60); }
+  function refLines(){ const tp = targetPages(); return tp ? tp * LPP : Math.max(P.total, 1); }
+  function layout(){
+    if (!ed.isConnected) return;
+    const els = ed.children, n = els.length;
+    const tops = new Array(n + 1);
+    for (let i = 0; i < n; i++) tops[i] = els[i].offsetTop;
+    tops[n] = ed.offsetHeight;
+    const lh = parseFloat(getComputedStyle(page).fontSize) * 1.25;
+    const total = P.total, R = refLines();
+    const yAt = r => {
+      if (r >= total) return tops[n] + (r - total) * lh;
+      let lo = 0, hi = n - 1;
+      while (lo < hi){ const mid = (lo + hi + 1) >> 1; if (P.starts[mid] <= r) lo = mid; else hi = mid - 1; }
+      let i = lo; while (i < n - 1 && P.starts[i+1] === P.starts[i] && P.starts[i] < r) i++;
+      const hP = P.starts[i+1] - P.starts[i];
+      return hP > 0 ? tops[i] + (r - P.starts[i]) / hP * (tops[i+1] - tops[i]) : tops[i];
+    };
+    geo = {tops, yAt, lh, total, R};
+    const tp = targetPages();
+    const ghostLines = (tp && U.live) ? Math.max(0, R - total) : 0;
+    ghost.style.height = ghostLines ? (ghostLines * lh) + 'px' : '0px';
+    ghost.textContent = !ghostLines ? '' : (U.togo !== false && ghostLines > LPP * 0.15) ? `≈ ${(ghostLines / LPP).toFixed(1)} pages still to write to reach your ${tp}-page target` : '\u00a0';
+    const edTop = ed.offsetTop;
+    const frag = document.createDocumentFragment();
+    const maxR = Math.max(total, U.live ? R : 0);
+    for (let p = 1; p * LPP < maxR; p++) frag.append(h('div', {class:'pline', style:`top:${edTop + yAt(p * LPP)}px`}, h('span', null, (p + 1) + '.')));
+    if (U.live){
+      SPANS.forEach(sp => {
+        const y0 = yAt(sp.s / 100 * R), y1 = yAt(sp.e / 100 * R);
+        frag.append(h('div', {class:`band fam-${sp.fam}` + (sp.grp ? ' grp' : ''), style:`top:${edTop + y0}px;height:${Math.max(2, y1 - y0)}px`}, h('div', {class:'strip'}), (y1 - y0) > 36 ? h('div', {class:'blab'}, spanLabel(sp)) : null));
+      });
+      frag.append(h('div', {class:'moment fam-mid', style:`top:${edTop + yAt(0.5 * R)}px`}, h('span', {class:'mlab'}, 'Midpoint')));
+      if (tp && total > R) frag.append(h('div', {class:'overband', style:`top:${edTop + yAt(R)}px;height:${yAt(total) - yAt(R)}px`}, h('span', null, 'Over target')));
+    }
+    ovl.replaceChildren(frag);
+    ovl.style.height = page.offsetHeight + 'px';
+    // stats
+    const pages = total / LPP;
+    const c = getCaret(); const cl = c ? c.line : caretLine;
+    const curPage = cl >= 0 ? Math.floor(P.starts[cl] / LPP) + 1 : 1;
+    stat.innerHTML = `Page <b>${total ? curPage : 0}</b> of <b>${Math.max(1, curPage, Math.ceil(pages || 0))}</b>${tp ? ` <span class="muted">(target ${tp})</span>` : ''} · ≈ <b>${pages < 1 ? Math.round(pages * 60) + ' sec' : pages.toFixed(1) + ' min'}</b>`;
+    drawMTL(); updatePanels(); drawChecks();
+  }
+  function caretR(){
+    if (!geo) return 0;
+    const c = getCaret();
+    if (c && document.activeElement === ed){ return P.starts[c.line] || 0; }
+    // viewport centre → r
+    const pr = page.getBoundingClientRect(), vr = v.getBoundingClientRect();
+    const y = (vr.top + vr.height * 0.4) - pr.top - ed.offsetTop;
+    const {tops} = geo; let i = 0; while (i < tops.length - 2 && tops[i+1] <= y) i++;
+    return P.starts[i] || 0;
+  }
+  function beatAt(frac){
+    const pct = frac * 100;
+    const span = SPANS.find(sp => pct >= sp.s && pct < sp.e) || SPANS[SPANS.length - 1];
+    const near = Math.abs(pct - 50) <= 3 ? BEAT.mid : null;
+    return {span, near};
+  }
+  function drawMTL(){
+    if (U.bar === false){ mtl.style.display = 'none'; return; }
+    mtl.style.display = '';
+    const R = refLines(), total = P.total, tp = targetPages();
+    const segs = [];
+    SPANS.forEach(sp => { if (sp.ids[0] === 'a2b') segs.push(h('div', {class:'m fam-mid', title:'Midpoint'})); segs.push(h('div', {class:`fam-${sp.fam}` + (sp.grp ? ' grp' : ''), style:`flex:${sp.e - sp.s} 1 0`, title: spanLabel(sp)})); });
+    const row = h('div', {class:'mtl-row'}, segs);
+    const kids = [row];
+    const scale = tp && total > R ? R / total : 1;
+    if (scale < 1){ row.style.right = (100 - scale * 100) + '%'; kids.push(h('div', {class:'mtl-over', style:`left:${scale * 100}%;right:0`, title:'Over target'})); }
+    if (tp && total < R) kids.push(h('div', {class:'mtl-end', style:`left:0;width:${total / R * 100}%`, title:'Written so far'}));
+    const cr = caretR(); const f = Math.min(1, (cr / (scale < 1 ? total : R)) || 0);
+    kids.push(h('div', {class:'mtl-cur', style:`left:${f * 100}%`, 'data-l': 'You are here · ' + Math.round(cr / R * 100) + '%'}));
+    mtl.replaceChildren(...kids);
+  }
+  function updatePanels(){
+    if (!geo) return;
+    root.style.setProperty('--wbarh', bar.offsetHeight + 'px');
+    if (!U.live){ setCols(null, null, null, 'off'); return; }
+    const R = refLines(), r = caretR(), frac = Math.min(.9999, r / R);
+    const {span, near} = beatAt(frac);
+    const key = span.ids.join() + '|' + (near ? 'mid' : '') + '|' + S.develop.arc + '|' + Math.round(R);
+    const pgOf = pct => (pct / 100 * R / LPP);
+    const fmtP = x => x < 10 ? x.toFixed(1) : Math.round(x);
+    const ab = ARC_BEATS[S.develop.arc];
+    const topCol = S.develop.arc === 'disillusionment' ? 'var(--tragic)' : 'var(--truth)';
+    const arcRow = id => { const a = ab[BEAT_IDS.indexOf(id)]; return h('div', {class:'barc', style:'margin:6px 0 10px'}, h('span', {class:'bdot', style:`background:color-mix(in srgb, ${topCol} ${Math.round(a[0]*100)}%, var(--lie))`}), h('span', null, a[1])); };
+    const nextSp = [...SPANS.map(sp => ({label: spanLabel(sp), s: sp.s})), {label:'Midpoint', s:50}].filter(x => x.s > frac * 100).sort((x, y) => x.s - y.s)[0];
+    const left = h('div', {class:`pcard beat fam-${span.fam}` + (span.grp ? ' grp' : '')},
+      h('div', {class:'pk'}, h('span', null, 'Where you are'), h('span', null, beatRange(span))),
+      h('h4', null, span.grp ? spanLabel(span) : beatFull(span.ids[0])),
+      h('div', {class:'small muted'}, `≈ ${fmtP(pgOf(span.s))}–${fmtP(pgOf(span.e))} of ${fmtP(R / LPP)} pages${targetPages() ? '' : ' (current length)'}`),
+      ...span.ids.flatMap(id => [span.grp ? h('p', {class:`fam-${BEAT[id].fam}`, style:'margin-bottom:0'}, h('b', {style:'color:var(--c)'}, BEAT[id].name + ': '), BEAT_DESC[id]) : h('p', null, BEAT_DESC[id]), arcRow(id)]),
+      near ? h('div', {class:'near fam-mid'}, h('b', null, (Math.abs(frac*100 - 50) < .6 ? 'Here: ' : 'Close to: ') + 'Midpoint · 50%'), h('p', {style:'margin:4px 0 0'}, BEAT_DESC.mid)) : null,
+      nextSp ? h('div', {class:'next'}, `Coming up: `, h('b', null, nextSp.label), ` ≈ ${fmtP(pgOf(nextSp.s))} pages in`) : null);
+    const outlineBits = id => { const BB = S.outline.beats[id]; return [BB.summary.trim() ? h('p', {style:'color:var(--ink)'}, BB.summary.trim()) : h('p', {class:'muted', style:'font-style:italic'}, 'Nothing outlined for this stage yet.'), BB.items.length ? h('ul', null, BB.items.map(i => h('li', null, i.title || '…'))) : null]; };
+    const right = h('div', {class:`pcard beat fam-${span.fam}` + (span.grp ? ' grp' : '')},
+      h('div', {class:'pk'}, h('span', null, 'Your outline'), h('a', {href:'#', onclick: e => { e.preventDefault(); const id = span.ids[0]; const i = OSTEPS.findIndex(s => s.beats.includes(id)); S.outline.step = i >= 0 ? i : OSTEPS.length - 1; S.outline.pass = PAYOFF.has(id) ? 2 : 1; go('outline'); }}, 'Edit')),
+      h('h4', null, span.grp ? spanLabel(span) : beatFull(span.ids[0])),
+      ...span.ids.flatMap(id => span.grp ? [h('div', {class:`pk fam-${BEAT[id].fam}`, style:'margin:10px 0 0;color:var(--c)'}, BEAT[id].name), ...outlineBits(id)] : outlineBits(id)),
+      near ? h('div', {class:'near fam-mid'}, h('b', null, 'Midpoint'), ...outlineBits('mid')) : null);
+    const B = S.outline.beats[span.ids[0]];
+    setCols(left, right, h('div', {class:`pcard beat fam-${span.fam}`}, h('div', {class:'pk'}, h('span', null, 'Where you are'), h('span', null, beatRange(span))), h('h4', null, span.grp ? spanLabel(span) : beatFull(span.ids[0])), B.summary.trim() ? h('p', null, B.summary.trim()) : null), key);
+  }
+  function setCols(left, right, flt, key){
+    key += '|' + (U.scenes !== false) + (U.checks !== false);
+    if (leftCol._key === key) return;
+    leftCol._key = key;
+    leftCol.replaceChildren(...[left, U.scenes !== false ? scenesCard() : null].filter(Boolean));
+    rightCol.replaceChildren(...[right, U.checks !== false ? checksCard() : null].filter(Boolean));
+    floatBeat.replaceChildren(...(flt ? [flt] : []));
+  }
+  let scenesEl = null, checksEl = null;
+  function scenesCard(){
+    if (!scenesEl) scenesEl = h('div', {class:'scenes'});
+    drawScenes();
+    return h('div', {class:'pcard'}, h('div', {class:'pk'}, h('span', null, 'Scenes')), scenesEl);
+  }
+  function drawScenes(){
+    if (!scenesEl) return;
+    const items = [];
+    P.lines.forEach((l, i) => { if (P.types[i] === 'scene') items.push([i, l]); if (P.types[i] === 'section') items.push([i, l, true]); });
+    let k = 0;
+    scenesEl.replaceChildren(...(items.length ? items.map(([i, l, sec]) => h('button', {onclick: () => jumpTo(i), title:'p.' + (Math.floor(P.starts[i] / LPP) + 1), style: sec ? 'font-family:var(--ui);font-weight:700;color:var(--accent)' : ''}, h('span', null, sec ? '' : ++k), h('span', null, sec ? l.replace(/^#+\s*/, '') : cleanText(l, 'scene').toUpperCase()))) : [h('div', {class:'small muted'}, 'Your scene headings will be listed here.')]));
+  }
+  function drawScenesCol(){
+    if (leftCol._key !== 'off'){ leftCol._key = 'off'; leftCol.replaceChildren(scenesCard()); rightCol.replaceChildren(checksCard()); floatBeat.replaceChildren(); }
+  }
+  function checksCard(){
+    if (!checksEl) checksEl = h('div', {class:'checklist'});
+    return h('div', {class:'pcard'}, h('div', {class:'pk'}, h('span', null, 'Script check'), h('span', {class:'teach'}, 'tips, not rules')), checksEl);
+  }
+  let lastChecks = '';
+  function drawChecks(){
+    drawScenes();
+    const list = scriptChecks(P);
+    checkBadge.textContent = list.length; checkBadge.className = 'badge' + (list.some(m => m.level === 'warn') ? '' : ' z');
+    const key = JSON.stringify(list.map(m => m.text));
+    if (key === lastChecks || !checksEl) return; lastChecks = key;
+    checksEl.replaceChildren(...(list.length ? list.map(m => msgEl(m, m.line != null ? () => jumpTo(m.line) : null)) : [h('div', {class:'small muted'}, P.total ? 'Nothing to flag right now. Nice.' : 'Craft and formatting tips will appear here as you write.')]));
+  }
+  function showChecksModal(){
+    const list = scriptChecks(P);
+    const close = modal('Script check', h('div', null, h('p', {class:'small muted'}, 'Friendly pointers based on common screenwriting conventions. They\'re tips, not rules: use your judgement.'),
+      list.length ? h('div', {class:'checklist'}, list.map(m => msgEl(m, m.line != null ? () => { close(); jumpTo(m.line); } : null))) : h('div', {class:'empty'}, 'Nothing to flag right now.')));
+  }
+  function jumpTo(i){
+    const el = ed.children[i]; if (!el) return;
+    ed.focus(); setCaret(i, (el._t || '').length);
+    const r = el.getBoundingClientRect(), vr = v.getBoundingClientRect();
+    v.scrollTop += r.top - vr.top - vr.height * 0.35;
+    restyle(i); schedule();
+  }
+
+  reloadEditor = () => { loadText(S.script.text, {line:0, off:0}); hist = [{text:S.script.text, caret:null}]; hidx = 0; schedule(); };
+  loadText(S.script.text, null);
+  schedule();
+  setTimeout(schedule, 400); // after web fonts settle
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => schedule());
+  derived.push(() => { /* other tabs may change characters/settings/outline */ leftCol._key = null; schedule(); });
+  setTimeout(() => { ed.focus(); const n = ed.children.length; setCaret(n - 1, (ed.children[n-1]?._t || '').length); }, 30);
+}
+
+/* ---------- drafts ---------- */
+let reloadEditor = null;
+function pagesOf(text){ const P = parseScript(text); return P.total / LPP; }
+function saveDraftPrompt(after){
+  flushEditor && flushEditor();
+  if (!S.drafts) S.drafts = [];
+  const n = S.drafts.length + 1;
+  const inp = h('input', {class:'inp', value:`Draft ${n}`, style:'margin-top:8px'});
+  const close = modal('Save as draft', h('div', null, h('p', null, 'Saves a snapshot of your script exactly as it is now. Keep writing afterwards; you can always come back to this version, or duplicate it, from ', h('b', null, 'Drafts'), '.'), h('label', {class:'flabel'}, 'Draft name'), inp),
+    [{label:'Cancel'}, {label:'Save draft', primary:true, fn: () => {
+      const d = {id:uid(), name: inp.value.trim() || `Draft ${n}`, savedAt: Date.now(), text: S.script.text};
+      S.drafts.push(d); S.script.basedOn = d.id; touch(); saveLocal(); runDerived();
+      toast(`“${d.name}” saved. Find it under Drafts.`);
+      after && after();
+    }}]);
+  setTimeout(() => { inp.focus(); inp.select(); inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ $$('.modal .btn.primary').pop()?.click(); } }); }, 30);
+}
+function loadIntoEditor(text, basedOn, msg){
+  S.script.text = text; S.script.basedOn = basedOn || ''; touch(); saveLocal();
+  if (S.ui.tab === 'write' && reloadEditor) reloadEditor(); else if (S.ui.tab === 'write') renderView();
+  runDerived(); toast(msg);
+}
+function isSavedSomewhere(text){ return !text.trim() || (S.drafts || []).some(d => d.text === text); }
+function draftsModal(){
+  flushEditor && flushEditor();
+  if (!S.drafts) S.drafts = [];
+  const list = h('div', {class:'plist'});
+  let close;
+  const guardThen = (doIt, label) => {
+    if (isSavedSomewhere(S.script.text)) return doIt();
+    modal('Keep your current script?', h('p', null, `Your current script has changes that aren't saved as a draft. ${label}`),
+      [{label:'Cancel'}, {label:'Replace without saving', fn: doIt}, {label:'Save current as a draft first', primary:true, fn: () => { setTimeout(() => saveDraftPrompt(doIt), 0); }}]);
+  };
+  const draw = () => {
+    const ds = [...S.drafts].sort((a, b) => b.savedAt - a.savedAt);
+    list.replaceChildren(...(ds.length ? ds.map(d => {
+      const cur = S.script.basedOn === d.id;
+      const same = d.text === S.script.text;
+      return h('div', {class:'pi' + (cur ? ' cur' : '')},
+        h('div', {style:'flex:1;min-width:0'}, h('b', null, d.name), cur ? h('span', {class:'pill', style:'margin-left:8px'}, same ? 'Open now' : 'Open now · edited since') : null,
+          h('div', {class:'small muted'}, new Date(d.savedAt).toLocaleString('en-GB', {dateStyle:'medium', timeStyle:'short'}) + ' · ≈ ' + pagesOf(d.text).toFixed(1) + ' pages')),
+        h('button', {class:'btn sm', title:'Load this draft into the editor to keep working on it', onclick: () => guardThen(() => { close && close(); loadIntoEditor(d.text, d.id, `Now editing “${d.name}”. Save as a new draft when you want to keep a version.`); }, `Opening “${d.name}” will replace it in the editor.`)}, 'Open'),
+        h('button', {class:'btn sm ghost', title:'Make a copy of this draft', onclick: () => { const c = {id:uid(), name: d.name + ' (copy)', savedAt: Date.now(), text: d.text}; S.drafts.push(c); touch(); draw(); runDerived(); }}, 'Duplicate'),
+        h('button', {class:'btn sm ghost', title:'Rename', onclick: () => { const inp = h('input', {class:'inp', value:d.name}); modal('Rename draft', inp, [{label:'Cancel'}, {label:'Rename', primary:true, fn: () => { d.name = inp.value.trim() || d.name; touch(); draw(); }}]); setTimeout(() => inp.focus(), 30); }}, 'Rename'),
+        h('button', {class:'btn sm ghost icon', title:'Delete draft', onclick: () => confirmBox('Delete draft?', `“${d.name}” will be deleted from this project.`, 'Delete', () => { S.drafts.splice(S.drafts.indexOf(d), 1); if (S.script.basedOn === d.id) S.script.basedOn = ''; touch(); draw(); runDerived(); })}, svgIcon(IC.trash)));
+    }) : [h('div', {class:'empty'}, 'No drafts yet. Use “Save as draft” to keep a snapshot of your script.')]));
+  };
+  draw();
+  close = modal('Script drafts', h('div', null,
+    h('p', null, 'Snapshots of your script, saved inside this project (so they go into your backups too). ', h('b', null, 'Open'), ' loads one into the editor to keep working on it; ', h('b', null, 'Duplicate'), ' makes a copy to branch off from.'),
+    h('div', {class:'row', style:'gap:8px'},
+      h('button', {class:'btn sm primary', onclick: () => { close(); saveDraftPrompt(); }}, '+ Save current script as a draft'),
+      h('button', {class:'btn sm', onclick: () => guardThen(() => { close(); loadIntoEditor('', '', 'Blank page ready. Your drafts are all still saved.'); }, 'Starting a blank page will clear the editor.')}, 'Start a blank page')),
+    list));
+}
+
+function syntaxHelp(){
+  const row = (a, b, c) => h('tr', null, h('td', null, a), h('td', {html:b}), h('td', {html:c || ''}));
+  modal('How auto-formatting works', h('div', null,
+    h('p', null, 'Just type. The page works out what each line is from the way you write it (the same plain-text approach used by Slugline, Highland and the Fountain format). Use the element menu in the toolbar if it ever guesses wrong.'),
+    h('table', {class:'syntax'},
+      row('Scene heading', 'Start a line with <code>INT.</code> <code>EXT.</code> <code>EST.</code> <code>INT./EXT.</code> or <code>I/E</code> after a blank line.', 'Force any line with a full stop: <code>.FLASHBACK</code>'),
+      row('Character', 'A name in <b>ALL CAPS</b> on its own line (after a blank line), then press <span class="kbd">Enter</span>. If you keep typing on the same line instead, it stays as action.', '<code>MARY (V.O.)</code> · force mixed case with @: <code>@McCLANE</code>'),
+      row('Dialogue', 'Just type on the line straight after the character name.', ''),
+      row('Parenthetical', 'Inside dialogue, start a line with <code>(</code>', '<code>(whispering)</code>'),
+      row('Transition', 'CAPS ending in <code>TO:</code> on its own line', '<code>CUT TO:</code> · or force with &gt;: <code>&gt;FADE OUT.</code>'),
+      row('Centred', 'Wrap in &gt; &lt;', '<code>&gt;THE END&lt;</code>'),
+      row('Action', 'Anything else. Force a line to be action with <code>!</code>', '<code>!BANG!</code>'),
+      row('Dual dialogue', 'Add <code>^</code> after the <i>second</i> character\'s name', '<code>JOHN ^</code>'),
+      row('Emphasis', '<code>*italic*</code> <code>**bold**</code> <code>_underline_</code>', '<span class="kbd">Ctrl</span>+<span class="kbd">I</span> / <span class="kbd">B</span> / <span class="kbd">U</span>'),
+      row('Notes', '<code>[[like this]]</code>: never printed', ''),
+      row('Sections', '<code># Act One</code>: your own signposts; never printed, listed in Scenes', ''),
+      row('Synopsis', '<code>= A one-line summary</code>: never printed', ''),
+      row('Boneyard', '<code>/* hide text */</code>: not printed or counted (great for cut material)', ''),
+      row('Page break', '<code>===</code> on its own line', ''),
+      row('Lyrics', 'Start a line with <code>~</code>', ''),
+      row('Scene numbers', 'Add <code>#1#</code> at the end of a heading', '')),
+    h('p', {style:'margin-top:14px'}, h('b', null, 'Smart Enter'), ' (on by default) adds the blank line for you after headings, action and speeches, so you can just keep typing. ', h('span', {class:'kbd'}, 'Shift'), '+', h('span', {class:'kbd'}, 'Enter'), ' gives a plain new line. ', h('span', {class:'kbd'}, 'Tab'), ' accepts a suggested character name, location or time of day.')));
+}
+
+/* =====================================================================
+   EXPORT / IMPORT
+   ===================================================================== */
+function currentScript(){ flushEditor && flushEditor(); return parseScript(S.script.text); }
+function exportFountain(){
+  const P = currentScript();
+  const tp = [`Title: ${S.title || 'Untitled'}`, 'Credit: Written by', `Author: ${S.author || ''}`];
+  if (S.contact) tp.push(`Contact: ${S.contact}`);
+  tp.push(`Draft date: ${new Date().toLocaleDateString('en-GB')}`);
+  download(`${slug(S.title)}_${stamp(new Date())}.fountain`, tp.join('\n') + '\n\n' + P.lines.join('\n') + '\n', 'text/plain');
+}
+function exportFDX(){
+  const P = currentScript();
+  const X = s => esc(s).replace(/'/g, '&apos;');
+  const map = {scene:'Scene Heading', action:'Action', character:'Character', dialogue:'Dialogue', parenthetical:'Parenthetical', transition:'Transition', centered:'Action', lyric:'Dialogue'};
+  let body = '';
+  P.lines.forEach((l, i) => { const t = P.types[i]; if (!map[t]) return; const tx = cleanText(l, t); if (t === 'dialogue' && !tx) return; body += `    <Paragraph Type="${map[t]}"${t === 'centered' ? ' Alignment="Center"' : ''}><Text>${X(t === 'scene' || t === 'transition' ? tx.toUpperCase() : tx)}</Text></Paragraph>\n`; });
+  const xml = `<?xml version="1.0" encoding="UTF-8" standalone="no" ?>\n<FinalDraft DocumentType="Script" Template="No" Version="5">\n  <Content>\n${body}  </Content>\n  <TitlePage>\n    <Content>\n      <Paragraph Alignment="Center"><Text>${X((S.title || 'Untitled').toUpperCase())}</Text></Paragraph>\n      <Paragraph Alignment="Center"><Text>Written by</Text></Paragraph>\n      <Paragraph Alignment="Center"><Text>${X(S.author || '')}</Text></Paragraph>\n    </Content>\n  </TitlePage>\n</FinalDraft>\n`;
+  download(`${slug(S.title)}_${stamp(new Date())}.fdx`, xml, 'application/xml');
+}
+function emph(s){ return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\*(.+?)\*/g, '<i>$1</i>').replace(/(^|\W)_(.+?)_(?=\W|$)/g, '$1<u>$2</u>'); }
+function printScript(){
+  const P = currentScript();
+  const root = h('div', {id:'print'});
+  root.append(h('div', {class:'tp'}, h('div', null, h('div', {class:'tt'}, S.title || 'Untitled'), h('div', {class:'cr'}, 'Written by'), h('div', {class:'cr'}, S.author || '')), h('div', {class:'ct'}, S.contact || '')));
+  const L = P.lines, T = P.types;
+  const para = (cls, txt) => h('p', {class:cls, html: emph(txt) || '&nbsp;'});
+  let i = 0;
+  const block = (start) => { // character + dialogue block
+    const box = h('div', {class:'blk'}); let j = start;
+    box.append(para('chr', cleanText(L[j], 'character').toUpperCase())); j++;
+    while (j < L.length && (T[j] === 'dialogue' || T[j] === 'parenthetical')){ const tx = cleanText(L[j], T[j]); if (tx || T[j] === 'parenthetical') box.append(para(T[j] === 'dialogue' ? 'dlg' : 'par', tx)); j++; }
+    return [box, j];
+  };
+  while (i < L.length){
+    const t = T[i];
+    if (t === 'character'){
+      const [box, j] = block(i);
+      // dual dialogue: next block's cue ends with ^
+      let k = j; while (k < L.length && T[k] === 'blank') k++;
+      if (k < L.length && T[k] === 'character' && /\^\s*$/.test(L[k])){ const [box2, j2] = block(k); root.append(h('div', {class:'dual'}, box, box2)); i = j2; continue; }
+      root.append(box); i = j; continue;
+    }
+    if (t === 'scene') root.append(para('sc', cleanText(L[i], t)));
+    else if (t === 'action') root.append(para('act', cleanText(L[i], t)));
+    else if (t === 'transition') root.append(para('tr', cleanText(L[i], t)));
+    else if (t === 'centered') root.append(para('cen', cleanText(L[i], t)));
+    else if (t === 'lyric') root.append(para('ly', cleanText(L[i], t)));
+    else if (t === 'pagebreak') root.append(h('div', {class:'pb'}));
+    i++;
+  }
+  // collapse consecutive actions spacing: action lines directly following action get no top margin
+  $$('p.act', root).forEach(p => { const prev = p.previousElementSibling; if (prev && prev.classList.contains('act')) p.style.marginTop = '0'; });
+  $('#print')?.remove();
+  $('#layer').append(root);
+  const done = () => { root.remove(); window.removeEventListener('afterprint', done); };
+  window.addEventListener('afterprint', done);
+  setTimeout(() => window.print(), 50);
+}
+function importFountain(){
+  const inp = h('input', {type:'file', accept:'.fountain,.txt,.spmd,text/plain', style:'display:none'});
+  inp.addEventListener('change', () => {
+    const f = inp.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      let text = String(rd.result).replace(/\r\n?/g, '\n');
+      let title = '', author = '';
+      const lines = text.split('\n');
+      if (/^\s*[A-Za-z ]+:/.test(lines[0] || '')){
+        let k = 0; while (k < lines.length && lines[k].trim() !== ''){ const m = lines[k].match(/^\s*([A-Za-z ]+):\s*(.*)$/); if (m){ const key = m[1].toLowerCase(); if (key === 'title') title = m[2].replace(/[_*]/g, ''); if (key === 'author' || key === 'authors') author = m[2]; } k++; }
+        text = lines.slice(k + 1).join('\n');
+      }
+      confirmBox('Replace your script?', `This will replace the script in the Write tab with “${f.name}”. (Your Develop and Outline work is untouched. )`, 'Replace script', () => {
+        S.script.text = text.replace(/^\n+/, ''); if (title && !S.title) S.title = title; if (author && !S.author) S.author = author;
+        touch(); saveLocal(); renderAll(); toast('Script imported.');
+      });
+    };
+    rd.readAsText(f);
+  });
+  document.body.append(inp); inp.click(); setTimeout(() => inp.remove(), 60000);
+}
+
+/* =====================================================================
+   START
+   ===================================================================== */
+applyTheme();
+renderAll();
+if (!S.savedAt){ S.savedAt = Date.now(); }
+saveLocal();
+})();
+</script>
+</body>
+</html>

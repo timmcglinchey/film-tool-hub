@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Call Sheet Builder</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font:14px/1.45 var(--fth-display);display:flex;flex-direction:column}
+.app{flex:1;min-height:0;display:grid;grid-template-columns:minmax(400px,46%) 1fr}
+.ed{padding:6px 22px 48px;border-right:1px solid var(--fth-line);overflow:auto}
+.pvw{padding:28px 24px 40px;overflow:auto}
+.intro{color:var(--fth-muted);margin:16px 0 4px;font-size:13.5px;max-width:62ch}
+.intro .fth-info{cursor:default}
+.sub{color:var(--fth-muted);margin:0 0 10px;font-size:12.5px}
+.status{font:500 11px var(--fth-mono);letter-spacing:.04em;color:var(--fth-faint);white-space:nowrap}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}.g .w{grid-column:1/-1}
+.ed label{display:flex;align-items:center;margin-bottom:5px}
+.ed label:not(.fth-label){font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+textarea.fth-input{min-height:64px}
+.inline{display:flex;gap:8px;align-items:center;color:var(--fth-muted);font-size:13px}
+.tip{display:none;margin:2px 0 8px}.tip.on{display:block}
+.fth-sec .fth-info{margin-left:0}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+.tw{overflow-x:auto;border:1px solid var(--fth-line);border-radius:11px;background:var(--fth-bg2)}
+table.t{border-collapse:collapse;min-width:100%}
+.t th{font:500 10px/1.2 var(--fth-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--fth-muted);text-align:left;white-space:nowrap;padding:9px 6px 7px;border-bottom:1px solid var(--fth-line);background:var(--fth-surface)}
+.t td{padding:3px 3px;border-bottom:1px solid var(--fth-line)}
+.t tr:last-child td{border-bottom:0}
+.t .fth-input{min-width:76px;padding:5px 7px;font-size:13px;border-radius:6px;background:var(--fth-surface);border-color:var(--fth-line)}
+.t .fth-input:hover{border-color:var(--fth-line3)}
+.t .fth-input:focus{background:var(--fth-surface)}
+.t td:first-child{padding-left:6px}
+.t input[type=checkbox]{margin:0 8px}
+.x{color:var(--fth-faint)}.x:hover{color:var(--fth-bad)}
+#warn .fth-warn{margin:14px 0 0}#warn .fth-warn b{display:block;margin-bottom:3px}
+/* preview: the call sheet itself stays a white printed page in both themes */
+.pvlabel{max-width:820px;margin:0 auto 10px;display:flex;justify-content:space-between;gap:10px}
+#pv{padding:14px;font:9px/1.35 Arial,Helvetica,sans-serif;width:100%;max-width:820px;margin:auto}
+#pv table{border-collapse:collapse;width:100%}#pv td,#pv th{border:1px solid #000;padding:2px 4px;vertical-align:top}
+#pv th{background:#ccc;font-size:8px}#pv .c{text-align:center}#pv .box{border:1px solid #000;padding:3px 5px;min-height:60px}
+#pv .top{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:12px;margin:8px 0}.hd{display:flex;justify-content:space-between;font-size:8px;font-style:italic}
+#pv .ti{background:#bbb;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;text-align:center;padding:6px}
+#pv .big td{text-align:center;font-size:11px;font-weight:700}#pv .sp{height:8px;border:0}
+@media(max-width:900px){html,body{height:auto}body{display:block}.app{grid-template-columns:1fr}.ed{border-right:0;border-bottom:1px solid var(--fth-line)}.ed,.pvw{overflow:visible}}
+@media print{@page{size:A4;margin:8mm}html,body{height:auto}body{display:block}.ed,.pvlabel{display:none}.app{display:block}.pvw{padding:0;overflow:visible}#pv{max-width:none;padding:0;font-size:9.5px}}
+</style></head><body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>04 · Shoot-Day Paperwork</span><h1 class="fth-title">Call Sheet Builder</h1></div>
+  <div class="fth-actions">
+    <span class="status" id="saveState"></span>
+    <button class="fth-btn ghost" onclick="newSheet()">New sheet</button>
+    <span class="fth-vsep"></span>
+    <button class="fth-btn" onclick="xl()">Download Excel</button>
+    <button class="fth-btn primary" onclick="print()">Save as PDF</button>
+  </div>
+</header>
+<div class="app"><div class="ed" id="ed"></div><div class="pvw fth-paper-wrap"><div class="pvlabel"><span class="fth-label">Preview · A4</span><span class="fth-label" id="pvPages"></span></div><div id="pv" class="fth-paper"></div></div></div>
+<script id="sv" type="application/json"></script>
+<script>
+const CREW=["Director","1st AD","2nd AD","Dir. of Photography","Cam OP","Focus Puller/1st AC","Clapper Loader/2nd AC","Script Supervisor","Gaffer","Spark","Key Grip","Set Designer","Sound Recordist","Boom Operator"];
+const WX=[["☀️","Sunny"],["🌤️","Mostly Sunny"],["⛅","Partly Cloudy"],["🌥️","Mostly Overcast"],["☁️","Overcast"],["🌦️","Showers"],["🌧️","Rain"],["⛈️","Thunderstorms"],["🌨️","Snow"],["🌫️","Fog"],["💨","Windy"]];
+let S={title:"",place:"",producer:"",director:"",dirPhone:"",hosp:"",hospAddr:"",hospPhone:"",date:"",day:1,days:1,addr:"",w3w:"",
+call:"",dinner:"",camWrap:"",crewWrap:"",craft:"",wx:"Mostly Overcast",amT:"",pmT:"",hum:"",lat:54.6,lng:-5.93,notes:"",first:"",last:"",
+scenes:[{}],cast:[{}],crew:CREW.map(p=>({pos:p}))};
+const DEF=JSON.stringify(S),KEY="fth-callsheet-v1";let savedAt=0;
+try{const t=document.getElementById("sv").textContent.trim();if(t)S=JSON.parse(t);else{const l=localStorage.getItem(KEY);if(l){const o=JSON.parse(l);S=o.S||S;savedAt=o.at||0}}}catch(e){}
+const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const INFO={
+title:"The name of your production. It appears as the big heading on the sheet.",place:"The studio or company name shown in the top strip, e.g. 'E3 Studios, Belfast Met'.",
+producer:"The person responsible for budget and logistics. Leave blank if you don't have one.",director:"The person who leads the creative vision. Crew phone them if there are questions.",
+hosp:"The nearest A&E. Every call sheet must list one in case of an accident on set.",date:"The shoot date. Sunrise and sunset are calculated from this.",day:"Which shoot day this is, out of how many in total (e.g. Day 1 of 3).",
+addr:"The full address of where you're filming, so everyone can find it.",w3w:"A free What3Words address (three words) pinpoints the exact entrance or parking spot.",
+times:"Call time is when crew must arrive. Camera wrap is when filming ends. Crew wrap is when everyone can leave after packing down. Dinner is the main meal break; schedule it roughly 5-6 hours after call.",
+craft:"Craft services is the snacks and drinks table. Say who provides what, e.g. 'Crew: BYO, Cast: Dinner provided'.",wx:"Check the forecast the day before. Weather affects exterior scenes, kit and clothing advice.",
+loc:"Latitude/longitude is used only to work out sunrise and sunset. The defaults are for Belfast; change them for other locations.",
+notes:"Anything the whole team needs to know: parking, access, noise restrictions, safety, what to bring.",
+scenes:"Each row is a block of the schedule. 'Scenes' are the scene numbers shot, 'Partial' brackets them e.g. (2) when only part of the scene is shot. D/N is Day or Night. Pages is the script length as a fraction of a page, e.g. 1 3/8; the total is added up for you.",
+cast:"Cast working that day. SWHF is the status code: S start, W work, F finish, H hold, SW start/work, WF work/finish. MU is make-up call time, 'Set' is when they are needed on set.",
+shot:"The time you expect the first and last shot to be taken. Last shot must be before camera wrap.",
+crew:"Edit names and times, or add and remove rows. If someone arrives twice, type both times, e.g. '14:00 / 20:00'."};
+const info=k=>INFO[k]?`<b class="fth-info" title="What is this?" onclick="this.parentNode.nextElementSibling.classList.toggle('on')">i</b>`:"",
+tip=k=>`<div class="tip fth-tip">${INFO[k]||""}</div>`;
+const F=(l,k,t="text",ik,w)=>`<div class="${w?"w":""}"><label>${l}${ik?info(ik):""}</label>${ik?tip(ik):""}${t=="area"?`<textarea class="fth-input" data-k="${k}">${esc(S[k])}</textarea>`:`<input class="fth-input" type="${t}" data-k="${k}" value="${esc(S[k])}">`}</div>`;
+function tbl(n,cols){return `<div class="tw"><table class="t"><tr>${cols.map(c=>`<th>${c[1]}</th>`).join("")}<th></th></tr>`+S[n].map((r,i)=>`<tr>${cols.map(c=>{const v=r[c[0]]??"",a=`data-a="${n}" data-i="${i}" data-k="${c[0]}"`;
+return `<td>${c[2]=="chk"?`<input type="checkbox" ${a} ${v?"checked":""}>`:c[2]=="sel"?`<select class="fth-input" ${a}>${["",...c[3]].map(o=>`<option ${o==v?"selected":""}>${o}</option>`).join("")}</select>`:`<input class="fth-input" type="${c[2]||"text"}" ${a} value="${esc(v)}">`}</td>`}).join("")}<td><button class="fth-btn ghost icon x" data-del="${n}" data-i="${i}" title="Remove row">✕</button></td></tr>`).join("")+`</table></div><div class="bar"><button class="fth-btn sm" data-add="${n}">＋ Add row</button></div>`}
+function form(){const act=document.activeElement;$("#ed").innerHTML=`
+<p class="intro">Fill in each section and the call sheet builds live on the right. Click the <b class="fth-info">i</b> icons for help. For a PDF, choose “Save as PDF” as the printer. Excel needs an internet connection.</p>
+<div id="warn"></div>
+<h2 class="fth-sec"><span class="fth-num">01</span>Production</h2><div class="g">${F("Title","title","text","title",1)}${F("Studio / company","place","text","place")}${F("Producer","producer","text","producer")}${F("Director","director")}${F("Director phone","dirPhone")}</div>
+<h2 class="fth-sec"><span class="fth-num">02</span>Date</h2><div class="g">${F("Shoot date","date","date","date")}<div><label>Day ${info("day")}</label>${tip("day")}<div class="inline"><input class="fth-input" type="number" min="1" data-k="day" value="${S.day}"> of <input class="fth-input" type="number" min="1" data-k="days" value="${S.days}"></div></div></div>
+<h2 class="fth-sec"><span class="fth-num">03</span>Location</h2><div class="g">${F("Set address","addr","area","addr",1)}${F("What3Words","w3w","text","w3w")}${F("Nearest hospital","hosp","text","hosp")}${F("Hospital address","hospAddr","text","",1)}${F("Hospital phone","hospPhone")}</div>
+<h2 class="fth-sec"><span class="fth-num">04</span>Times</h2>${tip("times")}<div class="g">${F("Call time","call","time","times")}${F("Dinner","dinner","time")}${F("Camera wrap","camWrap","time")}${F("Crew wrap","crewWrap","time")}${F("First shot","first","time","shot")}${F("Last shot","last","time")}</div>
+<h2 class="fth-sec"><span class="fth-num">05</span>Weather &amp; light</h2><div class="g"><div class="w"><label>Conditions${info("wx")}</label>${tip("wx")}<select class="fth-input" data-k="wx">${WX.map(w=>`<option ${w[1]==S.wx?"selected":""} value="${w[1]}">${w[0]} ${w[1]}</option>`).join("")}</select></div>
+${F("AM temp (°C)","amT","number")}${F("PM temp (°C)","pmT","number")}${F("Humidity (%)","hum","number")}<div></div>${F("Latitude","lat","number","loc")}${F("Longitude","lng","number")}</div>
+<p class="sub" style="font-size:12px">☀️ Sunrise and sunset are worked out automatically from the date and location.</p>
+<h2 class="fth-sec"><span class="fth-num">06</span>Craft services &amp; notes</h2><div class="g">${F("Craft services","craft","text","craft",1)}${F("Notes","notes","area","notes",1)}</div>
+<h2 class="fth-sec"><span class="fth-num">07</span>Scenes &amp; schedule ${info("scenes")}</h2>${tip("scenes")}${tbl("scenes",[["sc","Scenes"],["part","Partial","chk"],["set","Set"],["desc","Description"],["ch","Char #"],["dn","D/N","sel",["D","N"]],["pg","Pages"],["st","Start","time"],["en","End","time"],["nt","Notes"]])}
+<h2 class="fth-sec"><span class="fth-num">08</span>Cast ${info("cast")}</h2>${tip("cast")}${tbl("cast",[["name","Cast"],["ch","Character"],["sw","SWHF","sel",["S","W","H","F","SW","WF","SWF"]],["mu","MU","time"],["set","Set","time"],["minor","Minor?","sel",["Y","N"]],["si","Special instructions"]])}
+<h2 class="fth-sec"><span class="fth-num">09</span>Crew ${info("crew")}</h2>${tip("crew")}${tbl("crew",[["pos","Position"],["name","Name"],["ph","Phone"],["set","Set (time)"]])}`;
+if(act&&act.dataset&&act.dataset.k){const q=`[data-k="${act.dataset.k}"]`+(act.dataset.a?`[data-a="${act.dataset.a}"][data-i="${act.dataset.i}"]`:":not([data-a])");const n=$(q);n&&n.focus()}}
+// maths
+const pv=v=>{const m=String(v||"").trim().match(/^(?:(\d+)\s+)?(?:(\d+)\/(\d+))?$|^(\d+)$/);if(!m||!String(v).trim())return 0;return m[4]?+m[4]:(+m[1]||0)+(m[2]?m[2]/m[3]:0)};
+const fp=x=>{const e=Math.round(x*8),w=Math.floor(e/8),r=e%8;return (w?w+" ":"")+(r?r+"/8":"")||"0"};
+const t12=t=>{if(!t)return"";let[h,m]=t.split(":");const a=h>=12?"pm":"am";h=h%12||12;return h+":"+m+" "+a};
+const hm=m=>{if(m==null||isNaN(m))return"";m=((m%1440)+1440)%1440;const h=Math.floor(m/60),mi=Math.round(m%60);return(mi==60?h+1:h)+":"+String(mi==60?0:mi).padStart(2,"0")};
+function sun(ds,lat,lng){if(!ds||isNaN(lat)||isNaN(lng))return["",""];const[y,mo,d]=ds.split("-").map(Number),R=Math.PI/180,N=Math.round((Date.UTC(y,mo-1,d)-Date.UTC(y,0,0))/864e5),tz=-new Date(y,mo-1,d,12).getTimezoneOffset()/60,lh=lng/15;
+const f=r=>{const t=N+((r?6:18)-lh)/24,M=0.9856*t-3.289;let L=(M+1.916*Math.sin(M*R)+0.02*Math.sin(2*M*R)+282.634+720)%360,RA=Math.atan(0.91764*Math.tan(L*R))/R;RA=(RA+360)%360;RA+=Math.floor(L/90)*90-Math.floor(RA/90)*90;RA/=15;
+const sd=0.39782*Math.sin(L*R),cd=Math.cos(Math.asin(sd)),ch=(Math.cos(90.833*R)-sd*Math.sin(lat*R))/(cd*Math.cos(lat*R));if(Math.abs(ch)>1)return null;
+let H=(r?360-Math.acos(ch)/R:Math.acos(ch)/R)/15;let T=H+RA-0.06571*t-6.622,ut=((T-lh)%24+24)%24;return ((ut+tz)%24)*60};
+const a=f(1),b=f(0);return[a==null?"":hm(a),b==null?"":hm(b)]}
+const wxI=n=>(WX.find(w=>w[1]==n)||["",""])[0];
+function totals(){return S.scenes.reduce((s,r)=>s+pv(r.pg),0)}
+function warns(){const w=[],c=S.call,v=(x,m)=>x&&w.push(m);
+v(S.first&&c&&S.first<c,"First shot is before call time.");v(S.last&&S.camWrap&&S.last>S.camWrap,"Last shot is after camera wrap.");v(S.camWrap&&S.crewWrap&&S.camWrap>S.crewWrap,"Camera wrap is after crew wrap.");
+v(S.dinner&&c&&S.camWrap&&(S.dinner<c||S.dinner>S.camWrap),"Dinner falls outside call time to camera wrap.");
+v(S.dinner&&c&&(parseInt(S.dinner)-parseInt(c))>6,"Dinner is more than 6 hours after call, so consider an earlier meal break.");
+S.cast.forEach(r=>{if(r.set&&S.first&&r.set>S.first)w.push((r.name||"A cast member")+" is on set after the first shot.")});
+const sc=S.scenes.filter(r=>r.st&&r.en).sort((a,b)=>a.st<b.st?-1:1);sc.forEach((r,i)=>{if(r.en<=r.st)w.push("Scene row “"+(r.sc||i+1)+"” ends before it starts.");if(sc[i+1]&&r.en>sc[i+1].st)w.push("Scene times overlap: "+(r.sc||"?")+" and "+(sc[i+1].sc||"?")+".")});
+v(!S.date,"No shoot date yet, so sunrise and sunset can't be worked out.");v(!S.hosp,"Nearest hospital is missing; call sheets should always include it.");return w}
+// preview
+const sc_=r=>r.part?"("+r.sc+")":r.sc||"";
+function prev(){const[sr,ss]=sun(S.date,+S.lat,+S.lng),dd=S.date?new Date(S.date+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"";
+$("#pv").innerHTML=`<div class="hd"><span>${esc(S.title)}</span><span>${esc(S.place)}</span><span>${dd}</span><span>Day ${S.day} of ${S.days}</span></div>
+<div class="top"><div class="box"><b>Producer</b> ${esc(S.producer)}<br><b>Director</b> ${esc(S.director)} ${esc(S.dirPhone)}<br><br><b>Nearest Hospital</b> ${esc(S.hospPhone)}<br>${esc(S.hosp)}<br>${esc(S.hospAddr)}</div>
+<div class="ti">${esc(S.title.toUpperCase())}</div>
+<table><tr><td><b>DINNER</b> ${t12(S.dinner)}</td><td><b>CRAFT SERVICES</b><br>${esc(S.craft)}</td></tr><tr><td><b>SUNRISE</b> 🌅 ${sr}<br><b>SUNSET</b> 🌇 ${ss}</td><td><b>WEATHER</b> ${wxI(S.wx)} ${esc(S.wx)}<br>AM: ${S.amT?S.amT+"C":""} PM: ${S.pmT?S.pmT+"C":""}<br>Humidity ${S.hum?S.hum+"%":""}</td></tr></table></div>
+<div class="top"><div class="box" style="min-height:40px"><b>Set Address:</b><br>${esc(S.addr).replace(/\n/g,"<br>")}<br><b>What3Words:</b> ${esc(S.w3w)}</div>
+<table class="big"><tr><td>CALL TIME<br>${S.call}</td><td>DINNER<br>${S.dinner}</td></tr><tr><td>CAMERA WRAP<br>${S.camWrap}</td><td>CREW WRAP<br>${S.crewWrap}</td></tr></table>
+<div class="box" style="min-height:40px"><b>Notes:</b><br><i>${esc(S.notes).replace(/\n/g,"<br>")}</i></div></div>
+<table><tr><th>SCENES</th><th>SET AND DESCRIPTION</th><th>CHAR #</th><th>D/N</th><th>PAGES</th><th>START</th><th>END</th><th>NOTES</th></tr>
+${S.scenes.map(r=>`<tr><td class="c">${esc(sc_(r))}</td><td><b>${esc(r.set)}</b><br><i>${esc(r.desc)}</i></td><td class="c">${esc(r.ch)}</td><td class="c">${esc(r.dn)}</td><td>${esc(r.pg)}</td><td class="c">${r.st||""}</td><td class="c">${r.en||""}</td><td>${esc(r.nt)}</td></tr>`).join("")}
+<tr><td colspan="4" style="border:0"></td><td colspan="2"><b>TOTAL PAGES</b></td><td colspan="2"><b>${fp(totals())}</b></td></tr></table><div class="sp"></div>
+<table><tr><th>#</th><th>CAST</th><th>CHARACTER</th><th>SWHF</th><th>MU</th><th>SET</th><th>MINOR?</th><th>SPECIAL INSTRUCTIONS</th></tr>
+${S.cast.map((r,i)=>`<tr class="c"><td>${i+1}</td><td>${esc(r.name)}</td><td>${esc(r.ch)}</td><td>${esc(r.sw)}</td><td>${r.mu||""}</td><td>${r.set||""}</td><td>${esc(r.minor)}</td><td>${esc(r.si)}</td></tr>`).join("")}</table><div class="sp"></div>
+<table><tr><th colspan="2">SHOT INFORMATION</th></tr><tr class="c"><td>FIRST SHOT</td><td>${S.first}</td></tr><tr class="c"><td>LAST SHOT</td><td>${S.last}</td></tr></table><div class="sp"></div>
+<table><tr><th>POSITION</th><th>NAME</th><th>PHONE</th><th>SET</th></tr>${S.crew.map(r=>`<tr class="c"><td>${esc(r.pos)}</td><td>${esc(r.name)}</td><td>${esc(r.ph)}</td><td>${esc(r.set)}</td></tr>`).join("")}</table>`;
+const w=warns();$("#warn").innerHTML=w.length?`<div class="fth-warn"><b>Sense checks</b>${w.map(x=>"• "+esc(x)).join("<br>")}</div>`:""}
+// events
+document.addEventListener("input",e=>{const t=e.target,k=t.dataset.k;if(!k)return;const v=t.type=="checkbox"?t.checked:t.value;
+if(t.dataset.a)S[t.dataset.a][+t.dataset.i][k]=v;else S[k]=v;prev();persist()});
+document.addEventListener("change",e=>{if(e.target.dataset.k)prev()});
+document.addEventListener("click",e=>{const t=e.target;if(t.dataset.add){S[t.dataset.add].push({});form();prev();persist()}
+if(t.dataset.del&&confirm("Remove this row?")){S[t.dataset.del].splice(+t.dataset.i,1);form();prev();persist()}});
+function dl(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),999)}
+let saveT;function persist(){clearTimeout(saveT);saveT=setTimeout(()=>{try{savedAt=Date.now();localStorage.setItem(KEY,JSON.stringify({S,at:savedAt}));showSaved()}catch(e){$("#saveState").textContent="Couldn’t save in this browser"}},400)}
+function showSaved(){$("#saveState").textContent=savedAt?"Saved in this browser · "+new Date(savedAt).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""}
+function newSheet(){if(!confirm("Start a new, empty call sheet? The current one will be cleared from this browser."))return;S=JSON.parse(DEF);try{localStorage.removeItem(KEY)}catch(e){}savedAt=0;form();prev();showSaved()}
+function xl(){if(typeof XLSX=="undefined")return alert("The Excel library couldn't load. Check your internet connection and try again.");
+const[sr,ss]=sun(S.date,+S.lat,+S.lng),e=[""],R=[[S.title,"",S.place,"",S.date,"Day "+S.day+" of "+S.days],e,
+["Producer",S.producer,"","Dinner",t12(S.dinner),"Craft services",S.craft],["Director",S.director+" "+S.dirPhone,"","Sunrise",sr,"Sunset",ss],
+["Nearest hospital",S.hosp+", "+S.hospAddr+" "+S.hospPhone,"","Weather",S.wx,"AM "+S.amT+"C / PM "+S.pmT+"C","Humidity "+S.hum+"%"],e,
+["Set address",S.addr,"","Call time",S.call,"Dinner",S.dinner],["What3Words",S.w3w,"","Camera wrap",S.camWrap,"Crew wrap",S.crewWrap],["Notes",S.notes],e,
+["SCENES","SET","DESCRIPTION","CHAR #","D/N","PAGES","START","END","NOTES"],...S.scenes.map(r=>[sc_(r),r.set,r.desc,r.ch,r.dn,r.pg,r.st,r.en,r.nt]),["","","","","TOTAL PAGES",fp(totals())],e,
+["#","CAST","CHARACTER","SWHF","MU","SET","MINOR?","SPECIAL INSTRUCTIONS"],...S.cast.map((r,i)=>[i+1,r.name,r.ch,r.sw,r.mu,r.set,r.minor,r.si]),e,
+["SHOT INFORMATION"],["First shot",S.first],["Last shot",S.last],e,["POSITION","NAME","PHONE","SET"],...S.crew.map(r=>[r.pos,r.name,r.ph,r.set])];
+const ws=XLSX.utils.aoa_to_sheet(R);ws["!cols"]=[{wch:22},{wch:28},{wch:36},{wch:16},{wch:16},{wch:18},{wch:12},{wch:12},{wch:24}];
+const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Call Sheet");XLSX.writeFile(wb,"Call_Sheet_"+(S.date||"draft")+".xlsx")}
+form();prev();showSaved();
+</script></body></html>

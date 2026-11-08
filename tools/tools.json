@@ -1,0 +1,308 @@
+{
+  "categories": [
+    {
+      "id": "write",
+      "num": "01",
+      "short": "Write",
+      "name": "Writing & Script Prep",
+      "color": "#f5b14c",
+      "blurb": "Develop the screenplay, then line it for coverage."
+    },
+    {
+      "id": "plan",
+      "num": "02",
+      "short": "Plan",
+      "name": "Planning & Scheduling",
+      "color": "#4fc7b5",
+      "blurb": "Map out pre-production and build the shooting schedule."
+    },
+    {
+      "id": "visual",
+      "num": "03",
+      "short": "Visualise",
+      "name": "Visual Planning",
+      "color": "#97a3ff",
+      "blurb": "Design the shots, blocking and lighting before you get to set."
+    },
+    {
+      "id": "shoot",
+      "num": "04",
+      "short": "Shoot day",
+      "name": "Shoot-Day Paperwork",
+      "color": "#ff7152",
+      "blurb": "The documents your crew needs before cameras roll."
+    }
+  ],
+  "tools": [
+    {
+      "id": "script-dev",
+      "name": "Script Development Tool",
+      "desc": "Scaffolded scriptwriting: build characters, settings and structure, then write in screenplay format with saved drafts.",
+      "category": "write",
+      "tags": [
+        "Writer",
+        "Fountain",
+        "Final Draft",
+        "PDF"
+      ],
+      "icon": "script",
+      "fileName": "Script Development Tool.html",
+      "origTitle": "Scaffolded Scriptwriting",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/script-dev.html"
+    },
+    {
+      "id": "script-lining",
+      "name": "Script Lining Tool",
+      "desc": "Upload a script PDF and draw tramlines to map shot coverage, with zig-zags for off-screen lines and notes per shot.",
+      "category": "write",
+      "tags": [
+        "Director",
+        "Script supervisor",
+        "PDF"
+      ],
+      "icon": "lining",
+      "fileName": "Script Lining Tool.html",
+      "origTitle": "Script Lining Tool",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/script-lining.html"
+    },
+    {
+      "id": "breakdown",
+      "name": "Script Breakdown",
+      "desc": "Tag cast, props, SFX, wardrobe and more straight onto your script PDF, then export category lists, scene-by-scene breakdowns and a colour-coded script.",
+      "category": "write",
+      "tags": [
+        "1st AD",
+        "Producer",
+        "Line producer",
+        "PDF",
+        "CSV"
+      ],
+      "icon": "breakdown",
+      "fileName": "Script Breakdown.html",
+      "origTitle": "Script Breakdown",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/breakdown.html"
+    },
+    {
+      "id": "preprod",
+      "name": "Pre-Production Timeline",
+      "desc": "A department-by-department roadmap from idea to shoot-ready, with trackable tasks, filters and an editable glossary.",
+      "category": "plan",
+      "tags": [
+        "All crew",
+        "Checklist"
+      ],
+      "icon": "timeline",
+      "fileName": "Pre-Production Timeline.html",
+      "origTitle": "Short Film Pre-Production",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/preprod.html"
+    },
+    {
+      "id": "schedule",
+      "name": "Production Schedule Builder",
+      "desc": "Build a stripboard-style shoot schedule with shoot days, cast legend, locations and a day-out-of-days.",
+      "category": "plan",
+      "tags": [
+        "1st AD",
+        "Producer",
+        "Excel"
+      ],
+      "icon": "schedule",
+      "fileName": "Production Schedule Builder.html",
+      "origTitle": "Production Schedule Builder",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/schedule.html"
+    },
+    {
+      "id": "shotlist",
+      "name": "Shot List Builder",
+      "desc": "Plan every shot day by day with custom columns, sunrise and sunset times, breaks and company moves. Track it live on the day.",
+      "category": "visual",
+      "tags": [
+        "Director",
+        "DP",
+        "CSV",
+        "PDF"
+      ],
+      "icon": "shotlist",
+      "fileName": "Shot List Builder.html",
+      "origTitle": "Shot List Builder",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/shotlist.html"
+    },
+    {
+      "id": "blocking",
+      "name": "Blocking Planner",
+      "desc": "Top-down floor plans for actor and camera blocking: rooms, props, movement paths and animated keyframes.",
+      "category": "visual",
+      "tags": [
+        "Director",
+        "DP",
+        "JPG"
+      ],
+      "icon": "blocking",
+      "fileName": "Blocking Planner.html",
+      "origTitle": "BLOCKING PLANNER",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/blocking.html"
+    },
+    {
+      "id": "lighting",
+      "name": "Lighting Plan Studio",
+      "desc": "Draw lighting diagrams from a full library of fixtures and modifiers, with shoot info and a kit list.",
+      "category": "visual",
+      "tags": [
+        "Gaffer",
+        "DP",
+        "PDF"
+      ],
+      "icon": "lighting",
+      "fileName": "Lighting Plan Studio.html",
+      "origTitle": "Lighting Plan Studio",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/lighting.html"
+    },
+    {
+      "id": "pattern-lab",
+      "name": "Lighting Pattern Lab",
+      "desc": "Learn classic portrait lighting on a 3D head: Rembrandt, loop, butterfly, split, broad and short. Move the key light and see real soft-shadow falloff.",
+      "category": "visual",
+      "tags": [
+        "DP",
+        "Gaffer",
+        "Learning"
+      ],
+      "icon": "portrait",
+      "fileName": "Lighting Pattern Lab.html",
+      "origTitle": "Lighting Pattern Lab",
+      "ver": 2,
+      "updated": 1793998377844,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/pattern-lab.html"
+    },
+    {
+      "id": "exposure",
+      "name": "Exposure Lab",
+      "category": "visual",
+      "icon": "exposure",
+      "desc": "Explore falloff, collimation and hard vs soft light from arm's length to a kilometre, with an exposure triangle, ND and a live camera preview.",
+      "tags": [
+        "DP",
+        "Gaffer",
+        "Learning"
+      ],
+      "fileName": "Exposure Lab.html",
+      "origTitle": "Exposure Lab",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/exposure.html"
+    },
+    {
+      "id": "falsecolour",
+      "name": "False Colour Studio",
+      "category": "visual",
+      "icon": "falsecolour",
+      "desc": "Plan exposure with false colour: load stills, check levels and contrast ratios, compare frames side by side and export a PDF.",
+      "tags": [
+        "DP",
+        "Gaffer",
+        "PDF"
+      ],
+      "fileName": "False Colour Studio.html",
+      "origTitle": "False Colour Studio",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/falsecolour.html"
+    },
+    {
+      "id": "palette",
+      "name": "Colour Palette Studio",
+      "desc": "Pull a 3–10 colour palette from any still, check it against 60/30/10, and build a reference deck that blends many stills into one look.",
+      "category": "visual",
+      "tags": [
+        "DP",
+        "Director",
+        "Production designer",
+        "PDF"
+      ],
+      "icon": "palette",
+      "fileName": "Colour Palette Studio.html",
+      "origTitle": "Colour Palette Studio",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/palette.html"
+    },
+    {
+      "id": "callsheet",
+      "name": "Call Sheet Builder",
+      "desc": "Fill in production, location, scenes, weather and catering details while the call sheet builds alongside.",
+      "category": "shoot",
+      "tags": [
+        "Producer",
+        "1st AD",
+        "Excel"
+      ],
+      "icon": "callsheet",
+      "fileName": "Call Sheet Builder.html",
+      "origTitle": "Call Sheet Builder",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/callsheet.html"
+    },
+    {
+      "id": "risk",
+      "name": "Risk Assessment Builder",
+      "desc": "Work through hazards, controls, emergency, welfare and sign-off while the risk assessment builds alongside.",
+      "category": "shoot",
+      "tags": [
+        "Producer",
+        "Safety",
+        "Excel"
+      ],
+      "icon": "risk",
+      "fileName": "Film Shoot Risk Assessment Builder.html",
+      "origTitle": "Risk Assessment Builder",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 1794092387559,
+      "file": "tools/risk.html"
+    }
+  ]
+}

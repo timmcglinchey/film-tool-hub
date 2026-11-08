@@ -1,0 +1,1894 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
+<title>Lighting Plan Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* Layout: one-screen workstation. Kit/generic/set/grip palette left, plan centre, inspector + layers right. Road-case stencil wordmark, tungsten amber accent, daylight blue for cameras. */
+:root{
+  --bg:#E4E7EB; --panel:#F6F7F9; --panel-2:#ECEEF2; --ink:#15181D; --muted:#59616D; --line:#CDD2D9; --line-2:#B9BFC8;
+  --accent:#C26E16; --accent-ink:#965009; --accent-soft:#F5E3CC; --cam:#2C61C4; --cam-soft:#DDE7F8; --danger:#B3262D; --ok:#2E7A4E;
+  --canvas:#FAFBFC; --grid:#E9ECF0; --grid-major:#D6DBE2; --room:#38404B;
+  --sym-ink:#1F242C; --sym-fill:#FFFFFF; --sym-mod:#7A5A2E; --sym-modfill:rgba(194,110,22,.10); --sym-set:#5B6574; --sym-setfill:#E8EBEF;
+  --sym-grip:#3E4551; --sym-gripfill:#D8DCE2; --sym-wedge:rgba(44,97,196,.09); --sym-glass:#9CC3E8; --sym-sel:#2C61C4; --sym-green:#5DBB63;
+  --shadow:0 10px 30px rgba(20,24,30,.14), 0 2px 6px rgba(20,24,30,.08);
+  --font-display:'Saira Stencil One','Archivo',system-ui,sans-serif;
+  --font-ui:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1114; --panel:#171A1F; --panel-2:#1E2228; --ink:#E5E7EA; --muted:#8D95A1; --line:#2A2F37; --line-2:#3A404A;
+  --accent:#E8973A; --accent-ink:#F1B067; --accent-soft:#3A2915; --cam:#7BA3F5; --cam-soft:#1E2A42; --danger:#F06A70; --ok:#5CC48A;
+  --canvas:#13161A; --grid:#1B1F25; --grid-major:#262B33; --room:#A9B1BD;
+  --sym-ink:#D8DCE2; --sym-fill:#22262D; --sym-mod:#CFA772; --sym-modfill:rgba(232,151,58,.12); --sym-set:#8F99A8; --sym-setfill:#1F232A;
+  --sym-grip:#AFB7C3; --sym-gripfill:#2B3038; --sym-wedge:rgba(123,163,245,.11); --sym-glass:#3D6A90; --sym-sel:#7BA3F5; --sym-green:#3E8E45;
+  --shadow:0 10px 30px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.35); color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0F1114; --panel:#171A1F; --panel-2:#1E2228; --ink:#E5E7EA; --muted:#8D95A1; --line:#2A2F37; --line-2:#3A404A;
+  --accent:#E8973A; --accent-ink:#F1B067; --accent-soft:#3A2915; --cam:#7BA3F5; --cam-soft:#1E2A42; --danger:#F06A70; --ok:#5CC48A;
+  --canvas:#13161A; --grid:#1B1F25; --grid-major:#262B33; --room:#A9B1BD;
+  --sym-ink:#D8DCE2; --sym-fill:#22262D; --sym-mod:#CFA772; --sym-modfill:rgba(232,151,58,.12); --sym-set:#8F99A8; --sym-setfill:#1F232A;
+  --sym-grip:#AFB7C3; --sym-gripfill:#2B3038; --sym-wedge:rgba(123,163,245,.11); --sym-glass:#3D6A90; --sym-sel:#7BA3F5; --sym-green:#3E8E45;
+  --shadow:0 10px 30px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.35); color-scheme:dark;}
+
+[hidden]{display:none!important}
+html{height:100%;box-sizing:border-box}
+*,*::before,*::after{box-sizing:border-box}
+body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:13px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--cam);outline-offset:2px}
+#app{height:100%;display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:8px;padding-block:10px}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+.mark{font-family:var(--font-display);font-size:22px;letter-spacing:.04em;line-height:1;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.mark i{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.proj{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 220px}
+.proj input{border:1px solid transparent;background:transparent;font-weight:600;font-size:15px;padding:5px 8px;border-radius:6px;min-width:0;width:100%;max-width:340px;font-stretch:90%}
+.proj input:hover{border-color:var(--line)} .proj input:focus{border-color:var(--line-2);background:var(--panel)}
+.save{font-family:var(--font-mono);font-size:11px;color:var(--muted);white-space:nowrap}
+.save b{font-weight:500;color:var(--ok)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:6px 10px;font-weight:500;font-size:12.5px;white-space:nowrap}
+.btn:hover{border-color:var(--line-2);background:var(--panel-2)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.ghost:hover{background:var(--panel-2)}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn svg,.tb svg{width:15px;height:15px;flex:none}
+
+/* toolbar */
+.toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:5px 6px}
+.grp{display:flex;align-items:center;gap:2px;padding-right:6px;margin-right:2px;border-right:1px solid var(--line)}
+.grp:last-child{border-right:0}
+.grp-l{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-stretch:80%;padding:0 6px 0 4px;font-weight:600}
+.tb{display:inline-flex;align-items:center;gap:5px;border:1px solid transparent;background:transparent;border-radius:6px;padding:5px 8px;font-size:12px;font-weight:500;white-space:nowrap;color:var(--muted)}
+.tb:hover{background:var(--panel-2);color:var(--ink)}
+.tb:disabled{opacity:.4;cursor:default;background:transparent}
+.tb[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.tb.tog[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink);border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:4px 8px;font-size:11.5px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+.mini-sel{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:3px 4px;font-size:11.5px}
+.zoom{font-family:var(--font-mono);font-size:11px;color:var(--muted);min-width:42px;text-align:center}
+.mobile-only{display:none}
+
+/* work area */
+.work{display:grid;grid-template-columns:288px minmax(0,1fr) 300px;gap:8px;min-height:0}
+.side{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.tabs{display:flex;border-bottom:1px solid var(--line);padding:0 4px;flex:none}
+.tabs button{flex:1;border:0;background:transparent;padding:10px 4px 9px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--muted);font-stretch:85%;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.scroll{overflow:auto;min-height:0;flex:1;padding:10px}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;font-weight:600;color:var(--muted);font-stretch:85%;margin:14px 2px 6px}
+.sec-h:first-child{margin-top:2px}
+.hint{color:var(--muted);font-size:12px;line-height:1.45;margin:4px 2px 10px}
+.search{width:100%;border:1px solid var(--line);background:var(--canvas);border-radius:7px;padding:7px 9px}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.tile{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px 7px;border:1px solid var(--line);border-radius:8px;background:var(--canvas);cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y;text-align:center;min-width:0}
+.tile:hover{border-color:var(--accent)}
+.tile svg{width:44px;height:44px}
+.tile span{font-size:11.5px;line-height:1.2;font-weight:500;overflow-wrap:anywhere}
+.krow{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:8px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--canvas);margin-bottom:5px;cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y}
+.krow:hover{border-color:var(--accent)}
+.krow svg{width:38px;height:38px}
+.krow .nm{font-weight:600;font-size:12.5px;line-height:1.2;overflow-wrap:anywhere}
+.krow .sb{font-size:11px;color:var(--muted);margin-top:2px}
+.krow .sb .warn{color:var(--danger);font-weight:600}
+.qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
+.qty button{border:0;background:transparent;width:22px;height:24px;font-size:14px;color:var(--muted)}
+.qty button:hover{background:var(--panel-2);color:var(--ink)}
+.qty span{font-family:var(--font-mono);font-size:11.5px;min-width:18px;text-align:center}
+
+/* canvas */
+.stage{position:relative;min-height:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--canvas);display:flex;flex-direction:column}
+#planWrap{position:relative;flex:1;min-height:0;touch-action:none}
+#plan{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;-webkit-user-select:none}
+#plan.t-pan{cursor:grab} #plan.t-pan.grabbing{cursor:grabbing} #plan.t-measure,#plan.t-text{cursor:crosshair}
+.titleblock{position:absolute;left:10px;bottom:10px;max-width:min(420px,calc(100% - 20px));background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11.5px;pointer-events:none;backdrop-filter:blur(4px)}
+.titleblock .t1{font-weight:700;font-size:13px;font-stretch:90%}
+.titleblock .t2{color:var(--muted);font-family:var(--font-mono);font-size:10.5px;margin-top:3px;line-height:1.5}
+.canvas-hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:6px 10px;border-radius:6px;font-size:12px;pointer-events:none;white-space:nowrap;max-width:calc(100% - 20px);overflow:hidden;text-overflow:ellipsis}
+.setups{display:flex;align-items:stretch;gap:2px;border-top:1px solid var(--line);background:var(--panel);padding:4px 6px 0;overflow-x:auto;flex:none}
+.setups button.st{border:1px solid transparent;border-bottom:0;background:transparent;padding:6px 12px 7px;border-radius:7px 7px 0 0;font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap}
+.setups button.st[aria-selected="true"]{background:var(--canvas);border-color:var(--line);color:var(--ink);font-weight:600}
+.setups button.st .lt{font-family:var(--font-mono);font-size:10px;color:var(--accent-ink);margin-right:6px}
+.setups input{width:140px;border:1px solid var(--line-2);border-radius:6px;padding:4px 6px;margin:2px 0 5px}
+.setups .add{border:0;background:transparent;color:var(--muted);padding:6px 10px;font-weight:600;white-space:nowrap;flex:none}
+.setups .menu{display:flex;flex:none}
+.setups .add:hover{color:var(--ink)}
+.setups .menu{margin-left:auto}
+
+/* inspector */
+.ins-h{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.ins-h svg{width:44px;height:44px;flex:none;background:var(--canvas);border:1px solid var(--line);border-radius:8px}
+.ins-h .nm{font-weight:700;font-size:14px;line-height:1.2;font-stretch:92%}
+.ins-h .sb{font-size:11.5px;color:var(--muted)}
+.fld{display:grid;grid-template-columns:86px minmax(0,1fr);gap:8px;align-items:center;margin-bottom:7px}
+.fld>label{font-size:11.5px;color:var(--muted)}
+.fld input,.fld select,.fld textarea{width:100%;min-width:0;border:1px solid var(--line);background:var(--canvas);border-radius:6px;padding:5px 7px;font-size:12.5px}
+.fld textarea{resize:vertical;min-height:54px}
+.fld .pair{display:flex;gap:6px;align-items:center}
+.fld .pair input{flex:1}
+.fld .u{font-size:11px;color:var(--muted);font-family:var(--font-mono)}
+.fld input[type=color]{padding:1px;height:28px;width:36px;flex:none}
+.fld input[type=checkbox]{width:auto}
+.ro{font-family:var(--font-mono);font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--accent-soft);color:var(--accent-ink);border-radius:999px;padding:3px 4px 3px 9px;font-size:11.5px;font-weight:500}
+.chip button{border:0;background:transparent;color:inherit;width:18px;height:18px;border-radius:50%;line-height:1}
+.chip button:hover{background:color-mix(in srgb,var(--accent) 25%,transparent)}
+.btnrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.divider{height:1px;background:var(--line);margin:12px 0}
+
+.stop{display:flex;align-items:center;gap:6px;min-width:0}
+.stop input[type=range],.lstop input[type=range]{flex:1;min-width:0;accent-color:var(--accent);padding:0;border:0;background:transparent}
+.stop input.unset,.lstop input.unset{opacity:.45}
+.stop output,.lstop output{font-family:var(--font-mono);font-size:11px;min-width:64px;text-align:right;color:var(--accent-ink);white-space:nowrap}
+.lstop{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin-bottom:6px;background:var(--canvas)}
+.lstop-h{display:flex;align-items:center;gap:6px;font-size:12px}
+.lstop-h .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.lstop .bdg{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;font-size:10.5px;font-weight:700;flex:none}
+.lstop input[type=range]{width:100%;margin-top:4px}
+.photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.photos figure{margin:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--canvas);min-width:0}
+.pthumb{display:block;width:100%;padding:0;border:0;background:var(--panel-2);aspect-ratio:4/3;max-width:100%}
+.pthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pcap{display:flex;align-items:center}
+.pcap input{flex:1;min-width:0;border:0;background:transparent;padding:5px 6px;font-size:11.5px}
+.empty-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(340px,calc(100% - 32px));text-align:center;color:var(--muted);font-size:12.5px;line-height:1.5;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.empty-hint b{color:var(--ink);font-size:15px;font-stretch:92%}
+.empty-hint .btn{pointer-events:auto}
+.setups button.st .smp{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;background:var(--panel-2);color:var(--muted);border-radius:4px;padding:1px 5px;margin-left:6px}
+.banner{border:1px solid color-mix(in srgb,var(--accent) 45%,var(--line));background:var(--accent-soft);color:var(--ink);border-radius:8px;padding:9px 10px;font-size:12px;line-height:1.45;margin-bottom:10px}
+.banner .btnrow{margin-top:8px}
+.exsetups{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+.exsetups label{display:flex;gap:8px;align-items:center;font-size:13px;padding:4px 2px}
+.exsetups input{accent-color:var(--accent)}
+/* layers */
+.layer{border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:var(--canvas)}
+.layer-h{display:flex;align-items:center;gap:4px;padding:4px 4px 4px 6px}
+.layer-h input{flex:1;min-width:0;border:1px solid transparent;background:transparent;padding:3px 5px;border-radius:5px;font-weight:600;font-size:12px}
+.layer-h input:hover{border-color:var(--line)}
+.layer-h .ct{font-family:var(--font-mono);font-size:10.5px;color:var(--muted);padding:0 4px}
+.ib{border:0;background:transparent;width:24px;height:24px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;color:var(--muted);flex:none}
+.ib:hover{background:var(--panel-2);color:var(--ink)}
+.ib[aria-pressed="true"]{color:var(--accent-ink)}
+.ib svg{width:14px;height:14px}
+.layer.active{border-color:color-mix(in srgb,var(--accent) 60%,var(--line))}
+.litems{border-top:1px solid var(--line);padding:3px 0}
+.li{display:flex;align-items:center;gap:6px;padding:2px 6px 2px 10px;font-size:12px;cursor:pointer}
+.li:hover{background:var(--panel-2)}
+.li.sel{background:var(--cam-soft)}
+.li .n{font-family:var(--font-mono);font-size:10.5px;color:var(--accent-ink);min-width:16px}
+.li .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(10,12,16,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);width:min(720px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden}
+.modal.wide{width:min(1060px,100%);height:min(780px,100%)}
+.modal-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);flex:none}
+.modal-h h2{margin:0;font-size:16px;font-stretch:92%;flex:1;text-wrap:balance}
+.modal-b{padding:14px 16px;overflow:auto;min-height:0;flex:1}
+.modal-f{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--line);flex:none;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px}
+
+/* catalogue */
+.cat{display:grid;grid-template-columns:200px minmax(0,1fr);height:100%;min-height:0}
+.cat-f{border-right:1px solid var(--line);padding:12px;overflow:auto;min-height:0}
+.cat-m{display:flex;flex-direction:column;min-height:0;min-width:0}
+.cat-bar{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap;align-items:center}
+.cat-bar .search{flex:1 1 200px;width:auto}
+.cat-list{overflow:auto;min-height:0;flex:1;padding:0 12px 12px}
+.brand{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:6px;cursor:pointer;font-size:12.5px}
+.brand:hover{background:var(--panel-2)}
+.brand input{accent-color:var(--accent)}
+.brand .c{margin-left:auto;font-family:var(--font-mono);font-size:10.5px;color:var(--muted)}
+.bh{position:sticky;top:0;background:var(--panel);padding:12px 2px 6px;font-family:var(--font-display);font-size:15px;letter-spacing:.03em;border-bottom:1px solid var(--line);z-index:1;display:flex;justify-content:space-between;align-items:baseline}
+.bh small{font-family:var(--font-mono);font-size:10.5px;color:var(--muted);letter-spacing:0}
+.crow{display:grid;grid-template-columns:22px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:7px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.crow:hover{background:var(--panel-2)}
+.crow input{accent-color:var(--accent);width:16px;height:16px}
+.crow .nm{font-weight:500}
+.crow .ty{font-size:11px;color:var(--muted)}
+.crow .w{font-family:var(--font-mono);font-size:11px;color:var(--muted);text-align:right;min-width:56px}
+.tag{font-size:10.5px;padding:2px 7px;border-radius:999px;background:var(--panel-2);color:var(--muted);white-space:nowrap;font-weight:500}
+.tag.cam{background:var(--cam-soft);color:var(--cam)}
+.tag.light{background:var(--accent-soft);color:var(--accent-ink)}
+
+/* kit list */
+table.kit{width:100%;border-collapse:collapse;font-size:12.5px}
+table.kit th{text-align:left;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line-2);font-stretch:85%}
+table.kit td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.kit td.q{font-family:var(--font-mono);text-align:right;font-variant-numeric:tabular-nums;width:56px}
+table.kit tr.kgrp td{font-weight:700;background:var(--panel-2);font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-stretch:85%}
+.short{color:var(--danger);font-weight:600}
+.stat{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px}
+.stat div{font-size:11px;color:var(--muted)} .stat b{display:block;font-size:18px;color:var(--ink);font-family:var(--font-mono);font-weight:500}
+
+.lib-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:var(--canvas)}
+.lib-row.cur{border-color:var(--accent)}
+.lib-row .nm{font-weight:600}
+.lib-row .sb{font-size:11.5px;color:var(--muted);font-family:var(--font-mono)}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;background:var(--canvas)}
+.opt input{accent-color:var(--accent);margin-top:2px}
+.opt b{display:block;font-size:13px} .opt span{font-size:11.5px;color:var(--muted)}
+.opt:has(input:checked){border-color:var(--accent)}
+.preview-img{max-width:100%;border:1px solid var(--line);border-radius:6px;background:#fff}
+textarea.out{width:100%;min-height:240px;font-family:var(--font-mono);font-size:11.5px;border:1px solid var(--line);border-radius:6px;padding:8px;background:var(--canvas)}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:9px 14px;border-radius:8px;font-size:12.5px;z-index:80;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+.ghost-drag{position:fixed;z-index:90;pointer-events:none;width:56px;height:56px;margin:-28px 0 0 -28px;background:var(--panel);border:1px solid var(--accent);border-radius:10px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center}
+.ghost-drag svg{width:46px;height:46px}
+.drop-ok #planWrap{outline:2px dashed var(--accent);outline-offset:-4px}
+
+@media (max-width:1560px){.toolbar .grp-l{display:none}}
+@media (max-width:980px){
+  .work{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));width:min(320px,calc(100% - 32px));z-index:40;box-shadow:var(--shadow);transform:translateX(-120%);transition:transform .2s ease}
+  #left{left:max(16px,env(safe-area-inset-left,0px))}
+  #right{right:max(16px,env(safe-area-inset-right,0px));transform:translateX(120%)}
+  .side.open{transform:none}
+  .mobile-only{display:inline-flex}
+  .toolbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .toolbar .grp{flex:none}
+  .mark{font-size:18px}
+  .save .sv-t{display:none}
+  .proj{flex:1 1 120px}
+  .cat{grid-template-columns:minmax(0,1fr)}
+  .cat-f{border-right:0;border-bottom:1px solid var(--line);max-height:140px}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+  .toolbar .grp-l{display:none}
+}
+@media (max-width:620px){.acts{width:100%}.acts .btn{flex:1;justify-content:center;padding:6px 6px}.acts .btn .lbl{display:none}.acts .btn.pri .lbl{display:inline}.mark{font-size:16px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ═════ Film Tool Hub kit mapping ═════ */
+:root:root:root{--bg:var(--fth-bg);--panel:var(--fth-surface);--panel-2:var(--fth-surface2);--ink:var(--fth-text);--muted:var(--fth-muted);--line:var(--fth-line);--line-2:var(--fth-line2);--accent:var(--fth-accent);--accent-ink:var(--fth-accent-ink);--accent-soft:var(--fth-accent-soft);--danger:var(--fth-bad);--ok:var(--fth-good);--shadow:var(--fth-shadow);--font-display:var(--fth-display);--font-ui:var(--fth-display);--font-mono:var(--fth-mono);}
+.btn{height:32px;padding:0 12px;border-radius:9px;font:600 13px/1 var(--fth-display);letter-spacing:0;border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text)}
+.btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.btn.pri{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.btn.pri:hover{filter:brightness(1.08);background:var(--fth-accent)}
+header.fth-head{height:auto;box-shadow:none;flex-wrap:wrap}
+
+.top.fth-head{padding:10px 20px;gap:10px 18px}
+.top .proj{flex:1;min-width:180px;max-width:420px}
+.top .proj input{font:700 16px var(--fth-display)}
+</style>
+
+<div id="app">
+  <header class="top fth-head">
+    <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>03 · Visual Planning</span><h1 class="fth-title">Lighting Plan Studio</h1></div>
+    <div class="proj">
+      <input id="projName" aria-label="Project name" spellcheck="false">
+      <span class="save" id="saveState"></span>
+    </div>
+    <div class="acts">
+      <button class="btn" id="bLib" title="Open, create or import projects"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4.5h4l1.5 1.5H14v7H2z"/></svg><span class="lbl">Projects</span></button>
+      <button class="btn" id="bInfo" title="Shoot name, date, crew"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="2" width="11" height="12" rx="1.5"/><path d="M5 5.5h6M5 8h6M5 10.5h4"/></svg><span class="lbl">Shoot info</span></button>
+      <button class="btn" id="bKit" title="Auto-generated kit list"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 4h8M5 8h8M5 12h8"/><circle cx="2.5" cy="4" r=".8" fill="currentColor"/><circle cx="2.5" cy="8" r=".8" fill="currentColor"/><circle cx="2.5" cy="12" r=".8" fill="currentColor"/></svg><span class="lbl">Kit list</span></button>
+      <button class="btn pri" id="bExport"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 13.5h11"/></svg><span class="lbl">Save &amp; export</span></button>
+    </div>
+  </header>
+
+  <nav class="toolbar" id="toolbar" aria-label="Plan tools"></nav>
+
+  <main class="work">
+    <aside class="side" id="left" aria-label="Kit and symbols">
+      <div class="tabs" role="tablist" id="leftTabs"></div>
+      <div class="scroll" id="leftBody"></div>
+    </aside>
+    <section class="stage" id="stage">
+      <div id="planWrap">
+        <svg id="plan" xmlns="http://www.w3.org/2000/svg"><g id="world"></g></svg>
+        <div class="titleblock" id="titleBlock" hidden></div>
+        <div class="canvas-hint" id="canvasHint" hidden></div>
+      </div>
+      <div class="setups" id="setups"></div>
+    </section>
+    <aside class="side" id="right" aria-label="Inspector and layers">
+      <div class="tabs" role="tablist" id="rightTabs"></div>
+      <div class="scroll" id="rightBody"></div>
+    </aside>
+  </main>
+</div>
+<div id="modalRoot"></div>
+<datalist id="lensList"></datalist><datalist id="stopList"></datalist><datalist id="kList"></datalist><datalist id="ratioList"></datalist>
+
+<script>
+'use strict';
+/* ============ utilities ============ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-4);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rad=d=>d*Math.PI/180, deg=r=>r*180/Math.PI;
+const slug=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const fmtM=cm=>(cm/100).toFixed(2)+' m';
+const num=(v,d=0)=>{const n=parseFloat(v);return isFinite(n)?n:d};
+const LS={get(k){try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+function toast(msg,ms=2600){document.querySelectorAll('.toast').forEach(x=>x.remove());const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),ms)}
+
+/* ============ symbol type tables ============ */
+const LTYPES={
+  cob:{w:30,h:45,label:'Point source / COB'}, fresnel:{w:40,h:40,label:'Fresnel'}, openface:{w:36,h:32,label:'Open face'},
+  panel:{w:60,h:12,label:'Soft panel'}, tube:{w:120,h:6,label:'LED tube'}, mat:{w:60,h:6,label:'Flexible mat'},
+  spot:{w:24,h:55,label:'Spot / ellipsoidal'}, par:{w:30,h:30,label:'PAR'}, bulb:{w:14,h:14,label:'Bulb'},
+  pocket:{w:14,h:9,label:'Pocket / on-camera'}, hmi:{w:55,h:55,label:'HMI'}, practical:{w:40,h:40,label:'Practical lamp'},
+  balloon:{w:150,h:150,label:'Balloon light'}, chinaball:{w:60,h:60,label:'China ball'}, sun:{w:60,h:60,label:'Sun / daylight direction'}
+};
+const MTYPES={
+  softbox:{d:90,label:'Softbox'}, strip:{d:120,label:'Strip box'}, octa:{d:120,label:'Octa'}, dome:{d:90,label:'Light dome'},
+  parabolic:{d:120,label:'Deep parabolic'}, lantern:{d:65,label:'Lantern'}, umbrella:{d:105,label:'Umbrella'},
+  fresnel:{d:25,label:'Fresnel attachment'}, projection:{d:30,label:'Projection / gobo'}, reflector:{d:35,label:'Reflector'},
+  grid:{d:0,label:'Grid / egg crate'}, barndoors:{d:20,label:'Barndoors'}, snoot:{d:12,label:'Snoot'}, spacelight:{d:55,label:'Space light'}
+};
+
+/* ============ catalogue ============
+   L|brand|name|type|colour|watts|width(cm)   M|brand|name|type|size(cm)   C|brand|name|class|sensor width(mm) */
+const CAT_RAW=`
+L|Aputure|STORM CS32|cob|RGB (BLAIR-CG)||
+L|Aputure|Electro Storm CS15|cob|RGB|1500|
+L|Aputure|Electro Storm XT26|cob|Bi-colour|2600|
+L|Aputure|STORM XT52|cob|Tunable white|5200|
+L|Aputure|STORM 1200x|cob|Tunable white|1200|
+L|Aputure|STORM 1000c|cob|RGB|1000|
+L|Aputure|STORM 700x|cob|Tunable white|700|
+L|Aputure|STORM 80c|cob|RGB|80|
+L|Aputure|LS 1200d Pro|cob|Daylight|1200|
+L|Aputure|LS 600d Pro|cob|Daylight|600|
+L|Aputure|LS 600x Pro|cob|Bi-colour|600|
+L|Aputure|LS 600c Pro II|cob|RGB|600|
+L|Aputure|LS 600c Pro|cob|RGB|600|
+L|Aputure|LS 300x|cob|Bi-colour|300|
+L|Aputure|LS 300d II|cob|Daylight|300|
+L|Aputure|LS 60x|cob|Bi-colour|60|
+L|Aputure|NOVA II 2x1|panel|RGB||60
+L|Aputure|NOVA II 1x1|panel|RGB||30
+L|Aputure|NOVA 9° 2x1|panel|Tunable white||60
+L|Aputure|NOVA P600c|panel|RGB|600|60
+L|Aputure|NOVA P300c|panel|RGB|300|45
+L|Aputure|INFINIBAR PB12|tube|RGB|100|120
+L|Aputure|INFINIBAR PB6|tube|RGB|50|60
+L|Aputure|INFINIBAR PB3|tube|RGB|25|30
+L|Aputure|INFINIMAT 8x8|mat|Bi-colour||240
+L|Aputure|INFINIMAT 4x4|mat|Bi-colour||120
+L|Aputure|INFINIMAT 2x4|mat|Bi-colour||120
+L|Aputure|INFINIMAT 1x4|mat|Bi-colour||120
+L|Aputure|MT Pro|tube|RGB||30
+L|Aputure|MC Pro|pocket|RGB||
+L|Aputure|MC|pocket|RGB||
+L|Aputure|amaran 300c|cob|RGB|300|
+L|Aputure|amaran Ray 120c|cob|RGB|120|
+L|Aputure|amaran Ray 60c|cob|RGB|60|
+L|Aputure|amaran 150c|cob|RGB|150|
+L|Aputure|amaran 200x S|cob|Bi-colour|200|
+L|Aputure|amaran 200d S|cob|Daylight|200|
+L|Aputure|amaran 100x S|cob|Bi-colour|100|
+L|Aputure|amaran 100d S|cob|Daylight|100|
+L|Aputure|amaran COB 60x S|cob|Bi-colour|60|
+L|Aputure|amaran COB 60d S|cob|Daylight|60|
+L|Aputure|amaran Ace 25c|cob|RGB|25|
+L|Aputure|amaran P60c|panel|RGB|60|30
+L|Aputure|amaran P60x|panel|Bi-colour|60|30
+L|Aputure|amaran Pano 120c|panel|RGB|120|50
+L|Aputure|amaran Pano 60c|panel|RGB|60|40
+L|Aputure|amaran F22c|mat|RGB|200|60
+L|Aputure|amaran F21c|mat|RGB|100|60
+L|Aputure|amaran F22x|mat|Bi-colour|200|60
+L|Aputure|amaran F21x|mat|Bi-colour|100|60
+L|Aputure|amaran PT4c|tube|RGB||120
+L|Aputure|amaran PT2c|tube|RGB||60
+L|Aputure|amaran PT1c|tube|RGB||30
+L|Nanlite|Forza 720|cob|Daylight|720|
+L|Nanlite|Forza 720B|cob|Bi-colour|720|
+L|Nanlite|Forza 500 II|cob|Daylight|500|
+L|Nanlite|Forza 500B II|cob|Bi-colour|500|
+L|Nanlite|Forza 300 II|cob|Daylight|300|
+L|Nanlite|Forza 300B II|cob|Bi-colour|300|
+L|Nanlite|Forza 150|cob|Daylight|150|
+L|Nanlite|Forza 150B|cob|Bi-colour|150|
+L|Nanlite|Forza 60 II|cob|Daylight|60|
+L|Nanlite|Forza 60B II|cob|Bi-colour|60|
+L|Nanlite|FC-720C|cob|RGB|750|
+L|Nanlite|FC-720B|cob|Bi-colour|750|
+L|Nanlite|FC-500C|cob|RGB|500|
+L|Nanlite|FC-500B|cob|Bi-colour|500|
+L|Nanlite|FC-300C|cob|RGB|300|
+L|Nanlite|FC-300B|cob|Bi-colour|300|
+L|Nanlite|FC-120C|cob|RGB|120|
+L|Nanlite|FC-120B|cob|Bi-colour|120|
+L|Nanlite|FC-60B|cob|Bi-colour|60|
+L|Nanlite|FS-300B|cob|Bi-colour|300|
+L|Nanlite|FS-200B|cob|Bi-colour|200|
+L|Nanlite|FS-150B|cob|Bi-colour|150|
+L|Nanlite|FS-300|cob|Daylight|300|
+L|Nanlite|FS-200|cob|Daylight|200|
+L|Nanlite|FS-150|cob|Daylight|150|
+L|Nanlite|PavoTube II 30C|tube|RGB||120
+L|Nanlite|PavoTube II 15C|tube|RGB||60
+L|Nanlite|PavoTube II 6C|tube|RGB||25
+L|Nanlite|PavoTube II 30X|tube|RGB pixel||120
+L|Nanlite|PavoTube II 15X|tube|RGB pixel||60
+L|Nanlite|PavoTube II 30XR|tube|RGB pixel||120
+L|Nanlite|PavoTube II 15XR|tube|RGB pixel||60
+L|Nanlite|PavoTube II 6XR|tube|RGB pixel||25
+L|Nanlite|PavoTube T8-7X|tube|RGB pixel||60
+L|Nanlite|PavoBulb 10C|bulb|RGB|10|
+L|Nanlite|PavoSlim 360C|panel|RGB|370|120
+L|Nanlite|PavoSlim 240C|panel|RGB|240|90
+L|Nanlite|PavoSlim 240B|panel|Bi-colour|240|90
+L|Nanlite|PavoSlim 120C|panel|RGB|120|60
+L|Nanlite|PavoSlim 120B|panel|Bi-colour|120|60
+L|Nanlite|PavoSlim 60C|panel|RGB|60|30
+L|Nanlite|PavoSlim 60B|panel|Bi-colour|60|30
+L|Nanlite|MixPanel 150|panel|RGB|150|55
+L|Nanlite|MixPanel 60|panel|RGB|60|35
+L|Nanlite|Nanlux Evoke 5000B|cob|Bi-colour|5000|
+L|Nanlite|Nanlux Evoke 2400B|cob|Bi-colour|2400|
+L|Nanlite|Nanlux Evoke 1200B|cob|Bi-colour|1200|
+L|Nanlite|Nanlux Evoke 1200|cob|Daylight|1200|
+L|Nanlite|Nanlux Evoke 900C|cob|RGB|900|
+L|Nanlite|Nanlux Evoke 600C|cob|RGB|600|
+L|Nanlite|Nanlux Dyno 1200C|panel|RGB|1200|120
+L|Nanlite|Nanlux Dyno 650C|panel|RGB|650|90
+L|Nanlite|Nanlux Matrix 2500C|panel|RGB|2500|120
+L|Nanlite|Nanlux Matrix 2500B|panel|Bi-colour|2500|120
+L|Nanlite|Nanlux TK-450|panel|Daylight|450|90
+L|Nanlite|Nanlux TK-280|panel|Daylight|280|60
+L|Godox|Knowled MG2400Bi|cob|Bi-colour|2400|
+L|Godox|Knowled MG1200Bi|cob|Bi-colour|1200|
+L|Godox|Knowled M600D|cob|Daylight|600|
+L|Godox|Knowled M600Bi|cob|Bi-colour|600|
+L|Godox|Knowled F600Bi|mat|Bi-colour|600|120
+L|Godox|Knowled P600Bi|panel|Bi-colour|600|60
+L|Godox|VL300 II|cob|Daylight|300|
+L|Godox|VL150 II|cob|Daylight|150|
+L|Godox|VL150|cob|Daylight|150|
+L|Godox|SL300 III|cob|Daylight|300|
+L|Godox|SL150 III|cob|Daylight|150|
+L|Godox|SZ300R|cob|RGB|300|
+L|Godox|UL150 II|cob|Daylight|150|
+L|Godox|UL60|cob|Daylight|60|
+L|Godox|ML100Bi|cob|Bi-colour|100|
+L|Godox|ML60 II Bi|cob|Bi-colour|60|
+L|Godox|TL60|tube|RGB||60
+L|Godox|LC500R|tube|RGB||70
+L|ARRI|SkyPanel S360-C|panel|RGB|1500|190
+L|ARRI|SkyPanel S120-C|panel|RGB|460|120
+L|ARRI|SkyPanel S60-C|panel|RGB|450|65
+L|ARRI|SkyPanel S30-C|panel|RGB|200|35
+L|ARRI|SkyPanel X23|panel|RGB||70
+L|ARRI|SkyPanel X22|panel|RGB||70
+L|ARRI|SkyPanel X21|panel|RGB||70
+L|ARRI|Orbiter|cob|RGB|500|
+L|ARRI|L10-C|fresnel|RGB|510|
+L|ARRI|L7-C|fresnel|RGB|160|
+L|ARRI|L5-C|fresnel|RGB|115|
+L|ARRI|M90|hmi|HMI daylight|9000|
+L|ARRI|M40|hmi|HMI daylight|4000|
+L|ARRI|M18|hmi|HMI daylight|1800|
+L|ARRI|True Blue T2 (2K)|fresnel|Tungsten|2000|
+L|ARRI|650 Plus|fresnel|Tungsten|650|
+L|ARRI|300 Plus|fresnel|Tungsten|300|
+L|ARRI|150 Fresnel|fresnel|Tungsten|150|
+L|Litepanels|Gemini 2x1 Soft|panel|RGB|350|60
+L|Litepanels|Gemini 2x1 Hard|panel|RGB|350|60
+L|Litepanels|Gemini 1x1 Soft|panel|RGB|200|30
+L|Litepanels|Astra IP 2x1|panel|Bi-colour|200|60
+L|Litepanels|Astra IP 1x1|panel|Bi-colour|100|30
+L|Litepanels|Astra 6X|panel|Bi-colour|100|30
+L|Kino Flo|FreeStyle T44 LED|panel|RGB||120
+L|Kino Flo|FreeStyle 31 LED|panel|RGB||100
+L|Kino Flo|FreeStyle 21 LED|panel|RGB||70
+L|Kino Flo|Celeb 850 LED|panel|RGB||120
+L|Kino Flo|Celeb 450Q LED|panel|RGB||80
+L|Kino Flo|Celeb 250 LED|panel|RGB||60
+L|Kino Flo|Diva-Lite LED 31|panel|RGB||100
+L|Kino Flo|Diva-Lite LED 21|panel|RGB||70
+L|Kino Flo|MIMIK 120|panel|RGB||120
+L|Kino Flo|Select 30 LED|panel|RGB||75
+L|Astera|Titan Tube|tube|RGB pixel||104
+L|Astera|Hyperion Tube|tube|RGB pixel||101
+L|Astera|Helios Tube|tube|RGB pixel||52
+L|Astera|AX1 PixelTube|tube|RGB pixel||104
+L|Astera|QuikBeam|fresnel|RGB||
+L|Astera|AX9 PowerPAR|par|RGB||
+L|Astera|PixelBrick|par|RGB||
+L|Astera|NYX Bulb|bulb|RGB||
+L|Creamsource|Vortex24|panel|RGB||130
+L|Creamsource|Vortex8|panel|RGB|650|60
+L|Creamsource|Vortex4|panel|RGB|325|30
+L|Creamsource|SpaceX|panel|RGB||120
+L|Creamsource|Micro Colour|par|RGB||
+L|Quasar Science|Rainbow 2 8ft|tube|RGB pixel||240
+L|Quasar Science|Rainbow 2 4ft|tube|RGB pixel||120
+L|Quasar Science|Rainbow 2 2ft|tube|RGB pixel||60
+L|Quasar Science|Double Rainbow 4ft|tube|RGB pixel||120
+L|Quasar Science|Crossfade X 4ft|tube|Bi-colour||120
+L|Prolycht|Orion 675 FS|cob|RGB|675|
+L|Prolycht|Orion 300 FS|cob|RGB|300|
+L|Rotolight|Titan X2|panel|RGB||60
+L|Rotolight|AEOS 2 Pro|panel|RGB|100|50
+L|Rotolight|NEO 3 Pro|pocket|RGB||
+L|DMG Lumière|MAXI MIX|panel|RGB||120
+L|DMG Lumière|SL1 MIX|panel|RGB|400|60
+L|DMG Lumière|MINI MIX|panel|RGB||30
+L|K5600|Alpha 4K|hmi|HMI daylight|4000|
+L|K5600|Joker 1600|hmi|HMI daylight|1600|
+L|K5600|Joker 800|hmi|HMI daylight|800|
+L|Zhiyun|MOLUS G300|cob|Bi-colour|300|
+L|Zhiyun|MOLUS X100|cob|Bi-colour|100|
+L|Dedolight|DLH4|spot|Tungsten|150|
+M|Aputure|Light Dome III|dome|90
+M|Aputure|Light Dome Mini III|dome|55
+M|Aputure|Light Dome 150|dome|150
+M|Aputure|Lantern 90|lantern|90
+M|Aputure|Lantern 26|lantern|66
+M|Aputure|Light Box 30x120|strip|120
+M|Aputure|Light Box 60x90|softbox|90
+M|Aputure|Light Box 120x120|softbox|120
+M|Aputure|Space Light|spacelight|55
+M|Aputure|F10 Fresnel|fresnel|27
+M|Aputure|F14 Fresnel|fresnel|37
+M|Aputure|CF12 FresnelEZ|fresnel|32
+M|Aputure|CF10 Fresnel|fresnel|27
+M|Aputure|Spotlight Max|projection|35
+M|Aputure|Spotlight Mount|projection|30
+M|Aputure|Spotlight Mini Zoom|projection|15
+M|Aputure|Hyper Reflector|reflector|30
+M|Aputure|Bowens Barndoors|barndoors|20
+M|Aputure|Light Dome Grid|grid|0
+M|Aputure|amaran Light Dome SE|dome|85
+M|Aputure|amaran Spotlight SE|projection|22
+M|Nanlite|Para 150|parabolic|150
+M|Nanlite|Para 120|parabolic|120
+M|Nanlite|Para 90|parabolic|90
+M|Nanlite|Lantern LT-120|lantern|120
+M|Nanlite|Lantern LT-80|lantern|80
+M|Nanlite|Forza Fresnel FL-20G|fresnel|22
+M|Nanlite|Forza Fresnel FL-11|fresnel|13
+M|Nanlite|Projection Mount PJ-FMM-36|projection|28
+M|Nanlite|Bowens Projection Attachment|projection|28
+M|Nanlite|Reflector RF-FMM-45|reflector|30
+M|Nanlite|Miro reflector|reflector|40
+M|Nanlite|Barndoor BD-FMM|barndoors|20
+M|Godox|Parabolic P120L|parabolic|120
+M|Godox|Parabolic P90L|parabolic|90
+M|Godox|Lantern CS-85D|lantern|85
+M|Godox|Lantern CS-65D|lantern|65
+M|ARRI|Orbiter Dome M|dome|90
+M|ARRI|Orbiter Projection Optics|projection|30
+M|ARRI|Orbiter Open Face|reflector|30
+M|ARRI|Orbiter Fresnel Optic|fresnel|30
+M|DoPchoice|Snapbag Octa 5'|octa|150
+M|DoPchoice|Snapbox 3'|softbox|90
+M|Chimera|Pancake Lantern 30"|lantern|76
+M|Chimera|Video Pro Plus Medium|softbox|90
+M|Chimera|Octaplus 5'|octa|150
+M|Light Tools|Soft Egg Crate 40°|grid|0
+C|Sony|VENICE 2 8K|Cinema|36.2
+C|Sony|BURANO|Cinema|35.9
+C|Sony|FX9|Cinema|35.7
+C|Sony|FX6|Cinema|35.7
+C|Sony|FX3|Cinema Line|35.6
+C|Sony|FX2|Cinema Line|35.7
+C|Sony|FX30|Cinema Line|23.3
+C|Sony|a7S III|Mirrorless|35.6
+C|Sony|a7 IV|Mirrorless|35.9
+C|Sony|a1 II|Mirrorless|35.9
+C|Sony|ZV-E1|Mirrorless|35.6
+C|Canon|EOS C500 Mark II|Cinema|38.1
+C|Canon|EOS C400|Cinema|36
+C|Canon|EOS C300 Mark III|Cinema|26.2
+C|Canon|EOS C300|Cinema|24.6
+C|Canon|EOS C80|Cinema|36
+C|Canon|EOS C70|Cinema|26.2
+C|Canon|EOS C50|Cinema|36
+C|Canon|EOS R5 C|Mirrorless|36
+C|Canon|EOS R5 Mark II|Mirrorless|36
+C|Blackmagic|URSA Cine 17K 65|Cinema|50.8
+C|Blackmagic|URSA Cine 12K LF|Cinema|35.6
+C|Blackmagic|URSA Mini Pro 12K OLPF|Cinema|27.03
+C|Blackmagic|URSA Mini Pro 4.6K G2|Cinema|25.34
+C|Blackmagic|PYXIS 6K|Cinema|36
+C|Blackmagic|Cinema Camera 6K|Cinema|36
+C|Blackmagic|Pocket Cinema Camera 6K Pro|Cinema|23.1
+C|Blackmagic|Pocket Cinema Camera 4K|Cinema|18.96
+C|RED|V-RAPTOR [X] 8K VV|Cinema|40.96
+C|RED|V-RAPTOR 8K S35|Cinema|26.21
+C|RED|KOMODO-X 6K|Cinema|27.03
+C|RED|KOMODO 6K|Cinema|27.03
+C|ARRI|ALEXA 265|Cinema|54.12
+C|ARRI|ALEXA 35|Cinema|27.99
+C|ARRI|ALEXA Mini LF|Cinema|36.7
+C|ARRI|ALEXA LF|Cinema|36.7
+C|ARRI|AMIRA|Cinema|28.25
+C|Panasonic|LUMIX S1H|Mirrorless|35.6
+C|Panasonic|LUMIX S1 II|Mirrorless|35.6
+C|Panasonic|LUMIX S5 IIX|Mirrorless|35.6
+C|Panasonic|LUMIX GH7|Mirrorless|17.3
+C|Panasonic|LUMIX BGH1|Box|17.3
+C|Panasonic|AU-EVA1|Cinema|24.6
+C|Panasonic|VariCam LT|Cinema|26.69
+C|Fujifilm|GFX ETERNA 55|Cinema|43.8
+C|Fujifilm|GFX100 II|Mirrorless|43.8
+C|Fujifilm|X-H2S|Mirrorless|23.5
+C|Fujifilm|X-H2|Mirrorless|23.5
+C|Nikon|ZR|Cinema|35.9
+C|Nikon|Z9|Mirrorless|35.9
+C|Nikon|Z8|Mirrorless|35.9
+C|Nikon|Z6III|Mirrorless|35.9
+C|DJI|Ronin 4D 8K|Cinema|36
+C|DJI|Ronin 4D 6K|Cinema|36
+C|DJI|Osmo Pocket 3|Compact|13.2
+C|Z CAM|E2-F6|Cinema|35.8
+C|GoPro|HERO13 Black|Action|6.17
+`;
+const BRAND_ORDER=['Aputure','Nanlite','Godox','ARRI','Litepanels','Kino Flo','Astera','Creamsource','Quasar Science','Prolycht','Rotolight','DMG Lumière','K5600','Zhiyun','Dedolight','DoPchoice','Chimera','Light Tools','Sony','Canon','Blackmagic','RED','Panasonic','Fujifilm','Nikon','DJI','Z CAM','GoPro'];
+const ENTRIES={};
+const CATALOG=[];
+function regEntry(e){ENTRIES[e.id]=e;return e}
+function lightDims(type,watts,w,name){
+  const W=num(watts);
+  switch(type){
+    case 'cob':{if(/CS32|XT52|XT26|Evoke 5000|Evoke 2400|MG2400/.test(name||''))return [38,62];if(!W)return [22,36];if(W<=80)return [11,18];if(W<=150)return [13,22];if(W<=350)return [17,28];if(W<=750)return [22,38];if(W<=1500)return [28,46];return [38,62]}
+    case 'fresnel':{if(!W)return [18,22];if(W<=200)return [20,24];if(W<=650)return [30,36];return [38,46]}
+    case 'hmi':{if(W<=1800)return [34,50];if(W<=4000)return [45,65];return [60,80]}
+    case 'openface':return [26,22];
+    case 'panel':{const ww=num(w)||60;return [ww,ww>=100?10:8]}
+    case 'tube':return [num(w)||120,4];
+    case 'mat':return [num(w)||60,3];
+    case 'spot':return [12,26];case 'par':return [22,20];case 'bulb':return [7,7];case 'pocket':return [9,3];
+    case 'practical':return [35,35];case 'chinaball':return [60,60];case 'balloon':return [150,150];case 'sun':return [60,60];
+  }
+  const d=LTYPES[type]||LTYPES.cob;return [num(w)||d.w,d.h];
+}
+function mkLight(id,brand,name,type,sub,watts,w){const [lw,lh]=lightDims(type,watts,w,name);return {id,cat:'light',brand,name,type,sub:sub||'',watts:num(watts),w:lw,h:lh}}
+function mkMod(id,brand,name,type,size){const d=MTYPES[type]||MTYPES.softbox;return {id,cat:'modifier',brand,name,type,size:num(size,d.d)}}
+function camDims(cls,name){ // [body width, body depth, lens dia, lens length] cm, top-down
+  if(/VENICE|ALEXA 35|ALEXA LF|ALEXA 265|AMIRA|URSA|V-RAPTOR \[X\]|VariCam|ETERNA/.test(name||''))return [18,30,11,18];
+  if(cls==='Cinema'){if(/KOMODO|PYXIS|Ronin|E2|Mini LF|BURANO|C70|C80|C50|Cinema Camera 6K|Pocket|BGH1|EVA1|ZR|V-RAPTOR/.test(name||''))return [13,15,9,13];return [15,22,10,15]}
+  if(cls==='Action')return [7,4,3,1];
+  if(cls==='Compact')return [4,4,3,2];
+  return [13,8,8,10];
+}
+function mkCam(id,brand,name,cls,sensor){const [bw,bd,lw,ll]=camDims(cls||'',name);return {id,cat:'camera',brand,name,type:'camera',sub:cls||'',sensor:num(sensor,36),cw:bw,cd:bd,lw,ll,w:bw,h:bd+ll}}
+CAT_RAW.trim().split('\n').forEach(line=>{
+  const p=line.split('|').map(s=>s.trim());const brand=p[1],name=p[2];const id='c:'+slug(brand+' '+name);
+  let e;
+  if(p[0]==='L')e=mkLight(id,brand,name,p[3],p[4],p[5],p[6]);
+  else if(p[0]==='M')e=mkMod(id,brand,name,p[3],p[4]);
+  else if(p[0]==='C')e=mkCam(id,brand,name,p[3],p[4]);
+  if(e){CATALOG.push(regEntry(e))}
+});
+
+/* generic symbols */
+const GENERIC=[
+  ['Lights',[['cob','Point source / COB'],['fresnel','Fresnel'],['openface','Open face'],['panel','Soft panel',60],['tube','LED tube (4ft)',120],['mat','Flexible mat',60],['spot','Spot / ellipsoidal'],['par','PAR'],['hmi','HMI'],['practical','Practical lamp'],['bulb','Bare bulb'],['chinaball','China ball'],['balloon','Balloon light'],['pocket','On-camera light'],['sun','Sun / daylight direction']]],
+  ['Modifiers',[['softbox','Softbox'],['strip','Strip box'],['octa','Octa'],['dome','Light dome'],['parabolic','Deep parabolic'],['lantern','Lantern'],['spacelight','Space light'],['umbrella','Umbrella'],['fresnel','Fresnel attachment'],['projection','Projection / gobo'],['reflector','Reflector'],['grid','Grid / egg crate'],['barndoors','Barndoors'],['snoot','Snoot']]],
+  ['Cameras',[['cam-ff','Camera (full frame)',36],['cam-s35','Camera (Super 35)',24.9],['cam-mft','Camera (MFT)',17.3]]]
+];
+GENERIC[0][1].forEach(([t,n,w])=>regEntry({...mkLight('g:'+t,'Generic',n,t,'',t==='cob'||t==='fresnel'?300:t==='hmi'?1800:0,w),generic:true}));
+GENERIC[1][1].forEach(([t,n])=>regEntry({...mkMod('gm:'+t,'Generic',n,t),generic:true}));
+GENERIC[2][1].forEach(([t,n,s])=>regEntry({...mkCam('g:'+t,'Generic',n,'Cinema',s),generic:true}));
+
+/* set elements: [type, name, w, h, resizable] */
+const SET_DEF=[
+  ['People',[['talent','Talent',50,30],['talent2','Talent (seated)',50,55]]],
+  ['Furniture',[['chair','Chair',50,50],['armchair','Armchair',85,85],['sofa','Sofa',200,90],['table','Table',120,80],['roundtable','Round table',90,90],['desk','Desk',140,70],['bed','Bed',150,200],['counter','Counter / bench',240,60],['shelf','Shelving',100,35],['plant','Plant',50,50],['rug','Rug',200,150],['tv','TV / monitor (on set)',120,10],['mirror','Mirror',100,6]]],
+  ['Architecture',[['room','Room (drag to draw)',600,500],['wall','Wall',300,15],['window','Window',150,15],['door','Door',90,90],['pillar','Pillar',40,40],['stairs','Stairs',100,200],['outlet','Power outlet',20,10]]],
+  ['Backdrops',[['backdrop','Paper backdrop',270,90],['greenscreen','Green screen',300,10],['cyc','Cyc / infinity curve',400,300]]],
+  ['Notes',[['mark','Floor mark (X)',30,30],['arrow','Arrow',120,24],['text','Text note',0,0]]]
+];
+SET_DEF.forEach(([g,list])=>list.forEach(([t,n,w,h])=>regEntry({id:'s:'+t,cat:'set',brand:'Set',name:n,type:t,w,h,group:g})));
+const GRIP_DEF=[
+  ['Stands & support',[['cstand','C-stand',70,70],['combo','Combo / steel stand',100,100],['roller','Roller stand',110,110],['baby','Baby stand',60,60],['menace','Menace arm / boom',250,80],['sandbag','Sandbag',40,20],['applebox','Apple box',50,30],['ladder','Ladder',50,120]]],
+  ['Shaping & bounce',[['flag','Flag 18x24',46,4],['flag2','Flag 24x36',61,4],['floppy','Floppy 4x4',120,5],['frame','Diffusion frame 4x4',120,5],['frame6','Frame 6x6',180,5],['butterfly8','Butterfly 8x8',240,5],['overhead','Overhead 12x12',360,360],['overhead20','Overhead 20x20',600,600],['bounce','Bounce board / poly',120,5],['negfill','Negative fill',120,5],['vflat','V-flat',122,70],['net','Net / single',120,5]]],
+  ['Camera support',[['tripod','Tripod',70,70],['slider','Slider',100,14],['dolly','Dolly & track',400,60],['jib','Jib / crane',300,60],['gimbal','Gimbal',40,40],['steadicam','Steadicam',60,60]]],
+  ['Power & effects',[['distro','Distro box',40,30],['genny','Generator',120,70],['haze','Haze machine',50,30],['fan','Fan',60,60],['village','Video village',150,80]]]
+];
+GRIP_DEF.forEach(([g,list])=>list.forEach(([t,n,w,h])=>regEntry({id:'r:'+t,cat:'grip',brand:'Grip',name:n,type:t,w,h,group:g})));
+regEntry({id:'t:measure',cat:'tool',brand:'',name:'Measurement',type:'measure',w:0,h:0});
+
+const SUPPORTS=[['','None / not set'],['r:cstand','C-stand'],['r:combo','Combo / steel stand'],['r:roller','Roller stand'],['r:baby','Baby stand'],['r:menace','Menace arm / boom'],['overhead','Rigged overhead'],['clamp','Pipe / ceiling clamp'],['floor','On the floor'],['handheld','Handheld']];
+const CAM_SUPPORTS=[['','None / not set'],['r:tripod','Tripod'],['r:slider','Slider'],['r:dolly','Dolly & track'],['r:jib','Jib / crane'],['r:gimbal','Gimbal'],['r:steadicam','Steadicam'],['handheld','Handheld / shoulder']];
+const LENS_SETS={
+ 'DZOFilm Vespid Prime':{f:[12,16,21,25,35,40,50,75,90,100,125],t:'T2.1 (12/16/90 Macro T2.8)'},
+ 'DZOFilm Vespid Retro':{f:[16,21,25,35,40,50,75,90,100,125],t:'T2.1'},
+ 'DZOFilm Vespid Cyber':{f:[25,35,50,75,100,125],t:'T2.1'},
+ 'DZOFilm Arles Prime':{f:[14,18,21,25,35,50,75,100,135],t:'T1.4'},
+ 'DZOFilm Catta Ace zoom':{f:[18,35,70,135],t:'T2.9 (18–35, 35–80, 70–135)'},
+ 'DZOFilm Pictor zoom':{f:[12,25,50,70],t:'T2.8 (S35)'},
+ 'ARRI Signature Prime':{f:[12,15,18,21,25,29,35,40,47,58,75,95,125,150,200,280],t:'T1.8'},
+ 'ARRI Master Prime':{f:[12,14,16,18,21,25,27,32,35,40,50,65,75,100,135,150],t:'T1.3'},
+ 'ARRI Ultra Prime':{f:[8,10,12,14,16,20,24,28,32,40,50,65,85,100,135,180],t:'T1.9'},
+ 'Cooke S4/i':{f:[12,14,16,18,21,25,27,32,35,40,50,65,75,100,135,150],t:'T2'},
+ 'Cooke S7/i':{f:[16,18,21,25,27,32,40,50,65,75,100,135],t:'T2'},
+ 'Cooke Panchro/i Classic FF':{f:[18,21,25,32,40,50,65,75,100,135],t:'T2.2'},
+ 'Zeiss Supreme Prime':{f:[15,18,21,25,29,35,50,65,85,100,135,150,200],t:'T1.5'},
+ 'Zeiss Supreme Prime Radiance':{f:[18,21,25,29,35,50,65,85,100,135],t:'T1.5'},
+ 'Zeiss CP.3':{f:[15,18,21,25,28,35,50,85,100,135],t:'T2.1'},
+ 'Zeiss Nano Prime':{f:[18,24,35,50,75,100],t:'T1.5'},
+ 'Leitz Summilux-C':{f:[16,18,21,25,29,35,40,50,65,75,100,135],t:'T1.4'},
+ 'Leitz Summicron-C':{f:[15,18,21,25,29,35,40,50,75,100,135],t:'T2'},
+ 'Canon CN-E Prime':{f:[14,20,24,35,50,85,135],t:'T1.3–T3.1'},
+ 'Canon Sumire Prime':{f:[14,20,24,35,50,85,135],t:'T1.3–T3.1'},
+ 'Sigma Cine FF High Speed':{f:[14,20,24,28,35,40,50,65,85,105,135],t:'T1.5'},
+ 'Sigma Aizu Prime':{f:[18,24,28,35,40,50,65,75,85,105],t:'T1.3'},
+ 'Tokina Vista Prime':{f:[18,21,25,29,35,40,50,65,85,105,135],t:'T1.5'},
+ 'Sony CineAlta Prime':{f:[20,25,35,50,85,135],t:'T2'},
+ 'Samyang Xeen CF':{f:[16,24,35,50,85],t:'T1.5'},
+ 'Sirui Nightwalker':{f:[16,24,35,55,75],t:'T1.2 (S35)'},
+ 'Laowa Nanomorph (anamorphic)':{f:[27,35,50,65,80],t:'T2.4'},
+ 'Atlas Orion (anamorphic)':{f:[25,32,40,50,65,80,100],t:'T2'},
+ 'Angénieux Optimo Ultra 12x':{f:[24,36,290],t:'T2.8'},
+ 'Angénieux EZ zoom':{f:[15,30,45,135],t:'T2–T3'},
+ 'Fujinon Premista zoom':{f:[19,28,45,80,100,250],t:'T2.5–T2.9'},
+ 'Fujinon MK zoom':{f:[18,50,135],t:'T2.9 (S35)'},
+ 'Canon CN-E zoom':{f:[15,17,35,120],t:'T2.4–T2.95'}
+};
+const STOPS=['1','1.3','1.4','1.5','1.6','1.8','2','2.1','2.2','2.5','2.8','3.2','3.5','4','4.5','5','5.6','6.3','7.1','8','9','10','11','13','14','16','18','20','22'];
+const KELVINS=[2700,3200,3600,4300,5000,5600,6500];
+function fmtStop(v){v=Math.round(num(v)*3)/3;if(Math.abs(v)<.01)return 'At key';const sgn=v>0?'+':'−';const a=Math.abs(v);const w=Math.floor(a+1e-6),fr=Math.round((a-w)*3);return sgn+(w||'')+(fr===1?'⅓':fr===2?'⅔':'')+(a===1?' stop':' stops')}
+function fmtStopShort(v){return fmtStop(v).replace(' stops',' st').replace(' stop',' st')}
+const ROLES=['','Key','Fill','Back / rim','Hair','Kicker','Background','Practical','Ambient','Bounce','Negative fill','Effect'];
+
+function E(ref){return ENTRIES[ref]||(prefs&&prefs.custom||[]).find(c=>c.id===ref)||{id:ref,cat:'set',brand:'',name:'Unknown item',type:'mark',w:30,h:30}}
+function isResizable(e){return (e.cat==='set'||e.cat==='grip')&&!['text','outlet'].includes(e.type)}
+
+/* ============ state ============ */
+const defaultToggles={grid:true,snap:false,snapSize:50,labels:'num',details:false,fov:true,grip:true,title:true};
+let prefs={kit:{},custom:[],toggles:{...defaultToggles},lastProject:null};
+let P=null;
+const ui={tool:'select',sel:new Set(),view:{x:0,y:0,s:1},leftTab:'kit',rightTab:'inspect',kitSearch:'',editSetup:null,space:false,activeLayer:null};
+let hist=[],hIdx=-1;
+
+function S(){return P.setups.find(s=>s.id===P.current)||P.setups[0]}
+function defaultLayers(){return [{id:uid(),name:'Set',visible:true,locked:false,kind:'set'},{id:uid(),name:'Grip',visible:true,locked:false,kind:'grip'},{id:uid(),name:'Lights & cameras',visible:true,locked:false,kind:'main'},{id:uid(),name:'Notes',visible:true,locked:false,kind:'notes'}]}
+function defaultCam(){return {lens:'',stopType:'T',stop:'',kelvin:'',key:0,ratio:''}}
+function newSetup(name){return {id:uid(),name:name||'Setup A',desc:'',room:{on:false,w:600,d:500},cam:defaultCam(),photos:[],layers:defaultLayers(),items:[]}}
+function newProject(name){const s=newSetup('Setup A');return {id:uid(),name:name||'Untitled shoot',created:Date.now(),updated:Date.now(),info:{production:'',client:'',date:'',location:'',director:'',dop:'',gaffer:'',producer:'',notes:''},setups:[s],current:s.id}}
+function layerFor(Sx,e){
+  const k=e.cat==='set'?(['mark','arrow','text'].includes(e.type)?'notes':'set'):e.cat==='grip'?'grip':e.cat==='tool'?'notes':'main';
+  const L=Sx.layers.find(l=>l.kind===k&&!l.locked)||Sx.layers.find(l=>!l.locked)||Sx.layers[0];
+  return (ui.activeLayer&&Sx.layers.find(l=>l.id===ui.activeLayer&&!l.locked&&l.kind===k))?ui.activeLayer:L.id;
+}
+function makeItem(ref,x,y,extra){
+  const e=E(ref);const Sx=S();
+  const it={id:uid(),ref,x:Math.round(x),y:Math.round(y),rot:0,props:{},layer:layerFor(Sx,e)};
+  if(e.cat==='set'||e.cat==='grip'){it.w=e.w;it.h=e.h}
+  if(e.cat==='light'){it.props={role:'',power:100,cct:e.sub==='Tungsten'?3200:/HMI|Daylight/.test(e.sub)?5600:'',gel:'',height:'',support:'',sandbags:'',notes:''};it.mods=[]}
+  if(e.cat==='camera'){it.props={focal:35,sensor:e.sensor,crop:1,throw:450,height:'',support:'',notes:''}}
+  if(e.type==='talent'||e.type==='talent2')it.label='Talent';
+  if(e.type==='text')it.props={text:'Note',fs:24};
+  return Object.assign(it,extra||{});
+}
+
+/* ============ example project ============ */
+function sampleSetup(p){
+  const s=newSetup('Sample interview');s.sample=true;s.desc='Seated interview, A cam mid, B cam tight profile';s.cam={lens:'DZOFilm Vespid Prime',stopType:'T',stop:'2.8',kelvin:4300,key:0,ratio:''};s.room={on:true,w:700,d:550};
+  const prevP=P;P={...p,setups:[s],current:s.id};
+  const L=s.items;
+  const add=(ref,x,y,rot,extra)=>{const it=makeItem(ref,x,y,extra);it.rot=rot;L.push(it);return it};
+  add('s:wall',350,7,0,{w:700,h:15});
+  add('s:window',300,7,180,{w:160,h:15});
+  add('s:wall',693,275,90,{w:550,h:15});
+  add('s:backdrop',600,300,270,{w:260,h:80});
+  add('s:chair',395,265,270);
+  add('s:talent2',395,265,270,{label:'Contributor'});
+  add('s:plant',80,480,0);
+  add('s:table',470,360,0,{w:60,h:60});
+  const key=add('c:aputure-ls-600c-pro-ii',230,420,43);key.mods=['c:aputure-light-dome-iii','c:aputure-light-dome-grid'];Object.assign(key.props,{stops:0,role:'Key',power:55,cct:4300,height:'2.1',support:'r:cstand',sandbags:'2'});
+  const back=add('c:aputure-ls-300x',540,110,225);back.mods=['c:aputure-bowens-barndoors'];Object.assign(back.props,{stops:1,role:'Back / rim',power:35,cct:5000,height:'2.4',support:'r:combo',sandbags:'1'});
+  const bg=add('c:nanlite-pavotube-ii-30c',640,420,270);Object.assign(bg.props,{stops:-1.6666666666666667,role:'Background',power:40,gel:'Teal',height:'1.2',support:'r:cstand'});
+  const pr=add('g:practical',470,360,0);Object.assign(pr.props,{role:'Practical',cct:2700,power:60});
+  add('r:negfill',395,170,180,{w:120,h:5});
+  add('r:bounce',300,190,135,{w:100,h:5});
+  const a=add('c:red-komodo-6k',165,265,90,{label:'A cam'});Object.assign(a.props,{focal:50,height:'1.3',support:'r:tripod',throw:420,lens:'DZOFilm Vespid Prime'});
+  const b=add('c:sony-fx30',275,130,125,{label:'B cam'});Object.assign(b.props,{focal:75,height:'1.3',support:'r:tripod',throw:320,lens:'DZOFilm Vespid Prime'});
+  add('t:measure',230,420,0,{x2:395,y2:265});
+  const guide=[
+    '# What you can do here',
+    '',
+    '# Build',
+    'Drag kit, generic symbols, set pieces',
+    'and grip from the left panel.',
+    'Room tool (B): drag out the walls.',
+    'Drop a modifier onto a light to attach it.',
+    'Copy and paste between setups (Ctrl/Cmd+C, V).',
+    '',
+    '# Detail',
+    'Per light: role, power, CCT, gel, height,',
+    'stand, sandbags and stops vs key.',
+    'Setup panel: lens, stop, camera WB,',
+    'scene key, contrast ratio, location photos.',
+    'Camera wedges use sensor, lens and crop.',
+    '',
+    '# Share',
+    'Toggle labels, details, FOV and grip.',
+    'Kit list builds itself from the plan.',
+    'Export PDF, PNG, SVG, CSV or project file.',
+    'This sample is left out of exports;',
+    'delete it from the Setup panel.'
+  ];
+  const fs=26,tw=Math.max(...guide.map(l=>l.length))*fs*.56+8;
+  add('s:text',700+90+tw/2,300,0,{props:{text:guide.join('\n'),fs,align:'left'}});
+  P=prevP;return s;
+}
+function firstRunProject(){
+  const p=newProject('Untitled shoot');p.example=true;p.migratedSample=true;
+  p.setups.push(sampleSetup(p));p.current=p.setups[0].id;return p;
+}
+
+/* ============ palette ============ */
+const PAL_KEYS=['sym-ink','sym-fill','sym-mod','sym-modfill','sym-set','sym-setfill','sym-grip','sym-gripfill','sym-wedge','sym-glass','sym-sel','sym-green','accent','cam','canvas','grid','grid-major','room','muted','panel','ink'];
+let PAL={};
+function readPal(){const cs=getComputedStyle(document.documentElement);PAL={};PAL_KEYS.forEach(k=>PAL[k.replace('sym-','')]=cs.getPropertyValue('--'+k).trim())}
+const EXPORT_PAL={ink:'#1F242C',fill:'#FFFFFF',mod:'#7A5A2E',modfill:'rgba(194,110,22,.10)',set:'#5B6574',setfill:'#EDEFF2',grip:'#3E4551',gripfill:'#D8DCE2',wedge:'rgba(44,97,196,.09)',glass:'#9CC3E8',sel:'#2C61C4',green:'#5DBB63',accent:'#C26E16',cam:'#2C61C4',canvas:'#FFFFFF','grid':'#EEF0F3','grid-major':'#DCE0E6',room:'#38404B',muted:'#59616D',panel:'#FFFFFF'};
+
+/* ============ symbol drawing (local coords, cm, facing up) ============ */
+let SW=1; // stroke multiplier
+const st=(c,w=1.2,extra='')=>`stroke="${c}" stroke-width="${(w*SW).toFixed(2)}" vector-effect="non-scaling-stroke" ${extra}`;
+function cctColor(k){k=num(k);if(!k)return null;if(k<=3600)return '#F2A541';if(k<=4800)return '#F5DE9E';return '#A8C6FF'}
+function modGeom(type,D){
+  switch(type){
+    case 'softbox':return {dep:D*.55,front:D};case 'strip':return {dep:35,front:D};case 'octa':return {dep:D*.45,front:D};
+    case 'dome':return {dep:D*.6,front:D};case 'parabolic':return {dep:D*.75,front:D};case 'lantern':return {dep:D,front:D,round:true};
+    case 'spacelight':return {dep:D,front:D,round:true};case 'umbrella':return {dep:D*.45,front:D};case 'fresnel':return {dep:Math.max(14,D*.5),front:D};
+    case 'projection':return {dep:Math.max(22,D*1.2),front:Math.max(12,D*.5)};case 'reflector':return {dep:20,front:D};case 'grid':return {dep:3,front:0};
+    case 'barndoors':return {dep:4,front:0};case 'snoot':return {dep:20,front:8};default:return {dep:20,front:D}
+  }
+}
+function drawMod(type,D,y0,fw,Pp){
+  const g=modGeom(type,D);const y1=y0-g.dep;let s='';const fl=`fill="${Pp.modfill}" ${st(Pp.mod)}`;
+  const hw=fw/2,HW=(g.front||fw)/2;
+  switch(type){
+    case 'softbox':case 'strip':case 'reflector':
+      s=`<path d="M${-hw} ${y0}L${-HW} ${y1}L${HW} ${y1}L${hw} ${y0}Z" ${fl}/><line x1="${-HW}" y1="${y1}" x2="${HW}" y2="${y1}" ${st(Pp.mod,2.2)}/>`;break;
+    case 'octa':{const c=HW*.35;s=`<path d="M${-hw} ${y0}L${-HW} ${y1+c}L${-HW+c} ${y1}L${HW-c} ${y1}L${HW} ${y1+c}L${hw} ${y0}Z" ${fl}/><line x1="${-HW+c}" y1="${y1}" x2="${HW-c}" y2="${y1}" ${st(Pp.mod,2.2)}/>`;break}
+    case 'dome':case 'parabolic':s=`<path d="M${-hw} ${y0}C${-HW} ${y0},${-HW} ${y0-g.dep*.45},${-HW} ${y1}L${HW} ${y1}C${HW} ${y0-g.dep*.45},${HW} ${y0},${hw} ${y0}Z" ${fl}/><line x1="${-HW}" y1="${y1}" x2="${HW}" y2="${y1}" ${st(Pp.mod,2.2)}/>${type==='parabolic'?`<path d="M${-HW*.5} ${y1}L0 ${y0}L${HW*.5} ${y1}" fill="none" ${st(Pp.mod,.8,'stroke-dasharray="3 3"')}/>`:''}`;break;
+    case 'lantern':case 'spacelight':{const cy=y0-D/2;s=`<circle cx="0" cy="${cy}" r="${D/2}" ${fl}/><circle cx="0" cy="${cy}" r="${D*.28}" fill="none" ${st(Pp.mod,.8,'stroke-dasharray="3 3"')}/>`;if(type==='spacelight')s+=`<circle cx="0" cy="${cy}" r="${D/2+6}" fill="none" ${st(Pp.mod,.8)}/>`;break}
+    case 'umbrella':s=`<path d="M${-HW} ${y1+g.dep*.15}Q0 ${y1-g.dep*.55} ${HW} ${y1+g.dep*.15}" fill="${Pp.modfill}" ${st(Pp.mod,2)}/><line x1="0" y1="${y0}" x2="0" y2="${y1-g.dep*.2}" ${st(Pp.mod,.9)}/>`;break;
+    case 'fresnel':s=`<path d="M${-hw} ${y0}L${-HW} ${y0-g.dep*.4}L${-HW} ${y1}L${HW} ${y1}L${HW} ${y0-g.dep*.4}L${hw} ${y0}Z" fill="${Pp.fill}" ${st(Pp.ink)}/><path d="M${-HW+2} ${y1+1}Q0 ${y1-HW*.3} ${HW-2} ${y1+1}" fill="none" ${st(Pp.accent,2)}/>`;break;
+    case 'projection':s=`<rect x="${-HW}" y="${y1}" width="${HW*2}" height="${g.dep}" rx="1.5" fill="${Pp.fill}" ${st(Pp.ink)}/><rect x="${-HW-1.5}" y="${y1-2}" width="${HW*2+3}" height="3" rx="1" fill="${Pp.accent}"/>`;break;
+    case 'snoot':s=`<rect x="${-HW}" y="${y1}" width="${HW*2}" height="${g.dep}" fill="${Pp.ink}" ${st(Pp.ink)}/>`;break;
+    case 'grid':{let l='';const n=Math.max(3,Math.round(fw/10));for(let i=0;i<=n;i++){const x=-hw+fw*i/n;l+=`<line x1="${x}" y1="${y0}" x2="${x}" y2="${y0-4}" ${st(Pp.mod,1)}/>`}s=l+`<line x1="${-hw}" y1="${y0-4}" x2="${hw}" y2="${y0-4}" ${st(Pp.mod,1)}/>`;return {s,y:y0-4,fw}}
+    case 'barndoors':{const L=Math.max(8,fw*.45);s=`<line x1="${-hw}" y1="${y0}" x2="${-hw-L*.55}" y2="${y0-L*.85}" ${st(Pp.ink,2.4,'stroke-linecap="round"')}/><line x1="${hw}" y1="${y0}" x2="${hw+L*.55}" y2="${y0-L*.85}" ${st(Pp.ink,2.4,'stroke-linecap="round"')}/>`;return {s,y:y0,fw,extra:L*.85}}
+  }
+  return {s,y:y1,fw:g.front||fw};
+}
+function lightBody(type,w,h,Pp,dot){
+  const x=-w/2,y=-h/2;let s='';const body=`fill="${Pp.fill}" ${st(Pp.ink)}`;
+  switch(type){
+    case 'cob':{const f=Math.max(2,h*.14);s=`<rect x="${x}" y="${y+f*.6}" width="${w}" height="${h-f*.6}" rx="${Math.min(3,w*.15)}" ${body}/><rect x="${x-w*.08}" y="${y}" width="${w*1.16}" height="${f}" rx="1" fill="${Pp.accent}" ${st(Pp.ink,.7)}/>`;break}
+    case 'fresnel':case 'hmi':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.min(4,w*.12)}" ${body}/><path d="M${x+w*.1} ${y+h*.06}Q0 ${y-h*.16} ${-x-w*.1} ${y+h*.06}" fill="none" ${st(Pp.accent,2.2)}/>${type==='hmi'?`<rect x="${x+w*.2}" y="${-y-h*.22}" width="${w*.6}" height="${h*.1}" fill="${Pp.ink}"/>`:''}`;break;
+    case 'openface':s=`<path d="M${x+w*.22} ${-y}L${x} ${y}L${-x} ${y}L${-x-w*.22} ${-y}Z" ${body}/><line x1="${x}" y1="${y}" x2="${-x}" y2="${y}" ${st(Pp.accent,2.6)}/>`;break;
+    case 'panel':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="1.5" ${body}/><line x1="${x+1}" y1="${y}" x2="${-x-1}" y2="${y}" ${st(Pp.accent,2.6)}/>`;break;
+    case 'tube':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h/2}" fill="${Pp.accent}" fill-opacity=".85" ${st(Pp.ink,.8)}/><rect x="${x-1}" y="${y-.5}" width="3" height="${h+1}" fill="${Pp.ink}"/><rect x="${-x-2}" y="${y-.5}" width="3" height="${h+1}" fill="${Pp.ink}"/>`;break;
+    case 'mat':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${Pp.fill}" ${st(Pp.ink)}/><line x1="${x}" y1="${y}" x2="${-x}" y2="${y}" ${st(Pp.accent,3,'stroke-dasharray="6 3"')}/>`;break;
+    case 'spot':s=`<rect x="${x}" y="${y+h*.25}" width="${w}" height="${h*.75}" rx="2" ${body}/><rect x="${x+w*.12}" y="${y}" width="${w*.76}" height="${h*.3}" rx="1" fill="${Pp.accent}" ${st(Pp.ink,.7)}/>`;break;
+    case 'par':s=`<circle cx="0" cy="0" r="${w/2}" ${body}/><path d="M${-w/2+3} ${-w/4}A${w/2} ${w/2} 0 0 1 ${w/2-3} ${-w/4}" fill="none" ${st(Pp.accent,3)}/>`;break;
+    case 'bulb':s=`<circle cx="0" cy="0" r="${w/2}" fill="${Pp.accent}" ${st(Pp.ink,.9)}/>`+[0,90,180,270].map(a=>{const c=Math.cos(rad(a)),sn=Math.sin(rad(a));return `<line x1="${c*w*.7}" y1="${sn*w*.7}" x2="${c*w}" y2="${sn*w}" ${st(Pp.accent,1.2)}/>`}).join('');break;
+    case 'pocket':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" ${body}/><line x1="${x+1}" y1="${y}" x2="${-x-1}" y2="${y}" ${st(Pp.accent,2.5)}/>`;break;
+    case 'practical':s=`<circle cx="0" cy="0" r="${w/2}" fill="${Pp.fill}" ${st(Pp.ink)}/><circle cx="0" cy="0" r="${w*.32}" fill="none" ${st(Pp.ink,.7)}/><circle cx="0" cy="0" r="${w*.12}" fill="${Pp.accent}"/>`;break;
+    case 'balloon':s=`<circle cx="0" cy="0" r="${w/2}" fill="${Pp.accent}" fill-opacity=".14" ${st(Pp.accent,1.4,'stroke-dasharray="7 4"')}/><circle cx="0" cy="0" r="${w*.08}" fill="${Pp.accent}"/>`;break;
+    case 'chinaball':s=`<circle cx="0" cy="0" r="${w/2}" fill="${Pp.fill}" ${st(Pp.ink)}/>`+[-.3,0,.3].map(f=>`<line x1="${-Math.sqrt(1-f*f*4)*w/2}" y1="${f*w}" x2="${Math.sqrt(1-f*f*4)*w/2}" y2="${f*w}" ${st(Pp.ink,.6)}/>`).join('')+`<circle cx="0" cy="0" r="${w*.1}" fill="${Pp.accent}"/>`;break;
+    case 'sun':{let r='';for(let a=0;a<360;a+=45){const c=Math.cos(rad(a)),sn=Math.sin(rad(a));r+=`<line x1="${c*w*.32}" y1="${sn*w*.32}" x2="${c*w*.5}" y2="${sn*w*.5}" ${st(Pp.accent,1.6,'stroke-linecap="round"')}/>`}
+      s=`<circle cx="0" cy="0" r="${w*.22}" fill="${Pp.accent}"/>${r}<line x1="0" y1="${-w*.55}" x2="0" y2="${-w*2.1}" ${st(Pp.accent,1.6,'stroke-dasharray="8 5"')}/><path d="M-9 ${-w*2.1+10}L0 ${-w*2.1-6}L9 ${-w*2.1+10}Z" fill="${Pp.accent}"/>`;break}
+  }
+  if(dot&&!['bulb','tube','sun','balloon','practical','chinaball'].includes(type))s+=`<circle cx="0" cy="${type==='panel'||type==='mat'||type==='pocket'?0:h*.12}" r="${Math.min(3.5,Math.min(w,h)*.2)}" fill="${dot}" ${st(Pp.ink,.6)}/>`;
+  return s;
+}
+/* returns {svg, box:[x0,y0,x1,y1]} in local coords */
+function symbol(it,e,Pp){
+  if(e.cat==='light'){
+    const w=e.w,h=e.h;const dot=it.props&&(it.props.gelColor||cctColor(it.props.cct));
+    let s=lightBody(e.type,w,h,Pp,dot);
+    let y=e.type==='sun'?-h/2:(e.type==='cob'?-h/2:-h/2),fw=['tube','mat','panel'].includes(e.type)?w:Math.min(w,30);let minY=y,maxX=w/2,ext=0;
+    if(['cob','fresnel','openface','spot','par','hmi','pocket','panel','tube','mat'].includes(e.type)){
+      for(const m of (it.mods||[])){const me=E(m);const r=drawMod(me.type,me.size||MTYPES[me.type]?.d||60,y,fw,Pp);s+=r.s;y=r.y;fw=r.fw||fw;minY=Math.min(minY,y-(r.extra||0));maxX=Math.max(maxX,fw/2+(r.extra||0)*.6);}
+      if(!(it.mods||[]).length||true){const cv=clamp(Math.min(e.w,e.h+10)*.18,2.5,5);s+=`<path d="M${-cv} ${y-cv}L0 ${y-cv*2.2}L${cv} ${y-cv}" fill="none" ${st(Pp.ink,1.1,'stroke-linecap="round" stroke-linejoin="round"')}/>`;minY=Math.min(minY,y-cv*2.2)}
+    }
+    if(e.type==='sun')minY=-w*2.1-6;
+    return {svg:s,box:[-maxX,minY,maxX,h/2]};
+  }
+  if(e.cat==='modifier'){
+    const D=e.size||MTYPES[e.type]?.d||60;const g=modGeom(e.type,D);const y0=g.dep/2;const fw=Math.max(16,Math.min(30,D*.3));
+    const r=drawMod(e.type,D||40,y0,e.type==='grid'||e.type==='barndoors'?40:fw,Pp);
+    let s=`<rect x="${-fw/2}" y="${y0}" width="${fw}" height="6" fill="${Pp.mod}" opacity=".5"/>`+r.s;const W=Math.max(g.front||40,40)/2;
+    return {svg:s,box:[-W-(r.extra||0),r.y-(r.extra||0),W+(r.extra||0),y0+6]};
+  }
+  if(e.cat==='camera'){
+    const g=camG(e);const by=-g.bd/2+g.ll/2;const fy=by-g.ll;
+    const s=`<rect x="${-g.bw/2}" y="${by}" width="${g.bw}" height="${g.bd}" rx="${Math.min(2,g.bw*.15)}" fill="${Pp.fill}" ${st(Pp.cam,1.3)}/><rect x="${-g.lw/2}" y="${fy}" width="${g.lw}" height="${g.ll}" rx="${Math.min(1.5,g.lw*.2)}" fill="${Pp.cam}" ${st(Pp.cam,.8)}/>`;
+    return {svg:s,box:[-g.bw/2,fy,g.bw/2,by+g.bd]};
+  }
+  const w=it.w||e.w||40,h=it.h||e.h||40,x=-w/2,y=-h/2;const C=e.cat==='grip'?Pp.grip:Pp.set,F=e.cat==='grip'?Pp.gripfill:Pp.setfill;
+  const box=[x,y,-x,-y];let s='';const fs=`fill="${F}" ${st(C)}`;
+  switch(e.type){
+    case 'talent':case 'talent2':{const hr=Math.min(w,h,40)*.22;s=(e.type==='talent2'?`<rect x="${x}" y="${-h*.15}" width="${w}" height="${h*.65}" rx="5" fill="${F}" ${st(C,.8,'stroke-dasharray="3 2"')}/>`:'')+`<ellipse cx="0" cy="${e.type==='talent2'?-h*.15:0}" rx="${w/2}" ry="${Math.min(h,30)*.36}" fill="${Pp.fill}" ${st(Pp.ink,1.3)}/><circle cx="0" cy="${e.type==='talent2'?-h*.15:0}" r="${hr+2}" fill="${Pp.fill}" ${st(Pp.ink,1.3)}/><path d="M-4 ${(e.type==='talent2'?-h*.15:0)-hr}L0 ${(e.type==='talent2'?-h*.15:0)-hr-8}L4 ${(e.type==='talent2'?-h*.15:0)-hr}Z" fill="${Pp.ink}"/>`;box[1]=Math.min(y,(e.type==='talent2'?-h*.15:0)-hr-8);break}
+    case 'chair':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" ${fs}/><rect x="${x}" y="${-y-h*.22}" width="${w}" height="${h*.22}" rx="2" fill="${C}" opacity=".55"/>`;break;
+    case 'armchair':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" ${fs}/><rect x="${x}" y="${-y-h*.24}" width="${w}" height="${h*.24}" rx="4" fill="${C}" opacity=".45"/><rect x="${x}" y="${y}" width="${w*.18}" height="${h}" rx="4" fill="${C}" opacity=".3"/><rect x="${-x-w*.18}" y="${y}" width="${w*.18}" height="${h}" rx="4" fill="${C}" opacity=".3"/>`;break;
+    case 'sofa':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" ${fs}/><rect x="${x}" y="${-y-h*.28}" width="${w}" height="${h*.28}" rx="4" fill="${C}" opacity=".45"/><rect x="${x}" y="${y}" width="${Math.min(22,w*.12)}" height="${h}" rx="4" fill="${C}" opacity=".3"/><rect x="${-x-Math.min(22,w*.12)}" y="${y}" width="${Math.min(22,w*.12)}" height="${h}" rx="4" fill="${C}" opacity=".3"/><line x1="0" y1="${y+4}" x2="0" y2="${-y-h*.28}" ${st(C,.7)}/>`;break;
+    case 'table':case 'counter':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" ${fs}/>${e.type==='counter'?`<rect x="${x+w*.6}" y="${y+h*.2}" width="${w*.22}" height="${h*.6}" rx="4" fill="none" ${st(C,.8)}/>`:''}`;break;
+    case 'roundtable':case 'plant':case 'pillar':
+      if(e.type==='plant'){s=[0,72,144,216,288].map(a=>`<ellipse cx="${Math.cos(rad(a))*w*.22}" cy="${Math.sin(rad(a))*w*.22}" rx="${w*.22}" ry="${w*.13}" transform="rotate(${a} ${Math.cos(rad(a))*w*.22} ${Math.sin(rad(a))*w*.22})" fill="${Pp.green}" fill-opacity=".55" ${st(C,.8)}/>`).join('')+`<circle cx="0" cy="0" r="${w*.12}" fill="${C}"/>`}
+      else if(e.type==='pillar')s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${C}" fill-opacity=".55" ${st(C)}/><line x1="${x}" y1="${y}" x2="${-x}" y2="${-y}" ${st(Pp.fill,.8)}/><line x1="${-x}" y1="${y}" x2="${x}" y2="${-y}" ${st(Pp.fill,.8)}/>`;
+      else s=`<ellipse cx="0" cy="0" rx="${w/2}" ry="${h/2}" ${fs}/>`;break;
+    case 'desk':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" ${fs}/><rect x="${-x-w*.32}" y="${y+4}" width="${w*.28}" height="${h-8}" fill="none" ${st(C,.7)}/>`;break;
+    case 'bed':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" ${fs}/><rect x="${x+6}" y="${-y-h*.16}" width="${w/2-9}" height="${h*.12}" rx="4" fill="${Pp.fill}" ${st(C,.8)}/><rect x="${3}" y="${-y-h*.16}" width="${w/2-9}" height="${h*.12}" rx="4" fill="${Pp.fill}" ${st(C,.8)}/><line x1="${x}" y1="${y+h*.45}" x2="${-x}" y2="${y+h*.45}" ${st(C,.8)}/>`;break;
+    case 'shelf':{let l='';for(let i=1;i<4;i++)l+=`<line x1="${x+w*i/4}" y1="${y}" x2="${x+w*i/4}" y2="${-y}" ${st(C,.7)}/>`;s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" ${fs}/>`+l;break}
+    case 'rug':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${F}" fill-opacity=".5" ${st(C,.9,'stroke-dasharray="6 4"')}/>`;break;
+    case 'tv':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="${Pp.ink}" ${st(Pp.ink)}/><line x1="${x+3}" y1="${y}" x2="${-x-3}" y2="${y}" ${st(Pp.cam,2)}/>`;break;
+    case 'mirror':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${Pp.glass}" ${st(C)}/><line x1="${x}" y1="${y}" x2="${-x}" y2="${y}" ${st(Pp.fill,1.4)}/>`;break;
+    case 'wall':{let l='';const n=Math.floor(w/18);for(let i=0;i<=n;i++){const xx=x+i*18;l+=`<line x1="${xx}" y1="${-y}" x2="${Math.min(xx+h,-x)}" y2="${y}" ${st(C,.6)}/>`}s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${F}" ${st(C,1.5)}/>`+l;break}
+    case 'window':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${Pp.fill}" ${st(C,1.5)}/><line x1="${x}" y1="${-h*.15}" x2="${-x}" y2="${-h*.15}" ${st(Pp.glass,2.4)}/><line x1="${x}" y1="${h*.18}" x2="${-x}" y2="${h*.18}" ${st(Pp.glass,1.2)}/><line x1="0" y1="${y}" x2="0" y2="${-y}" ${st(C,.8)}/>`;break;
+    case 'door':s=`<line x1="${x}" y1="${-y}" x2="${x}" y2="${-y-w}" ${st(C,2)}/><path d="M${x} ${-y-w}A${w} ${w} 0 0 1 ${-x} ${-y}" fill="none" ${st(C,.9,'stroke-dasharray="4 3"')}/><line x1="${x-6}" y1="${-y}" x2="${-x+6}" y2="${-y}" ${st(C,.7)}/>`;box[1]=-y-w;break;
+    case 'stairs':{let l='';const n=Math.max(3,Math.floor(h/25));for(let i=1;i<n;i++)l+=`<line x1="${x}" y1="${y+h*i/n}" x2="${-x}" y2="${y+h*i/n}" ${st(C,.8)}/>`;s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" ${fs}/>`+l+`<path d="M0 ${-y-8}L0 ${y+10}M-6 ${y+18}L0 ${y+8}L6 ${y+18}" fill="none" ${st(C,1)}/>`;break}
+    case 'outlet':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="${Pp.fill}" ${st(C)}/><circle cx="${-w*.2}" cy="0" r="1.6" fill="${C}"/><circle cx="${w*.2}" cy="0" r="1.6" fill="${C}"/>`;break;
+    case 'backdrop':s=`<rect x="${x}" y="${-y-12}" width="${w}" height="12" rx="6" fill="${F}" ${st(C,1.4)}/><rect x="${x+4}" y="${y}" width="${w-8}" height="${h-12}" fill="${Pp.fill}" fill-opacity=".6" ${st(C,.8,'stroke-dasharray="5 4"')}/><line x1="${x-8}" y1="${-y-6}" x2="${x}" y2="${-y-6}" ${st(C,1.5)}/><line x1="${-x}" y1="${-y-6}" x2="${-x+8}" y2="${-y-6}" ${st(C,1.5)}/>`;box[0]=x-8;box[2]=-x+8;break;
+    case 'greenscreen':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${Pp.green}" ${st(C,1.2)}/>`;break;
+    case 'cyc':{const r=Math.min(w,h)*.3;s=`<path d="M${x} ${-y}L${x} ${y+r}Q${x} ${y} ${x+r} ${y}L${-x-r} ${y}Q${-x} ${y} ${-x} ${y+r}L${-x} ${-y}" fill="${F}" fill-opacity=".45" ${st(C,1.4)}/><path d="M${x+r} ${-y}L${x+r} ${y+r*1.4}M${-x-r} ${-y}L${-x-r} ${y+r*1.4}M${x+r*1.4} ${y+r}L${-x-r*1.4} ${y+r}" fill="none" ${st(C,.7,'stroke-dasharray="4 4"')}/>`;break}
+    case 'room':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" ${st(C,3.2)}/><path d="M${x+w*.3} ${y}v${h*.18}M${x} ${y+h*.6}h${w*.15}" ${st(C,2)}/>`;break;
+    case 'mark':s=`<path d="M${x} ${y}L${-x} ${-y}M${-x} ${y}L${x} ${-y}" ${st(Pp.accent,3,'stroke-linecap="round"')}/>`;break;
+    case 'arrow':s=`<path d="M${x} 0L${-x-14} 0" ${st(Pp.ink,1.8)}/><path d="M${-x-16} ${-8}L${-x} 0L${-x-16} 8Z" fill="${Pp.ink}"/>`;break;
+    case 'text':{const fsz=num(it.props?.fs,24);const lines=String(it.props?.text||'').split('\n');const tw=Math.max(...lines.map(l=>l.length))*fsz*.56+8,th=lines.length*fsz*1.2+6;
+      const left=it.props?.align==='left',tx=left?-tw/2+4:0,bold=(l)=>/^#\s?/.test(l);
+      s=`<rect x="${-tw/2}" y="${-th/2}" width="${tw}" height="${th}" fill="transparent"/><text x="${tx}" y="${-th/2+fsz*.95+3}" text-anchor="${left?'start':'middle'}" font-size="${fsz}" font-family="Helvetica, Arial, sans-serif" fill="${Pp.ink}">${lines.map((l,i)=>`<tspan x="${tx}" dy="${i?fsz*1.2:0}" ${bold(l)?'font-weight="700"':''}>${esc(l.replace(/^#\s?/,''))||'\u00a0'}</tspan>`).join('')}</text>`;
+      return {svg:s,box:[-tw/2,-th/2,tw/2,th/2]}}
+    /* grip */
+    case 'cstand':{const L=w/2;s=[0,120,240].map((a,i)=>{const r=rad(a+90),l=i===0?L:L*.75;return `<line x1="0" y1="0" x2="${Math.cos(r)*l}" y2="${Math.sin(r)*l}" ${st(C,2,'stroke-linecap="round"')}/>`}).join('')+`<circle cx="0" cy="0" r="5" fill="${C}"/><line x1="0" y1="0" x2="0" y2="${-L*.9}" ${st(C,1,'stroke-dasharray="3 3"')}/>`;break}
+    case 'combo':case 'roller':case 'baby':{const L=w/2;s=[30,150,270].map(a=>{const r=rad(a);return `<line x1="0" y1="0" x2="${Math.cos(r)*L}" y2="${Math.sin(r)*L}" ${st(C,2,'stroke-linecap="round"')}/>`+(e.type==='roller'?`<circle cx="${Math.cos(r)*L}" cy="${Math.sin(r)*L}" r="5" fill="${F}" ${st(C)}/>`:'')}).join('')+`<circle cx="0" cy="0" r="6" fill="${C}"/>`;break}
+    case 'menace':{const b=h/2;s=[30,150,270].map(a=>{const r=rad(a);return `<line x1="0" y1="${b}" x2="${Math.cos(r)*b}" y2="${b+Math.sin(r)*b}" ${st(C,2)}/>`}).join('')+`<line x1="0" y1="${b}" x2="0" y2="${b-w}" ${st(C,3,'stroke-linecap="round"')}/><circle cx="0" cy="${b-w}" r="6" fill="${C}"/><rect x="-10" y="${b+12}" width="20" height="14" rx="3" fill="${F}" ${st(C)}/>`;box[1]=b-w-6;box[3]=b*2+26;box[0]=-b;box[2]=b;break}
+    case 'sandbag':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h/2}" fill="${F}" ${st(C)}/><line x1="0" y1="${y}" x2="0" y2="${-y}" ${st(C,.7)}/>`;break;
+    case 'applebox':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${F}" ${st(C)}/><line x1="${x}" y1="${y}" x2="${-x}" y2="${-y}" ${st(C,.7)}/>`;break;
+    case 'ladder':{let l='';for(let i=1;i<6;i++)l+=`<line x1="${x}" y1="${y+h*i/6}" x2="${-x}" y2="${y+h*i/6}" ${st(C,.8)}/>`;s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" ${st(C,1.4)}/>`+l;break}
+    case 'flag':case 'flag2':case 'floppy':case 'negfill':s=`<rect x="${x}" y="${y}" width="${w}" height="${Math.max(h,4)}" fill="${Pp.ink}" ${st(Pp.ink)}/><circle cx="${x}" cy="0" r="3" fill="${C}"/><circle cx="${-x}" cy="0" r="3" fill="${C}"/>`;break;
+    case 'frame':case 'frame6':case 'butterfly8':s=`<rect x="${x}" y="${y}" width="${w}" height="${Math.max(h,4)}" fill="${Pp.fill}" ${st(C,1.2)}/><line x1="${x+4}" y1="0" x2="${-x-4}" y2="0" ${st(C,.8,'stroke-dasharray="4 3"')}/><circle cx="${x}" cy="0" r="3" fill="${C}"/><circle cx="${-x}" cy="0" r="3" fill="${C}"/>`;break;
+    case 'bounce':s=`<rect x="${x}" y="${y}" width="${w}" height="${Math.max(h,4)}" fill="${Pp.fill}" ${st(C,1.6)}/>`;break;
+    case 'net':s=`<line x1="${x}" y1="0" x2="${-x}" y2="0" ${st(C,2.2,'stroke-dasharray="2 3"')}/>`;break;
+    case 'overhead':case 'overhead20':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${Pp.fill}" fill-opacity=".35" ${st(C,1.2,'stroke-dasharray="10 6"')}/><line x1="${x}" y1="${y}" x2="${-x}" y2="${-y}" ${st(C,.6)}/><line x1="${-x}" y1="${y}" x2="${x}" y2="${-y}" ${st(C,.6)}/>`;break;
+    case 'vflat':s=`<path d="M${x} ${y}L0 ${-y}L${-x} ${y}" fill="none" ${st(C,4,'stroke-linejoin="round"')}/>`;break;
+    case 'tripod':{const L=w/2;s=[90,210,330].map(a=>{const r=rad(a);return `<line x1="0" y1="0" x2="${Math.cos(r)*L}" y2="${Math.sin(r)*L}" ${st(Pp.cam,1.6,'stroke-linecap="round"')}/>`}).join('')+`<circle cx="0" cy="0" r="5" fill="${Pp.cam}"/>`;break}
+    case 'slider':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${F}" ${st(C)}/><rect x="-10" y="${y-3}" width="20" height="${h+6}" rx="2" fill="${Pp.cam}"/>`;break;
+    case 'dolly':{let l='';for(let i=0;i<=Math.floor(w/40);i++){const xx=x+i*40;l+=`<line x1="${xx}" y1="${y}" x2="${xx}" y2="${-y}" ${st(C,.8)}/>`}s=l+`<line x1="${x}" y1="${y+6}" x2="${-x}" y2="${y+6}" ${st(C,2)}/><line x1="${x}" y1="${-y-6}" x2="${-x}" y2="${-y-6}" ${st(C,2)}/><rect x="-28" y="${y-2}" width="56" height="${h+4}" rx="5" fill="${F}" ${st(Pp.cam,1.4)}/>`;break}
+    case 'jib':s=`<circle cx="${x+30}" cy="0" r="18" fill="${F}" ${st(C)}/><line x1="${x}" y1="0" x2="${-x}" y2="0" ${st(C,3,'stroke-linecap="round"')}/><rect x="${x-6}" y="-10" width="20" height="20" fill="${C}"/><circle cx="${-x}" cy="0" r="7" fill="${Pp.cam}"/>`;break;
+    case 'gimbal':s=`<circle cx="0" cy="0" r="${w/2}" fill="none" ${st(Pp.cam,1.6)}/><circle cx="0" cy="0" r="${w*.22}" fill="${Pp.cam}"/>`;break;
+    case 'steadicam':s=`<circle cx="0" cy="0" r="${w/2}" fill="${F}" ${st(C)}/><path d="M${-w*.35} ${w*.1}A${w*.35} ${w*.35} 0 0 1 ${w*.35} ${w*.1}" fill="none" ${st(Pp.cam,2)}/><circle cx="0" cy="0" r="5" fill="${Pp.cam}"/>`;break;
+    case 'distro':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${F}" ${st(C)}/><path d="M2 ${y+4}L-5 1H1L-2 ${-y-4}L6 -2H0Z" fill="${Pp.accent}"/>`;break;
+    case 'genny':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="${F}" ${st(C,1.4)}/><text x="0" y="6" text-anchor="middle" font-size="16" font-family="Helvetica, Arial, sans-serif" font-weight="700" fill="${C}">GEN</text>`;break;
+    case 'haze':s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${F}" ${st(C)}/>`+[0,1,2].map(i=>`<circle cx="${(i-1)*9}" cy="${y-8-i*6}" r="${5+i*2}" fill="none" ${st(C,.8)}/>`).join('');box[1]=y-26;break;
+    case 'fan':s=`<circle cx="0" cy="0" r="${w/2}" fill="${F}" ${st(C)}/>`+[0,120,240].map(a=>`<ellipse cx="0" cy="${-w*.2}" rx="${w*.1}" ry="${w*.2}" transform="rotate(${a})" fill="${C}" opacity=".6"/>`).join('')+`<path d="M-6 ${-w/2-6}L0 ${-w/2-14}L6 ${-w/2-6}" fill="none" ${st(C,1.2)}/>`;box[1]=-w/2-14;break;
+    case 'village':s=`<rect x="${x}" y="${y}" width="${w}" height="${h*.3}" rx="2" fill="${Pp.ink}"/><rect x="${x+4}" y="${y+2}" width="${w/2-8}" height="${h*.3-4}" fill="${Pp.cam}" opacity=".5"/><rect x="4" y="${y+2}" width="${w/2-8}" height="${h*.3-4}" fill="${Pp.cam}" opacity=".5"/>`+[-.3,0,.3].map(f=>`<rect x="${f*w-14}" y="${y+h*.5}" width="28" height="${h*.45}" rx="4" fill="${F}" ${st(C,.9)}/>`).join('');break;
+    default:s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" ${fs}/>`;
+  }
+  return {svg:s,box};
+}
+function iconSVG(e){
+  const it={w:e.w,h:e.h,props:e.type==='text'?{text:'Aa',fs:40}:{},mods:[]};
+  if(e.cat==='light')it.props={};
+  SW=1;const r=symbol(it,e,PAL);const b=r.box;const cx=(b[0]+b[2])/2,cy=(b[1]+b[3])/2;const R=Math.max(b[2]-b[0],b[3]-b[1])/2*1.12+4;
+  let rot=0;if(e.cat==='set'&&['wall','window','greenscreen','tv','mirror','backdrop'].includes(e.type))rot=0;
+  return `<svg viewBox="${cx-R} ${cy-R} ${R*2} ${R*2}" aria-hidden="true"><g transform="rotate(${rot})">${r.svg}</g></svg>`.replace(/vector-effect="non-scaling-stroke"/g,'vector-effect="non-scaling-stroke"');
+}
+
+/* ============ plan rendering ============ */
+function worldBox(it,e,box){
+  if(e.type==='measure'){return [Math.min(it.x,it.x2),Math.min(it.y,it.y2),Math.max(it.x,it.x2),Math.max(it.y,it.y2)]}
+  const r=rad(it.rot||0),c=Math.cos(r),s=Math.sin(r);let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const [px,py] of [[box[0],box[1]],[box[2],box[1]],[box[2],box[3]],[box[0],box[3]]]){const X=it.x+px*c-py*s,Y=it.y+px*s+py*c;x0=Math.min(x0,X);y0=Math.min(y0,Y);x1=Math.max(x1,X);y1=Math.max(y1,Y)}
+  return [x0,y0,x1,y1];
+}
+function camG(e){return {bw:e.cw||15,bd:e.cd||20,lw:e.lw||9,ll:e.ll||12}}
+function camApex(e){const g=camG(e);return -g.bd/2+g.ll/2-g.ll}
+function effSensor(it){return num(it.props?.sensor,36)/Math.max(1,num(it.props?.crop,1))}
+function hfov(it){const f=num(it.props?.focal,35);return 2*Math.atan(effSensor(it)/(2*f))}
+function badges(Sx){const m={};let n=0,c=0;for(const it of Sx.items){const e=E(it.ref);if(e.cat==='light')m[it.id]=String(++n);else if(e.cat==='camera')m[it.id]=String.fromCharCode(65+(c++%26))}return m}
+function visibleItems(Sx,o){
+  const out=[];const showGrip=o.grip;
+  for(const L of Sx.layers){if(!L.visible)continue;for(const it of Sx.items){if(it.layer!==L.id)continue;const e=E(it.ref);if(e.cat==='grip'&&!showGrip)continue;out.push({it,e,L})}}
+  return out;
+}
+function detailLine(it,e){
+  const p=it.props||{};const a=[];
+  if(e.cat==='light'){if(p.role)a.push(p.role);if(p.stops!==''&&p.stops!=null)a.push(fmtStopShort(p.stops));if(p.power!==''&&p.power!=null&&num(p.power,100)!==100)a.push(num(p.power)+'%');if(p.cct)a.push(p.cct+'K');if(p.gel)a.push(p.gel);if(p.height)a.push('h '+p.height+'m');(it.mods||[]).forEach(m=>a.push(E(m).name.replace(/^amaran /,'')))}
+  if(e.cat==='camera'){if(p.lens)a.push(p.lens);a.push((p.focal||'?')+'mm'+(num(p.crop,1)>1?' ('+num(p.crop)+'× crop)':''));a.push(Math.round(deg(hfov(it)))+'° H');if(p.height)a.push('h '+p.height+'m')}
+  return a.join(' · ');
+}
+function planSVG(Sx,o){
+  const Pp=o.P,k=o.k;SW=o.sw||1;let out='';
+  if(o.grid&&o.bounds){
+    const [bx,by,bw,bh]=o.bounds;const minor=o.s>0.55||o.export;
+    out+=`<defs><pattern id="g${o.pid}" width="100" height="100" patternUnits="userSpaceOnUse">${minor?`<path d="M50 0V100M0 50H100" stroke="${Pp.grid}" stroke-width="${k*SW}" fill="none"/>`:''}<path d="M0 0V100M0 0H100" stroke="${Pp['grid-major']}" stroke-width="${k*1.1*SW}" fill="none"/></pattern></defs><rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="url(#g${o.pid})"/>`;
+  }
+  const RM=o.room||Sx.room;
+  if(RM.on){
+    const w=RM.w,d=RM.d,off=34*k,fsz=11*k;
+    out+=`<g transform="translate(${RM.x||0} ${RM.y||0})">`;
+    out+=`<rect x="0" y="0" width="${w}" height="${d}" fill="none" ${st(Pp.room,2.2)}/>`;
+    out+=`<g ${st(Pp.muted,.9)}><line x1="0" y1="${-off}" x2="${w}" y2="${-off}"/><line x1="0" y1="${-off-5*k}" x2="0" y2="${-off+5*k}"/><line x1="${w}" y1="${-off-5*k}" x2="${w}" y2="${-off+5*k}"/><line x1="${-off}" y1="0" x2="${-off}" y2="${d}"/><line x1="${-off-5*k}" y1="0" x2="${-off+5*k}" y2="0"/><line x1="${-off-5*k}" y1="${d}" x2="${-off+5*k}" y2="${d}"/></g>`;
+    out+=`<g font-family="${o.font}" font-size="${fsz}" fill="${Pp.muted}" text-anchor="middle"><rect x="${w/2-34*k}" y="${-off-8*k}" width="${68*k}" height="${16*k}" fill="${Pp.canvas}"/><text x="${w/2}" y="${-off+4*k}">${fmtM(w)}</text><g transform="translate(${-off} ${d/2}) rotate(-90)"><rect x="${-34*k}" y="${-8*k}" width="${68*k}" height="${16*k}" fill="${Pp.canvas}"/><text x="0" y="${4*k}">${fmtM(d)}</text></g></g></g>`;
+  }
+  const vis=visibleItems(Sx,o);
+  if(o.fov){for(const {it,e} of vis){if(e.cat!=='camera')continue;const a=hfov(it)/2,L=num(it.props.throw,450),t=Math.tan(a)*L,ay=camApex(e);
+    out+=`<g transform="translate(${it.x} ${it.y}) rotate(${it.rot||0})" pointer-events="none"><path d="M0 ${ay}L${-t} ${ay-L}L${t} ${ay-L}Z" fill="${Pp.wedge}" ${st(Pp.cam,.9,'stroke-dasharray="6 5" stroke-opacity=".6"')}/></g>`}}
+  const boxes={};
+  for(const {it,e} of vis){
+    if(e.type==='measure'){out+=measureSVG(it,Pp,k,o,Sx);continue}
+    const r=symbol(it,e,Pp);boxes[it.id]=worldBox(it,e,r.box);
+    const b=r.box,pad=8*k;
+    out+=`<g data-id="${it.id}" transform="translate(${it.x} ${it.y}) rotate(${it.rot||0})"><rect x="${b[0]-pad}" y="${b[1]-pad}" width="${b[2]-b[0]+pad*2}" height="${b[3]-b[1]+pad*2}" fill="transparent"/>${r.svg}</g>`;
+  }
+  // labels
+  if(o.labels!=='off'||o.details){
+    const B=badges(Sx);
+    for(const {it,e} of vis){
+      if(e.type==='measure'||e.type==='text')continue;const wb=boxes[it.id];if(!wb)continue;
+      const lines=[];const badge=B[it.id];
+      if(o.labels==='name'){const nm=it.label||(e.cat==='light'||e.cat==='camera'||e.cat==='grip'||e.cat==='modifier'?e.name:'');if(nm)lines.push(nm)}
+      else if(o.labels==='num'&&(e.cat==='set')&&it.label){lines.push(it.label)}
+      if(o.details&&(e.cat==='light'||e.cat==='camera')){const d=detailLine(it,e);if(d)lines.push(d)}
+      if(o.labels==='off'&&!lines.length)continue;
+      const fsz=11*k;let x=it.x,y=wb[3]+6*k;
+      if(badge&&o.labels!=='off'){const cam=e.cat==='camera';const r=rad(it.rot||0);const lb=symbol(it,e,Pp).box;const d=lb[3]+12*k;const bx=it.x-Math.sin(r)*d,by=it.y+Math.cos(r)*d;
+        out+=`<g pointer-events="none"><circle cx="${bx}" cy="${by}" r="${9*k}" fill="${cam?Pp.cam:Pp.accent}"/><text x="${bx}" y="${by+3.8*k}" text-anchor="middle" font-family="${o.font}" font-size="${10.5*k}" font-weight="700" fill="#fff">${badge}</text></g>`;
+        if(by+9*k>wb[3]){x=bx;y=by+10*k}}
+      lines.forEach((l,i)=>{y+=fsz*1.25;const wtxt=l.length*fsz*.55+6*k;out+=`<g pointer-events="none"><rect x="${x-wtxt/2}" y="${y-fsz*.95}" width="${wtxt}" height="${fsz*1.25}" rx="${2*k}" fill="${Pp.canvas}" fill-opacity=".85"/><text x="${x}" y="${y}" text-anchor="middle" font-family="${o.font}" font-size="${i===0&&o.labels==='name'?fsz:fsz*.92}" font-weight="${i===0&&o.labels==='name'?600:400}" fill="${i===0&&o.labels==='name'?Pp.ink:Pp.muted}">${esc(l)}</text></g>`});
+    }
+  }
+  // selection
+  if(o.sel&&o.sel.size){
+    for(const {it,e} of vis){if(!o.sel.has(it.id))continue;
+      if(e.type==='measure'){out+=`<circle data-h="m1" data-hid="${it.id}" cx="${it.x}" cy="${it.y}" r="${6*k}" fill="${Pp.panel}" ${st(Pp.sel,1.6)}/><circle data-h="m2" data-hid="${it.id}" cx="${it.x2}" cy="${it.y2}" r="${6*k}" fill="${Pp.panel}" ${st(Pp.sel,1.6)}/>`;continue}
+      const r=symbol(it,e,Pp),b=r.box,pad=5*k;
+      out+=`<g transform="translate(${it.x} ${it.y}) rotate(${it.rot||0})"><rect x="${b[0]-pad}" y="${b[1]-pad}" width="${b[2]-b[0]+pad*2}" height="${b[3]-b[1]+pad*2}" fill="none" ${st(Pp.sel,1.3,'stroke-dasharray="5 4"')} pointer-events="none"/>`;
+      if(o.sel.size===1&&!it.locked){
+        const hy=b[1]-pad-24*k;out+=`<line x1="0" y1="${b[1]-pad}" x2="0" y2="${hy}" ${st(Pp.sel,1)} pointer-events="none"/><circle data-h="rot" data-hid="${it.id}" cx="0" cy="${hy}" r="${7*k}" fill="${Pp.panel}" ${st(Pp.sel,1.6)} style="cursor:grab"/>`;
+        if(isResizable(e))out+=`<rect data-h="size" data-hid="${it.id}" x="${b[2]+pad-6*k}" y="${b[3]+pad-6*k}" width="${12*k}" height="${12*k}" fill="${Pp.sel}" style="cursor:nwse-resize"/>`;
+      }
+      out+='</g>';
+    }
+  }
+  return out;
+}
+function measureSVG(it,Pp,k,o,Sx){
+  const dx=it.x2-it.x,dy=it.y2-it.y,L=Math.hypot(dx,dy);if(L<1)return '';const nx=-dy/L,ny=dx/L,t=6*k;
+  const mx=(it.x+it.x2)/2,my=(it.y+it.y2)/2;const lbl=(Sx.room.on?'':'≈ ')+fmtM(L);const fsz=11*k,tw=lbl.length*fsz*.6+8*k;
+  let a=deg(Math.atan2(dy,dx));if(a>90||a<-90)a+=180;
+  return `<g data-id="${it.id}"><line x1="${it.x}" y1="${it.y}" x2="${it.x2}" y2="${it.y2}" stroke="transparent" stroke-width="${14*k}"/><line x1="${it.x}" y1="${it.y}" x2="${it.x2}" y2="${it.y2}" ${st(Pp.accent,1.3,'stroke-dasharray="7 4"')}/><line x1="${it.x-nx*t}" y1="${it.y-ny*t}" x2="${it.x+nx*t}" y2="${it.y+ny*t}" ${st(Pp.accent,1.6)}/><line x1="${it.x2-nx*t}" y1="${it.y2-ny*t}" x2="${it.x2+nx*t}" y2="${it.y2+ny*t}" ${st(Pp.accent,1.6)}/><g transform="translate(${mx} ${my}) rotate(${a})"><rect x="${-tw/2}" y="${-fsz*.8}" width="${tw}" height="${fsz*1.5}" rx="${3*k}" fill="${Pp.accent}"/><text x="0" y="${fsz*.38}" text-anchor="middle" font-family="${o.font}" font-size="${fsz}" font-weight="600" fill="#fff">${lbl}</text></g></g>`;
+}
+
+/* ============ screen canvas ============ */
+const svg=$('#plan'),world=$('#world'),wrap=$('#planWrap');
+const UI_FONT="Archivo, Helvetica, Arial, sans-serif";
+function viewBounds(){const r=svg.getBoundingClientRect();const v=ui.view;return [(-v.x)/v.s-100,(-v.y)/v.s-100,r.width/v.s+200,r.height/v.s+200]}
+function roomFromDraft(d){const x=Math.min(d.x0,d.x1),y=Math.min(d.y0,d.y1);return {on:true,x,y,w:Math.max(10,Math.abs(d.x1-d.x0)),d:Math.max(10,Math.abs(d.y1-d.y0))}}
+function snapRoom(w){const T=prefs.toggles;const g=T.snap?T.snapSize:10;return {x:Math.round(w.x/g)*g,y:Math.round(w.y/g)*g}}
+function renderCanvas(){
+  const Sx=S(),v=ui.view,T=prefs.toggles;
+  world.setAttribute('transform',`translate(${v.x} ${v.y}) scale(${v.s})`);
+  world.innerHTML=planSVG(Sx,{room:ui.roomDraft?roomFromDraft(ui.roomDraft):null,P:PAL,k:1/v.s,sw:1,grid:T.grid,bounds:viewBounds(),s:v.s,grip:T.grip,labels:T.labels,details:T.details,fov:T.fov,sel:ui.sel,font:UI_FONT,pid:'s'})+(ui.marq?`<rect x="${Math.min(ui.marq.x0,ui.marq.x1)}" y="${Math.min(ui.marq.y0,ui.marq.y1)}" width="${Math.abs(ui.marq.x1-ui.marq.x0)}" height="${Math.abs(ui.marq.y1-ui.marq.y0)}" fill="${PAL.wedge}" ${st(PAL.sel,1,'stroke-dasharray="4 3"')}/>`:'')+(ui.measDraft?measureSVG({...ui.measDraft,id:'draft'},PAL,1/v.s,{font:UI_FONT},Sx):'');
+  const z=$('#zoomPct');if(z)z.textContent=Math.round(v.s*100)+'%';
+  renderTitleBlock();
+  svg.className.baseVal='t-'+(ui.space?'pan':ui.tool);
+}
+function renderTitleBlock(){
+  const tb=$('#titleBlock');const T=prefs.toggles;if(!T.title){tb.hidden=true;return}
+  const i=P.info,Sx=S();const bits=[i.date&&fmtDate(i.date),i.location,i.dop&&'DoP '+i.dop,i.gaffer&&'Gaffer '+i.gaffer].filter(Boolean);
+  const c=Sx.cam||{};const camLine=[c.lens,c.stop&&c.stopType+c.stop,c.kelvin&&c.kelvin+'K',c.key?'Key '+fmtStop(c.key):'',c.ratio||(ratioFromStops(Sx)||{}).r].filter(Boolean).join(' · ');if(camLine)bits.push(camLine);
+  tb.hidden=false;tb.innerHTML=`<div class="t1">${esc(i.production||P.name)} — ${esc(Sx.name)}</div><div class="t2">${esc(Sx.desc||'')}${Sx.desc&&bits.length?'<br>':''}${bits.map(esc).join('<br>')}${Sx.room.on?`<br>Room ${fmtM(Sx.room.w)} × ${fmtM(Sx.room.d)} · grid 1 m`:''}</div>`;
+}
+function fmtDate(d){try{const x=new Date(d+'T12:00:00');if(isNaN(x))return d;return x.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}catch(e){return d}}
+function fitView(){
+  const Sx=S();const r=svg.getBoundingClientRect();if(!r.width)return;
+  let b=contentBounds(Sx,{grip:prefs.toggles.grip,fov:false});
+  if(!b)b=[0,0,800,600];
+  const pad=60,w=b[2]-b[0],h=b[3]-b[1];const s=clamp(Math.min((r.width-pad*2)/w,(r.height-pad*2)/h),.15,4);
+  ui.view={s,x:r.width/2-(b[0]+w/2)*s,y:r.height/2-(b[1]+h/2)*s};renderCanvas();
+}
+function contentBounds(Sx,o){
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,any=false;
+  const grow=(a,b,c,d)=>{x0=Math.min(x0,a);y0=Math.min(y0,b);x1=Math.max(x1,c);y1=Math.max(y1,d);any=true};
+  if(Sx.room.on){const rx=Sx.room.x||0,ry=Sx.room.y||0;grow(rx-50,ry-50,rx+Sx.room.w,ry+Sx.room.d)}
+  for(const {it,e} of visibleItems(Sx,{grip:o.grip})){
+    if(e.type==='measure'){grow(...worldBox(it,e));continue}
+    const r=symbol(it,e,EXPORT_PAL);grow(...worldBox(it,e,r.box));
+    if(o.fov&&e.cat==='camera'){const a=hfov(it)/2,L=num(it.props.throw,450),t=Math.tan(a)*L;const fb=[-t,camApex(e)-L,t,0];grow(...worldBox(it,e,fb))}
+  }
+  return any?[x0,y0,x1,y1]:null;
+}
+
+/* ============ history & save ============ */
+function snapshot(){return JSON.stringify(P)}
+function resetHistory(){hist=[snapshot()];hIdx=0}
+function commit(){const s=snapshot();if(s===hist[hIdx])return renderAll();P.updated=Date.now();const s2=snapshot();hist=hist.slice(0,hIdx+1);hist.push(s2);if(hist.length>160)hist.shift();hIdx=hist.length-1;scheduleSave();renderAll()}
+function undo(){if(hIdx<=0)return;hIdx--;P=JSON.parse(hist[hIdx]);pruneSel();scheduleSave();renderAll()}
+function redo(){if(hIdx>=hist.length-1)return;hIdx++;P=JSON.parse(hist[hIdx]);pruneSel();scheduleSave();renderAll()}
+function pruneSel(){const ids=new Set(S().items.map(i=>i.id));for(const id of [...ui.sel])if(!ids.has(id))ui.sel.delete(id)}
+
+const Store={mode:'local',db:null,uid:null,
+  key(){return `data/users/${this.uid}`},
+  async list(){
+    if(this.mode==='cloud'){try{const snap=await this.db.collection(this.key()).get();return snap.docs.filter(d=>d.id.startsWith('v2p_')).map(d=>{const x=d.data()||{};return {id:d.id.slice(4),name:x.name,updated:x.updated,setups:x.setups}})}catch(e){}}
+    return LS.get('lps2:index')||[];
+  },
+  async load(id){
+    if(this.mode==='cloud'){try{const d=await this.db.doc(this.key()+'/v2p_'+id).get();const x=d.data();if(x&&x.json)return JSON.parse(x.json)}catch(e){}}
+    return LS.get('lps2:p:'+id);
+  },
+  async save(p){
+    const meta={id:p.id,name:p.name,updated:p.updated,setups:p.setups.length};
+    LS.set('lps2:p:'+p.id,p);const idx=(LS.get('lps2:index')||[]).filter(x=>x.id!==p.id);idx.unshift(meta);LS.set('lps2:index',idx);
+    if(this.mode==='cloud'){await this.db.doc(this.key()+'/v2p_'+p.id).set({name:p.name,updated:p.updated,setups:p.setups.length,json:JSON.stringify(p)})}
+  },
+  async remove(id){LS.del('lps2:p:'+id);LS.set('lps2:index',(LS.get('lps2:index')||[]).filter(x=>x.id!==id));if(this.mode==='cloud'){try{await this.db.doc(this.key()+'/v2p_'+id).delete()}catch(e){}}},
+  async savePrefs(){LS.set('lps2:prefs',prefs);if(this.mode==='cloud'){try{await this.db.doc(this.key()+'/v2prefs').set({json:JSON.stringify(prefs)})}catch(e){}}},
+  async loadPrefs(){if(this.mode==='cloud'){try{const d=await this.db.doc(this.key()+'/v2prefs').get();const x=d.data();if(x&&x.json)return JSON.parse(x.json)}catch(e){}}return null}
+};
+let saveTimer=null,saving=false,savePrefsTimer=null;
+function scheduleSave(){setSaveState('pending');clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,700)}
+async function saveNow(){saving=true;setSaveState('saving');try{await Store.save(P);prefs.lastProject=P.id;persistPrefs(true);setSaveState('saved')}catch(e){setSaveState('error')}saving=false}
+function persistPrefs(quiet){clearTimeout(savePrefsTimer);savePrefsTimer=setTimeout(()=>Store.savePrefs(),quiet?50:400)}
+function setSaveState(s){const el=$('#saveState');const where=Store.mode==='cloud'?'to your account':'in this browser';
+  el.innerHTML=s==='saving'?'<b style="color:var(--muted)">●</b> <span class="sv-t">Saving…</span>':s==='pending'?'<b style="color:var(--accent)">●</b> <span class="sv-t">Unsaved changes</span>':s==='error'?'<b style="color:var(--danger)">●</b> <span class="sv-t">Save failed, retrying on next change</span>':`<b>●</b> <span class="sv-t">Saved ${where}</span>`;el.title=el.textContent.replace('●','').trim()}
+
+/* ============ toolbar ============ */
+const IC={
+  room:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 2.5h11v11h-11z"/><path d="M6 2.5v2M2.5 9h2" stroke-width="1.2"/></svg>',
+  copy:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg>',
+  paste:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="10" height="11.5" rx="1.5"/><path d="M6 3V2h4v1"/><path d="M5.5 7.5h5M5.5 10h3.5"/></svg>',
+  select:'<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2l9 5.2-4 .9 2.4 4.6-1.6.8L6.4 9 3.5 11.8z"/></svg>',
+  pan:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2"/></svg>',
+  measure:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="5" width="13" height="6" rx="1"/><path d="M4 5v2.5M7 5v3.5M10 5v2.5M13 5v3.5"/></svg>',
+  text:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3.5h10M8 3.5v10M6 13.5h4"/></svg>',
+  undo:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.5 3 2.5 6l3 3"/><path d="M2.5 6H10a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  redo:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m10.5 3 3 3-3 3"/><path d="M13.5 6H6a3.5 3.5 0 0 0 0 7h4"/></svg>',
+  eye:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg>',
+  eyeoff:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 2l12 12M6.3 4A7 7 0 0 1 8 3.5C12 3.5 14.5 8 14.5 8a12 12 0 0 1-2 2.6M9.9 11.9a6 6 0 0 1-1.9.6C4 12.5 1.5 8 1.5 8a12 12 0 0 1 2.4-2.9"/></svg>',
+  lock:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="7" width="10" height="7" rx="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>',
+  unlock:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="7" width="10" height="7" rx="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 4.9-.7"/></svg>',
+  up:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 10 4-4 4 4"/></svg>',
+  down:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 6 4 4 4-4"/></svg>',
+  x:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4 4 8 8M12 4l-8 8"/></svg>',
+  panelL:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M6 2.5v11"/></svg>',
+  panelR:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M10 2.5v11"/></svg>'
+};
+function renderToolbar(){
+  const T=prefs.toggles;const tb=(id,label,on,title,cls='tog')=>`<button class="tb ${cls}" data-tog="${id}" aria-pressed="${!!on}" title="${esc(title)}">${label}</button>`;
+  $('#toolbar').innerHTML=`
+  <div class="grp mobile-only"><button class="tb" data-act="openLeft" title="Kit &amp; symbols">${IC.panelL}Kit</button><button class="tb" data-act="openRight" title="Inspector &amp; layers">${IC.panelR}Inspect</button></div>
+  <div class="grp"><span class="grp-l">Tool</span>${['select','pan','room','measure','text'].map(t=>`<button class="tb" data-tool="${t}" aria-pressed="${ui.tool===t}" title="${{select:'Select & move (V)',pan:'Pan (H, or hold Space)',room:'Draw the room (B): drag out its walls',measure:'Measure distance (M)',text:'Text note (T)'}[t]}">${IC[t]}${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div>
+  <div class="grp"><button class="tb" data-act="undo" title="Undo (Ctrl/Cmd+Z)" ${hIdx<=0?'disabled':''}>${IC.undo}</button><button class="tb" data-act="redo" title="Redo (Ctrl/Cmd+Shift+Z)" ${hIdx>=hist.length-1?'disabled':''}>${IC.redo}</button><button class="tb" data-act="copy" title="Copy selection (Ctrl/Cmd+C)" aria-label="Copy" ${ui.sel.size?'':'disabled'}>${IC.copy}</button><button class="tb" data-act="paste" title="Paste, including into another setup (Ctrl/Cmd+V)" aria-label="Paste" ${ui.clip?'':'disabled'}>${IC.paste}</button></div>
+  <div class="grp"><span class="grp-l">Show</span>
+    <span class="seg" title="Labels on the plan"><button data-labels="off" aria-pressed="${T.labels==='off'}">No labels</button><button data-labels="num" aria-pressed="${T.labels==='num'}">Numbers</button><button data-labels="name" aria-pressed="${T.labels==='name'}">Names</button></span>
+    ${tb('details','Details',T.details,'Show power, CCT, gel, height and modifiers on the plan')}
+    ${tb('fov','Camera FOV',T.fov,'Show camera field-of-view wedges')}
+    ${tb('grip','Grip',T.grip,'Show grip on the plan. Grip is always counted in the kit list.')}
+    ${tb('title','Title block',T.title,'Show the shoot title block')}
+  </div>
+  <div class="grp"><span class="grp-l">Grid</span>${tb('grid','Grid',T.grid,'Show 1 m grid')}${tb('snap','Snap',T.snap,'Snap positions to the grid')}
+    <select class="mini-sel" id="snapSize" title="Snap spacing" aria-label="Snap spacing">${[10,25,50,100].map(v=>`<option value="${v}" ${T.snapSize==v?'selected':''}>${v} cm</option>`).join('')}</select></div>
+  <div class="grp"><button class="tb" data-act="zoomOut" title="Zoom out">−</button><span class="zoom" id="zoomPct"></span><button class="tb" data-act="zoomIn" title="Zoom in">+</button><button class="tb" data-act="fit" title="Fit plan to view">Fit</button></div>`;
+}
+$('#toolbar').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.tool){setTool(b.dataset.tool);return}
+  if(b.dataset.tog){prefs.toggles[b.dataset.tog]=!prefs.toggles[b.dataset.tog];persistPrefs();if(b.dataset.tog==='grip')pruneHiddenSel();renderToolbar();renderCanvas();renderRight();return}
+  if(b.dataset.labels){prefs.toggles.labels=b.dataset.labels;persistPrefs();renderToolbar();renderCanvas();return}
+  const a=b.dataset.act;
+  if(a==='undo')undo();else if(a==='redo')redo();else if(a==='copy')copySel();else if(a==='paste')pasteClip();else if(a==='fit')fitView();
+  else if(a==='zoomIn'||a==='zoomOut'){const r=svg.getBoundingClientRect();zoomAt(r.width/2,r.height/2,a==='zoomIn'?1.25:0.8)}
+  else if(a==='openLeft'){$('#left').classList.toggle('open');$('#right').classList.remove('open')}
+  else if(a==='openRight'){$('#right').classList.toggle('open');$('#left').classList.remove('open')}
+});
+$('#toolbar').addEventListener('change',e=>{if(e.target.id==='snapSize'){prefs.toggles.snapSize=+e.target.value;persistPrefs()}});
+function pruneHiddenSel(){if(!prefs.toggles.grip)for(const it of S().items)if(E(it.ref).cat==='grip')ui.sel.delete(it.id)}
+function setTool(t){ui.tool=t;renderToolbar();renderCanvas();const h=$('#canvasHint');
+  if(t==='room'){h.hidden=false;h.textContent=S().room.on?'Drag on the plan to redraw the room':'Drag on the plan to draw the room'}
+  else if(t==='measure'){h.hidden=false;h.textContent=S().room.on?'Drag on the plan to measure':'Drag to measure. Set a room size for exact scale.'}
+  else if(t==='text'){h.hidden=false;h.textContent='Click the plan to place a note'}else h.hidden=true}
+function zoomAt(sx,sy,f){const v=ui.view;const ns=clamp(v.s*f,.08,8);const wx=(sx-v.x)/v.s,wy=(sy-v.y)/v.s;v.s=ns;v.x=sx-wx*ns;v.y=sy-wy*ns;renderCanvas()}
+
+/* ============ left panel ============ */
+const LTABS=[['kit','Available kit'],['generic','Generic'],['set','Set'],['grip','Grip']];
+function renderLeft(){
+  $('#leftTabs').innerHTML=LTABS.map(([k,l])=>`<button role="tab" aria-selected="${ui.leftTab===k}" data-lt="${k}">${l}</button>`).join('');
+  const body=$('#leftBody');let h='';
+  if(ui.leftTab==='kit'){
+    const ids=Object.keys(prefs.kit).filter(id=>ENTRIES[id]||prefs.custom.find(c=>c.id===id));
+    h+=`<div style="display:flex;gap:6px"><input class="search" id="kitSearch" placeholder="Filter your kit" value="${esc(ui.kitSearch)}" aria-label="Filter kit"><button class="btn pri" data-act="catalogue">Catalogue</button></div>`;
+    if(!ids.length){h+=`<p class="hint" style="margin-top:14px">Your available kit is empty. Open the catalogue and tick what you own or have hired, then drag it onto the plan.</p><button class="btn" data-act="catalogue">Open catalogue</button>`}
+    else{
+      const used=usedCounts(S());const q=ui.kitSearch.toLowerCase();
+      for(const [cat,label] of [['camera','Cameras'],['light','Lights'],['modifier','Modifiers']]){
+        const list=ids.map(E).filter(e=>e.cat===cat&&(!q||(e.brand+' '+e.name).toLowerCase().includes(q))).sort(sortEntries);
+        if(!list.length)continue;h+=`<div class="sec-h">${label}<span>${list.length}</span></div>`;
+        for(const e of list){const own=prefs.kit[e.id]||1,u=used[e.id]||0;
+          h+=`<div class="krow" data-ref="${e.id}" title="Drag onto the plan, or click to add">${iconSVG(e)}<div style="min-width:0"><div class="nm">${esc(e.name)}</div><div class="sb">${esc(e.brand)}${u?` · <span class="${u>own?'warn':''}">${u}/${own} placed</span>`:''}</div></div><div class="qty" title="Quantity available"><button data-kq="-1" data-id="${e.id}" aria-label="Fewer">−</button><span>${own}</span><button data-kq="1" data-id="${e.id}" aria-label="More">+</button></div></div>`}
+      }
+      h+=`<p class="hint" style="margin-top:12px">Drop a modifier onto a light to attach it. Click an item to add it to the middle of the view.</p>`;
+    }
+  } else if(ui.leftTab==='generic'){
+    h+=`<p class="hint">Use these when the exact model doesn't matter yet.</p>`;
+    GENERIC.forEach(([g,list],gi)=>{h+=`<div class="sec-h">${g}</div><div class="tiles">`;list.forEach(([t,n])=>{const id=(gi===1?'gm:':'g:')+t;h+=`<div class="tile" data-ref="${id}">${iconSVG(E(id))}<span>${esc(n)}</span></div>`});h+='</div>'});
+  } else if(ui.leftTab==='set'){
+    SET_DEF.forEach(([g,list])=>{h+=`<div class="sec-h">${g}</div><div class="tiles">`;list.forEach(([t,n])=>{const id='s:'+t;h+=`<div class="tile" data-ref="${id}">${iconSVG(E(id))}<span>${esc(n)}</span></div>`});h+='</div>'});
+  } else {
+    h+=`<p class="hint">${prefs.toggles.grip?'Grip is showing on the plan.':'Grip is hidden on the plan.'} Either way it's counted in the kit list. You can also set a light's stand and sandbags in its details.</p>`;
+    GRIP_DEF.forEach(([g,list])=>{h+=`<div class="sec-h">${g}</div><div class="tiles">`;list.forEach(([t,n])=>{const id='r:'+t;h+=`<div class="tile" data-ref="${id}">${iconSVG(E(id))}<span>${esc(n)}</span></div>`});h+='</div>'});
+  }
+  body.innerHTML=h;
+}
+function sortEntries(a,b){const ia=BRAND_ORDER.indexOf(a.brand),ib=BRAND_ORDER.indexOf(b.brand);return ((ia<0?99:ia)-(ib<0?99:ib))||a.name.localeCompare(b.name,undefined,{numeric:true})}
+function usedCounts(Sx){const m={};for(const it of Sx.items){m[it.ref]=(m[it.ref]||0)+1;(it.mods||[]).forEach(r=>m[r]=(m[r]||0)+1)}return m}
+$('#leftTabs').addEventListener('click',e=>{const b=e.target.closest('[data-lt]');if(!b)return;ui.leftTab=b.dataset.lt;renderLeft()});
+$('#leftBody').addEventListener('input',e=>{if(e.target.id==='kitSearch'){ui.kitSearch=e.target.value;const pos=e.target.selectionStart;renderLeft();const i=$('#kitSearch');i.focus();i.setSelectionRange(pos,pos)}});
+$('#leftBody').addEventListener('click',e=>{
+  const q=e.target.closest('[data-kq]');if(q){e.stopPropagation();const id=q.dataset.id;const n=(prefs.kit[id]||1)+(+q.dataset.kq);if(n<=0)delete prefs.kit[id];else prefs.kit[id]=n;persistPrefs();renderLeft();return}
+  const a=e.target.closest('[data-act]');if(a&&a.dataset.act==='catalogue')openCatalogue();
+});
+$('#leftBody').addEventListener('pointerdown',e=>{
+  if(e.target.closest('[data-kq]'))return;const t=e.target.closest('[data-ref]');if(!t||e.button>0)return;startPaletteDrag(e,t.dataset.ref);
+});
+function startPaletteDrag(e,ref){
+  const sx=e.clientX,sy=e.clientY;let ghost=null;const pid=e.pointerId;
+  const move=ev=>{if(ev.pointerId!==pid)return;if(!ghost&&Math.hypot(ev.clientX-sx,ev.clientY-sy)>6){ghost=document.createElement('div');ghost.className='ghost-drag';ghost.innerHTML=iconSVG(E(ref));document.body.appendChild(ghost);document.body.classList.add('drop-ok');if(innerWidth<=980)$('#left').classList.remove('open')}
+    if(ghost){ghost.style.left=ev.clientX+'px';ghost.style.top=ev.clientY+'px'}};
+  const end=ev=>{if(ev.pointerId!==pid)return;removeEventListener('pointermove',move);removeEventListener('pointerup',end);removeEventListener('pointercancel',end);
+    if(ghost){ghost.remove();document.body.classList.remove('drop-ok');if(ev.type==='pointerup'){const r=wrap.getBoundingClientRect();if(ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom){const w=toWorld(ev.clientX,ev.clientY);dropRef(ref,w.x,w.y,true)}}}
+    else if(ev.type==='pointerup'){const r=svg.getBoundingClientRect();const w=toWorld(r.left+r.width/2,r.top+r.height/2);dropRef(ref,w.x+(Math.random()-.5)*40,w.y+(Math.random()-.5)*40,false);if(innerWidth<=980)$('#left').classList.remove('open')}};
+  addEventListener('pointermove',move);addEventListener('pointerup',end);addEventListener('pointercancel',end);
+}
+function dropRef(ref,x,y,atPoint){
+  const e=E(ref),Sx=S();
+  if(ref==='s:room'){if(!atPoint){setTool('room');return}const w=Sx.room.on?Sx.room.w:600,d=Sx.room.on?Sx.room.d:500;const p=snapRoom({x:x-w/2,y:y-d/2});Sx.room={on:true,x:p.x,y:p.y,w,d};commit();toast(`Room placed (${fmtM(w)} × ${fmtM(d)}). Use the Room tool to drag out a different size.`);return}
+  if(e.cat==='modifier'){
+    let target=null;
+    if(atPoint){let best=1e9;for(const {it,e:le} of visibleItems(Sx,{grip:true})){if(le.cat!=='light')continue;const d=Math.hypot(it.x-x,it.y-y);if(d<Math.max(70,le.w)&&d<best){best=d;target=it}}}
+    else if(ui.sel.size===1){const it=Sx.items.find(i=>i.id===[...ui.sel][0]);if(it&&E(it.ref).cat==='light')target=it}
+    if(target&&canHaveMods(E(target.ref))){(target.mods=target.mods||[]).push(ref);ui.sel=new Set([target.id]);commit();toast(`${e.name} attached to ${target.label||E(target.ref).name}`);return}
+  }
+  const T=prefs.toggles;if(T.snap){x=Math.round(x/T.snapSize)*T.snapSize;y=Math.round(y/T.snapSize)*T.snapSize}
+  const it=makeItem(ref,x,y);if(e.type==='text')it.props.text='Note';Sx.items.push(it);ui.sel=new Set([it.id]);
+  if(e.cat==='grip'&&!T.grip)toast('Added. Grip is hidden on the plan; turn on "Grip" to see it.');
+  const L=Sx.layers.find(l=>l.id===it.layer);if(L&&!L.visible){L.visible=true}
+  commit();
+}
+function canHaveMods(e){return e.cat==='light'&&['cob','fresnel','openface','spot','par','hmi','pocket','panel','tube','mat'].includes(e.type)}
+
+/* ============ canvas interaction ============ */
+function toWorld(cx,cy){const r=svg.getBoundingClientRect();return {x:(cx-r.left-ui.view.x)/ui.view.s,y:(cy-r.top-ui.view.y)/ui.view.s}}
+function itemById(id){return S().items.find(i=>i.id===id)}
+function layerOf(it){return S().layers.find(l=>l.id===it.layer)}
+function isLocked(it){const L=layerOf(it);return it.locked||(L&&L.locked)}
+const pointers=new Map();let drag=null;
+svg.addEventListener('pointerdown',e=>{
+  svg.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pointers.size===2){if(drag&&drag.orig)restoreOrig();const [a,b]=[...pointers.values()];drag={type:'pinch',d0:Math.hypot(a.x-b.x,a.y-b.y),s0:ui.view.s,c0:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},v0:{...ui.view}};ui.marq=null;ui.measDraft=null;return}
+  if(pointers.size>2)return;
+  const w=toWorld(e.clientX,e.clientY);
+  if(e.button===1||ui.tool==='pan'||ui.space){drag={type:'pan',sx:e.clientX,sy:e.clientY,v0:{...ui.view}};svg.classList.add('grabbing');return}
+  const h=e.target.closest('[data-h]');
+  if(h){const it=itemById(h.dataset.hid);if(!it)return;
+    if(h.dataset.h==='rot')drag={type:'rot',it,orig:snapItems([it])};
+    else if(h.dataset.h==='size')drag={type:'size',it,orig:snapItems([it])};
+    else drag={type:h.dataset.h,it,orig:snapItems([it])};return}
+  if(ui.tool==='room'){const p=snapRoom(w);drag={type:'room'};ui.roomDraft={x0:p.x,y0:p.y,x1:p.x,y1:p.y};return}
+  if(ui.tool==='measure'){const p=snapPt(w);drag={type:'measure'};ui.measDraft={x:p.x,y:p.y,x2:p.x,y2:p.y};return}
+  if(ui.tool==='text'){const it=makeItem('s:text',w.x,w.y);S().items.push(it);ui.sel=new Set([it.id]);setTool('select');commit();setTimeout(()=>{const f=document.querySelector('[data-f="props.text"]');if(f){f.focus();f.select()}},30);return}
+  const g=e.target.closest('[data-id]');
+  if(g){const id=g.dataset.id;const it=itemById(id);
+    if(e.shiftKey||e.metaKey||e.ctrlKey){if(ui.sel.has(id))ui.sel.delete(id);else ui.sel.add(id);renderAll();return}
+    if(!ui.sel.has(id))ui.sel=new Set([id]);
+    const movers=[...ui.sel].map(itemById).filter(i=>i&&!isLocked(i));
+    drag={type:'move',w0:w,orig:snapItems(movers),moved:false,anchor:it};renderAll();return}
+  if(!(e.shiftKey||e.metaKey||e.ctrlKey))ui.sel.clear();
+  drag={type:'marq',base:new Set(ui.sel)};ui.marq={x0:w.x,y0:w.y,x1:w.x,y1:w.y};renderAll();
+});
+svg.addEventListener('pointermove',e=>{
+  if(!pointers.has(e.pointerId))return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!drag)return;
+  const w=toWorld(e.clientX,e.clientY);const T=prefs.toggles;
+  switch(drag.type){
+    case 'pinch':{if(pointers.size<2)return;const [a,b]=[...pointers.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);const c={x:(a.x+b.x)/2,y:(a.y+b.y)/2};const r=svg.getBoundingClientRect();
+      const ns=clamp(drag.s0*d/drag.d0,.08,8);const wx=(drag.c0.x-r.left-drag.v0.x)/drag.v0.s,wy=(drag.c0.y-r.top-drag.v0.y)/drag.v0.s;ui.view={s:ns,x:c.x-r.left-wx*ns,y:c.y-r.top-wy*ns};renderCanvas();break}
+    case 'pan':ui.view.x=drag.v0.x+(e.clientX-drag.sx);ui.view.y=drag.v0.y+(e.clientY-drag.sy);renderCanvas();break;
+    case 'move':{let dx=w.x-drag.w0.x,dy=w.y-drag.w0.y;if(!drag.moved&&Math.hypot(dx,dy)*ui.view.s<3)return;drag.moved=true;
+      if(T.snap&&drag.anchor){const o=drag.orig.find(o=>o.id===drag.anchor.id);if(o){const tx=Math.round((o.x+dx)/T.snapSize)*T.snapSize,ty=Math.round((o.y+dy)/T.snapSize)*T.snapSize;dx=tx-o.x;dy=ty-o.y}}
+      for(const o of drag.orig){const it=itemById(o.id);it.x=Math.round(o.x+dx);it.y=Math.round(o.y+dy);if(o.x2!=null){it.x2=Math.round(o.x2+dx);it.y2=Math.round(o.y2+dy)}}renderCanvas();break}
+    case 'rot':{const it=drag.it;let a=deg(Math.atan2(w.x-it.x,-(w.y-it.y)));if(e.shiftKey||T.snap)a=Math.round(a/15)*15;else a=Math.round(a);it.rot=((a%360)+360)%360;renderCanvas();break}
+    case 'size':{const it=drag.it;const r=rad(-(it.rot||0)),dx=w.x-it.x,dy=w.y-it.y;const lx=dx*Math.cos(r)-dy*Math.sin(r),ly=dx*Math.sin(r)+dy*Math.cos(r);let nw=Math.max(5,Math.abs(lx)*2-12/ui.view.s),nh=Math.max(4,Math.abs(ly)*2-12/ui.view.s);
+      if(T.snap){nw=Math.max(T.snapSize/5,Math.round(nw/5)*5);nh=Math.max(2,Math.round(nh/5)*5)}it.w=Math.round(nw);it.h=Math.round(nh);renderCanvas();break}
+    case 'm1':case 'm2':{const p=snapPt(w);if(drag.type==='m1'){drag.it.x=p.x;drag.it.y=p.y}else{drag.it.x2=p.x;drag.it.y2=p.y}renderCanvas();break}
+    case 'room':{const p=snapRoom(w);ui.roomDraft.x1=p.x;ui.roomDraft.y1=p.y;renderCanvas();break}
+    case 'measure':{const p=snapPt(w);ui.measDraft.x2=p.x;ui.measDraft.y2=p.y;renderCanvas();break}
+    case 'marq':{ui.marq.x1=w.x;ui.marq.y1=w.y;const x0=Math.min(ui.marq.x0,w.x),x1=Math.max(ui.marq.x0,w.x),y0=Math.min(ui.marq.y0,w.y),y1=Math.max(ui.marq.y0,w.y);
+      const s=new Set(drag.base);for(const {it} of visibleItems(S(),{grip:T.grip})){const cx=it.x2!=null?(it.x+it.x2)/2:it.x,cy=it.y2!=null?(it.y+it.y2)/2:it.y;if(cx>=x0&&cx<=x1&&cy>=y0&&cy<=y1)s.add(it.id)}ui.sel=s;renderCanvas();break}
+  }
+});
+function endPointer(e){
+  pointers.delete(e.pointerId);svg.classList.remove('grabbing');if(!drag)return;
+  if(drag.type==='pinch'){if(pointers.size===0)drag=null;return}
+  const d=drag;drag=null;
+  if(d.type==='room'){const r=roomFromDraft(ui.roomDraft);ui.roomDraft=null;if(r.w>=50&&r.d>=50){S().room=r;setTool('select');commit();toast(`Room set to ${fmtM(r.w)} × ${fmtM(r.d)}. Fine-tune it in the Setup panel.`)}else{renderCanvas();toast('Drag a bigger box to draw the room (at least 50 cm each way).')}return}
+  if(d.type==='measure'){const m=ui.measDraft;ui.measDraft=null;if(m&&Math.hypot(m.x2-m.x,m.y2-m.y)>8){const it=makeItem('t:measure',m.x,m.y,{x2:m.x2,y2:m.y2});S().items.push(it);ui.sel=new Set([it.id]);commit()}else renderCanvas();return}
+  if(d.type==='marq'){ui.marq=null;renderAll();return}
+  if(d.type==='pan')return;
+  if(['move','rot','size','m1','m2'].includes(d.type)){if(d.type==='move'&&!d.moved){renderAll();return}commit()}
+}
+svg.addEventListener('pointerup',endPointer);svg.addEventListener('pointercancel',endPointer);
+svg.addEventListener('dblclick',e=>{const g=e.target.closest('[data-id]');if(!g)return;ui.sel=new Set([g.dataset.id]);ui.rightTab='inspect';renderAll();$('#right').classList.add('open');setTimeout(()=>{const f=document.querySelector('#rightBody [data-f="label"],#rightBody [data-f="props.text"]');if(f)f.focus()},20)});
+svg.addEventListener('wheel',e=>{e.preventDefault();const r=svg.getBoundingClientRect();
+  if(e.ctrlKey||e.metaKey||Math.abs(e.deltaY)>=40&&e.deltaMode===0&&Number.isInteger(e.deltaY)||e.deltaMode===1){zoomAt(e.clientX-r.left,e.clientY-r.top,Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0015)))}
+  else{ui.view.x-=e.deltaX;ui.view.y-=e.deltaY;renderCanvas()}},{passive:false});
+function snapItems(list){return list.map(it=>({id:it.id,x:it.x,y:it.y,x2:it.x2,y2:it.y2,rot:it.rot,w:it.w,h:it.h}))}
+function restoreOrig(){if(!drag||!drag.orig)return;for(const o of drag.orig){const it=itemById(o.id);if(it)Object.assign(it,{x:o.x,y:o.y,rot:o.rot,w:o.w,h:o.h},o.x2!=null?{x2:o.x2,y2:o.y2}:{})}}
+function snapPt(w){const T=prefs.toggles;if(!T.snap)return {x:Math.round(w.x),y:Math.round(w.y)};const s=Math.min(T.snapSize,25);return {x:Math.round(w.x/s)*s,y:Math.round(w.y/s)*s}}
+new ResizeObserver(()=>renderCanvas()).observe(wrap);
+
+/* keyboard */
+addEventListener('keydown',e=>{
+  const tag=(e.target.tagName||'').toLowerCase();const typing=tag==='input'||tag==='textarea'||tag==='select'||e.target.isContentEditable;
+  if($('#modalRoot').children.length){if(e.key==='Escape')closeModal();return}
+  const mod=e.metaKey||e.ctrlKey;
+  if(mod&&e.key.toLowerCase()==='z'&&!typing){e.preventDefault();e.shiftKey?redo():undo();return}
+  if(mod&&e.key.toLowerCase()==='y'&&!typing){e.preventDefault();redo();return}
+  if(typing)return;
+  if(e.key===' '){if(!ui.space){ui.space=true;renderCanvas()}e.preventDefault();return}
+  if(mod&&e.key.toLowerCase()==='d'){e.preventDefault();duplicateSel();return}
+  if(mod&&e.key.toLowerCase()==='c'){if(ui.sel.size){e.preventDefault();copySel()}return}
+  if(mod&&e.key.toLowerCase()==='x'){if(ui.sel.size){e.preventDefault();copySel(true)}return}
+  if(mod&&e.key.toLowerCase()==='v'){if(ui.clip){e.preventDefault();pasteClip()}return}
+  if(mod&&e.key.toLowerCase()==='a'){e.preventDefault();ui.sel=new Set(visibleItems(S(),{grip:prefs.toggles.grip}).map(v=>v.it.id));renderAll();return}
+  if(e.key==='Delete'||e.key==='Backspace'){if(ui.sel.size){e.preventDefault();deleteSel()}return}
+  if(e.key==='Escape'){ui.sel.clear();setTool('select');renderAll();return}
+  if(e.key==='v'||e.key==='V')setTool('select');else if(e.key==='h'||e.key==='H')setTool('pan');else if(e.key==='m'||e.key==='M')setTool('measure');else if(e.key==='b'||e.key==='B')setTool('room');else if(e.key==='t'||e.key==='T')setTool('text');
+  else if((e.key==='r'||e.key==='R')&&ui.sel.size){rotateSel(e.shiftKey?-15:15)}
+  else if(e.key.startsWith('Arrow')&&ui.sel.size){e.preventDefault();const st=e.shiftKey?50:prefs.toggles.snap?prefs.toggles.snapSize:5;const dx=e.key==='ArrowLeft'?-st:e.key==='ArrowRight'?st:0,dy=e.key==='ArrowUp'?-st:e.key==='ArrowDown'?st:0;
+    for(const id of ui.sel){const it=itemById(id);if(!it||isLocked(it))continue;it.x+=dx;it.y+=dy;if(it.x2!=null){it.x2+=dx;it.y2+=dy}}commitSoon()}
+  else if(e.key==='0'&&!mod)fitView();
+});
+addEventListener('keyup',e=>{if(e.key===' '){ui.space=false;renderCanvas()}});
+let csT=null;function commitSoon(){renderCanvas();clearTimeout(csT);csT=setTimeout(commit,350)}
+function rotateSel(d){for(const id of ui.sel){const it=itemById(id);if(!it||isLocked(it)||it.x2!=null)continue;it.rot=(((it.rot||0)+d)%360+360)%360}commit()}
+function copySel(cut,quiet){
+  const Sx=S();const items=[...ui.sel].map(itemById).filter(Boolean);if(!items.length)return;
+  ui.clip={from:Sx.id,pastes:{},items:items.map(it=>{const L=Sx.layers.find(l=>l.id===it.layer)||{};return {it:JSON.parse(JSON.stringify(it)),kind:L.kind,lname:L.name}})};
+  if(cut){const ids=new Set(items.filter(i=>!isLocked(i)).map(i=>i.id));Sx.items=Sx.items.filter(i=>!ids.has(i.id));ui.sel.clear();commit();toast(`Cut ${ids.size} item${ids.size>1?'s':''}. Switch setup and paste with Ctrl/Cmd+V.`)}
+  else{renderRight();renderToolbar();if(!quiet)toast(`Copied ${items.length} item${items.length>1?'s':''}. Switch setup and paste with Ctrl/Cmd+V.`)}
+}
+function pasteClip(target){
+  const c=ui.clip;if(!c)return;const Tx=target||S();
+  const n=(c.pastes[Tx.id]=(c.pastes[Tx.id]||0)+1);const off=(Tx.id===c.from?n:n-1)*40;
+  const ids=new Set();
+  for(const {it,kind,lname} of c.items){
+    const x=JSON.parse(JSON.stringify(it));x.id=uid();x.locked=false;x.x+=off;x.y+=off;if(x.x2!=null){x.x2+=off;x.y2+=off}
+    const L=Tx.layers.find(l=>l.id===it.layer&&Tx.id===c.from)||Tx.layers.find(l=>l.kind===kind&&!l.locked)||Tx.layers.find(l=>l.name===lname&&!l.locked)||Tx.layers.find(l=>l.id===layerFor(Tx,E(x.ref)));
+    x.layer=(L||Tx.layers[0]).id;const LL=Tx.layers.find(l=>l.id===x.layer);if(LL)LL.visible=true;
+    Tx.items.push(x);ids.add(x.id)}
+  if(Tx===S()){ui.sel=ids;commit()}else{commit();toast(`Copied ${ids.size} item${ids.size>1?'s':''} to “${Tx.name}”.`)}
+}
+function copyToSetup(id){const T=P.setups.find(s=>s.id===id);if(!T)return;const keep=ui.clip;copySel(false,true);ui.clip.pastes={};pasteClip(T);ui.clip=keep||ui.clip}
+function duplicateSel(){const Sx=S();const ns=new Set();for(const id of ui.sel){const it=itemById(id);if(!it)continue;const c=JSON.parse(JSON.stringify(it));c.id=uid();c.x+=40;c.y+=40;if(c.x2!=null){c.x2+=40;c.y2+=40}c.locked=false;Sx.items.push(c);ns.add(c.id)}ui.sel=ns;commit()}
+function deleteSel(){const Sx=S();const n=[...ui.sel].filter(id=>{const it=itemById(id);return it&&!isLocked(it)});Sx.items=Sx.items.filter(i=>!n.includes(i.id));ui.sel.clear();commit();if(n.length)toast(`Deleted ${n.length} item${n.length>1?'s':''}. Undo with Ctrl/Cmd+Z.`)}
+function reorderSel(dir){const Sx=S();const arr=Sx.items;const ids=[...ui.sel];
+  if(dir==='front'){Sx.items=arr.filter(i=>!ui.sel.has(i.id)).concat(arr.filter(i=>ui.sel.has(i.id)))}else{Sx.items=arr.filter(i=>ui.sel.has(i.id)).concat(arr.filter(i=>!ui.sel.has(i.id)))}commit()}
+
+/* ============ right panel ============ */
+function renderRight(){
+  $('#rightTabs').innerHTML=[['inspect',ui.sel.size?'Selection':'Setup'],['layers','Layers']].map(([k,l])=>`<button role="tab" aria-selected="${ui.rightTab===k}" data-rt="${k}">${l}</button>`).join('');
+  const f=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.f;
+  $('#rightBody').innerHTML=ui.rightTab==='layers'?layersHTML():inspectorHTML();
+  if(f){const el=document.querySelector(`#rightBody [data-f="${f}"]`);if(el&&el!==document.activeElement)el.focus()}
+}
+$('#rightTabs').addEventListener('click',e=>{const b=e.target.closest('[data-rt]');if(!b)return;ui.rightTab=b.dataset.rt;renderRight()});
+function stopSlider(f,v,label,clearable=true){const set=v!==''&&v!=null;const val=set?num(v):0;
+  return `<div class="fld"><label>${label}</label><div class="stop"><input type="range" data-f="${f}" min="-7" max="7" step="0.333333" value="${val}" aria-label="${esc(label)} in stops" class="${set?'':'unset'}"><output>${set?fmtStop(val):'Not set'}</output>${clearable&&set?`<button class="ib" data-stopreset="${f}" title="Clear">${IC.x}</button>`:''}</div></div>`}
+function ratioFromStops(Sx){const L=Sx.items.filter(i=>E(i.ref).cat==='light'&&i.props&&i.props.stops!==''&&i.props.stops!=null);const k=L.find(i=>i.props.role==='Key'),f=L.find(i=>i.props.role==='Fill');if(!k||!f)return null;const d=num(k.props.stops)-num(f.props.stops);const r=Math.pow(2,d);return {d,r:(r>=10?Math.round(r):Math.round(r*10)/10)+':1'}}
+function cameraSetupHTML(Sx){const c=Sx.cam;const auto=ratioFromStops(Sx);
+  return `<div class="sec-h">Camera &amp; exposure</div>
+  ${fld('Lens set',`<input data-f="cam.lens" list="lensList" value="${esc(c.lens)}" placeholder="Choose or type">`)}
+  ${fld('Stop',`<div class="pair"><select data-f="cam.stopType" style="flex:0 0 58px">${['T','f'].map(x=>`<option ${c.stopType===x?'selected':''}>${x}</option>`).join('')}</select><input data-f="cam.stop" list="stopList" value="${esc(c.stop)}" placeholder="e.g. 2.8"></div>`)}
+  ${fld('Camera WB',`<div class="pair"><input data-f="cam.kelvin" list="kList" type="number" min="1500" max="15000" step="50" value="${esc(c.kelvin)}" placeholder="e.g. 5600"><span class="u">K</span></div>`)}
+  ${fld('Contrast ratio',`<input data-f="cam.ratio" list="ratioList" value="${esc(c.ratio)}" placeholder="${auto?esc(auto.r+' from key/fill'):'e.g. 4:1'}">`)}
+  ${auto&&!c.ratio?`<p class="hint" style="margin-top:-2px">Key and fill are ${Math.round(Math.abs(auto.d)*10)/10} stops apart, which is ${auto.r} (2 to the power of the stop difference).</p>`:''}
+  ${stopSlider('cam.key',c.key,'Scene key',false)}
+  <p class="hint" style="margin-top:-2px">How the scene sits against a normal exposure: 0 is at key, −1 is a stop under, +2 two stops over.</p>`}
+function exposureHTML(Sx){const B=badges(Sx);const L=Sx.items.filter(i=>E(i.ref).cat==='light');if(!L.length)return '';
+  return `<div class="sec-h">Lights vs key</div><p class="hint" style="margin-top:0">Stops over or under the scene key that each light should read on the subject.</p>`+L.map(it=>{const e=E(it.ref),p=it.props||{};const set=p.stops!==''&&p.stops!=null;const val=set?num(p.stops):0;
+    return `<div class="lstop"><div class="lstop-h"><span class="bdg">${B[it.id]}</span><span class="t">${esc((p.role?p.role+' · ':'')+(it.label||e.name))}</span><output>${set?fmtStop(val):'Not set'}</output>${set?`<button class="ib" data-stopreset="lstop:${it.id}" title="Clear">${IC.x}</button>`:''}</div><input type="range" data-f="lstop:${it.id}" min="-7" max="7" step="0.333333" value="${val}" class="${set?'':'unset'}" aria-label="${esc(it.label||e.name)} stops vs key"></div>`}).join('')}
+function photoSrc(ph){return ph.asset?'/_blob/'+ph.asset:ph.src}
+function photosHTML(Sx){return `<div class="sec-h">Location photos<span>${Sx.photos.length||''}</span></div>
+  <div class="photos">${Sx.photos.map(ph=>`<figure><button class="pthumb" data-pview="${ph.id}" title="View larger"><img src="${esc(photoSrc(ph))}" alt="${esc(ph.cap||'Location photo')}" loading="lazy"></button><div class="pcap"><input data-f="pcap:${ph.id}" value="${esc(ph.cap||'')}" placeholder="Caption" aria-label="Caption"><button class="ib" data-prm="${ph.id}" title="Remove photo">${IC.x}</button></div></figure>`).join('')}</div>
+  <label class="btn" style="margin-top:6px">+ Add photos<input type="file" data-f="photoUpload" accept="image/*" multiple hidden></label>
+  <p class="hint">Recce shots, window positions, power points. They stay with this setup${Store.mode==='cloud'?'':' and are saved in this browser, so keep it to a handful'}.</p>`}
+let assetsNS=undefined;
+async function getAssets(){if(assetsNS!==undefined)return assetsNS;try{assetsNS=window.claude?.use?await window.claude.use('assets'):null}catch(e){assetsNS=null}return assetsNS}
+function downscale(file,max,q){return new Promise((res,rej)=>{const url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{const r=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*r);c.height=Math.round(img.height*r);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);c.toBlob(b=>b?res({blob:b,canvas:c}):rej(new Error('encode')),'image/jpeg',q)};img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('That file isn’t an image this browser can read.'))};img.src=url})}
+async function addPhotos(files){
+  if(!files.length)return;const Sx=S();const assets=await getAssets();let added=0;
+  if(!assets&&Store.mode==='cloud'){toast('Photo uploads aren’t available for you on this page.');return}
+  toast(`Adding ${files.length} photo${files.length>1?'s':''}…`,1500);
+  for(const f of files){try{
+    if(assets){const {blob}=await downscale(f,2000,.85);const r=await assets.upload(blob,{name:(f.name||'photo').replace(/\.[^.]+$/,'')+'.jpg'});Sx.photos.push({id:uid(),asset:r.id,cap:''})}
+    else{const {canvas}=await downscale(f,1280,.72);Sx.photos.push({id:uid(),src:canvas.toDataURL('image/jpeg',.72),cap:''})}
+    added++}catch(err){toast(err&&err.code==='quota_exceeded'?'Photo storage is full. Remove some photos and try again.':(err&&err.message)||'Couldn’t add that photo.')}}
+  if(added){commit();if(!assets&&(LS.get('lps2:p:'+P.id)===null))toast('Browser storage may be full. Export a project file to keep a copy.')}
+}
+function viewPhoto(id){const ph=S().photos.find(x=>x.id===id);if(!ph)return;const i=S().photos.indexOf(ph);
+  openModal(`${mh(esc(ph.cap||'Location photo '+(i+1)))}<div class="modal-b" style="display:flex;justify-content:center;background:var(--panel-2)"><img src="${esc(photoSrc(ph))}" alt="${esc(ph.cap||'Location photo')}" style="max-width:100%;max-height:70vh;object-fit:contain;border-radius:6px"></div><div class="modal-f"><button class="btn pri" data-close>Done</button></div>`,'wide')}
+function fld(label,inner){return `<div class="fld"><label>${label}</label>${inner}</div>`}
+function inp(f,v,type='text',attrs=''){return `<input data-f="${f}" type="${type}" value="${esc(v??'')}" ${attrs}>`}
+function sel(f,v,opts){return `<select data-f="${f}">${opts.map(([val,l])=>`<option value="${esc(val)}" ${String(v??'')===String(val)?'selected':''}>${esc(l)}</option>`).join('')}</select>`}
+function inspectorHTML(){
+  const Sx=S();
+  if(!ui.sel.size){
+    const used=usedCounts(Sx);let watts=0,lights=0;for(const it of Sx.items){const e=E(it.ref);if(e.cat==='light'){lights++;watts+=e.watts||0}}
+    const rw=Sx.room.w,rd=Sx.room.d;
+    return `${Sx.sample?`<div class="banner"><b>This is a sample setup.</b> It's left out of exports and the project kit list unless you choose to include it.<div class="btnrow"><button class="btn" data-ia="keepSample">Keep as my setup</button><button class="btn danger" data-ia="delSample">Delete sample</button></div></div>`:''}
+    ${ui.clip?`<button class="btn" data-ia="paste" style="width:100%;justify-content:center;margin-bottom:8px">Paste ${ui.clip.items.length} copied item${ui.clip.items.length>1?'s':''} here</button>`:''}
+    <div class="sec-h">This setup</div>
+    ${fld('Name',inp('setup.name',Sx.name))}
+    ${fld('Description',`<textarea data-f="setup.desc" rows="2" placeholder="e.g. Seated interview, A cam mid">${esc(Sx.desc)}</textarea>`)}
+    <div class="sec-h">Room size</div>
+    <div class="fld"><label>Use room size</label><div class="pair"><input type="checkbox" data-f="room.on" ${Sx.room.on?'checked':''} id="roomOn"><label for="roomOn" style="font-size:12px;color:var(--muted)">${Sx.room.on?'Plan is to scale':'Off: build freely'}</label></div></div>
+    ${Sx.room.on?`${fld('Width',`<div class="pair">${inp('room.wm',Math.floor(rw/100),'number','min="0" step="1"')}<span class="u">m</span>${inp('room.wc',Math.round(rw%100),'number','min="0" max="99" step="1"')}<span class="u">cm</span></div>`)}
+    ${fld('Depth',`<div class="pair">${inp('room.dm',Math.floor(rd/100),'number','min="0" step="1"')}<span class="u">m</span>${inp('room.dc',Math.round(rd%100),'number','min="0" max="99" step="1"')}<span class="u">cm</span></div>`)}<p class="hint" style="margin-top:-2px">Or redraw it with the Room tool (B).</p>`:`<p class="hint">Use the <b>Room</b> tool (B) to drag the room out on the plan, or tick this to type the size in. The grid is 1 m either way.</p>`}
+    ${cameraSetupHTML(Sx)}
+    ${exposureHTML(Sx)}
+    ${photosHTML(Sx)}
+    <div class="sec-h">At a glance</div>
+    <div class="stat"><div><b>${lights}</b>lights</div><div><b>${Sx.items.filter(i=>E(i.ref).cat==='camera').length}</b>cameras</div><div><b>${watts?(watts/1000).toFixed(2):'–'}</b>kW max draw</div></div>
+    <p class="hint">Select something on the plan to edit it. Shift-click or drag a box to select several. Double-click an item to rename it.</p>
+    <div class="sec-h">Shortcuts</div>
+    <p class="hint" style="font-family:var(--font-mono);font-size:11px;line-height:1.7">R / Shift+R rotate 15° · Arrows nudge<br>Ctrl/Cmd+D duplicate · Del remove<br>Ctrl/Cmd+C / V copy &amp; paste (works across setups)<br>Ctrl/Cmd+Z undo · Space+drag pan<br>V select · H pan · B room · M measure · T text · 0 fit</p>`;
+  }
+  if(ui.sel.size>1){
+    const items=[...ui.sel].map(itemById).filter(Boolean);
+    return `<div class="ins-h"><div><div class="nm">${items.length} items selected</div><div class="sb">${[...new Set(items.map(i=>E(i.ref).cat))].join(', ')}</div></div></div>
+    ${fld('Layer',sel('multi.layer','',[['','Move to layer…'],...Sx.layers.map(l=>[l.id,l.name])]))}
+    <div class="btnrow"><button class="btn" data-ia="copy">Copy</button>${P.setups.length>1?`<select class="mini-sel" data-copyto style="padding:6px 6px"><option value="">Copy to setup…</option>${P.setups.filter(x=>x.id!==P.current).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select>`:''}<button class="btn" data-ia="rotL">⟲ 15°</button><button class="btn" data-ia="rotR">⟳ 15°</button><button class="btn" data-ia="dup">Duplicate</button><button class="btn" data-ia="lock">Lock</button><button class="btn" data-ia="unlock">Unlock</button><button class="btn" data-ia="front">Bring to front</button><button class="btn" data-ia="back">Send to back</button><button class="btn danger" data-ia="del">Delete</button></div>`;
+  }
+  const it=itemById([...ui.sel][0]);if(!it)return '';const e=E(it.ref),p=it.props||{};
+  if(e.type==='measure'){const L=Math.hypot(it.x2-it.x,it.y2-it.y);return `<div class="ins-h"><div><div class="nm">Measurement</div><div class="sb">${Sx.room.on?'':'Approximate: no room size set'}</div></div></div>${fld('Length',`<span class="ro">${fmtM(L)}</span>`)}<p class="hint">Drag the end points to adjust.</p><div class="btnrow"><button class="btn danger" data-ia="del">Delete</button></div>`}
+  let h=`<div class="ins-h">${iconSVG(e)}<div style="min-width:0"><div class="nm">${esc(e.name)}</div><div class="sb">${esc([e.brand!=='Set'&&e.brand!=='Grip'?e.brand:'',e.sub,e.watts?e.watts+' W':'',e.cat==='camera'&&!e.generic?e.sensor+' mm sensor':''].filter(Boolean).join(' · '))}</div></div></div>`;
+  if(e.type==='text'){h+=fld('Text',`<textarea data-f="props.text" rows="3">${esc(p.text)}</textarea>`)+fld('Align',sel('props.align',p.align||'center',[['center','Centre'],['left','Left']]))+`<p class="hint" style="margin-top:-2px">Start a line with # to make it bold.</p>`+fld('Size',`<div class="pair">${inp('props.fs',p.fs,'number','min="6" step="2"')}<span class="u">cm</span></div>`)}
+  else h+=fld('Label',inp('label',it.label||'','text',`placeholder="${e.cat==='camera'?'e.g. A cam':e.cat==='light'?'e.g. Key':'Optional'}"`));
+  if(e.cat==='light'){
+    h+=fld('Role',sel('props.role',p.role,ROLES.map(r=>[r,r||'—'])));
+    h+=stopSlider('props.stops',p.stops,'Vs key');
+    h+=fld('Power',`<div class="pair">${inp('props.power',p.power,'number','min="0" max="100" step="5"')}<span class="u">%</span></div>`);
+    h+=fld('Colour temp',`<div class="pair">${inp('props.cct',p.cct,'number','min="1500" max="20000" step="100" placeholder="e.g. 5600"')}<span class="u">K</span></div>`);
+    h+=fld('Gel / colour',`<div class="pair">${inp('props.gel',p.gel,'text','placeholder="e.g. ½ CTO, teal"')}<input type="color" data-f="props.gelColor" value="${esc(p.gelColor||'#f2a541')}" title="Colour swatch on the plan"></div>`);
+    h+=fld('Height',`<div class="pair">${inp('props.height',p.height,'number','min="0" step="0.1"')}<span class="u">m</span></div>`);
+    h+=fld('Support',sel('props.support',p.support,SUPPORTS));
+    h+=fld('Sandbags',inp('props.sandbags',p.sandbags,'number','min="0" step="1"'));
+    if(canHaveMods(e)){
+      const kitMods=Object.keys(prefs.kit).map(E).filter(x=>x.cat==='modifier').sort(sortEntries);
+      h+=`<div class="sec-h">Modifiers</div><div class="chips">${(it.mods||[]).map((m,i)=>`<span class="chip">${esc(E(m).name)}<button data-rmmod="${i}" aria-label="Remove ${esc(E(m).name)}">×</button></span>`).join('')||'<span class="hint" style="margin:0">None attached</span>'}</div>
+      <div class="fld" style="margin-top:8px"><label>Add</label><select data-addmod><option value="">Choose a modifier…</option>${kitMods.length?`<optgroup label="Your kit">${kitMods.map(m=>`<option value="${m.id}">${esc(m.brand+' '+m.name)}</option>`).join('')}</optgroup>`:''}<optgroup label="Generic">${GENERIC[1][1].map(([t,n])=>`<option value="gm:${t}">${esc(n)}</option>`).join('')}</optgroup></select></div>`;
+    }
+  }
+  if(e.cat==='camera'){
+    const lensName=p.lens||Sx.cam.lens||'';const ls=LENS_SETS[lensName];
+    h+=fld('Lens set',`<input data-f="props.lens" list="lensList" value="${esc(p.lens||'')}" placeholder="${esc(Sx.cam.lens||'e.g. DZOFilm Vespid Prime')}">`);
+    h+=fld('Focal length',`<div class="pair">${ls?`<select data-f="props.focalPick"><option value="">Custom</option>${ls.f.map(f=>`<option value="${f}" ${num(p.focal)===f?'selected':''}>${f} mm</option>`).join('')}</select>`:''}${inp('props.focal',p.focal,'number',`min="4" max="1200" step="1" ${ls?'style="flex:0 0 58px"':''} aria-label="Focal length in mm"`)}<span class="u">mm</span></div>`);
+    if(ls)h+=`<p class="hint" style="margin-top:-2px">${esc(lensName)}: ${esc(ls.t)}</p>`;
+    h+=fld('Sensor width',`<div class="pair">${inp('props.sensor',p.sensor,'number','min="4" max="70" step="0.1"')}<span class="u">mm</span></div>`);
+    h+=fld('Crop factor',`<div class="pair">${inp('props.crop',p.crop||1,'number','min="1" max="4" step="0.01"')}<span class="u">×</span></div>`);
+    h+=fld('Horizontal FOV',`<span class="ro">${Math.round(deg(hfov(it))*10)/10}°</span>`);
+    h+=`<p class="hint" style="margin-top:-2px">Uses ${effSensor(it).toFixed(1)} mm of recorded width. For cropped modes set the crop factor (e.g. 1.5 for Super 35 on full frame), or enter that mode’s recorded width as sensor width. Focus breathing and anamorphics aren’t modelled.</p>`;
+    h+=fld('Wedge length',`<div class="pair">${inp('props.throwM',(num(p.throw,450)/100).toFixed(1),'number','min="0.5" step="0.5"')}<span class="u">m</span></div>`);
+    h+=fld('Height',`<div class="pair">${inp('props.height',p.height,'number','min="0" step="0.1"')}<span class="u">m</span></div>`);
+    h+=fld('Support',sel('props.support',p.support,CAM_SUPPORTS));
+  }
+  if(isResizable(e)){h+=fld(['wall','window','door','greenscreen','tv','mirror','flag','flag2','floppy','frame','frame6','butterfly8','bounce','negfill','net','slider','dolly','jib','menace','arrow'].includes(e.type)?'Length':'Width',`<div class="pair">${inp('w',it.w,'number','min="2" step="5"')}<span class="u">cm</span></div>`)+fld(e.type==='menace'?'Base':'Depth',`<div class="pair">${inp('h',it.h,'number','min="2" step="5"')}<span class="u">cm</span></div>`)}
+  if(e.cat!=='set'||e.type==='talent'||e.type==='talent2')h+=fld('Notes',`<textarea data-f="props.notes" rows="2">${esc(p.notes||'')}</textarea>`);
+  h+=`<div class="divider"></div>`;
+  h+=fld('Position',`<div class="pair"><span class="u">X</span>${inp('xm',(it.x/100).toFixed(2),'number','step="0.05"')}<span class="u">Y</span>${inp('ym',(it.y/100).toFixed(2),'number','step="0.05"')}</div>`);
+  h+=fld('Rotation',`<div class="pair">${inp('rot',Math.round(it.rot||0),'number','step="15"')}<span class="u">°</span></div>`);
+  h+=fld('Layer',sel('layer',it.layer,Sx.layers.map(l=>[l.id,l.name])));
+  h+=fld('Locked',`<input type="checkbox" data-f="locked" ${it.locked?'checked':''}>`);
+  h+=`<div class="btnrow"><button class="btn" data-ia="copy">Copy</button>${P.setups.length>1?`<select class="mini-sel" data-copyto style="padding:6px 6px"><option value="">Copy to setup…</option>${P.setups.filter(x=>x.id!==P.current).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('')}</select>`:''}<button class="btn" data-ia="rotL">⟲ 15°</button><button class="btn" data-ia="rotR">⟳ 15°</button><button class="btn" data-ia="dup">Duplicate</button><button class="btn" data-ia="front">Front</button><button class="btn" data-ia="back">Back</button><button class="btn danger" data-ia="del">Delete</button></div>`;
+  return h;
+}
+$('#rightBody').addEventListener('change',e=>{
+  const t=e.target;const Sx=S();
+  if(t.dataset.copyto!==undefined){if(t.value)copyToSetup(t.value);t.value='';return}
+  if(t.dataset.addmod!==undefined){if(!t.value)return;const it=itemById([...ui.sel][0]);(it.mods=it.mods||[]).push(t.value);commit();return}
+  const f=t.dataset.f;if(!f)return;const v=t.type==='checkbox'?t.checked:t.value;
+  if(f.startsWith('setup.')){if(f==='setup.name'&&v!==Sx.name)delete Sx.sample;Sx[f.slice(6)]=v;commit();return}
+  if(f.startsWith('cam.')){const k=f.slice(4);Sx.cam[k]=(k==='key')?Math.round(num(v)*3)/3:(t.type==='number'&&v!==''?num(v):v);commit();return}
+  if(f.startsWith('lstop:')){const it=itemById(f.slice(6));if(it){it.props.stops=Math.round(num(v)*3)/3;commit()}return}
+  if(f.startsWith('pcap:')){const ph=Sx.photos.find(x=>x.id===f.slice(5));if(ph){ph.cap=v;commit()}return}
+  if(f==='photoUpload'){addPhotos([...t.files]);t.value='';return}
+  if(f==='props.focalPick'){const it=itemById([...ui.sel][0]);if(it&&v){it.props.focal=num(v);commit()}return}
+  if(f.startsWith('room.')){const k=f.slice(5);if(k==='on'){Sx.room.on=v;if(v&&Sx.room.x==null){Sx.room.x=0;Sx.room.y=0}if(v&&!Sx.items.length){}commit();if(v)setTimeout(fitView,30);return}
+    const wm=num($('#rightBody [data-f="room.wm"]')?.value,Math.floor(Sx.room.w/100)),wc=num($('#rightBody [data-f="room.wc"]')?.value,0),dm=num($('#rightBody [data-f="room.dm"]')?.value,Math.floor(Sx.room.d/100)),dc=num($('#rightBody [data-f="room.dc"]')?.value,0);
+    Sx.room.w=Math.max(50,wm*100+clamp(wc,0,99));Sx.room.d=Math.max(50,dm*100+clamp(dc,0,99));commit();return}
+  if(f.startsWith('layerName:')){const L=Sx.layers.find(l=>l.id===f.slice(10));if(L){L.name=v||L.name;commit()}return}
+  if(f==='multi.layer'){if(!v)return;for(const id of ui.sel){const it=itemById(id);if(it)it.layer=v}commit();return}
+  const it=itemById([...ui.sel][0]);if(!it)return;
+  if(f==='xm'){it.x=Math.round(num(v)*100);if(it.x2!=null){}}
+  else if(f==='ym')it.y=Math.round(num(v)*100);
+  else if(f==='rot')it.rot=((Math.round(num(v))%360)+360)%360;
+  else if(f==='w'||f==='h')it[f]=Math.max(2,Math.round(num(v,it[f])));
+  else if(f==='label')it.label=v;
+  else if(f==='layer')it.layer=v;
+  else if(f==='locked')it.locked=v;
+  else if(f==='props.throwM')it.props.throw=Math.max(50,Math.round(num(v,4.5)*100));
+  else if(f.startsWith('props.')){const k=f.slice(6);it.props=it.props||{};it.props[k]=t.type==='range'?Math.round(num(v)*3)/3:(t.type==='number'&&v!=='')?num(v):v;if(k==='gel'&&!v)delete it.props.gelColor}
+  commit();
+});
+$('#rightBody').addEventListener('input',e=>{const t=e.target;if(t.type==='range'){const o=t.parentElement.querySelector('output');if(o)o.textContent=fmtStop(t.value)}if(t.dataset.f==='props.gelColor'){const it=itemById([...ui.sel][0]);if(it){it.props.gelColor=t.value;renderCanvas()}}});
+$('#rightBody').addEventListener('click',e=>{
+  const pv=e.target.closest('[data-pview]');if(pv){viewPhoto(pv.dataset.pview);return}
+  const pr=e.target.closest('[data-prm]');if(pr){const Sx=S();Sx.photos=Sx.photos.filter(x=>x.id!==pr.dataset.prm);commit();return}
+  const sr=e.target.closest('[data-stopreset]');if(sr){const f=sr.dataset.stopreset;if(f==='cam.key'){S().cam.key=0}else if(f.startsWith('lstop:')){const it=itemById(f.slice(6));if(it)it.props.stops=''}else{const it=itemById([...ui.sel][0]);if(it)it.props.stops=''}commit();return}
+  const rm=e.target.closest('[data-rmmod]');if(rm){const it=itemById([...ui.sel][0]);it.mods.splice(+rm.dataset.rmmod,1);commit();return}
+  const b=e.target.closest('[data-ia]');if(b){const a=b.dataset.ia;
+    if(a==='keepSample'){delete S().sample;commit();toast('Kept. It now exports like any other setup.');return}
+    if(a==='delSample'){const Sx=S();const i=P.setups.indexOf(Sx);P.setups.splice(i,1);if(!P.setups.length)P.setups.push(newSetup('Setup A'));P.current=P.setups[Math.max(0,i-1)].id;ui.sel.clear();commit();setTimeout(fitView,10);toast('Sample deleted. Undo with Ctrl/Cmd+Z.');return}
+    if(a==='copy'){copySel();return}if(a==='cut'){copySel(true);return}if(a==='paste'){pasteClip();return}
+    if(a==='del')deleteSel();else if(a==='dup')duplicateSel();else if(a==='rotL')rotateSel(-15);else if(a==='rotR')rotateSel(15);
+    else if(a==='lock'||a==='unlock'){for(const id of ui.sel){const it=itemById(id);if(it)it.locked=a==='lock'}commit()}
+    else if(a==='front'||a==='back')reorderSel(a);return}
+  const L=e.target.closest('[data-la]');if(L){layerAction(L.dataset.la,L.dataset.lid);return}
+  const li=e.target.closest('[data-li]');if(li){const id=li.dataset.li;if(e.shiftKey||e.metaKey||e.ctrlKey){ui.sel.has(id)?ui.sel.delete(id):ui.sel.add(id)}else ui.sel=new Set([id]);renderAll();return}
+  const lh=e.target.closest('[data-lsel]');if(lh&&e.target.tagName!=='INPUT'){ui.activeLayer=lh.dataset.lsel;renderRight()}
+});
+function layersHTML(){
+  const Sx=S();const B=badges(Sx);const T=prefs.toggles;
+  let h=`<p class="hint">Top of the list draws on top. Hide or lock a whole layer, or lock single items.</p>`;
+  for(const L of [...Sx.layers].reverse()){
+    const items=Sx.items.filter(i=>i.layer===L.id);
+    h+=`<div class="layer ${ui.activeLayer===L.id?'active':''}"><div class="layer-h" data-lsel="${L.id}"><input data-f="layerName:${L.id}" value="${esc(L.name)}" aria-label="Layer name"><span class="ct">${items.length}</span>
+      <button class="ib" data-la="vis" data-lid="${L.id}" aria-pressed="${!L.visible}" title="${L.visible?'Hide':'Show'} layer">${L.visible?IC.eye:IC.eyeoff}</button>
+      <button class="ib" data-la="lock" data-lid="${L.id}" aria-pressed="${L.locked}" title="${L.locked?'Unlock':'Lock'} layer">${L.locked?IC.lock:IC.unlock}</button>
+      <button class="ib" data-la="up" data-lid="${L.id}" title="Move layer up">${IC.up}</button><button class="ib" data-la="down" data-lid="${L.id}" title="Move layer down">${IC.down}</button>
+      <button class="ib" data-la="del" data-lid="${L.id}" title="Delete layer">${IC.x}</button></div>`;
+    if(items.length)h+=`<div class="litems">${[...items].reverse().map(it=>{const e=E(it.ref);const hiddenGrip=e.cat==='grip'&&!T.grip;return `<div class="li ${ui.sel.has(it.id)?'sel':''}" data-li="${it.id}"><span class="n">${B[it.id]||''}</span><span class="t" ${hiddenGrip?'style="opacity:.5"':''}>${esc(it.label?it.label+' · '+e.name:e.name)}${hiddenGrip?' (hidden)':''}</span><button class="ib" data-la="ilock" data-lid="${it.id}" aria-pressed="${!!it.locked}" title="${it.locked?'Unlock':'Lock'} item">${it.locked?IC.lock:IC.unlock}</button></div>`}).join('')}</div>`;
+    h+='</div>';
+  }
+  h+=`<button class="btn" data-la="add">+ Add layer</button>`;return h;
+}
+function layerAction(a,id){
+  const Sx=S();const i=Sx.layers.findIndex(l=>l.id===id);const L=Sx.layers[i];
+  if(a==='add'){const n={id:uid(),name:'Layer '+(Sx.layers.length+1),visible:true,locked:false,kind:'custom'};Sx.layers.push(n);ui.activeLayer=n.id;commit();return}
+  if(a==='ilock'){const it=itemById(id);if(it){it.locked=!it.locked;commit()}return}
+  if(!L)return;
+  if(a==='vis'){L.visible=!L.visible;if(!L.visible)Sx.items.forEach(it=>{if(it.layer===L.id)ui.sel.delete(it.id)})}
+  else if(a==='lock')L.locked=!L.locked;
+  else if(a==='up'&&i<Sx.layers.length-1){[Sx.layers[i],Sx.layers[i+1]]=[Sx.layers[i+1],Sx.layers[i]]}
+  else if(a==='down'&&i>0){[Sx.layers[i],Sx.layers[i-1]]=[Sx.layers[i-1],Sx.layers[i]]}
+  else if(a==='del'){if(Sx.layers.length<=1){toast('A setup needs at least one layer.');return}const to=Sx.layers.find(l=>l.id!==L.id);const n=Sx.items.filter(it=>it.layer===L.id).length;Sx.items.forEach(it=>{if(it.layer===L.id)it.layer=to.id});Sx.layers.splice(i,1);if(n)toast(`Moved ${n} item${n>1?'s':''} to “${to.name}”.`)}
+  commit();
+}
+
+/* ============ setups bar ============ */
+function renderSetups(){
+  const el=$('#setups');
+  el.innerHTML=P.setups.map((s,i)=>ui.editSetup===s.id?`<input id="setupEdit" value="${esc(s.name)}" aria-label="Setup name">`:`<button class="st" data-sid="${s.id}" aria-selected="${s.id===P.current}" title="Double-click to rename"><span class="lt">${String.fromCharCode(65+i%26)}</span>${esc(s.name)}${s.sample?'<span class="smp">Sample</span>':''}</button>`).join('')+
+  `<button class="add" data-sa="add" title="Add a setup">+ Setup</button><span class="menu"><button class="tb" data-sa="dup" title="Duplicate this setup">Duplicate</button><button class="tb" data-sa="del" title="Delete this setup" ${P.setups.length<2?'disabled':''}>Delete</button></span>`;
+  const inp=$('#setupEdit');if(inp){inp.focus();inp.select();const fin=ok=>{const s=P.setups.find(x=>x.id===ui.editSetup);ui.editSetup=null;if(ok&&s&&inp.value.trim()){if(s.name!==inp.value.trim())delete s.sample;s.name=inp.value.trim();commit()}else renderSetups()};
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')fin(true);if(e.key==='Escape')fin(false)});inp.addEventListener('blur',()=>fin(true))}
+}
+$('#setups').addEventListener('click',e=>{
+  const b=e.target.closest('[data-sid]');if(b){if(P.current!==b.dataset.sid){P.current=b.dataset.sid;ui.sel.clear();ui.activeLayer=null;commit();setTimeout(fitView,10)}return}
+  const a=e.target.closest('[data-sa]');if(!a)return;
+  if(a.dataset.sa==='add'){const s=newSetup('Setup '+String.fromCharCode(65+P.setups.length%26));s.room={...S().room};P.setups.push(s);P.current=s.id;ui.sel.clear();commit();setTimeout(fitView,10)}
+  else if(a.dataset.sa==='dup'){const s=JSON.parse(JSON.stringify(S()));s.id=uid();s.name=S().name+' (copy)';const map={};s.layers.forEach(l=>{const n=uid();map[l.id]=n;l.id=n});s.items.forEach(it=>{it.id=uid();it.layer=map[it.layer]||s.layers[0].id});P.setups.splice(P.setups.indexOf(S())+1,0,s);P.current=s.id;ui.sel.clear();commit()}
+  else if(a.dataset.sa==='del'){confirmModal(`Delete “${S().name}”?`,'This removes the setup and everything on it. You can undo straight after.','Delete setup',()=>{const i=P.setups.indexOf(S());P.setups.splice(i,1);P.current=P.setups[Math.max(0,i-1)].id;ui.sel.clear();commit();setTimeout(fitView,10)})}
+});
+$('#setups').addEventListener('dblclick',e=>{const b=e.target.closest('[data-sid]');if(!b)return;ui.editSetup=b.dataset.sid;renderSetups()});
+
+/* ============ modals ============ */
+function openModal(html,cls=''){$('#modalRoot').innerHTML=`<div class="scrim" id="scrim"><div class="modal ${cls}" role="dialog" aria-modal="true">${html}</div></div>`;
+  $('#scrim').addEventListener('pointerdown',e=>{if(e.target.id==='scrim')closeModal()});const f=$('#modalRoot [autofocus]');if(f)f.focus()}
+function closeModal(){$('#modalRoot').innerHTML='';renderAll()}
+const mh=(t)=>`<div class="modal-h"><h2>${t}</h2><button class="ib" data-close aria-label="Close">${IC.x}</button></div>`;
+$('#modalRoot').addEventListener('click',e=>{if(e.target.closest('[data-close]'))closeModal()});
+function confirmModal(title,body,okLabel,onOk){openModal(`${mh(esc(title))}<div class="modal-b"><p style="margin:0;line-height:1.5">${esc(body)}</p></div><div class="modal-f"><button class="btn" data-close>Cancel</button><button class="btn pri" id="cOk" style="background:var(--danger);border-color:var(--danger)">${esc(okLabel)}</button></div>`);
+  $('#cOk').onclick=()=>{closeModal();onOk()}}
+
+/* catalogue */
+const catState={q:'',brands:new Set(),cat:'all',type:'',ticked:false};
+function openCatalogue(){openModal(`${mh('Catalogue')}<div class="modal-b" style="padding:0;display:flex;min-height:0"><div class="cat" id="catWrap" style="flex:1"></div></div><div class="modal-f"><span class="hint" style="margin:0 auto 0 0;align-self:center" id="catCount"></span><button class="btn" id="customBtn">+ Custom item</button><button class="btn pri" data-close>Done</button></div>`,'wide');renderCatalogue();
+  $('#customBtn').onclick=openCustom}
+function catList(){
+  const all=CATALOG.concat(prefs.custom);const q=catState.q.toLowerCase().trim();
+  return all.filter(e=>(catState.cat==='all'||e.cat===catState.cat)&&(!catState.brands.size||catState.brands.has(e.brand))&&(!catState.type||e.type===catState.type)&&(!catState.ticked||prefs.kit[e.id])&&(!q||(e.brand+' '+e.name+' '+(e.sub||'')+' '+(LTYPES[e.type]?.label||MTYPES[e.type]?.label||'')).toLowerCase().includes(q))).sort(sortEntries);
+}
+function renderCatalogue(){
+  const wrapEl=$('#catWrap');if(!wrapEl)return;
+  const all=CATALOG.concat(prefs.custom);const brands=[...new Set(all.map(e=>e.brand))].sort((a,b)=>{const ia=BRAND_ORDER.indexOf(a),ib=BRAND_ORDER.indexOf(b);return ((ia<0?99:ia)-(ib<0?99:ib))||a.localeCompare(b)});
+  const types=catState.cat==='light'?Object.entries(LTYPES):catState.cat==='modifier'?Object.entries(MTYPES):[];
+  const list=catList();let cur='',rows='';
+  for(const e of list){if(e.brand!==cur){cur=e.brand;rows+=`<div class="bh">${esc(cur)}<small>${list.filter(x=>x.brand===cur).length} items</small></div>`}
+    const tl=e.cat==='camera'?(e.sub+' · '+e.sensor+' mm'):e.cat==='light'?((LTYPES[e.type]?.label||'')+(e.sub?' · '+e.sub:'')):(MTYPES[e.type]?.label||'')+(e.size?' · '+e.size+' cm':'');
+    rows+=`<label class="crow"><input type="checkbox" data-tick="${e.id}" ${prefs.kit[e.id]?'checked':''}><div style="min-width:0"><div class="nm">${esc(e.name)}${e.custom?' <span class="tag">custom</span>':''}</div><div class="ty">${esc(tl)}</div></div><span class="tag ${e.cat==='camera'?'cam':e.cat==='light'?'light':''}">${e.cat==='camera'?'Camera':e.cat==='light'?'Light':'Modifier'}</span><span class="w">${e.watts?e.watts+' W':''}</span></label>`}
+  if(!list.length)rows=`<p class="hint" style="padding:20px 4px">Nothing matches. Clear a filter, or add it as a custom item.</p>`;
+  wrapEl.innerHTML=`<div class="cat-f"><div class="sec-h" style="margin-top:0">Brand<button class="tb" id="brandAll" style="padding:2px 6px">${catState.brands.size?'Clear':'All'}</button></div>${brands.map(b=>`<label class="brand"><input type="checkbox" data-brand="${esc(b)}" ${catState.brands.has(b)?'checked':''}>${esc(b)}<span class="c">${all.filter(e=>e.brand===b).length}</span></label>`).join('')}</div>
+  <div class="cat-m"><div class="cat-bar"><input class="search" id="catQ" placeholder="Search model, brand or type" value="${esc(catState.q)}" aria-label="Search catalogue">
+  <span class="seg">${[['all','All'],['light','Lights'],['modifier','Modifiers'],['camera','Cameras']].map(([k,l])=>`<button data-ccat="${k}" aria-pressed="${catState.cat===k}">${l}</button>`).join('')}</span>
+  ${types.length?`<select class="mini-sel" id="catType" aria-label="Type"><option value="">Any type</option>${types.map(([k,v])=>`<option value="${k}" ${catState.type===k?'selected':''}>${esc(v.label)}</option>`).join('')}</select>`:''}
+  <label style="display:flex;gap:5px;align-items:center;font-size:12px;color:var(--muted)"><input type="checkbox" id="catTicked" ${catState.ticked?'checked':''}>Ticked only</label></div>
+  <div class="cat-list" id="catList">${rows}</div></div>`;
+  const n=Object.keys(prefs.kit).length;$('#catCount').textContent=`${list.length} shown · ${n} in your available kit`;
+}
+$('#modalRoot').addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.tick){if(t.checked)prefs.kit[t.dataset.tick]=prefs.kit[t.dataset.tick]||1;else delete prefs.kit[t.dataset.tick];persistPrefs();$('#catCount').textContent=`${catList().length} shown · ${Object.keys(prefs.kit).length} in your available kit`;renderLeft();return}
+  if(t.dataset.brand!==undefined){t.checked?catState.brands.add(t.dataset.brand):catState.brands.delete(t.dataset.brand);rerenderCatKeepScroll();return}
+  if(t.id==='catType'){catState.type=t.value;renderCatalogue();return}
+  if(t.id==='catTicked'){catState.ticked=t.checked;renderCatalogue();return}
+});
+$('#modalRoot').addEventListener('input',e=>{if(e.target.id==='catQ'){catState.q=e.target.value;const pos=e.target.selectionStart;renderCatalogue();const i=$('#catQ');i.focus();i.setSelectionRange(pos,pos)}});
+$('#modalRoot').addEventListener('click',e=>{
+  const c=e.target.closest('[data-ccat]');if(c){catState.cat=c.dataset.ccat;catState.type='';renderCatalogue();return}
+  if(e.target.id==='brandAll'){catState.brands.clear();renderCatalogue()}
+});
+function rerenderCatKeepScroll(){const f=$('.cat-f')?.scrollTop||0;renderCatalogue();const ff=$('.cat-f');if(ff)ff.scrollTop=f}
+function openCustom(){
+  const types=(c)=>c==='light'?Object.entries(LTYPES).map(([k,v])=>[k,v.label]):c==='modifier'?Object.entries(MTYPES).map(([k,v])=>[k,v.label]):[['camera','Camera']];
+  openModal(`${mh('Add a custom item')}<div class="modal-b"><p class="hint" style="margin-top:0">For anything the catalogue doesn't cover. It's ticked into your available kit straight away.</p>
+  ${fld('Category',`<select id="cuCat"><option value="light">Light</option><option value="modifier">Modifier</option><option value="camera">Camera</option></select>`)}
+  ${fld('Brand',`<input id="cuBrand" placeholder="e.g. Aputure" autofocus>`)}${fld('Model',`<input id="cuName" placeholder="e.g. STORM 400x">`)}
+  ${fld('Symbol',`<select id="cuType">${types('light').map(([k,l])=>`<option value="${k}">${esc(l)}</option>`).join('')}</select>`)}
+  <div id="cuExtra">${fld('Colour',`<input id="cuSub" placeholder="e.g. Bi-colour, RGB">`)}${fld('Watts',`<input id="cuW" type="number" min="0">`)}</div></div>
+  <div class="modal-f"><button class="btn" id="cuBack">Back to catalogue</button><button class="btn pri" id="cuAdd">Add to kit</button></div>`);
+  $('#cuCat').onchange=e=>{const c=e.target.value;$('#cuType').innerHTML=types(c).map(([k,l])=>`<option value="${k}">${esc(l)}</option>`).join('');
+    $('#cuExtra').innerHTML=c==='light'?fld('Colour','<input id="cuSub" placeholder="e.g. Bi-colour, RGB">')+fld('Watts','<input id="cuW" type="number" min="0">'):c==='modifier'?fld('Size','<div class="pair"><input id="cuSize" type="number" min="0" value="90"><span class="u">cm</span></div>'):fld('Sensor width','<div class="pair"><input id="cuSensor" type="number" step="0.1" value="36"><span class="u">mm</span></div>')};
+  $('#cuBack').onclick=openCatalogue;
+  $('#cuAdd').onclick=()=>{const c=$('#cuCat').value,brand=$('#cuBrand').value.trim()||'Custom',name=$('#cuName').value.trim();if(!name){$('#cuName').focus();toast('Give the item a model name.');return}
+    const id='u:'+slug(brand+' '+name)+'-'+uid().slice(0,4);let e;
+    if(c==='light')e=mkLight(id,brand,name,$('#cuType').value,$('#cuSub')?.value||'',$('#cuW')?.value||0,'');
+    else if(c==='modifier')e=mkMod(id,brand,name,$('#cuType').value,$('#cuSize')?.value||'');
+    else e=mkCam(id,brand,name,'Custom',$('#cuSensor')?.value||36);
+    e.custom=true;prefs.custom.push(e);prefs.kit[id]=1;persistPrefs();renderLeft();toast(`${brand} ${name} added to your kit`);openCatalogue()};
+}
+
+/* shoot info */
+function openInfo(){const i=P.info;const f=(k,l,ph='',type='text')=>fld(l,`<input data-info="${k}" type="${type}" value="${esc(i[k]||'')}" placeholder="${esc(ph)}">`);
+  openModal(`${mh('Shoot info')}<div class="modal-b"><p class="hint" style="margin-top:0">Shown in the title block and on every export.</p><div class="grid2">
+  ${f('production','Production','e.g. Brand film — Episode 2')}${f('client','Client')}${f('date','Shoot date','','date')}${f('location','Location','e.g. Studio 2, Hackney')}
+  ${f('director','Director')}${f('dop','DoP')}${f('gaffer','Gaffer')}${f('producer','Producer')}</div>
+  ${fld('Notes',`<textarea data-info="notes" rows="3" placeholder="Power, access, parking, call times…">${esc(i.notes||'')}</textarea>`)}</div>
+  <div class="modal-f"><button class="btn pri" data-close>Done</button></div>`);}
+$('#modalRoot').addEventListener('change',e=>{const k=e.target.dataset.info;if(k){P.info[k]=e.target.value;commit()}});
+
+/* project library */
+async function openLibrary(){
+  openModal(`${mh('Projects')}<div class="modal-b" id="libBody"><p class="hint">Loading…</p></div><div class="modal-f"><label class="btn" style="margin-right:auto">Open project file…<input type="file" id="libImport" accept=".json,application/json" hidden></label><button class="btn pri" id="libNew">New project</button></div>`);
+  $('#libNew').onclick=async()=>{await saveNow();P=newProject();ui.sel.clear();resetHistory();closeModal();await saveNow();setTimeout(fitView,10);openInfo()};
+  $('#libImport').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const p=JSON.parse(await f.text());if(!p||!Array.isArray(p.setups))throw new Error();await saveNow();
+    if(p.kit&&typeof p.kit==='object'){/* project file may carry kit */}
+    const proj=p.project||p;proj.id=proj.id||uid();if(p.custom)p.custom.forEach(c=>{if(!prefs.custom.find(x=>x.id===c.id))prefs.custom.push(c)});
+    P=normalise(proj);P.updated=Date.now();ui.sel.clear();resetHistory();await saveNow();closeModal();setTimeout(fitView,10);toast(`Opened “${P.name}”`)}catch(err){toast('That file isn’t a lighting plan project.')}};
+  const list=(await Store.list()).sort((a,b)=>(b.updated||0)-(a.updated||0));
+  if(!list.find(x=>x.id===P.id))list.unshift({id:P.id,name:P.name,updated:P.updated,setups:P.setups.length});
+  $('#libBody').innerHTML=`<p class="hint" style="margin-top:0">${Store.mode==='cloud'?'Saved to your account, so they follow you to any device you open this on.':'Saved in this browser. Use “Project file” in Save & export to keep a copy or move it to another machine.'}</p>`+list.map(p=>`<div class="lib-row ${p.id===P.id?'cur':''}"><div style="min-width:0"><div class="nm">${esc(p.name||'Untitled')}</div><div class="sb">${p.setups||1} setup${(p.setups||1)>1?'s':''} · edited ${p.updated?new Date(p.updated).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'—'}</div></div><div class="acts">${p.id===P.id?'<span class="tag light">Open</span>':`<button class="btn" data-lopen="${p.id}">Open</button>`}<button class="btn" data-ldup="${p.id}">Duplicate</button><button class="btn danger" data-ldel="${p.id}">Delete</button></div></div>`).join('');
+  $('#libBody').onclick=async e=>{
+    const o=e.target.closest('[data-lopen]'),d=e.target.closest('[data-ldup]'),x=e.target.closest('[data-ldel]');
+    if(o){await saveNow();const p=await Store.load(o.dataset.lopen);if(p){P=normalise(p);ui.sel.clear();resetHistory();prefs.lastProject=P.id;persistPrefs();closeModal();setTimeout(fitView,10)}else toast('Couldn’t open that project.')}
+    if(d){await saveNow();const p=d.dataset.ldup===P.id?JSON.parse(snapshot()):await Store.load(d.dataset.ldup);if(p){p.id=uid();p.name=(p.name||'Untitled')+' (copy)';p.updated=Date.now();delete p.example;await Store.save(p);openLibrary()}}
+    if(x){const id=x.dataset.ldel;const row=x.closest('.lib-row');if(x.dataset.sure){await Store.remove(id);if(id===P.id){const rest=(await Store.list()).filter(r=>r.id!==id);const nxt=rest[0]&&await Store.load(rest[0].id);P=nxt?normalise(nxt):newProject();ui.sel.clear();resetHistory();await saveNow();setTimeout(fitView,10)}openLibrary()}else{x.dataset.sure='1';x.textContent='Confirm delete';setTimeout(()=>{if(x.isConnected){delete x.dataset.sure;x.textContent='Delete'}},3500)}}
+  };
+}
+function normalise(p){
+  if(p.example&&!p.migratedSample&&Array.isArray(p.setups)){
+    const ex=p.setups.find(x=>x.name==='Interview wide');
+    if(ex){ex.sample=true;ex.name='Sample interview';
+      p.setups=p.setups.filter(x=>!(x.name==='B-roll hands'&&!(x.items||[]).length));
+      const blank=newSetup('Setup A');p.setups.unshift(blank);p.current=blank.id;
+      if(p.name==='Example: two-camera interview')p.name='Untitled shoot';
+      if(p.info&&p.info.production==='Example production')p.info={};}
+    p.migratedSample=true;
+  }
+  p.info=Object.assign({production:'',client:'',date:'',location:'',director:'',dop:'',gaffer:'',producer:'',notes:''},p.info||{});
+  if(!p.setups||!p.setups.length)p.setups=[newSetup()];
+  p.setups.forEach(s=>{s.room=Object.assign({on:false,x:0,y:0,w:600,d:500},s.room||{});s.cam=Object.assign(defaultCam(),s.cam||{});s.photos=s.photos||[];if(!s.layers||!s.layers.length)s.layers=defaultLayers();s.items=s.items||[];const ids=new Set(s.layers.map(l=>l.id));s.items.forEach(it=>{if(!ids.has(it.layer))it.layer=s.layers[0].id;it.props=it.props||{}})});
+  if(!p.setups.find(s=>s.id===p.current))p.current=p.setups[0].id;p.name=p.name||'Untitled shoot';return p;
+}
+
+/* ============ kit list ============ */
+function kitFor(Sx){
+  const m=new Map();const add=(ref,n=1)=>{if(!ref)return;m.set(ref,(m.get(ref)||0)+n)};
+  for(const it of Sx.items){const e=E(it.ref);if(!['light','camera','modifier','grip'].includes(e.cat))continue;add(it.ref);(it.mods||[]).forEach(r=>add(r));
+    const sp=it.props&&it.props.support;if(sp&&sp.startsWith('r:'))add(sp);const sb=num(it.props&&it.props.sandbags);if(sb>0)add('r:sandbag',sb)}
+  return m;
+}
+function kitProject(list){const tot=new Map();for(const s of (list||P.setups.filter(x=>!x.sample))){for(const [r,n] of kitFor(s))tot.set(r,Math.max(tot.get(r)||0,n))}return tot}
+function kitRows(m){
+  const groups=[['camera','Cameras'],['light','Lights'],['modifier','Modifiers'],['grip','Grip & support']];const out=[];
+  for(const [c,l] of groups){const rows=[...m].map(([r,n])=>({e:E(r),n})).filter(x=>x.e.cat===c).sort((a,b)=>(a.e.generic?1:0)-(b.e.generic?1:0)||sortEntries(a.e,b.e));if(rows.length)out.push({cat:c,label:l,rows})}
+  return out;
+}
+function wattsFor(Sx){let w=0;for(const it of Sx.items){const e=E(it.ref);if(e.cat==='light')w+=e.watts||0}return w}
+let kitScope='project';
+function openKit(){
+  const tabs=[['project','Whole project'],...P.setups.map(s=>[s.id,s.name])];
+  const m=kitScope==='project'?kitProject():kitFor(P.setups.find(s=>s.id===kitScope)||S());const groups=kitRows(m);
+  const total=[...m.values()].reduce((a,b)=>a+b,0);const watts=kitScope==='project'?Math.max(0,...P.setups.filter(x=>!x.sample).map(wattsFor)):wattsFor(P.setups.find(s=>s.id===kitScope)||S());
+  let short=0;const body=groups.map(g=>`<tr class="kgrp"><td colspan="4">${g.label}</td></tr>`+g.rows.map(({e,n})=>{const own=prefs.kit[e.id];const sh=own&&n>own;if(sh)short++;
+    return `<tr><td class="q">${n}×</td><td>${esc(e.generic?e.name+' (unspecified)':e.name)}</td><td style="color:var(--muted)">${esc(e.generic||e.cat==='grip'?'':e.brand)}</td><td style="color:var(--muted);font-size:11.5px">${own?(sh?`<span class="short">Have ${own}, need ${n}</span>`:`In kit (${own})`):(e.generic||e.cat==='grip'?'':'Not in available kit')}</td></tr>`}).join('')).join('');
+  openModal(`${mh('Kit list')}<div class="modal-b"><div class="seg" style="margin-bottom:12px;flex-wrap:wrap">${tabs.map(([k,l])=>`<button data-kscope="${k}" aria-pressed="${kitScope===k}">${esc(l)}</button>`).join('')}</div>
+  <div class="stat"><div><b>${total}</b>items</div><div><b>${watts?(watts/1000).toFixed(2):'–'}</b>kW max draw${kitScope==='project'?' (busiest setup)':''}</div><div><b>${short}</b>short</div></div>
+  ${kitScope==='project'?`<p class="hint" style="margin-top:-4px">Whole-project quantities are the most needed in any one setup, since kit is reused between setups.${P.setups.some(x=>x.sample)?' Sample setups aren’t included.':''}</p>`:''}
+  ${groups.length?`<div style="overflow-x:auto"><table class="kit"><thead><tr><th style="text-align:right">Qty</th><th>Item</th><th>Brand</th><th>Availability</th></tr></thead><tbody>${body}</tbody></table></div>`:'<p class="hint">Nothing on the plan yet. Lights, cameras, modifiers, grip and any stands or sandbags you set on a light will appear here.</p>'}</div>
+  <div class="modal-f"><button class="btn" id="kitCopy">Copy as text</button><button class="btn" id="kitCsv">Download CSV</button><button class="btn pri" data-close>Done</button></div>`);
+  $('#modalRoot').querySelectorAll('[data-kscope]').forEach(b=>b.onclick=()=>{kitScope=b.dataset.kscope;openKit()});
+  $('#kitCopy').onclick=async()=>{const t=kitText(m);try{await navigator.clipboard.writeText(t);toast('Kit list copied')}catch(e){showText('Kit list',t,'kit-list.txt')}};
+  $('#kitCsv').onclick=()=>saveFile(safeName()+' - kit list.csv',kitCSV(m),'text');
+}
+function kitText(m){let t=`${P.info.production||P.name} — kit list${kitScope==='project'?'':' ('+(P.setups.find(s=>s.id===kitScope)?.name||'')+')'}\n`;if(P.info.date)t+=fmtDate(P.info.date)+'\n';for(const g of kitRows(m)){t+=`\n${g.label.toUpperCase()}\n`;for(const {e,n} of g.rows)t+=`${n}x  ${e.generic?e.name+' (unspecified)':(e.cat==='grip'?'':e.brand+' ')+e.name}\n`}return t}
+function kitCSV(m){const q=s=>`"${String(s).replace(/"/g,'""')}"`;let c='Category,Brand,Item,Quantity,In available kit\n';for(const g of kitRows(m))for(const {e,n} of g.rows)c+=[g.label,e.generic||e.cat==='grip'?'':e.brand,e.generic?e.name+' (unspecified)':e.name,n,prefs.kit[e.id]||''].map(q).join(',')+'\n';return c}
+
+/* ============ export ============ */
+function safeName(){return (P.info.production||P.name||'Lighting plan').replace(/[\\/:*?"<>|]+/g,'').slice(0,80)}
+function buildExport(Sx,o){
+  const Pp=EXPORT_PAL;const T=prefs.toggles;
+  let b=contentBounds(Sx,{grip:T.grip,fov:T.fov})||[0,0,600,400];const padW=90;b=[b[0]-padW,b[1]-padW,b[2]+padW,b[3]+padW];
+  const bw=b[2]-b[0],bh=b[3]-b[1];const PLANW=o.planW||2000;let scale=PLANW/bw;if(bh*scale>1500)scale=1500/bh;const pw=bw*scale,ph=bh*scale;
+  const k=1.7/scale;const M=40;const B=badges(Sx);
+  const vis=visibleItems(Sx,{grip:T.grip}).filter(v=>v.e.cat==='light'||v.e.cat==='camera');
+  const legendW=o.legend&&vis.length?720:0;
+  const W=Math.round(M*2+pw+(legendW?legendW+30:0));
+  const legendRows=[];if(legendW){for(const {it,e} of vis){legendRows.push({b:B[it.id],cam:e.cat==='camera',t:(it.label?it.label+' — ':'')+(e.generic?e.name:e.brand+' '+e.name),d:detailLine(it,e)+(it.props?.support&&SUPPORTS.concat(CAM_SUPPORTS).find(s=>s[0]===it.props.support)?' · '+SUPPORTS.concat(CAM_SUPPORTS).find(s=>s[0]===it.props.support)[1]:'')+(it.props?.notes?' · '+it.props.notes:'')})}}
+  if(legendW&&!T.grip){const g=[...kitFor(Sx)].filter(([r])=>E(r).cat==='grip');if(g.length)legendRows.push({b:'',t:'Grip (not drawn)',d:g.map(([r,n])=>n+'× '+E(r).name).join(', ')})}
+  const wrapTxt=(s,n)=>{const w=String(s).split(' ');const lines=[];let l='';for(const x of w){if((l+' '+x).trim().length>n){if(l)lines.push(l);l=x}else l=(l+' '+x).trim()}if(l)lines.push(l);return lines};
+  let legendH=0;const legendSvg=legendRows.map(r=>{const dl=r.d?wrapTxt(r.d,68):[];const y=legendH;legendH+=30+dl.length*22+10;
+    return `<g transform="translate(0 ${y})">${r.b?`<circle cx="16" cy="12" r="15" fill="${r.cam?Pp.cam:Pp.accent}"/><text x="16" y="18" text-anchor="middle" font-size="16" font-weight="700" fill="#fff">${r.b}</text>`:''}<text x="44" y="18" font-size="18" font-weight="700" fill="${Pp.ink}">${esc(r.t)}</text>${dl.map((l,i)=>`<text x="44" y="${42+i*22}" font-size="15" fill="${Pp.muted}">${esc(l)}</text>`).join('')}</g>`}).join('');
+  const i=P.info,c=Sx.cam||defaultCam();
+  const cells=[['Production',i.production||P.name],['Setup',Sx.name+(Sx.desc?' — '+Sx.desc:'')],['Date',i.date?fmtDate(i.date):''],['Location',i.location],['Director',i.director],['DoP',i.dop],['Gaffer',i.gaffer],['Client',i.client],['Lens',c.lens],['Stop',c.stop?c.stopType+c.stop:''],['Camera WB',c.kelvin?c.kelvin+'K':''],['Scene key',c.key?fmtStop(c.key):(c.lens||c.stop||c.kelvin?'At key':'')],['Contrast ratio',c.ratio||(ratioFromStops(Sx)||{}).r||'']].filter(c=>c[1]);
+  const rows=Math.max(1,Math.ceil(cells.length/4));
+  const titleH=o.title?75*rows:0;const bodyH=Math.max(ph,legendW?legendH+50:0);const H=Math.round(M*2+bodyH+(titleH?titleH+24:0));
+  const plan=planSVG(Sx,{P:Pp,k,sw:2.2,grid:T.grid,bounds:b.slice(0,2).concat([bw,bh]),s:1,export:true,grip:T.grip,labels:T.labels==='off'&&o.legend?'num':T.labels,details:T.details,fov:T.fov,sel:null,font:'Helvetica, Arial, sans-serif',pid:'x'+Sx.id});
+  const cw=(W-M*2)/4;
+  const title=o.title?`<g transform="translate(${M} ${H-M-titleH})"><rect x="0" y="0" width="${W-M*2}" height="${titleH}" fill="#fff" stroke="${Pp.ink}" stroke-width="2"/>${cells.map((c,n)=>{const x=(n%4)*cw,y=Math.floor(n/4)*75;return `<g transform="translate(${x} ${y})"><rect width="${cw}" height="75" fill="none" stroke="${Pp['grid-major']}"/><text x="14" y="26" font-size="13" letter-spacing="1.5" fill="${Pp.muted}">${esc(c[0].toUpperCase())}</text><text x="14" y="56" font-size="${n===0?22:19}" font-weight="${n<2?700:400}" fill="${Pp.ink}">${esc(String(c[1]).slice(0,Math.floor(cw/11)))}</text></g>`}).join('')}<text x="${W-M*2-12}" y="${titleH+18}" text-anchor="end" font-size="12" fill="${Pp.muted}">${Sx.room.on?`Room ${fmtM(Sx.room.w)} × ${fmtM(Sx.room.d)} · `:''}Grid 1 m · Exported ${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</text></g>`:'';
+  const svgStr=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Helvetica, Arial, sans-serif"><rect width="${W}" height="${H}" fill="#fff"/><svg x="${M}" y="${M}" width="${pw}" height="${ph}" viewBox="${b[0]} ${b[1]} ${bw} ${bh}">${plan}</svg>${legendW?`<g transform="translate(${M+pw+30} ${M})"><text x="0" y="18" font-size="14" letter-spacing="2" fill="${Pp.muted}">KEY</text><line x1="0" y1="30" x2="${legendW}" y2="30" stroke="${Pp['grid-major']}" stroke-width="2"/><g transform="translate(0 46)">${legendSvg}</g></g>`:''}${title}</svg>`;
+  return {svg:svgStr,W,H};
+}
+function svgToCanvas(svgStr,W,H,scale=1){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=Math.round(W*scale);c.height=Math.round(H*scale);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);res(c)};img.onerror=()=>rej(new Error('render'));img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgStr)})}
+let downloads=null;
+async function saveFile(filename,data,kind){
+  try{if(!downloads&&window.claude?.use)downloads=await window.claude.use('downloads')}catch(e){}
+  if(downloads){try{const r=await downloads.save({filename,data});if(r&&r.status==='saved')toast('Saved '+filename);return true}catch(err){if(err&&err.code==='declined')return false;if(err&&err.code==='rate_limited'){toast('A save prompt is already open.');return false}}}
+  // standalone file opened in a normal browser: plain download
+  if(!window.claude||!window.claude.use){try{const blob=data instanceof Blob?data:new Blob([data],{type:kind==='text'?'text/plain;charset=utf-8':'application/octet-stream'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);toast('Downloaded '+filename);return true}catch(e){}}
+  // fallback
+  if(kind==='text'){showText(filename,typeof data==='string'?data:await data.text(),filename)}
+  else if(kind==='image'){const url=URL.createObjectURL(data);openModal(`${mh('Your image')}<div class="modal-b"><p class="hint" style="margin-top:0">Saving files isn't available here. Right-click or long-press the image to save it.</p><img class="preview-img" src="${url}" alt="Exported lighting plan"></div><div class="modal-f"><button class="btn pri" data-close>Done</button></div>`)}
+  else toast('Saving files isn’t available in this view. Try opening the page directly in claude.ai.',4200);
+  return false;
+}
+function showText(title,text){openModal(`${mh(esc(title))}<div class="modal-b"><p class="hint" style="margin-top:0">Select all and copy.</p><textarea class="out" readonly>${esc(text)}</textarea></div><div class="modal-f"><button class="btn pri" data-close>Done</button></div>`);setTimeout(()=>{const t=$('textarea.out');t.focus();t.select()},30)}
+const exState={fmt:'pdf',scope:'current',setups:new Set(),one:'',incSample:false,legend:true,title:true,kit:true,photos:true,paper:'a4'};
+function openExport(){
+  {const ns=P.setups.filter(x=>!x.sample);exState.setups=new Set(ns.map(x=>x.id));exState.one=S().sample&&ns[0]?ns[0].id:S().id;exState.incSample=false}
+  const r=(name,val,label,desc)=>`<label class="opt"><input type="radio" name="${name}" value="${val}" ${exState[name]===val?'checked':''}><div><b>${label}</b><span>${desc}</span></div></label>`;
+  const c=(k,label)=>`<label style="display:flex;gap:8px;align-items:center;margin:6px 0;font-size:13px"><input type="checkbox" data-ex="${k}" ${exState[k]?'checked':''} style="accent-color:var(--accent)">${label}</label>`;
+  openModal(`${mh('Save &amp; export')}<div class="modal-b"><div class="grid2"><div><div class="sec-h" style="margin-top:0">Format</div>
+  ${r('fmt','pdf','PDF','Plan pages plus kit list, ready to send round')}${r('fmt','png','PNG image','One setup as a high-res picture')}${r('fmt','svg','SVG','Vector drawing for editing elsewhere')}${r('fmt','csv','Kit list (CSV)','Opens in Excel, Numbers or Sheets')}${r('fmt','json','Project file (.json)','Full backup you can re-open with Projects')}</div>
+  <div><div class="sec-h" style="margin-top:0">Options</div><div id="exOpts"></div></div></div></div>
+  <div class="modal-f"><button class="btn" data-close>Cancel</button><button class="btn pri" id="exGo">Export</button></div>`);
+  const opts=()=>{const f=exState.fmt;let h='';
+    if(f==='pdf')h+=`<div class="hint" style="margin:0 0 4px">Setups to include</div><div class="exsetups">${P.setups.map(x=>`<label><input type="checkbox" data-exs="${x.id}" ${exState.setups.has(x.id)?'checked':''}>${esc(x.name)}${x.sample?' <span class="tag">Sample</span>':''}</label>`).join('')}</div>`+c('kit','Add kit list page')+c('photos','Add location photos')+`<div class="fld" style="margin-top:8px"><label>Paper</label><select data-ex="paper"><option value="a4" ${exState.paper==='a4'?'selected':''}>A4 landscape</option><option value="a3" ${exState.paper==='a3'?'selected':''}>A3 landscape</option><option value="letter" ${exState.paper==='letter'?'selected':''}>US Letter landscape</option></select></div>`;
+    if(f==='png'||f==='svg')h+=fld('Setup',`<select data-ex="one">${P.setups.map(x=>`<option value="${x.id}" ${exState.one===x.id?'selected':''}>${esc(x.name)}${x.sample?' (sample)':''}</option>`).join('')}</select>`);
+    if(f==='pdf'||f==='png'||f==='svg')h+=c('legend','Include key (numbered lights & cameras)')+c('title','Include title block')+`<p class="hint">Uses the current Show settings for labels, details, FOV, grip and grid.</p>`;
+    if(f==='csv')h+=`<p class="hint">${kitScope==='project'?'Whole project, with the most needed in any one setup.'+(P.setups.some(x=>x.sample)?' Sample setups aren’t included.':''):'Current kit list view.'}</p>`;
+    if(f==='json'&&P.setups.some(x=>x.sample))h+=c('incSample','Include the sample setup');
+    if(f==='json')h+=`<p class="hint">Includes your setups, shoot info and any custom catalogue items used. Re-open it from Projects → Open project file.</p>`;
+    $('#exOpts').innerHTML=h};
+  opts();
+  $('.modal').addEventListener('change',e=>{const t=e.target;if(t.name==='fmt'){exState.fmt=t.value;opts()}else if(t.name==='scope')exState.scope=t.value;else if(t.dataset.exs){t.checked?exState.setups.add(t.dataset.exs):exState.setups.delete(t.dataset.exs)}else if(t.dataset.ex){exState[t.dataset.ex]=t.type==='checkbox'?t.checked:t.value}});
+  $('#exGo').onclick=async()=>{closeModal();toast('Preparing export…',1500);try{await runExport()}catch(err){console.error(err);toast('Export failed: '+(err.message||'unknown error'))}};
+}
+async function runExport(){
+  const f=exState.fmt,base=safeName();
+  if(f==='json'){let proj=P;if(!exState.incSample&&P.setups.some(x=>x.sample)&&P.setups.some(x=>!x.sample)){proj=JSON.parse(JSON.stringify(P));proj.setups=proj.setups.filter(x=>!x.sample);if(!proj.setups.find(x=>x.id===proj.current))proj.current=proj.setups[0].id}
+    const usedCustom=prefs.custom.filter(c=>proj.setups.some(s=>s.items.some(i=>i.ref===c.id||(i.mods||[]).includes(c.id))));await saveFile(base+'.json',JSON.stringify({format:'lighting-plan-studio',version:1,project:proj,custom:usedCustom,setups:proj.setups},null,1),'text');return}
+  if(f==='csv'){await saveFile(base+' - kit list.csv',kitCSV(kitScope==='project'?kitProject():kitFor(P.setups.find(s=>s.id===kitScope)||S())),'text');return}
+  const one=P.setups.find(x=>x.id===exState.one)||S();
+  if(f==='svg'){const x=buildExport(one,{legend:exState.legend,title:exState.title});await saveFile(base+' - '+one.name+'.svg',x.svg,'text');return}
+  if(f==='png'){const x=buildExport(one,{legend:exState.legend,title:exState.title});const c=await svgToCanvas(x.svg,x.W,x.H,1.5);const blob=await new Promise(r=>c.toBlob(r,'image/png'));await saveFile(base+' - '+one.name+'.png',blob,'image');return}
+  if(f==='pdf'){
+    if(!window.jspdf){toast('The PDF engine didn’t load. Check your connection and reload.');return}
+    const {jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'landscape',unit:'mm',format:exState.paper});const PW=doc.internal.pageSize.getWidth(),PH=doc.internal.pageSize.getHeight(),m=10;
+    const setups=P.setups.filter(x=>exState.setups.has(x.id));if(!setups.length){toast('Tick at least one setup to export.');return}let first=true;
+    for(const s of setups){const x=buildExport(s,{legend:exState.legend,title:exState.title,planW:2200});const c=await svgToCanvas(x.svg,x.W,x.H,1.2);if(!first)doc.addPage();first=false;
+      const r=Math.min((PW-m*2)/x.W,(PH-m*2)/x.H);const w=x.W*r,h=x.H*r;doc.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',(PW-w)/2,(PH-h)/2,w,h)}
+    if(exState.photos){for(const s of setups){for(const ph of (s.photos||[])){try{const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=photoSrc(ph)});
+      const cv=document.createElement('canvas');const r0=Math.min(1,1800/Math.max(img.naturalWidth,img.naturalHeight));cv.width=Math.round(img.naturalWidth*r0);cv.height=Math.round(img.naturalHeight*r0);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      doc.addPage();doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(20);doc.text(`${s.name} — ${ph.cap||'Location photo'}`,m,m+5);
+      const avH=PH-m*2-10,r=Math.min((PW-m*2)/cv.width,avH/cv.height);const w=cv.width*r,h=cv.height*r;doc.addImage(cv.toDataURL('image/jpeg',.88),'JPEG',(PW-w)/2,m+10,w,h)}catch(e){}}}}
+    if(exState.kit){const mm=setups.length>1?kitProject(setups):kitFor(setups[0]);const groups=kitRows(mm);doc.addPage();let y=m+8;
+      doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text((P.info.production||P.name)+' — kit list',m,y);y+=6;doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(90);
+      doc.text([setups.length>1?setups.map(x=>x.name).join(', ')+' (most needed in any one setup)':setups[0].name,P.info.date?fmtDate(P.info.date):'',P.info.location].filter(Boolean).join('  ·  '),m,y);y+=8;doc.setTextColor(20);
+      const colW=(PW-m*2-10)/2;let col=0;const startY=y;
+      const line=(txt,bold,size=10)=>{if(y>PH-m){if(col===0){col=1;y=startY}else{doc.addPage();col=0;y=m+8}}doc.setFont('helvetica',bold?'bold':'normal');doc.setFontSize(size);doc.text(txt,m+col*(colW+10),y,{maxWidth:colW});y+=size*0.5+1.5};
+      if(!groups.length)line('Nothing on the plan yet.',false);
+      for(const g of groups){y+=2;line(g.label.toUpperCase(),true,9);for(const {e,n} of g.rows){const own=prefs.kit[e.id];line(`${n}×   ${e.generic?e.name+' (unspecified)':(e.cat==='grip'?'':e.brand+' ')+e.name}${own&&n>own?`   (have ${own})`:''}`,false)}}
+      if(P.info.notes){y+=4;line('NOTES',true,9);line(P.info.notes,false,9)}}
+    await saveFile(base+'.pdf',doc.output('blob'),'pdf');
+  }
+}
+
+/* ============ render all & wiring ============ */
+function renderAll(){
+  $('#projName').value!==P.name&&document.activeElement!==$('#projName')&&($('#projName').value=P.name);
+  renderToolbar();renderLeft();renderRight();renderSetups();renderCanvas();
+}
+$('#projName').addEventListener('change',e=>{P.name=e.target.value.trim()||'Untitled shoot';delete P.example;commit()});
+$('#bLib').onclick=openLibrary;$('#bInfo').onclick=openInfo;$('#bKit').onclick=()=>{kitScope='project';openKit()};$('#bExport').onclick=openExport;
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{readPal();renderAll()});
+new MutationObserver(()=>{readPal();renderAll()}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+addEventListener('pointerdown',e=>{if(innerWidth>980)return;const l=$('#left'),r=$('#right');if(!e.target.closest('.side')&&!e.target.closest('.toolbar')&&!e.target.closest('#modalRoot')){l.classList.remove('open');r.classList.remove('open')}},true);
+
+async function connectCloud(){
+  if(!window.claude||!window.claude.use)return;
+  let db=null,user=null;try{[db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')])}catch(e){}
+  if(!db||!user)return;let id=null;try{id=await user.id()}catch(e){}if(!id)return;
+  Store.db=db;Store.uid=id;Store.mode='cloud';
+  try{
+    const cp=await Store.loadPrefs();
+    if(cp){prefs={...prefs,...cp,toggles:{...defaultToggles,...(cp.toggles||{})},kit:{...(cp.kit||{})},custom:cp.custom||[]};if(migrateKit())await Store.savePrefs()}else await Store.savePrefs();
+    const cloud=await Store.list();const ids=new Set(cloud.map(c=>c.id));
+    for(const meta of (LS.get('lps2:index')||[])){if(!ids.has(meta.id)){const p=LS.get('lps2:p:'+meta.id);if(p&&!(p.example&&cloud.length))await Store.save(p)}}
+    const want=prefs.lastProject&&cloud.find(c=>c.id===prefs.lastProject);
+    if(want&&want.id!==P.id){const p=await Store.load(want.id);if(p){P=normalise(p);ui.sel.clear();resetHistory();setTimeout(fitView,10)}}
+    else if(!want&&cloud.length&&P.example){const newest=cloud.sort((a,b)=>(b.updated||0)-(a.updated||0))[0];const p=await Store.load(newest.id);if(p){P=normalise(p);ui.sel.clear();resetHistory();setTimeout(fitView,10)}}
+    else await Store.save(P);
+  }catch(e){console.warn(e)}
+  setSaveState('saved');renderAll();
+}
+const DEFAULT_KIT={'c:red-komodo-6k':1,'c:blackmagic-ursa-mini-pro-4-6k-g2':1,'c:canon-eos-c300':1,'c:sony-fx30':1,'c:sony-a7s-iii':1,
+  'c:aputure-ls-600c-pro-ii':1,'c:aputure-ls-600d-pro':1,'c:aputure-ls-300x':1,'c:aputure-ls-60x':1,'c:aputure-mc':1,'c:aputure-amaran-300c':1,'c:aputure-amaran-f22c':1,'c:nanlite-pavotube-ii-30c':1,'c:aputure-amaran-ray-60c':1,'c:aputure-amaran-ray-120c':1,'c:godox-vl150':1,
+  'c:aputure-light-dome-iii':1,'c:aputure-light-dome-grid':1,'c:aputure-bowens-barndoors':1,'c:aputure-lantern-90':1};
+const OLD_DEFAULT_KIT=['c:aputure-ls-600x-pro','c:aputure-amaran-200x-s','c:aputure-light-dome-iii','c:aputure-light-dome-grid','c:aputure-bowens-barndoors','c:aputure-lantern-90','c:nanlite-pavotube-ii-30c','c:nanlite-forza-300b-ii','c:sony-fx6','c:sony-fx3'];
+function migrateKit(){if((prefs.kitV||0)>=2)return false;OLD_DEFAULT_KIT.forEach(k=>delete prefs.kit[k]);for(const [k,n] of Object.entries(DEFAULT_KIT))if(!prefs.kit[k])prefs.kit[k]=n;prefs.kitV=2;return true}
+function boot(){
+  readPal();
+  $('#lensList').innerHTML=Object.keys(LENS_SETS).map(n=>`<option value="${esc(n)}">`).join('');
+  $('#stopList').innerHTML=STOPS.map(v=>`<option value="${v}">`).join('');
+  $('#kList').innerHTML=KELVINS.map(v=>`<option value="${v}">`).join('');
+  $('#ratioList').innerHTML=['1:1','1.5:1','2:1','3:1','4:1','6:1','8:1','16:1'].map(v=>`<option value="${v}">`).join('');
+  const lp=LS.get('lps2:prefs');
+  if(lp)prefs={...prefs,...lp,toggles:{...defaultToggles,...(lp.toggles||{})},kit:lp.kit||{},custom:lp.custom||[]};
+  else{prefs.kit={...DEFAULT_KIT};prefs.kitV=2}
+  if(migrateKit())persistPrefs(true);
+  const last=prefs.lastProject&&LS.get('lps2:p:'+prefs.lastProject);
+  P=normalise(last||firstRunProject());resetHistory();
+  renderAll();setSaveState('saved');requestAnimationFrame(()=>fitView());
+  if(!last)saveNow();
+  connectCloud();
+}
+boot();
+</script>
+
+</body></html>

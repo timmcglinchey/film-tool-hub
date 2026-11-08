@@ -1,0 +1,1186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>False Colour Studio</title>
+<style>
+:root{
+  --bg:#0f1013; --panel:#16181d; --panel2:#1d2027; --field:#1f2229;
+  --line:#272b33; --line2:#383e48;
+  --fg:#f0ece5; --muted:#9aa0aa; --faint:#6b717b;
+  --accent:#ffb547; --accent-ink:#1a1206; --accent-soft:rgba(255,181,71,.12);
+  --good:#7fd6a2; --ok:#ffcf6e; --bad:#ff8f7a;
+  --shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root{
+  --bg:#f3f0ea; --panel:#ffffff; --panel2:#f4f1ea; --field:#f7f4ee;
+  --line:#e3ded4; --line2:#cfc8bb;
+  --fg:#16181c; --muted:#565c66; --faint:#878c95;
+  --accent:#a35f00; --accent-ink:#ffffff; --accent-soft:rgba(163,95,0,.09);
+  --good:#1f8a50; --ok:#9a6400; --bad:#c0392b;
+  --shadow:0 14px 30px -16px rgba(70,50,20,.28);
+  color-scheme:light;
+}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--display);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{max-width:1500px;margin:0 auto;padding:18px 20px 48px}
+
+/* header */
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;flex-direction:column;gap:3px;margin-right:6px}
+.eyebrow{font:600 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.brand h1{margin:0;font-stretch:72%;font-weight:800;font-size:26px;line-height:1;letter-spacing:.03em;text-transform:uppercase}
+.proj{flex:1;min-width:180px;max-width:380px;height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:var(--field);font-size:14px}
+.proj::placeholder{color:var(--faint)}
+.acts{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.btn{height:36px;padding:0 13px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn:hover{border-color:var(--fg)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.sm{height:30px;padding:0 10px;font-size:12.5px}
+.btn.ghost{background:none}
+.btn svg{width:15px;height:15px;flex:none}
+
+/* control bar */
+.bar{display:flex;align-items:center;gap:12px 20px;flex-wrap:wrap;margin:16px 0 18px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:13px}
+.seg{display:inline-flex;background:var(--field);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;color:var(--muted);padding:6px 11px;border-radius:7px;font-size:13px;font-weight:600;white-space:nowrap}
+.seg button:hover{color:var(--fg)}
+.seg button.on{background:var(--panel2);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line2)}
+.seg.modes button{padding:7px 14px;font-size:13.5px}
+.seg.modes button.on{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+.seg .n{font:500 11px var(--mono);opacity:.75;margin-left:4px}
+.ctl{display:flex;align-items:center;gap:10px}
+.ctl>label,.lbl{font:600 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ctl input[type=range]{width:110px;accent-color:var(--accent)}
+.kval{font:600 15px var(--mono);min-width:16px;text-align:center}
+.vsep{width:1px;height:26px;background:var(--line2)}
+.hint{font-size:12.5px;color:var(--muted)}
+kbd{font:500 11px var(--mono);border:1px solid var(--line2);border-bottom-width:2px;border-radius:5px;padding:1px 5px;background:var(--field)}
+
+/* layout */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}
+@media (max-width:1050px){.cols{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.card h2{margin:0 0 10px;font:600 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.card h2 .r{margin-left:auto;display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0}
+.stack{display:grid;gap:18px}
+
+/* drop zone */
+.drop{display:grid;place-items:center;text-align:center;min-height:52vh;border:1.5px dashed var(--line2);border-radius:16px;background:var(--panel);padding:30px;cursor:pointer;transition:border-color .2s,background .2s}
+.drop:hover{border-color:var(--accent);background:var(--accent-soft)}
+.drop h3{margin:14px 0 6px;font-stretch:80%;font-weight:750;font-size:26px;letter-spacing:-.005em}
+.drop p{margin:0 auto;color:var(--muted);max-width:480px}
+.drop .chips{display:flex;gap:3px;justify-content:center}
+.drop .chips i{width:22px;height:46px;border-radius:5px;display:block}
+
+/* single still stage */
+.still{padding:14px}
+.stagewrap{background:#000;border-radius:9px;overflow:hidden;display:grid;place-items:center}
+.stage{position:relative;max-width:100%;cursor:crosshair;touch-action:none;user-select:none}
+.stage img,.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.stage .divider{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.45);pointer-events:none;display:none}
+.stage .divider::after{content:"";position:absolute;top:50%;left:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.5)}
+.stage .tag{position:absolute;top:8px;padding:3px 7px;border-radius:6px;background:rgba(10,11,13,.72);color:#f0ece5;font:600 10.5px var(--mono);letter-spacing:.05em;display:none;pointer-events:none}
+.stage .tag.l{left:8px}.stage .tag.r{right:8px}
+.stage.split{cursor:ew-resize}
+.stage.split .divider,.stage.split .tag{display:block}
+.still .foot{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.fname{font:500 12px var(--mono);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:120px}
+
+/* viewer + IRE strip */
+.viewer{display:flex;gap:10px;justify-content:center;align-items:stretch}
+.viewer .stagewrap{flex:0 0 auto}
+.viewer .stage{width:100%}
+.strip{position:relative;width:74px;flex:none;min-height:160px}
+.strip .cap{position:absolute;top:0;left:24px;font:600 9.5px/1 var(--mono);letter-spacing:.1em;color:var(--muted)}
+.strip .scale{position:absolute;top:20px;bottom:6px;left:0;right:0}
+.strip .bar{position:absolute;left:24px;top:0;bottom:0;width:16px;border-radius:3px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(127,127,127,.4)}
+.strip .bar span{position:absolute;left:0;right:0}
+.strip .tk{position:absolute;left:44px;transform:translateY(50%);font:500 10px/1 var(--mono);color:var(--muted);padding-left:7px}
+.strip .tk::before{content:"";position:absolute;left:0;top:50%;width:4px;height:1px;background:var(--line2)}
+.strip .ptr{position:absolute;left:18px;width:28px;height:0;border-top:2px solid var(--fg);margin-top:-1px;pointer-events:none}
+.strip .ptr::before{content:"";position:absolute;left:-5px;top:-6px;border:5px solid transparent;border-left-color:var(--fg)}
+.strip .rmk{position:absolute;left:0;transform:translateY(50%);min-width:20px;padding:1px 3px;border-radius:3px;background:var(--c);color:#111;font:700 9px/1.2 var(--mono);text-align:center;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.strip .rmk::after{content:"";position:absolute;left:100%;top:50%;width:4px;height:1px;background:var(--c)}
+
+/* ratio markers on the image */
+.mk{position:absolute;transform:translate(-50%,-50%);pointer-events:none;display:grid;place-items:center}
+.mk i{display:block;width:100%;aspect-ratio:1;border-radius:50%;border:2px solid var(--c);box-shadow:0 0 0 1.5px rgba(0,0,0,.75),inset 0 0 0 1.5px rgba(0,0,0,.75)}
+.mk i::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:var(--c);box-shadow:0 0 0 1px rgba(0,0,0,.7)}
+.mk b{position:absolute;left:100%;margin-left:6px;white-space:nowrap;background:var(--c);color:#111;font:700 10px/1 var(--mono);padding:3px 5px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+.mk.act i{border-width:3px}
+
+/* ratios panel */
+.roles{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.roles li{display:grid;grid-template-columns:30px 1fr auto auto;gap:10px;align-items:center;padding:8px 9px;border-radius:10px;border:1px solid var(--line);cursor:pointer;background:var(--panel)}
+.roles li:hover{border-color:var(--line2)}
+.roles li.act{border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c);background:var(--panel2)}
+.roles .rchip{width:30px;height:30px;border-radius:8px;background:var(--c);color:#111;display:grid;place-items:center;font:700 11px var(--mono)}
+.roles .nm{font-weight:650;font-size:13.5px;min-width:0}
+.roles .nm small{display:block;font:400 11.5px var(--mono);color:var(--muted)}
+.roles .nm small.warn{color:var(--ok);font-family:var(--display)}
+.roles .k{font:500 10.5px var(--mono);color:var(--faint);border:1px solid var(--line2);border-radius:4px;padding:1px 5px}
+.mctl{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-top:12px}
+.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:4px 0 12px;border-bottom:1px solid var(--line)}
+.hero .lbl{font:600 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.hero b{display:block;font-stretch:72%;font-weight:800;font-size:46px;line-height:1;letter-spacing:-.01em;margin-top:6px}
+.hero .why{text-align:right;font-size:12.5px;color:var(--muted);max-width:170px}
+.hero .why strong{display:block;font:600 14px var(--mono);color:var(--fg)}
+.plist2{list-style:none;margin:6px 0 0;padding:0}
+.plist2 li{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line)}
+.plist2 li:first-child{border-top:0}
+.plist2 .pn{font-weight:650;font-size:13px}
+.plist2 .pn small{display:block;font-weight:400;font-size:11.5px;color:var(--muted)}
+.plist2 .pr{font:700 17px var(--mono)}
+.plist2 .ps{font:500 11.5px var(--mono);color:var(--muted);min-width:70px;text-align:right}
+.lnk{border:0;background:none;padding:0;color:var(--accent);font:600 11px var(--mono)}
+.lnk:hover{text-decoration:underline}
+
+/* legend */
+.pname{font-stretch:80%;font-weight:750;font-size:18px;margin:-2px 0 8px}
+.badge{font:600 9.5px/1 var(--mono);padding:4px 7px;border-radius:5px;letter-spacing:.08em;text-transform:uppercase}
+.badge.official{background:rgba(127,214,162,.14);color:var(--good)}
+.badge.approx{background:rgba(255,207,110,.14);color:var(--ok)}
+.badge.generic,.badge.custom{background:var(--panel2);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line2)}
+.legend{list-style:none;margin:0;padding:0}
+.legend li{display:grid;grid-template-columns:24px 1fr auto;gap:10px;align-items:center;padding:6px 4px;border-top:1px solid var(--line);cursor:pointer;border-radius:6px;transition:opacity .15s}
+.legend li:first-child{border-top:0}
+.legend li:hover{background:var(--panel2)}
+.legend li.off{opacity:.38}
+.legend li.off .chip{background-image:linear-gradient(135deg,transparent 45%,var(--panel) 45% 55%,transparent 55%)!important}
+.legend li.rest{cursor:default}.legend li.rest:hover{background:none}
+.legend .chip{width:24px;height:24px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(127,127,127,.3);display:block}
+.legend .chip.grey{background:linear-gradient(90deg,#111,#888,#eee)}
+.legend .nm{font-weight:650;font-size:13px;min-width:0}
+.legend .rg{font:500 11px var(--mono);color:var(--muted);margin-left:4px}
+.legend .nm small{display:block;font-weight:400;font-size:11.5px;color:var(--muted);line-height:1.3}
+.legend .v{text-align:right;font:600 12.5px var(--mono)}
+.legend .v small{display:block;font-weight:400;font-size:10.5px;color:var(--muted)}
+.pcbar{height:3px;border-radius:2px;background:var(--line);margin-top:4px;width:64px;margin-left:auto;overflow:hidden}
+.pcbar i{display:block;height:100%;background:var(--muted)}
+.srcnote{margin:12px 0 0;padding:9px 11px;border-radius:9px;background:var(--panel2);font-size:12px;color:var(--muted);line-height:1.5}
+.srcnote b{color:var(--fg);font-weight:650}
+.legendfoot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;font-size:11.5px;color:var(--faint)}
+
+/* histogram + stats */
+.hist{width:100%;height:130px;display:block}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{background:var(--panel2);border-radius:9px;padding:8px 10px}
+.stat span{display:block;font:600 9.5px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.stat b{display:block;font:600 16px var(--mono);margin-top:4px}
+
+/* custom editor */
+.custom{margin:-4px 0 18px}
+.ctable{display:grid;gap:6px;margin-top:10px}
+.crow{display:grid;grid-template-columns:38px minmax(90px,1fr) 84px 84px minmax(140px,2fr) 30px 30px;gap:6px;align-items:center}
+.crow.head{font:600 9.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.crow input{height:32px;border-radius:7px;border:1px solid var(--line2);background:var(--field);padding:0 8px;font-size:13px;min-width:0;width:100%}
+.crow input[type=color]{padding:2px;cursor:pointer}
+.crow input[type=number]{font-family:var(--mono)}
+.ibtn{height:30px;width:30px;border-radius:7px;border:1px solid var(--line2);background:var(--panel);display:grid;place-items:center;padding:0}
+.ibtn:hover{border-color:var(--fg)}
+.ibtn svg{width:13px;height:13px}
+select.sel{height:30px;border-radius:7px;border:1px solid var(--line2);background:var(--field);padding:0 8px;font-size:12.5px}
+
+/* deck: range chart */
+.rchart{display:grid;gap:3px}
+.rrow,.raxis{display:grid;grid-template-columns:150px minmax(0,1fr) 54px;gap:10px;align-items:center}
+.raxis .ticks{position:relative;height:16px}
+.raxis .ticks span{position:absolute;transform:translateX(-50%);font:500 10px var(--mono);color:var(--faint)}
+.raxis .ticks span:first-child{transform:none}.raxis .ticks span:last-child{transform:translateX(-100%)}
+.rn{font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow.flag .rn{color:var(--ok)}
+.track{position:relative;height:22px;border-radius:5px;background:var(--panel2);overflow:hidden}
+.track i{position:absolute;top:0;bottom:0;opacity:.22}
+.track .dm{position:absolute;top:0;bottom:0;border-left:1.5px dashed var(--muted);opacity:.7}
+.track .wh{position:absolute;top:50%;height:2px;margin-top:-1px;background:var(--fg);opacity:.75}
+.track .bx{position:absolute;top:5px;bottom:5px;border-radius:3px;background:var(--fg);opacity:.55}
+.track .md{position:absolute;top:2px;bottom:2px;width:3px;margin-left:-1.5px;border-radius:2px;background:var(--accent)}
+.rv{text-align:right;font:600 12.5px var(--mono)}
+.rv small{display:block;font-size:10.5px;color:var(--ok);font-weight:500}
+.rkey{font-size:11.5px;color:var(--faint);margin-top:8px}
+
+/* consistency */
+.ratio .head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:6px}
+.ratio .head h2{margin:0}
+.ratio .head p{margin:6px 0 0;font-size:12px;color:var(--muted);max-width:220px}
+.score{text-align:right;line-height:1}
+.score b{display:block;font-stretch:72%;font-weight:800;font-size:40px;letter-spacing:-.01em}
+.score span{font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.score.good b{color:var(--good)}.score.ok b{color:var(--ok)}.score.bad b{color:var(--bad)}.score.na b{color:var(--faint)}
+.facts{list-style:none;margin:10px 0 0;padding:0}
+.facts li{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line);font-size:13px}
+.facts li b{font-weight:650}
+.facts li span{font:500 12.5px var(--mono);text-align:right}
+.facts li span small{display:block;font-size:10.5px;color:var(--muted)}
+.verdict{margin:12px 0 0;padding:9px 11px;border-radius:9px;background:var(--panel2);font-size:12.5px}
+
+/* deck cards */
+.deckhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:22px 0 12px}
+.deckhead h3{margin:0;font-stretch:80%;font-weight:750;font-size:19px}
+.deckhead .hint{flex:1;min-width:200px}
+.grid{display:grid;gap:12px}
+.ref{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:opacity .2s,border-color .2s}
+.ref.flag{border-color:var(--ok)}
+.ref .thumb{position:relative;aspect-ratio:16/9;background:#000;cursor:crosshair}
+.ref .thumb canvas{width:100%;height:100%;object-fit:contain;display:block}
+.ref.off .thumb canvas{opacity:.28;filter:grayscale(1)}
+.ref.off .mini{opacity:.35}
+.ref.off{border-style:dashed}
+.inc{position:absolute;left:8px;top:8px;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px 0 6px;border-radius:7px;border:0;background:rgba(10,11,13,.72);color:#f0ece5;font:600 11px var(--mono);backdrop-filter:blur(6px)}
+.inc .bx{width:15px;height:15px;border-radius:4px;border:1.5px solid #f0ece5;display:grid;place-items:center}
+.inc .bx svg{width:11px;height:11px}
+.ref:not(.off) .inc .bx{background:#ffb547;border-color:#ffb547;color:#1a1206}
+.ref.off .inc .bx svg{display:none}
+.rm{position:absolute;right:8px;top:8px;width:26px;height:26px;border-radius:7px;border:0;background:rgba(10,11,13,.72);color:#f0ece5;display:grid;place-items:center;opacity:0;transition:opacity .15s}
+.ref:hover .rm,.rm:focus-visible{opacity:1}
+.rm svg{width:13px;height:13px}
+.ref .meta{padding:8px 10px 10px}
+.ref .nm{font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mini{display:flex;height:9px;border-radius:3px;overflow:hidden;margin-top:6px;background:#777}
+.mini span{display:block}
+.ref .sc{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font:500 11px var(--mono);color:var(--muted)}
+.ref .sc .fl{color:var(--ok)}
+.addtile{display:grid;place-items:center;text-align:center;border:1.5px dashed var(--line2);border-radius:12px;min-height:160px;background:none;color:var(--muted);padding:16px}
+.addtile:hover{border-color:var(--accent);color:var(--fg);background:var(--accent-soft)}
+.addtile b{display:block;font-size:14px;color:var(--fg);margin-top:6px}
+.empty{padding:26px 10px;text-align:center;color:var(--muted)}
+
+/* overlay, spot meter, toast */
+#dragOv{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(10,11,13,.6);backdrop-filter:blur(3px);pointer-events:none}
+#dragOv div{border:2px dashed var(--accent);border-radius:18px;padding:34px 46px;background:var(--panel);font-stretch:80%;font-weight:750;font-size:22px}
+#spot{position:fixed;z-index:50;pointer-events:none;background:rgba(10,11,13,.88);color:#f0ece5;border-radius:9px;padding:7px 10px;font-size:12px;line-height:1.35;box-shadow:var(--shadow);max-width:260px;backdrop-filter:blur(6px)}
+#spot b{font:600 15px var(--mono)}
+#spot .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:5px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
+#spot small{display:block;color:#a9aeb7}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:60;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--shadow);transition:all .25s;pointer-events:none;max-width:90vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ═════ Film Tool Hub kit mapping ═════ */
+:root:root:root{--bg:var(--fth-bg);--panel:var(--fth-surface);--panel2:var(--fth-surface2);--field:var(--fth-bg2);--line:var(--fth-line);--line2:var(--fth-line2);--fg:var(--fth-text);--muted:var(--fth-muted);--faint:var(--fth-faint);--accent:var(--fth-accent);--accent-ink:var(--fth-on-accent);--accent-soft:var(--fth-accent-soft);--good:var(--fth-good);--ok:var(--fth-warn);--bad:var(--fth-bad);--shadow:var(--fth-shadow);--display:var(--fth-display);--mono:var(--fth-mono);}
+.fth-head .proj{flex:1;min-width:180px;max-width:380px;height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--fth-line2);background:var(--fth-bg2);font-size:14px;color:var(--fth-text);outline:none}
+.fth-head .proj:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+.fth-head .fth-btn svg{width:15px;height:15px;flex:none}
+.app{padding-top:16px}
+
+</style>
+</head>
+<body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>03 · Visual Planning</span><h1 class="fth-title">False Colour Studio</h1></div>
+  <span class="fth-vsep"></span><input id="proj" class="proj" placeholder="Project title (used on exports)" aria-label="Project title">
+  <div class="fth-actions">
+      <button class="fth-btn" id="openBtn" title="Open a saved .json project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5V18a1.5 1.5 0 0 0 1.5 1.5h15A1.5 1.5 0 0 0 21 18V9a1.5 1.5 0 0 0-1.5-1.5H12L10 5H4.5A1.5 1.5 0 0 0 3 6.5z"/></svg>Open .json</button>
+      <button class="fth-btn" id="saveBtn" title="Save stills, chart and settings as a .json project file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M4.5 19.5h15"/></svg>Download .json</button>
+      <button class="fth-btn primary" id="pdfBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 13h6M9 16.5h4"/></svg><span id="pdfLbl">Export PDF</span></button>
+    </div>
+</header>
+<div class="app">
+  
+
+  <div class="bar">
+    <div class="seg modes" role="tablist">
+      <button data-mode="single" role="tab">Single still</button>
+      <button data-mode="deck" role="tab">Compare stills<span class="n" id="deckN"></span></button>
+      <button data-mode="ratios" role="tab">Ratios</button>
+    </div>
+    <div class="vsep"></div>
+    <div class="ctl"><span class="lbl">Chart</span><div class="seg" id="presetSeg"></div></div>
+    <div class="vsep"></div>
+    <div class="ctl"><span class="lbl">Levels</span>
+      <div class="seg" id="levelSeg">
+        <button data-levels="full" title="8-bit 0–255 reads as 0–100%. Right for JPEG/PNG stills and most frame grabs.">Full</button>
+        <button data-levels="legal" title="16–235 reads as 0–100%. Use for stills exported from video without range conversion (milky blacks).">Legal</button>
+      </div></div>
+    <div class="vsep"></div>
+    <div class="ctl"><span class="lbl">View</span>
+      <div class="seg" id="viewSeg">
+        <button data-view="fc">False colour</button>
+        <button data-view="orig">Original</button>
+        <button data-view="split" id="splitBtn" title="Drag across the image to move the split">Split</button>
+      </div></div>
+    <div class="ctl" id="colsCtl"><label for="cols">Columns</label><input type="range" id="cols" min="1" max="6" step="1" value="3"><span class="kval" id="colsVal">3</span></div>
+    <span class="hint">Hold <kbd>Space</kbd> to peek at the original.</span>
+  </div>
+
+  <section id="customBox" class="card custom" hidden></section>
+  <main id="main"></main>
+</div>
+
+<div id="dragOv" hidden><div id="dragTxt">Drop to add</div></div>
+<div id="spot" hidden></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="fileImg" accept="image/*" multiple hidden>
+<input type="file" id="fileJson" accept=".json,application/json" hidden>
+
+<script>
+'use strict';
+/* ───────────── charts ─────────────
+   Levels are % of signal (0 = black, 100 = white). A band matches when lo ≤ level ≤ hi; bands are
+   checked top to bottom and the first match wins. Anything that matches no band shows as greyscale. */
+const B = (n, m, lo, hi, c, r) => ({ n, m, lo, hi, c, r });
+const PRESETS = [
+  { id: 'arri', label: 'ARRI', name: 'ARRI ALEXA', src: 'official',
+    cite: 'ARRI ALEXA, ALEXA Mini and ALEXA Mini LF user manuals (False Color).',
+    sig: 'ARRI tints six ranges and shows the rest in black and white, calculated on whatever signal the output carries (Rec 709 or LogC).',
+    bands: [
+      B('Red', 'White clipping', 99, 200, '#ff2b1f', '99–100%'),
+      B('Yellow', 'Just below white clipping', 97, 99, '#ffe41a', '97–99%'),
+      B('Pink', 'One stop over 18% grey (light skin)', 52, 56, '#ff6ec7', '52–56%'),
+      B('Green', '18% medium grey', 38, 42, '#34c83c', '38–42%'),
+      B('Blue', 'Just above black clipping', 2.5, 4, '#2b6dff', '2.5–4%'),
+      B('Purple', 'Black clipping', -100, 2.5, '#8a36d8', '0–2.5%')] },
+  { id: 'red', label: 'RED', name: 'RED · Video mode', src: 'official',
+    cite: 'RED operation guides (DSMC2, RANGER, KOMODO/V-RAPTOR), False Color: Video mode.',
+    sig: 'Based on the RGB levels of the video (monitor) path, the cooked look rather than RAW. RED quotes whole IRE numbers, so band edges sit halfway between them.',
+    bands: [
+      B('Red', 'Untextured white', 98.5, 200, '#ff2020', 'IRE 99–100'),
+      B('Orange', 'Strong highlight, closest to white', 95.5, 98.5, '#ff8a00', 'IRE 96–98'),
+      B('Yellow', 'Strong highlight', 93.5, 95.5, '#ffe100', 'IRE 94–95'),
+      B('Straw', 'Strong highlight', 91.5, 93.5, '#e3cf8c', 'IRE 92–93'),
+      B('Pink', 'Typical light skin', 60.5, 70.5, '#ff7fc8', 'IRE 61–70'),
+      B('Green', '18% grey', 40.5, 48.5, '#2ec33d', 'IRE 41–48'),
+      B('Teal', 'Deep shadow', 9.5, 12.5, '#139c9c', 'IRE 10–12'),
+      B('Blue', 'On the verge of untextured black', 4.5, 5.5, '#2d5bff', 'IRE 5'),
+      B('Purple', 'Untextured black', -100, 4.5, '#8b2fd1', 'IRE 0–4')] },
+  { id: 'bmd', label: 'Blackmagic', name: 'Blackmagic Design', src: 'approx',
+    cite: 'Colours and meanings from Blackmagic camera manuals (Pocket, Cinema Camera, URSA). Blackmagic shows the cut-off levels only on the camera’s on-screen chart, so these edges are approximate.',
+    sig: 'Mid grey uses Blackmagic’s 38.4% figure for Film gamma, with pink one stop above. Check against your camera’s chart and fine-tune with Custom if needed.',
+    bands: [
+      B('Red', 'White clipping (95% WC)', 95, 200, '#ff2b1f', '≥95%'),
+      B('Yellow', 'Near white clipping', 90, 95, '#ffe41a', '~90–95%'),
+      B('Pink', 'One stop over middle grey (lighter skin)', 46.4, 50.4, '#ff6ec7', '~48% (MG+1)'),
+      B('Green', '18% middle grey (darker skin)', 36.4, 40.4, '#34c83c', '~38.4% (18% MG)'),
+      B('Blue', 'Near black detail loss', 2.5, 5, '#2b6dff', '~2.5–5% (NBDL)'),
+      B('Purple', 'Black detail loss', -100, 2.5, '#8a36d8', '<2.5% (BDL)')] },
+  { id: 'sony', label: 'Sony', name: 'Sony VENICE 2 · S-Log3 preset', src: 'official',
+    cite: 'Sony VENICE 2 operating instructions, False Color Display (S-Log3 default levels).',
+    sig: 'Sony’s levels are for an S-Log3 signal, so use this on ungraded S-Log3 frame grabs. Sony lists levels only; descriptions other than the grey references are ours.',
+    bands: [
+      B('Red', 'Near S-Log3 clip', 93.4, 96.1, '#ff2020', '93.4–96.1%'),
+      B('Yellow', 'Bright highlights', 91.3, 93.4, '#ffe100', '91.3–93.4%'),
+      B('Orange', 'Highlights', 87.7, 90.6, '#ff8c1a', '87.7–90.6%'),
+      B('Pink', 'Bright mid-tones', 54.3, 58.0, '#ff5fb8', '54.3–58.0%'),
+      B('Light pink', '18% grey + 1 stop', 47.8, 50.8, '#ffb3dc', '47.8–50.8%'),
+      B('Cyan', 'Between grey and +1 stop', 43.8, 46.5, '#20d9e6', '43.8–46.5%'),
+      B('Green', '18% grey', 38.9, 42.2, '#2fbf3a', '38.9–42.2%'),
+      B('Light blue', 'Lower mid-tones', 24.6, 34.4, '#7fb6ff', '24.6–34.4%'),
+      B('Blue', 'Near black', 3.5, 5.6, '#2a55ff', '3.5–5.6%'),
+      B('Purple', 'Black', -100, 3.5, '#8b2fd1', '−7.3–3.5%')] },
+  { id: 'stops', label: 'Stops', name: 'Stops from 18% grey', src: 'generic',
+    cite: 'Worked out from the encoding curve, not a manufacturer chart.',
+    get sig() { return `Each band is one stop wide, centred on whole stops from 18% grey, with edges calculated from the ${CURVES[state.curve].n} curve (change it in Ratios). On Rec 709, grey sits near 41% and the image clips about 2½ stops over, so the bright stops are narrow. Read stops on graded stills as approximate, because a grade bends the curve.`; },
+    get bands() { return stopBands(); } },
+  { id: 'zones', label: 'Zones', name: 'Ten zones', src: 'generic',
+    cite: 'Not a manufacturer chart.',
+    sig: 'Colours every 10% of signal so nothing stays grey. Useful for seeing where the bulk of each still sits.',
+    bands: [
+      B('90–100', 'Brightest highlights', 90, 200, '#e8202a'), B('80–90', 'Highlights', 80, 90, '#ff6a1a'),
+      B('70–80', 'Upper mid-tones', 70, 80, '#ffa31a'), B('60–70', 'Upper mid-tones', 60, 70, '#ffd21f'),
+      B('50–60', 'Mid-tones', 50, 60, '#9ad02b'), B('40–50', 'Mid-tones', 40, 50, '#2fbf4a'),
+      B('30–40', 'Lower mid-tones', 30, 40, '#18b5b5'), B('20–30', 'Shadows', 20, 30, '#1f86d9'),
+      B('10–20', 'Deep shadows', 10, 20, '#2b3fbf'), B('0–10', 'Near black', -100, 10, '#3b1a78')] },
+  { id: 'custom', label: 'Custom', name: 'Custom chart', src: 'custom',
+    cite: 'Your own bands.', sig: 'Edit them in the panel above. They’re saved with the project.' }
+];
+const BADGE = { official: 'Official', approx: 'Approximate', generic: 'Generic', custom: 'Custom' };
+const clone = o => JSON.parse(JSON.stringify(o));
+
+/* ───────────── state ───────────── */
+const state = { mode: 'single', preset: 'arri', levels: 'full', view: 'fc', cols: 3, order: 'added', split: 50,
+  single: null, deck: [], custom: clone(PRESETS[0].bands), hidden: new Set(), peek: false,
+  role: 'key', sample: 'small', curve: 'rec709' };
+
+/* ───────────── ratios ─────────────
+   Each reading averages the signal over a small disc, converts it back to linear light with the chosen
+   curve, and compares readings in stops (each stop doubles the light). */
+const ROLES = [
+  { id: 'key', n: 'Key', s: 'K', c: '#ffb547' },
+  { id: 'fill', n: 'Fill', s: 'F', c: '#5ab0ff' },
+  { id: 'back', n: 'Backlight', s: 'B', c: '#c9a7ff' },
+  { id: 'bg', n: 'Background', s: 'BG', c: '#7fd6a2' }];
+const PAIRS = [
+  ['key', 'fill', 'Key : Fill', 'Contrast across the subject'],
+  ['key', 'back', 'Key : Backlight', 'How hard the rim or edge reads'],
+  ['key', 'bg', 'Key : Background', 'Subject against the background'],
+  ['fill', 'bg', 'Fill : Background', 'Shadow side against the background'],
+  ['back', 'bg', 'Backlight : Background', 'Edge against the background'],
+  ['back', 'fill', 'Backlight : Fill', 'Edge against the shadow side']];
+const CURVES = {
+  rec709: { n: 'Rec 709 (camera)', f: v => v < 0.081 ? v / 4.5 : ((v + 0.099) / 1.099) ** (1 / 0.45) },
+  srgb: { n: 'sRGB (display)', f: v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4 },
+  g24: { n: 'Gamma 2.4 (display)', f: v => Math.max(0, v) ** 2.4 },
+  logc3: { n: 'ARRI LogC3 (EI 800)', f: v => v > 0.149658 ? (10 ** ((v - 0.385537) / 0.24719) - 0.052272) / 5.555556 : (v - 0.092809) / 5.367655 },
+  slog3: { n: 'Sony S-Log3', f: v => v * 1023 >= 171.2102946929 ? 10 ** ((v * 1023 - 420) / 261.5) * 0.19 - 0.01 : (v * 1023 - 95) * 0.01125 / (171.2102946929 - 95) },
+  bmd5: { n: 'Blackmagic Film Gen 5', f: v => v < 8.283605932402494 * 0.005 + 0.09246575342465753 ? (v - 0.09246575342465753) / 8.283605932402494 : Math.exp((v - 0.5300133392291939) / 0.08692876065491224) - 0.005494072432257808 }
+};
+const SAMPLE = { point: 0, small: 0.006, large: 0.016 };
+/* Stops chart: invert the curve to find the signal level of each half-stop edge around 18% grey. */
+const STOP_COL = { '-5': '#2a0f5c', '-4': '#3b2fb0', '-3': '#2b6dff', '-2': '#1fa3d9', '-1': '#17bfa6', '0': '#3fcf4a', '1': '#ff6ec7', '2': '#ff9a1a', '3': '#ffd21f', '4': '#c7ff3d', '5': '#ffffff' };
+const STOP_TXT = { '-5': 'Deep shadow, little detail', '-4': 'Deep shadow', '-3': 'Shadow', '-2': 'Shadow with detail', '-1': 'One stop under grey', '0': '18% grey', '1': 'One stop over grey (typical light skin)', '2': 'Two stops over grey', '3': 'Three stops over grey', '4': 'Four stops over grey', '5': 'Five stops over grey' };
+let stopC = { k: null };
+function stopBands() {
+  if (stopC.k === state.curve) return stopC.b;
+  const f = CURVES[state.curve].f, CLIP = 99.5;
+  const inv = L => { let lo = -0.1, hi = 1.2; for (let i = 0; i < 50; i++) { const m = (lo + hi) / 2; if (f(m) < L) lo = m; else hi = m; } return Math.round((lo + hi) / 2 * 1000) / 10; };
+  const out = [{ n: 'Clipped', m: 'At the top of the signal, no detail', lo: CLIP, hi: 200, c: '#ff2020' }];
+  for (let n = 5; n >= -5; n--) {
+    const lo = n === -5 ? -100 : inv(0.18 * 2 ** (n - 0.5)), hi = Math.min(CLIP, inv(0.18 * 2 ** (n + 0.5)));
+    if (lo >= CLIP) continue;
+    const name = n === 0 ? '0 · grey' : (n > 0 ? '+' : '−') + Math.abs(n) + (Math.abs(n) === 1 ? ' stop' : ' stops');
+    out.push({ n: n === -5 ? '−5 and below' : name, m: STOP_TXT[n], lo, hi, c: STOP_COL[n], r: n === -5 ? `below ${fmtNum(hi)}%` : `${fmtNum(Math.max(0, lo))}–${fmtNum(hi)}%` });
+  }
+  stopC = { k: state.curve, b: out }; return out;
+}
+const ireOfQ = q => { const c = q / 4; return state.levels === 'legal' ? (c - 16) / 2.19 : c / 2.55; };
+function readingAt(it, m) {
+  const L = it.full, r = SAMPLE[state.sample] * Math.max(L.w, L.h), cx = m.x * L.w, cy = m.y * L.h;
+  let s = 0, n = 0;
+  if (r < 1) { const x = Math.min(L.w - 1, Math.floor(cx)), y = Math.min(L.h - 1, Math.floor(cy)); s = L.luma[y * L.w + x]; n = 1; }
+  else for (let y = Math.max(0, Math.floor(cy - r)); y <= Math.min(L.h - 1, Math.ceil(cy + r)); y++)
+    for (let x = Math.max(0, Math.floor(cx - r)); x <= Math.min(L.w - 1, Math.ceil(cx + r)); x++)
+      if ((x + .5 - cx) ** 2 + (y + .5 - cy) ** 2 <= r * r) { s += L.luma[y * L.w + x]; n++; }
+  if (!n) { s = L.luma[Math.min(L.h - 1, Math.floor(cy)) * L.w + Math.min(L.w - 1, Math.floor(cx))]; n = 1; }
+  const ire = ireOfQ(s / n), lin = Math.max(1e-5, CURVES[state.curve].f(ire / 100)), bands = curBands(), bi = bandIndex(ire, bands);
+  return { ire, lin, stops: Math.log2(lin / 0.18), band: bi >= 0 ? bands[bi] : null,
+    warn: ire >= 98.5 ? 'At or near clipping, so the real level may be higher' : ire <= 2 ? 'At black, so this reading is unreliable' : '' };
+}
+function readingsOf(it) { const R = {}; ROLES.forEach(r => { const m = it.marks && it.marks[r.id]; if (m) R[r.id] = readingAt(it, m); }); return R; }
+function ratioOf(a, b) { const s = Math.log2(a.lin / b.lin), r = 2 ** Math.abs(s), f = r < 9.95 ? r.toFixed(1).replace(/\.0$/, '') : Math.round(r) + ''; return { s, txt: s >= 0 ? `${f}:1` : `1:${f}` }; }
+const fmtStops = s => (s >= 0 ? '+' : '−') + Math.abs(s).toFixed(1) + (Math.abs(s).toFixed(1) === '1.0' ? ' stop' : ' stops');
+const kfMood = s => { const a = Math.abs(s); return a < 0.5 ? 'Flat, almost no modelling' : a < 1.5 ? 'Soft, high-key' : a < 2.5 ? 'Classic portrait contrast' : a < 3.5 ? 'Dramatic' : 'Low-key, chiaroscuro'; };
+const cleanMarks = m => { const o = {}; if (m && typeof m === 'object') ROLES.forEach(r => { const v = m[r.id]; if (v && isFinite(v.x) && isFinite(v.y)) o[r.id] = { x: Math.min(1, Math.max(0, +v.x)), y: Math.min(1, Math.max(0, +v.y)) }; }); return o; };
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 10);
+let toastT;
+function toast(msg, ms = 2600) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms); }
+const preset = () => PRESETS.find(p => p.id === state.preset);
+const curBands = () => state.preset === 'custom' ? state.custom : preset().bands;
+const hex2rgb = h => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); const v = m ? parseInt(m[1], 16) : 0x808080; return [v >> 16 & 255, v >> 8 & 255, v & 255]; };
+const fmtNum = v => (Math.round(v * 10) / 10).toString();
+const fmtRange = b => b.r || (b.lo <= -50 && b.hi >= 150 ? 'all levels' : b.lo <= -50 ? `below ${fmtNum(b.hi)}%` : b.hi >= 150 ? `${fmtNum(b.lo)}% and up` : `${fmtNum(b.lo)}–${fmtNum(b.hi)}%`);
+const pct = v => (v * 100 >= 9.95 ? Math.round(v * 100) : (v * 100).toFixed(1).replace(/\.0$/, '')) + '%';
+const lvl = v => v.toFixed(1) + '%';
+
+/* ───────────── signal maths ─────────────
+   Luma is Rec 709 Y′ from the encoded 8-bit values (what camera false colour measures), quantised to ¼ code value. */
+const Q = 1021;
+const IRE = {};
+function ireTab() {
+  const lv = state.levels;
+  if (!IRE[lv]) { const t = new Float32Array(Q); for (let q = 0; q < Q; q++) { const c = q / 4; t[q] = lv === 'legal' ? (c - 16) / 2.19 : c / 2.55; } IRE[lv] = t; }
+  return IRE[lv];
+}
+function bandIndex(v, bands) { for (let i = 0; i < bands.length; i++) { const b = bands[i]; if (v >= b.lo && v <= b.hi) return i; } return -1; }
+let lutC = { key: null };
+function lutKey() { return state.preset + '|' + state.levels + '|' + (state.preset === 'stops' ? state.curve : '') + '|' + [...state.hidden].join(',') + '|' + (state.preset === 'custom' ? JSON.stringify(state.custom) : ''); }
+function getLUT() {
+  const k = lutKey(); if (lutC.key === k) return lutC;
+  const bands = curBands(), rgb = bands.map(b => hex2rgb(b.c)), t = ireTab();
+  const lut = new Uint8Array(Q * 3), bidx = new Int16Array(Q);
+  for (let q = 0; q < Q; q++) {
+    const bi = bandIndex(t[q], bands); bidx[q] = bi;
+    if (bi >= 0 && !state.hidden.has(bi)) { lut[q * 3] = rgb[bi][0]; lut[q * 3 + 1] = rgb[bi][1]; lut[q * 3 + 2] = rgb[bi][2]; }
+    else { const g = Math.round(q / 4); lut[q * 3] = lut[q * 3 + 1] = lut[q * 3 + 2] = g; }
+  }
+  lutC = { key: k, lut, bidx, bands, rgb }; return lutC;
+}
+function lumaFrom(img, maxEdge) {
+  const w0 = img.naturalWidth, h0 = img.naturalHeight, s = Math.min(1, maxEdge / Math.max(w0, h0));
+  const w = Math.max(1, Math.round(w0 * s)), h = Math.max(1, Math.round(h0 * s));
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.fillStyle = '#000'; x.fillRect(0, 0, w, h); x.drawImage(img, 0, 0, w, h);
+  const d = x.getImageData(0, 0, w, h).data, lu = new Uint16Array(w * h);
+  for (let i = 0, j = 0; j < lu.length; i += 4, j++) lu[j] = Math.round((0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]) * 4);
+  return { w, h, luma: lu };
+}
+function statsOf(it) {
+  const L = getLUT(); if (it._sk === L.key) return it._st;
+  const h = it.hist, t = ireTab(); let tot = 0; for (let q = 0; q < Q; q++) tot += h[q]; tot = tot || 1;
+  const cov = new Array(L.bands.length).fill(0); let rest = 0, sum = 0, black = 0, white = 0;
+  for (let q = 0; q < Q; q++) {
+    if (!h[q]) continue; const w = h[q] / tot; sum += t[q] * w;
+    const bi = L.bidx[q]; if (bi >= 0) cov[bi] += w; else rest += w;
+    if (q <= 2) black += w; if (q >= 1018) white += w;
+  }
+  const pc = p => { let acc = 0; const tg = p * tot; for (let q = 0; q < Q; q++) { acc += h[q]; if (acc >= tg) return t[q]; } return t[Q - 1]; };
+  const st = { p5: pc(.05), p25: pc(.25), p50: pc(.5), p75: pc(.75), p95: pc(.95), mean: sum, cov, rest, black, white };
+  it._sk = L.key; it._st = st; return st;
+}
+const median = a => { const s = [...a].sort((x, y) => x - y), n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : 0; };
+const sd = a => { if (a.length < 2) return 0; const m = a.reduce((s, v) => s + v, 0) / a.length; return Math.sqrt(a.reduce((s, v) => s + (v - m) ** 2, 0) / a.length); };
+
+/* ───────────── loading stills ───────────── */
+function loadImg(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('Could not read image')); i.src = src; }); }
+async function analyseImg(img, name, keepUrl) {
+  let dataUrl = keepUrl;
+  if (!dataUrl) {
+    const w0 = img.naturalWidth, h0 = img.naturalHeight, sc = Math.min(1, 2000 / Math.max(w0, h0));
+    const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w0 * sc)); c.height = Math.max(1, Math.round(h0 * sc));
+    const x = c.getContext('2d'); x.fillStyle = '#000'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+    dataUrl = c.toDataURL('image/jpeg', 0.95);
+  }
+  const full = lumaFrom(img, 1600), thumb = lumaFrom(img, 640);
+  const hist = new Uint32Array(Q); for (const v of full.luma) hist[v]++;
+  const disp = keepUrl ? img : await loadImg(dataUrl);
+  return { id: uid(), name, dataUrl, img: disp, full, thumb, hist, included: true };
+}
+async function analyseFile(file) {
+  const url = URL.createObjectURL(file);
+  try { return await analyseImg(await loadImg(url), file.name || 'Pasted still'); }
+  finally { URL.revokeObjectURL(url); }
+}
+async function addFiles(files, target) {
+  files = [...files].filter(f => /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|bmp|avif|tiff?)$/i.test(f.name));
+  if (!files.length) { toast('That doesn’t look like an image file.'); return; }
+  target = target || state.mode;
+  if (target !== 'deck') files = files.slice(0, 1);
+  if (files.length > 1) toast(`Analysing ${files.length} stills…`, 60000);
+  let bad = 0;
+  for (const f of files) {
+    try { const it = await analyseFile(f); if (target !== 'deck') { state.single = it; state.role = 'key'; } else { state.deck.push(it); render(); } }
+    catch (e) { bad++; }
+  }
+  render();
+  if (bad) toast(`${bad} file${bad > 1 ? 's' : ''} couldn’t be read by this browser (HEIC/RAW won’t open — export a JPEG or PNG).`, 5000);
+  else if (files.length > 1) toast(`Added ${files.length} stills.`);
+}
+const findItem = id => (state.single && state.single.id === id) ? state.single : state.deck.find(d => d.id === id);
+const deckIncluded = () => state.deck.filter(d => d.included);
+
+/* ───────────── painting ───────────── */
+function paintFC(cv, L) {
+  if (cv.width !== L.w) cv.width = L.w; if (cv.height !== L.h) cv.height = L.h;
+  const ctx = cv.getContext('2d'), id = ctx.createImageData(L.w, L.h), d = id.data, lut = getLUT().lut, lu = L.luma;
+  for (let i = 0, j = 0; i < lu.length; i++, j += 4) { const k = lu[i] * 3; d[j] = lut[k]; d[j + 1] = lut[k + 1]; d[j + 2] = lut[k + 2]; d[j + 3] = 255; }
+  ctx.putImageData(id, 0, 0);
+}
+function paintOrig(cv, it, L) { cv.width = L.w; cv.height = L.h; cv.getContext('2d').drawImage(it.img, 0, 0, L.w, L.h); }
+function applySingleView() {
+  const st = $('#stage'); if (!st) return;
+  const cv = st.querySelector('canvas'), split = state.mode === 'single' && state.view === 'split' && !state.peek;
+  st.classList.toggle('split', split);
+  cv.style.visibility = (state.view === 'orig' || state.peek) ? 'hidden' : 'visible';
+  cv.style.clipPath = split ? `inset(0 0 0 ${state.split}%)` : 'none';
+  st.querySelector('.divider').style.left = state.split + '%';
+}
+function paintAll() {
+  document.querySelectorAll('#main canvas.fc').forEach(cv => {
+    const it = findItem(cv.dataset.id); if (!it) return;
+    const L = cv.dataset.l === 'full' ? it.full : it.thumb;
+    if (state.mode === 'deck' && (state.view === 'orig' || state.peek)) paintOrig(cv, it, L); else paintFC(cv, L);
+  });
+  applySingleView();
+  drawHist();
+}
+function drawHist() {
+  const cv = $('#hist'), it = state.single; if (!cv || !it) return;
+  const dpr = window.devicePixelRatio || 1, W = cv.clientWidth || 340, H = 130;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+  const cs = getComputedStyle(document.documentElement), faint = cs.getPropertyValue('--faint').trim(), line = cs.getPropertyValue('--line').trim(), muted = cs.getPropertyValue('--muted').trim();
+  const L = getLUT(), t = ireTab(), NB = 200, bins = new Float64Array(NB), ph = H - 18;
+  for (let q = 0; q < Q; q++) { const n = it.hist[q]; if (!n) continue; let b = Math.floor(t[q] / 100 * NB); b = Math.max(0, Math.min(NB - 1, b)); bins[b] += n; }
+  let mx = 0; for (const v of bins) mx = Math.max(mx, v); mx = Math.sqrt(mx) || 1;
+  // faint chart bands behind
+  L.bands.forEach((b, i) => { const lo = Math.max(0, b.lo), hi = Math.min(100, b.hi); if (hi <= lo || state.hidden.has(i)) return; x.fillStyle = b.c; x.globalAlpha = .16; x.fillRect(lo / 100 * W, 0, Math.max(1, (hi - lo) / 100 * W), ph); });
+  x.globalAlpha = 1;
+  const bw = W / NB;
+  for (let b = 0; b < NB; b++) {
+    if (!bins[b]) continue; const c = (b + .5) / NB * 100, bi = bandIndex(c, L.bands);
+    x.fillStyle = bi >= 0 && !state.hidden.has(bi) ? L.bands[bi].c : faint;
+    const hh = Math.sqrt(bins[b]) / mx * (ph - 4); x.fillRect(b * bw, ph - hh, Math.max(1, bw - .3), hh);
+  }
+  x.fillStyle = line; x.fillRect(0, ph, W, 1);
+  x.fillStyle = muted; x.font = '500 10px "JetBrains Mono", monospace'; x.textBaseline = 'top';
+  [0, 20, 40, 60, 80, 100].forEach(v => { x.textAlign = v === 0 ? 'left' : v === 100 ? 'right' : 'center'; x.fillText(v + '', v / 100 * W, ph + 4); });
+}
+
+/* ───────────── rendering ───────────── */
+const ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const ICON_TICK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+const ICON_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>';
+
+function legendHTML(vals, restVal, ranges) {
+  const bands = curBands(), mx = Math.max(...vals, restVal, 0.0001);
+  return `<ul class="legend">${bands.map((b, i) => `<li data-band="${i}" class="${state.hidden.has(i) ? 'off' : ''}" title="Click to hide or show · Shift-click to show only this band">
+      <span class="chip" style="background:${esc(b.c)}"></span>
+      <div class="nm">${esc(b.n)}<span class="rg">${esc(fmtRange(b))}</span><small>${esc(b.m || '')}</small></div>
+      <div class="v">${pct(vals[i] || 0)}${ranges ? `<small>${pct(ranges[i][0])}–${pct(ranges[i][1])}</small>` : ''}<div class="pcbar"><i style="width:${(vals[i] || 0) / mx * 100}%;background:${esc(b.c)}"></i></div></div></li>`).join('')}
+    <li class="rest"><span class="chip grey"></span><div class="nm">Everything else<small>Shown in greyscale</small></div>
+      <div class="v">${pct(restVal)}<div class="pcbar"><i style="width:${restVal / mx * 100}%"></i></div></div></li></ul>
+    <div class="legendfoot"><span>${ranges ? 'Average share of frame · range across stills' : 'Share of the frame in each band'}</span>${state.hidden.size ? '<button class="btn sm" data-act="showAll">Show all bands</button>' : '<span>Shift-click to isolate</span>'}</div>`;
+}
+function chartCard(title, vals, restVal, ranges) {
+  const p = preset();
+  return `<section class="card"><h2>${title}<span class="r"><span class="badge ${p.src}">${BADGE[p.src]}</span></span></h2>
+    <div class="pname">${esc(p.name)}</div>
+    ${legendHTML(vals, restVal, ranges)}
+    <p class="srcnote"><b>Source.</b> ${esc(p.cite)} ${esc(p.sig)}</p></section>`;
+}
+function dropHTML(title, body) {
+  const ch = ['#8a36d8', '#2b6dff', '#3a3a3a', '#34c83c', '#7a7a7a', '#ff6ec7', '#c8c8c8', '#ffe41a', '#ff2b1f'];
+  return `<div class="drop" data-act="pick" tabindex="0" role="button"><div><div class="chips">${ch.map(c => `<i style="background:${c}"></i>`).join('')}</div>
+    <h3>${title}</h3><p>${body}</p></div></div>`;
+}
+/* Vertical IRE scale beside the image: the chart's bands at their levels over a greyscale ramp. */
+function stripHTML(it) {
+  const bands = curBands(), g0 = state.levels === 'legal' ? 16 : 0, g1 = state.levels === 'legal' ? 235 : 255, cl = v => Math.max(0, Math.min(100, v));
+  const segs = bands.map((b, i) => {
+    const lo = cl(b.lo), hi = cl(b.hi); if (hi <= lo) return '';
+    const off = state.hidden.has(i);
+    return `<span style="bottom:${lo}%;height:${Math.max(.7, hi - lo)}%;${off ? '' : `background:${esc(b.c)}`}" title="${esc(b.n)} · ${esc(fmtRange(b))}${b.m ? ' · ' + esc(b.m) : ''}${off ? ' (hidden)' : ''}"></span>`;
+  }).join('');
+  const ticks = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(v => `<span class="tk" style="bottom:${v}%">${v}</span>`).join('');
+  let rm = '';
+  if (state.mode === 'ratios' && it) { const R = readingsOf(it); rm = ROLES.filter(r => R[r.id]).map(r => `<span class="rmk" style="bottom:${cl(R[r.id].ire)}%;--c:${r.c}" title="${r.n} · ${lvl(R[r.id].ire)}">${r.s}</span>`).join(''); }
+  return `<div class="strip" title="${esc(preset().name)} on the IRE scale"><span class="cap">IRE</span><div class="scale">
+    <div class="bar" style="background:linear-gradient(to top,rgb(${g0},${g0},${g0}),rgb(${g1},${g1},${g1}))">${segs}</div>${ticks}${rm}<div class="ptr" id="stripPtr" hidden></div></div></div>`;
+}
+function viewerHTML(it) {
+  const ar = it.full.w / it.full.h, R = state.mode === 'ratios' ? readingsOf(it) : null;
+  const d = Math.max(0.6, SAMPLE[state.sample] * 2 * Math.max(it.full.w, it.full.h) / it.full.w * 100);
+  const marks = R ? ROLES.map(r => { const m = it.marks && it.marks[r.id]; return m ? `<span class="mk${state.role === r.id ? ' act' : ''}" style="left:${m.x * 100}%;top:${m.y * 100}%;width:max(16px, ${d.toFixed(2)}%);--c:${r.c}"><i></i><b>${r.n} ${Math.round(R[r.id].ire)}%</b></span>` : ''; }).join('') : '';
+  return `<div class="viewer"><div class="stagewrap" style="width:min(calc(100% - 84px), calc(66vh * ${ar.toFixed(4)}))"><div class="stage" id="stage" data-id="${it.id}" style="aspect-ratio:${it.full.w}/${it.full.h}">
+      <img src="${it.dataUrl}" alt="" draggable="false"><canvas class="fc" data-l="full" data-id="${it.id}"></canvas>
+      <div class="divider"></div><span class="tag l">ORIGINAL</span><span class="tag r">FALSE COLOUR</span>${marks}</div></div>${stripHTML(it)}</div>`;
+}
+function renderRatios() {
+  const it = state.single;
+  if (!it) return dropHTML('Measure lighting ratios', 'Drop a still, choose Key, Fill, Backlight or Background, then click where that light lands. You’ll get a reading for each spot and the ratios between them. Paste with <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>V</kbd> works too.');
+  const R = readingsOf(it);
+  const roles = ROLES.map((r, i) => { const rd = R[r.id]; return `<li class="${state.role === r.id ? 'act' : ''}" data-role="${r.id}" style="--c:${r.c}" title="Select, then click the image (shortcut ${i + 1})">
+      <span class="rchip">${r.s}</span>
+      <div class="nm">${r.n}<small>${rd ? `${lvl(rd.ire)} · ${fmtStops(rd.stops)} vs 18% grey${rd.band ? ' · ' + esc(rd.band.n) : ''}` : state.role === r.id ? 'Now click the image' : 'Not measured'}</small>${rd && rd.warn ? `<small class="warn">${rd.warn}</small>` : ''}</div>
+      <span class="k">${i + 1}</span>${rd ? `<button class="ibtn" data-act="clearRole" data-r="${r.id}" title="Remove this reading" aria-label="Remove ${r.n} reading">${ICON_X}</button>` : '<span></span>'}</li>`; }).join('');
+  const pairs = PAIRS.filter(p => R[p[0]] && R[p[1]]).map(p => ({ p, ...ratioOf(R[p[0]], R[p[1]]) }));
+  const kf = pairs.find(x => x.p[0] === 'key' && x.p[1] === 'fill'), hero = kf || pairs[0], rest = pairs.filter(x => x !== hero);
+  const heroHTML = hero ? `<div class="hero"><div><span class="lbl">${hero.p[2]}</span><b>${hero.txt}</b></div><div class="why"><strong>${fmtStops(hero.s)}</strong>${hero === kf ? kfMood(hero.s) : hero.p[3]}</div></div>`
+    : `<div class="empty" style="padding:14px 4px">Measure two roles to see a ratio. Start with <b>Key</b>, then <b>Fill</b>.</div>`;
+  const C = Object.entries(CURVES).map(([k, c]) => `<option value="${k}"${k === state.curve ? ' selected' : ''}>${c.n}</option>`).join('');
+  return `<div class="cols">
+    <section class="card still">${viewerHTML(it)}
+      <div class="foot"><span class="fname" title="${esc(it.name)}">${esc(it.name)}</span>
+        <button class="btn sm" data-act="pick">Replace still</button>
+        <button class="btn sm ghost" data-act="clearMarks">Clear readings</button></div>
+    </section>
+    <div class="stack">
+      <section class="card"><h2>Measure<span class="r">click a role, then the image</span></h2>
+        <ul class="roles">${roles}</ul>
+        <div class="mctl"><div class="ctl"><span class="lbl">Sample</span><div class="seg" id="sampleSeg">${['point', 'small', 'large'].map(s => `<button data-sample="${s}" class="${state.sample === s ? 'on' : ''}">${s[0].toUpperCase() + s.slice(1)}</button>`).join('')}</div></div>
+          <div class="ctl"><span class="lbl">Curve</span><select class="sel" id="curveSel" aria-label="Encoding curve of the still">${C}</select></div></div></section>
+      <section class="card"><h2>Ratios</h2>${heroHTML}
+        ${rest.length ? `<ul class="plist2">${rest.map(x => `<li><span class="pn">${x.p[2]}<small>${x.p[3]}</small></span><span class="pr">${x.txt}</span><span class="ps">${fmtStops(x.s)}</span></li>`).join('')}</ul>` : ''}
+        <p class="srcnote"><b>How it’s measured.</b> Each reading averages the signal in the ring, converts it back to linear light using the ${esc(CURVES[state.curve].n)} curve, and compares readings in stops; every stop doubles the light, so 1 stop = 2:1. Reading the key side against the fill side gives the usual (key + fill) : fill lighting ratio. A grade adds its own contrast, so on graded stills treat ratios as approximate, and pick the log curve for ungraded log frame grabs.</p></section>
+    </div></div>`;
+}
+function renderSingle() {
+  const it = state.single;
+  if (!it) return dropHTML('Drop a still to see it in false colour', 'Drag an image here, click to choose one, or paste with <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>V</kbd>. JPEG, PNG and WebP all work. Nothing leaves your computer.');
+  const st = statsOf(it);
+  const S = (k, v) => `<div class="stat"><span>${k}</span><b>${v}</b></div>`;
+  return `<div class="cols">
+    <section class="card still">${viewerHTML(it)}
+      <div class="foot"><span class="fname" title="${esc(it.name)}">${esc(it.name)}</span>
+        <button class="btn sm" data-act="pick">Replace still</button>
+        <button class="btn sm" data-act="toDeck">Add to comparison</button>
+        <button class="btn sm ghost" data-act="clearSingle">Clear</button></div>
+    </section>
+    <div class="stack">
+      ${chartCard('Chart', st.cov, st.rest)}
+      <section class="card"><h2>Signal levels<span class="r">${state.levels === 'full' ? 'Full range' : 'Legal range'}</span></h2>
+        <canvas id="hist" class="hist"></canvas>
+        <div class="stats">${S('Shadows · P5', lvl(st.p5))}${S('Median', lvl(st.p50))}${S('Highlights · P95', lvl(st.p95))}${S('Mean', lvl(st.mean))}${S('Pure black', pct(st.black))}${S('Pure white', pct(st.white))}</div>
+        <p class="hint" style="margin:10px 0 0">Hover the image to read the level at any point.</p></section>
+    </div></div>`;
+}
+function deckAnalysis(inc) {
+  const rows = inc.map(it => ({ it, st: statsOf(it) }));
+  const meds = rows.map(r => r.st.p50), deckMed = median(meds);
+  const sdM = sd(meds), sd5 = sd(rows.map(r => r.st.p5)), sd95 = sd(rows.map(r => r.st.p95));
+  const thr = Math.max(6, 1.5 * sdM);
+  rows.forEach(r => { r.dev = r.st.p50 - deckMed; r.flag = rows.length > 2 && Math.abs(r.dev) > thr; });
+  const spread = (sdM + sd5 + sd95) / 3, score = rows.length > 1 ? Math.round(100 * Math.exp(-spread / 15)) : null;
+  const nb = curBands().length, avg = new Array(nb).fill(0), rng = Array.from({ length: nb }, () => [1, 0]); let restAvg = 0;
+  rows.forEach(r => { r.st.cov.forEach((v, i) => { avg[i] += v / rows.length; rng[i][0] = Math.min(rng[i][0], v); rng[i][1] = Math.max(rng[i][1], v); }); restAvg += r.st.rest / rows.length; });
+  const ext = k => { const a = rows.map(r => r.st[k]); return [Math.min(...a), Math.max(...a)]; };
+  return { rows, deckMed, sdM, sd5, sd95, score, avg, rng, restAvg, ext };
+}
+const scoreCls = s => s == null ? 'na' : s >= 80 ? 'good' : s >= 60 ? 'ok' : 'bad';
+const scoreLbl = s => s == null ? 'needs 2+ stills' : s >= 80 ? 'Tight' : s >= 60 ? 'Fairly consistent' : s >= 40 ? 'Varied' : 'Wide spread';
+function orderRows(rows) { return state.order === 'median' ? [...rows].sort((a, b) => a.st.p50 - b.st.p50) : rows; }
+function rangeHTML(A) {
+  const bands = curBands(), cl = v => Math.max(0, Math.min(100, v));
+  const bg = bands.map((b, i) => { if (state.hidden.has(i)) return ''; const lo = cl(b.lo), hi = cl(b.hi); return hi > lo ? `<i style="left:${lo}%;width:${Math.max(.4, hi - lo)}%;background:${esc(b.c)}"></i>` : ''; }).join('');
+  return `<div class="rchart"><div class="raxis"><span></span><div class="ticks">${[0, 20, 40, 60, 80, 100].map(t => `<span style="left:${t}%">${t}</span>`).join('')}</div><span></span></div>
+    ${orderRows(A.rows).map(({ it, st, dev, flag }) => `<div class="rrow${flag ? ' flag' : ''}"><span class="rn" title="${esc(it.name)}">${esc(it.name)}</span>
+      <div class="track">${bg}<span class="dm" style="left:${cl(A.deckMed)}%"></span><span class="wh" style="left:${cl(st.p5)}%;width:${cl(st.p95) - cl(st.p5)}%"></span><span class="bx" style="left:${cl(st.p25)}%;width:${cl(st.p75) - cl(st.p25)}%"></span><span class="md" style="left:${cl(st.p50)}%"></span></div>
+      <span class="rv">${Math.round(st.p50)}%${flag ? `<small>${dev > 0 ? '+' : '−'}${Math.abs(Math.round(dev))}</small>` : ''}</span></div>`).join('')}
+    <div class="rkey">Line: 5th–95th percentile · box: middle 50% of the frame · orange tick: median · dashed: median of the set · tints: chart bands.</div></div>`;
+}
+function verdictText(A) {
+  if (A.score == null) return 'Add another still to measure consistency.';
+  const fl = A.rows.filter(r => r.flag);
+  if (!fl.length) return `<b>${scoreLbl(A.score)}.</b> No still sits far from the set’s median.`;
+  return `<b>Stands out:</b> ${fl.map(r => `${esc(r.it.name)} (${Math.abs(Math.round(r.dev))}% ${r.dev > 0 ? 'brighter' : 'darker'})`).join(', ')}.`;
+}
+function renderDeck() {
+  const D = state.deck, inc = deckIncluded();
+  if (!D.length) return dropHTML('Compare stills in false colour', 'Drop in a set of references, all at once or a few at a time. They sit side by side under the same chart, with a read-out of how consistently they’re exposed. Click to choose files or paste with <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>V</kbd>.');
+  let top = '', A = null;
+  if (inc.length) {
+    A = deckAnalysis(inc);
+    const F = (k, lbl, s) => { const [a, b] = A.ext(k); return `<li><b>${lbl}</b><span>${Math.round(a)}–${Math.round(b)}%<small>±${s.toFixed(1)} spread</small></span></li>`; };
+    top = `<div class="cols">
+      <section class="card"><h2>Exposure spread<span class="r">${inc.length} of ${D.length} still${D.length > 1 ? 's' : ''}</span></h2>${rangeHTML(A)}</section>
+      <div class="stack">
+        <section class="card ratio"><div class="head"><div><h2>Consistency</h2><p>How tightly shadows, medians and highlights line up across the included stills.</p></div>
+          <div class="score ${scoreCls(A.score)}"><b>${A.score == null ? '—' : A.score + '%'}</b><span>${scoreLbl(A.score)}</span></div></div>
+          <ul class="facts">${F('p5', 'Shadows · P5', A.sd5)}${F('p50', 'Median', A.sdM)}${F('p95', 'Highlights · P95', A.sd95)}</ul>
+          <p class="verdict">${verdictText(A)}</p></section>
+        ${chartCard('Chart across the set', A.avg, A.restAvg, A.rng)}
+      </div></div>`;
+  } else top = `<section class="card"><div class="empty">Every still is unticked. Tick at least one to compare.</div></section>`;
+  const byId = A ? Object.fromEntries(A.rows.map(r => [r.it.id, r])) : {};
+  let list = D;
+  if (state.order === 'median') list = [...D].sort((a, b) => statsOf(a).p50 - statsOf(b).p50);
+  const L = getLUT();
+  const cards = list.map(d => {
+    const st = statsOf(d), r = byId[d.id];
+    const mini = st.cov.map((v, i) => v > 0 ? `<span style="flex:${v};background:${state.hidden.has(i) ? '#777' : esc(L.bands[i].c)}" title="${esc(L.bands[i].n)} · ${pct(v)}"></span>` : '').join('') + (st.rest > 0 ? `<span style="flex:${st.rest};background:#777" title="Greyscale · ${pct(st.rest)}"></span>` : '');
+    return `<article class="ref${d.included ? '' : ' off'}${r && r.flag ? ' flag' : ''}" data-id="${d.id}">
+      <div class="thumb"><canvas class="fc" data-l="thumb" data-id="${d.id}"></canvas>
+        <button class="inc" data-act="toggle" aria-pressed="${d.included}" title="${d.included ? 'Untick to leave this still out of the comparison' : 'Tick to include this still again'}"><span class="bx">${ICON_TICK}</span>${d.included ? 'Included' : 'Left out'}</button>
+        <button class="rm" data-act="remove" title="Remove" aria-label="Remove">${ICON_X}</button></div>
+      <div class="meta"><div class="nm" title="${esc(d.name)}">${esc(d.name)}</div><div class="mini">${mini}</div>
+        <div class="sc"><span>Median ${Math.round(st.p50)}% · P95 ${Math.round(st.p95)}%</span>${r && r.flag ? `<span class="fl">${r.dev > 0 ? '+' : '−'}${Math.abs(Math.round(r.dev))} vs set</span>` : ''}</div>
+        <div class="sc"><button class="lnk" data-act="toRatios">Measure ratios →</button>${(() => { const R = readingsOf(d); return R.key && R.fill ? `<span>Key:Fill ${ratioOf(R.key, R.fill).txt}</span>` : ''; })()}</div></div></article>`;
+  }).join('');
+  return `${top}
+    <div class="deckhead"><h3>Stills</h3><span class="hint">All stills use the chart above. Untick one to leave it out of the read-out and the PDF. Hover any still to read its level.</span>
+      <div class="seg" id="orderSeg"><button data-order="added" class="${state.order === 'added' ? 'on' : ''}">As added</button><button data-order="median" class="${state.order === 'median' ? 'on' : ''}">Darkest first</button></div>
+      <button class="btn sm" data-act="all">Include all</button><button class="btn sm ghost" data-act="clearDeck">Clear all</button></div>
+    <div class="grid" style="grid-template-columns:repeat(${state.cols},minmax(0,1fr))">${cards}<button class="addtile" data-act="pick"><div><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="display:inline"><path d="M12 5v14M5 12h14"/></svg><b>Add stills</b>or drop them anywhere</div></button></div>`;
+}
+function renderBar() {
+  $('#presetSeg').innerHTML = PRESETS.map(p => `<button data-preset="${p.id}" class="${p.id === state.preset ? 'on' : ''}" title="${esc(p.name)} · ${BADGE[p.src]}">${p.label}</button>`).join('');
+  document.querySelectorAll('[data-mode]').forEach(b => { b.classList.toggle('on', b.dataset.mode === state.mode); b.setAttribute('aria-selected', b.dataset.mode === state.mode); });
+  document.querySelectorAll('[data-levels]').forEach(b => b.classList.toggle('on', b.dataset.levels === state.levels));
+  const view = state.mode !== 'single' && state.view === 'split' ? 'fc' : state.view;
+  document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === view));
+  $('#splitBtn').hidden = state.mode !== 'single';
+  $('#colsCtl').hidden = state.mode !== 'deck';
+  $('#cols').value = state.cols; $('#colsVal').textContent = state.cols;
+  $('#deckN').textContent = state.deck.length ? state.deck.length : '';
+  $('#pdfLbl').textContent = { single: 'Export PDF', deck: 'Export comparison PDF', ratios: 'Export ratios PDF' }[state.mode];
+}
+function render() {
+  renderBar();
+  $('#main').innerHTML = state.mode === 'single' ? renderSingle() : state.mode === 'ratios' ? renderRatios() : renderDeck();
+  paintAll();
+}
+function renderCustom() {
+  const box = $('#customBox');
+  if (state.preset !== 'custom') { box.hidden = true; box.innerHTML = ''; return; }
+  box.hidden = false;
+  box.innerHTML = `<h2>Custom chart<span class="r"><select class="sel" id="copyFrom" aria-label="Preset to copy">${PRESETS.filter(p => p.bands).map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
+      <button class="btn sm" data-cact="copy">Copy its bands</button><button class="btn sm" data-cact="add">Add band</button></span></h2>
+    <p class="hint" style="margin:0">Levels are % of signal (0 = black, 100 = white). Bands are checked top to bottom and the first match wins; use −100 or 200 for an open end. Match these to the chart on your camera or monitor.</p>
+    <div class="ctable"><div class="crow head"><span>Colour</span><span>Name</span><span>From %</span><span>To %</span><span>Meaning</span><span></span><span></span></div>
+    ${state.custom.map((b, i) => `<div class="crow" data-i="${i}">
+      <input type="color" data-k="c" value="${esc(b.c)}" aria-label="Colour"><input data-k="n" value="${esc(b.n)}" aria-label="Name">
+      <input type="number" step="0.1" data-k="lo" value="${b.lo}" aria-label="From"><input type="number" step="0.1" data-k="hi" value="${b.hi}" aria-label="To">
+      <input data-k="m" value="${esc(b.m || '')}" aria-label="Meaning" placeholder="What it means">
+      <button class="ibtn" data-cact="up" title="Move up" ${i ? '' : 'disabled'}>${ICON_UP}</button><button class="ibtn" data-cact="del" title="Remove band">${ICON_X}</button></div>`).join('')}</div>`;
+}
+
+/* ───────────── interactions ───────────── */
+function pick() { $('#fileImg').multiple = state.mode === 'deck'; $('#fileImg').value = ''; $('#fileImg').click(); }
+function setPreset(id) { if (id === state.preset) return; state.preset = id; state.hidden.clear(); renderCustom(); render(); }
+function toggleBand(i, solo) {
+  const n = curBands().length;
+  if (solo) { const only = state.hidden.size === n - 1 && !state.hidden.has(i); state.hidden.clear(); if (!only) for (let k = 0; k < n; k++) if (k !== i) state.hidden.add(k); }
+  else if (state.hidden.has(i)) state.hidden.delete(i); else state.hidden.add(i);
+  render();
+}
+$('#main').addEventListener('click', e => {
+  const li = e.target.closest('.legend li[data-band]'); if (li) { toggleBand(+li.dataset.band, e.shiftKey); return; }
+  const o = e.target.closest('[data-order]'); if (o) { state.order = o.dataset.order; render(); return; }
+  const sm = e.target.closest('[data-sample]'); if (sm) { state.sample = sm.dataset.sample; render(); return; }
+  const a = e.target.closest('[data-act]');
+  if (!a) { const ro = e.target.closest('.roles li[data-role]'); if (ro) { state.role = ro.dataset.role; render(); } return; }
+  const card = a.closest('.ref'), item = card && state.deck.find(d => d.id === card.dataset.id);
+  switch (a.dataset.act) {
+    case 'pick': pick(); break;
+    case 'toDeck': if (state.single) { state.deck.push({ ...state.single, id: uid(), included: true, _sk: null, marks: clone(state.single.marks || {}) }); render(); toast(`Added to the comparison (${state.deck.length} still${state.deck.length > 1 ? 's' : ''})`); } break;
+    case 'toRatios': if (item) { state.single = item; state.mode = 'ratios'; state.role = ROLES.find(r => !(item.marks || {})[r.id])?.id || 'key'; render(); window.scrollTo({ top: 0 }); } break;
+    case 'clearRole': if (state.single && state.single.marks) { delete state.single.marks[a.dataset.r]; state.role = a.dataset.r; render(); } break;
+    case 'clearMarks': if (state.single) { state.single.marks = {}; state.role = 'key'; render(); } break;
+    case 'clearSingle': state.single = null; render(); break;
+    case 'toggle': if (item) { item.included = !item.included; render(); } break;
+    case 'remove': if (item) { state.deck = state.deck.filter(d => d !== item); render(); toast('Removed'); } break;
+    case 'all': state.deck.forEach(d => d.included = true); render(); break;
+    case 'clearDeck': if (confirmInline(a)) { state.deck = []; render(); } break;
+    case 'showAll': state.hidden.clear(); render(); break;
+  }
+});
+function confirmInline(btn) {
+  if (btn.dataset.arm) return true;
+  btn.dataset.arm = '1'; const t = btn.textContent; btn.textContent = 'Click again to clear'; btn.classList.add('primary');
+  setTimeout(() => { if (btn.isConnected) { delete btn.dataset.arm; btn.textContent = t; btn.classList.remove('primary'); } }, 2500);
+  return false;
+}
+$('#main').addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.drop')) { e.preventDefault(); pick(); } });
+$('#main').addEventListener('change', e => { if (e.target.id === 'curveSel') { state.curve = e.target.value; render(); } });
+$('#fileImg').addEventListener('change', e => { if (e.target.files.length) addFiles(e.target.files); });
+document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => { state.mode = b.dataset.mode; render(); });
+$('#presetSeg').addEventListener('click', e => { const b = e.target.closest('[data-preset]'); if (b) setPreset(b.dataset.preset); });
+document.querySelectorAll('[data-levels]').forEach(b => b.onclick = () => { state.levels = b.dataset.levels; render(); });
+document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => { state.view = b.dataset.view; renderBar(); paintAll(); });
+$('#cols').addEventListener('input', e => { state.cols = +e.target.value; $('#colsVal').textContent = state.cols; const g = $('#main .grid'); if (g) g.style.gridTemplateColumns = `repeat(${state.cols},minmax(0,1fr))`; });
+
+// custom chart editor
+$('#customBox').addEventListener('change', e => {
+  const row = e.target.closest('.crow[data-i]'); if (!row || !e.target.dataset.k) return;
+  const b = state.custom[+row.dataset.i], k = e.target.dataset.k;
+  if (k === 'lo' || k === 'hi') { const v = parseFloat(e.target.value); if (!isNaN(v)) b[k] = v; } else b[k] = e.target.value;
+  delete b.r; state.hidden.clear(); render();
+});
+$('#customBox').addEventListener('click', e => {
+  const a = e.target.closest('[data-cact]'); if (!a) return;
+  const row = a.closest('.crow[data-i]'), i = row ? +row.dataset.i : -1;
+  if (a.dataset.cact === 'copy') { const p = PRESETS.find(p => p.id === $('#copyFrom').value); state.custom = clone(p.bands); toast(`Copied ${p.name}`); }
+  else if (a.dataset.cact === 'add') state.custom.unshift({ n: 'New band', m: '', lo: 70, hi: 80, c: '#00d1ff' });
+  else if (a.dataset.cact === 'del') state.custom.splice(i, 1);
+  else if (a.dataset.cact === 'up' && i > 0) { const [b] = state.custom.splice(i, 1); state.custom.splice(i - 1, 0, b); }
+  state.hidden.clear(); renderCustom(); render();
+});
+
+// spot meter + split drag
+let dragging = false;
+function spotAt(e) {
+  const host = e.target.closest && e.target.closest('.stage, .thumb'); const sp = $('#spot'), ptr = $('#stripPtr');
+  if (ptr) ptr.hidden = true;
+  if (!host) { sp.hidden = true; return; }
+  const cv = host.querySelector('canvas.fc'), it = cv && findItem(cv.dataset.id); if (!it) { sp.hidden = true; return; }
+  const L = cv.dataset.l === 'full' ? it.full : it.thumb, r = (host.classList.contains('stage') ? host : cv).getBoundingClientRect();
+  const s = Math.min(r.width / L.w, r.height / L.h), ox = (r.width - L.w * s) / 2, oy = (r.height - L.h * s) / 2;
+  const px = Math.floor((e.clientX - r.left - ox) / s), py = Math.floor((e.clientY - r.top - oy) / s);
+  if (px < 0 || py < 0 || px >= L.w || py >= L.h) { sp.hidden = true; return; }
+  const q = L.luma[py * L.w + px], LU = getLUT(), v = ireTab()[q], bi = LU.bidx[q], b = bi >= 0 ? LU.bands[bi] : null;
+  if (ptr && host.classList.contains('stage')) { ptr.hidden = false; ptr.style.bottom = Math.max(0, Math.min(100, v)) + '%'; }
+  const stopsTxt = state.mode === 'ratios' ? ` <small style="display:inline">${fmtStops(Math.log2(Math.max(1e-5, CURVES[state.curve].f(v / 100)) / 0.18))} vs grey</small>` : '';
+  const roleTxt = state.mode === 'ratios' && host.classList.contains('stage') ? `<small>Click to place ${ROLES.find(r => r.id === state.role).n}</small>` : '';
+  sp.innerHTML = `<b>${lvl(v)}</b>${stopsTxt}${b ?`<br><span class="sw" style="background:${esc(b.c)}"></span>${esc(b.n)}${b.m ? `<small>${esc(b.m)}</small>` : ''}` : '<small>No band, shown in greyscale</small>'}${roleTxt}`;
+  sp.hidden = false;
+  const W = sp.offsetWidth, H = sp.offsetHeight; let x = e.clientX + 16, y = e.clientY + 16;
+  if (x + W > innerWidth - 8) x = e.clientX - W - 16; if (y + H > innerHeight - 8) y = e.clientY - H - 16;
+  sp.style.left = x + 'px'; sp.style.top = y + 'px';
+}
+function setSplitFrom(e) { const st = $('#stage'); if (!st) return; const r = st.getBoundingClientRect(); state.split = Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100)); applySingleView(); }
+$('#main').addEventListener('pointermove', e => { if (dragging) setSplitFrom(e); spotAt(e); });
+$('#main').addEventListener('pointerleave', () => { $('#spot').hidden = true; const p = $('#stripPtr'); if (p) p.hidden = true; });
+$('#main').addEventListener('pointerdown', e => {
+  const st = e.target.closest('#stage'); if (!st) return;
+  if (state.mode === 'ratios') {
+    const it = findItem(st.dataset.id), r = st.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; if (!it || x < 0 || y < 0 || x > 1 || y > 1) return;
+    it.marks = it.marks || {}; const placed = state.role; it.marks[placed] = { x, y };
+    const nxt = ROLES.find(ro => !it.marks[ro.id]); if (nxt) state.role = nxt.id;
+    render(); $('#spot').hidden = true;
+    return;
+  }
+  if (state.mode === 'single' && state.view === 'split') { dragging = true; st.setPointerCapture(e.pointerId); setSplitFrom(e); }
+});
+window.addEventListener('pointerup', () => { dragging = false; });
+
+// peek at the original with Space
+const typing = el => el && (el.matches('input, textarea, select, [contenteditable]'));
+window.addEventListener('keydown', e => {
+  if (state.mode === 'ratios' && state.single && /^[1-4]$/.test(e.key) && !typing(e.target) && !e.metaKey && !e.ctrlKey) { state.role = ROLES[+e.key - 1].id; render(); }
+});
+window.addEventListener('keydown', e => { if (e.code !== 'Space' || typing(e.target) || e.target.matches('button, .drop')) return; e.preventDefault(); if (!state.peek) { state.peek = true; paintAll(); } });
+window.addEventListener('keyup', e => { if (e.code === 'Space' && state.peek) { state.peek = false; paintAll(); } });
+window.addEventListener('blur', () => { if (state.peek) { state.peek = false; paintAll(); } });
+window.addEventListener('resize', () => drawHist());
+
+// drag & drop anywhere + paste
+let dragDepth = 0;
+const hasFiles = e => [...(e.dataTransfer?.types || [])].includes('Files');
+window.addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; $('#dragTxt').textContent = state.mode === 'deck' ? 'Drop stills to add them' : 'Drop a still to analyse it'; $('#dragOv').hidden = false; });
+window.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+window.addEventListener('dragleave', e => { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; $('#dragOv').hidden = true; } });
+window.addEventListener('drop', e => {
+  if (!hasFiles(e)) return; e.preventDefault(); dragDepth = 0; $('#dragOv').hidden = true;
+  const files = [...e.dataTransfer.files];
+  if (files.length === 1 && /\.json$/i.test(files[0].name)) { openProject(files[0]); return; }
+  addFiles(files);
+});
+window.addEventListener('paste', e => {
+  if (typing(e.target)) return;
+  const files = [...(e.clipboardData?.items || [])].filter(i => i.kind === 'file' && i.type.startsWith('image/')).map(i => i.getAsFile());
+  if (files.length) { e.preventDefault(); addFiles(files); }
+});
+
+/* ───────────── project save / open ───────────── */
+const slug = s => (s || '').trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').slice(0, 60) || 'false-colour';
+function download(name, blob) { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }
+function fthData() {
+  return {
+    app: 'false-colour-studio', version: 1, saved: new Date().toISOString(), title: $('#proj').value.trim(),
+    settings: { chart: state.preset, levels: state.levels, view: state.view, columns: state.cols, order: state.order, mode: state.mode, sample: state.sample, curve: state.curve },
+    customChart: state.custom,
+    single: state.single ? { name: state.single.name, image: state.single.dataUrl, marks: state.single.marks || {} } : null,
+    stills: state.deck.map(d => ({ name: d.name, included: d.included, image: d.dataUrl, marks: d.marks || {} }))
+  };
+}
+$('#saveBtn').onclick = () => {
+  if (!state.single && !state.deck.length) { toast('Nothing to save yet. Add a still first.'); return; }
+  const data = fthData();
+  download(slug($('#proj').value) + '.json', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+  toast('Project saved');
+};
+$('#openBtn').onclick = () => { $('#fileJson').value = ''; $('#fileJson').click(); };
+$('#fileJson').addEventListener('change', e => { if (e.target.files[0]) openProject(e.target.files[0]); });
+async function openProject(file) {
+  let data;
+  try { data = JSON.parse(await file.text()); } catch (e) { toast('That file isn’t a readable project (.json).'); return; }
+  if (!data || data.app !== 'false-colour-studio') { toast('That .json wasn’t saved from False Colour Studio.'); return; }
+  toast('Opening project…', 60000);
+  const load = async o => { const img = await loadImg(o.image); const it = await analyseImg(img, o.name || 'Still', o.image); it.included = o.included !== false; it.marks = cleanMarks(o.marks); return it; };
+  try {
+    const single = data.single && data.single.image ? await load(data.single) : null;
+    const deck = []; for (const d of data.stills || []) if (d.image) deck.push(await load(d));
+    const s = data.settings || {};
+    state.single = single; state.deck = deck;
+    if (Array.isArray(data.customChart) && data.customChart.length) state.custom = data.customChart.map(b => ({ n: String(b.n || 'Band'), m: String(b.m || ''), lo: +b.lo || 0, hi: isNaN(+b.hi) ? 100 : +b.hi, c: /^#[0-9a-f]{6}$/i.test(b.c) ? b.c : '#888888', ...(b.r ? { r: String(b.r) } : {}) }));
+    state.preset = PRESETS.some(p => p.id === s.chart) ? s.chart : 'arri';
+    state.levels = s.levels === 'legal' ? 'legal' : 'full';
+    state.view = ['fc', 'orig', 'split'].includes(s.view) ? s.view : 'fc';
+    state.cols = Math.min(6, Math.max(1, +s.columns || 3)); state.order = s.order === 'median' ? 'median' : 'added';
+    state.sample = SAMPLE[s.sample] !== undefined ? s.sample : 'small'; state.curve = CURVES[s.curve] ? s.curve : 'rec709';
+    state.mode = s.mode === 'deck' ? 'deck' : s.mode === 'ratios' && single ? 'ratios' : (single || !deck.length ? 'single' : 'deck');
+    state.role = single ? (ROLES.find(r => !single.marks[r.id]) || ROLES[0]).id : 'key';
+    state.hidden.clear();
+    $('#proj').value = data.title || '';
+    renderCustom(); render(); toast(`Opened ${data.title ? '“' + data.title + '”' : 'project'}`);
+  } catch (e) { toast('Some images in that project couldn’t be read.'); }
+}
+
+/* ───────────── PDF export (jsPDF) ───────────── */
+let jspdfP;
+function loadJsPDF() {
+  if (window.jspdf) return Promise.resolve(window.jspdf);
+  return jspdfP || (jspdfP = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = () => window.jspdf ? res(window.jspdf) : rej(); s.onerror = () => { jspdfP = null; rej(); }; document.head.appendChild(s);
+  }));
+}
+const PW = 297, PH = 210, PM = 14, INK = [24, 25, 28], MUTED = [112, 116, 124], RULE = [220, 216, 208];
+const T = s => String(s).replace(/≥/g, '>=').replace(/≤/g, '<=').replace(/−/g, '-').replace(/[’‘]/g, "'").replace(/[“”]/g, '"').replace(/[^\x20-\x7E -ÿ–—…]/g, '');
+function clipText(doc, s, w) { s = T(s); if (doc.getTextWidth(s) <= w) return s; while (s.length > 1 && doc.getTextWidth(s + '…') > w) s = s.slice(0, -1); return s + '…'; }
+function fcUrl(it, which = 'full') { const c = document.createElement('canvas'); paintFC(c, it[which]); return c.toDataURL('image/jpeg', 0.9); }
+function pdfHeader(doc, title, sub, page) {
+  doc.setTextColor(...INK); doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.text(clipText(doc, title, PW - 2 * PM - 50), PM, PM + 5);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED); doc.text(clipText(doc, sub, PW - 2 * PM - 40), PM, PM + 10.5);
+  doc.setFontSize(7.5); doc.text('False Colour Studio', PW - PM, PM + 5, { align: 'right' });
+  if (page) doc.text(page, PW - PM, PM + 10.5, { align: 'right' });
+  doc.setDrawColor(...RULE); doc.setLineWidth(0.25); doc.line(PM, PM + 14, PW - PM, PM + 14);
+  return PM + 19;
+}
+function pdfLegend(doc, vals, rest, x, y, w, ranges) {
+  const bands = curBands();
+  const items = bands.map((b, i) => ({ c: state.hidden.has(i) ? [190, 190, 190] : hex2rgb(b.c), n: b.n, r: fmtRange(b), m: b.m || '', v: vals[i] || 0, rg: ranges && ranges[i] }))
+    .concat([{ c: [150, 150, 150], n: 'Everything else', r: 'greyscale', m: '', v: rest }]);
+  const gap = 8, colW = (w - gap) / 2, rows = Math.ceil(items.length / 2);
+  items.forEach((it, i) => {
+    const cx = x + Math.floor(i / rows) * (colW + gap), cy = y + (i % rows) * 6;
+    doc.setFillColor(...it.c); doc.setDrawColor(...RULE); doc.setLineWidth(0.2); doc.rect(cx, cy - 3.3, 4.4, 4.4, 'FD');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...INK); doc.text(clipText(doc, it.n, 22), cx + 6.5, cy);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...MUTED);
+    doc.text(clipText(doc, it.r + (it.m ? '  ·  ' + it.m : ''), colW - 58), cx + 30, cy);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...INK);
+    doc.text(pct(it.v) + (it.rg ? '' : ''), cx + colW - (it.rg ? 18 : 0), cy, { align: 'right' });
+    if (it.rg) { doc.setFont('helvetica', 'normal'); doc.setFontSize(6.6); doc.setTextColor(...MUTED); doc.text(T(`${pct(it.rg[0])}–${pct(it.rg[1])}`), cx + colW, cy, { align: 'right' }); }
+  });
+  return y + rows * 6;
+}
+const statLine = st => `Shadows (P5) ${lvl(st.p5)}   ·   Median ${lvl(st.p50)}   ·   Highlights (P95) ${lvl(st.p95)}   ·   Mean ${lvl(st.mean)}   ·   Pure black ${pct(st.black)}   ·   Pure white ${pct(st.white)}`;
+function fit(w, h, bw, bh) { const s = Math.min(bw / w, bh / h); return [w * s, h * s]; }
+function pdfStillPage(doc, it, title, sub, page) {
+  const top = pdfHeader(doc, title, sub, page), st = statsOf(it);
+  const nItems = curBands().length + 1, legH = Math.ceil(nItems / 2) * 6;
+  const gap = 6, colW = (PW - 2 * PM - gap) / 2, maxH = PH - PM - top - legH - 22;
+  const [iw, ih] = fit(it.full.w, it.full.h, colW, maxH);
+  const x1 = PM + (colW - iw) / 2, x2 = PM + colW + gap + (colW - iw) / 2;
+  doc.addImage(it.dataUrl, 'JPEG', x1, top, iw, ih, 'o' + it.id, 'FAST');
+  doc.addImage(fcUrl(it), 'JPEG', x2, top, iw, ih, undefined, 'FAST');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...MUTED);
+  doc.text('ORIGINAL', x1, top + ih + 4); doc.text(T('FALSE COLOUR  ·  ' + preset().name.toUpperCase()), x2, top + ih + 4);
+  let y = top + ih + 10;
+  doc.setDrawColor(...RULE); doc.line(PM, y, PW - PM, y);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7.6); doc.setTextColor(...INK); doc.text(T(statLine(st)), PM, y + 5);
+  pdfLegend(doc, st.cov, st.rest, PM, y + 12, PW - 2 * PM);
+}
+function pdfRangeRows(doc, rows, deckMed, y) {
+  const nx = PM, tx = PM + 64, tw = PW - PM - 16 - tx, rh = 7;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(6.8); doc.setTextColor(...MUTED);
+  [0, 20, 40, 60, 80, 100].forEach(v => doc.text(v + '', tx + tw * v / 100, y, { align: v === 0 ? 'left' : v === 100 ? 'right' : 'center' }));
+  y += 3;
+  const bands = curBands(), cl = v => Math.max(0, Math.min(100, v));
+  rows.forEach(({ it, st, flag, dev }) => {
+    doc.setFillColor(242, 240, 236); doc.rect(tx, y, tw, rh - 2, 'F');
+    bands.forEach((b, i) => { if (state.hidden.has(i)) return; const lo = cl(b.lo), hi = cl(b.hi); if (hi <= lo) return; const c = hex2rgb(b.c).map(v => Math.round(v * .35 + 255 * .65)); doc.setFillColor(...c); doc.rect(tx + tw * lo / 100, y, Math.max(.3, tw * (hi - lo) / 100), rh - 2, 'F'); });
+    const X = v => tx + tw * cl(v) / 100, mid = y + (rh - 2) / 2;
+    doc.setDrawColor(150, 150, 150); doc.setLineWidth(0.2); doc.setLineDashPattern([0.8, 0.8], 0); doc.line(X(deckMed), y, X(deckMed), y + rh - 2); doc.setLineDashPattern([], 0);
+    doc.setDrawColor(...INK); doc.setLineWidth(0.35); doc.line(X(st.p5), mid, X(st.p95), mid);
+    doc.setFillColor(90, 92, 98); doc.rect(X(st.p25), y + 1.2, Math.max(.4, X(st.p75) - X(st.p25)), rh - 4.4, 'F');
+    doc.setFillColor(214, 120, 0); doc.rect(X(st.p50) - .5, y + .4, 1, rh - 2.8, 'F');
+    doc.setFont('helvetica', flag ? 'bold' : 'normal'); doc.setFontSize(7.6); doc.setTextColor(...(flag ? [154, 100, 0] : INK));
+    doc.text(clipText(doc, it.name, 60), nx, mid + 1.2);
+    doc.setFont('helvetica', 'bold'); doc.setTextColor(...INK); doc.text(Math.round(st.p50) + '%', PW - PM, mid + 1.2, { align: 'right' });
+    if (flag) { doc.setFont('helvetica', 'normal'); doc.setFontSize(6.4); doc.setTextColor(154, 100, 0); doc.text(T((dev > 0 ? '+' : '-') + Math.abs(Math.round(dev))), PW - PM - 9, mid + 1.2, { align: 'right' }); }
+    y += rh;
+  });
+  return y;
+}
+function pdfRatiosPage(doc, it, title, sub) {
+  const top = pdfHeader(doc, title, sub), R = readingsOf(it);
+  const panelW = 96, areaW = PW - 2 * PM - panelW - 8, [iw, ih] = fit(it.full.w, it.full.h, areaW, PH - PM - top - 8);
+  const ix = PM + (areaW - iw) / 2, iy = top;
+  const showOrig = state.view === 'orig';
+  doc.addImage(showOrig ? it.dataUrl : fcUrl(it), 'JPEG', ix, iy, iw, ih, showOrig ? 'o' + it.id : undefined, 'FAST');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...MUTED);
+  doc.text(T(showOrig ? 'ORIGINAL' : 'FALSE COLOUR  ·  ' + preset().name.toUpperCase()), ix, iy + ih + 4);
+  ROLES.forEach(r => {
+    const m = it.marks && it.marks[r.id]; if (!m) return;
+    const cx = ix + m.x * iw, cy = iy + m.y * ih, rad = Math.max(1.4, SAMPLE[state.sample] * Math.max(iw, ih)), c = hex2rgb(r.c);
+    doc.setLineWidth(1.1); doc.setDrawColor(0, 0, 0); doc.circle(cx, cy, rad, 'S');
+    doc.setLineWidth(0.55); doc.setDrawColor(...c); doc.circle(cx, cy, rad, 'S');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); const lab = `${r.n.toUpperCase()} ${Math.round(R[r.id].ire)}%`, tw = doc.getTextWidth(lab);
+    doc.setFillColor(...c); doc.rect(cx + rad + 1.2, cy - 2.1, tw + 2.4, 4.2, 'F'); doc.setTextColor(17, 17, 17); doc.text(lab, cx + rad + 2.4, cy + 0.9);
+  });
+  const px = PW - PM - panelW; let y = top + 2;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...MUTED); doc.text('READINGS', px, y); y += 5;
+  ROLES.forEach(r => {
+    const rd = R[r.id]; doc.setFillColor(...hex2rgb(r.c)); doc.setDrawColor(...RULE); doc.rect(px, y - 3.4, 4.6, 4.6, 'FD');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...INK); doc.text(r.n, px + 7, y);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...(rd ? INK : MUTED));
+    doc.text(T(rd ? `${lvl(rd.ire)}   ${fmtStops(rd.stops)} vs grey` : 'not measured'), px + panelW, y, { align: 'right' });
+    if (rd && rd.warn) { doc.setFontSize(6.6); doc.setTextColor(154, 100, 0); doc.text(T(rd.warn), px + 7, y + 3.6); y += 3.4; }
+    y += 7.5;
+  });
+  y += 2; doc.setDrawColor(...RULE); doc.line(px, y, px + panelW, y); y += 6;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...MUTED); doc.text('RATIOS', px, y); y += 4;
+  const pairs = PAIRS.filter(p => R[p[0]] && R[p[1]]).map(p => ({ p, ...ratioOf(R[p[0]], R[p[1]]) }));
+  if (!pairs.length) { doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.text('Measure two roles to see a ratio.', px, y + 4); y += 8; }
+  pairs.forEach((x, i) => {
+    const big = i === 0 && x.p[0] === 'key' && x.p[1] === 'fill';
+    if (big) {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...MUTED); doc.text('KEY : FILL', px, y + 4);
+      doc.setFontSize(26); doc.setTextColor(...INK); doc.text(x.txt, px, y + 15);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.text(T(fmtStops(x.s)), px + panelW, y + 9, { align: 'right' });
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...MUTED); doc.text(T(kfMood(x.s)), px + panelW, y + 14, { align: 'right' });
+      y += 22;
+    } else {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...INK); doc.text(T(x.p[2]), px, y + 4);
+      doc.setFontSize(10); doc.text(x.txt, px + panelW - 26, y + 4, { align: 'right' });
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...MUTED); doc.text(T(fmtStops(x.s)), px + panelW, y + 4, { align: 'right' });
+      y += 7;
+    }
+  });
+  y += 4; doc.setFont('helvetica', 'normal'); doc.setFontSize(6.8); doc.setTextColor(...MUTED);
+  doc.text(doc.splitTextToSize(T(`Curve: ${CURVES[state.curve].n}  ·  Sample: ${state.sample}  ·  ${state.levels === 'full' ? 'Full' : 'Legal'} range. Readings are converted to linear light and compared in stops (1 stop = 2:1). On graded stills, treat ratios as approximate.`), panelW), px, y);
+}
+const subLine = () => `Chart: ${preset().name}  ·  ${state.levels === 'full' ? 'Full range' : 'Legal range'}  ·  ${new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}`;
+$('#pdfBtn').onclick = async () => {
+  const title = $('#proj').value.trim();
+  if (state.mode !== 'deck' && !state.single) { toast('Add a still first.'); return; }
+  if (state.mode === 'deck' && !deckIncluded().length) { toast(state.deck.length ? 'Tick at least one still to export.' : 'Add some stills first.'); return; }
+  let lib; toast('Building PDF…', 30000);
+  try { lib = await loadJsPDF(); } catch (e) { toast('Couldn’t load the PDF library — check your internet connection and try again.', 5000); return; }
+  const doc = new lib.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+  try {
+    if (state.mode === 'ratios') {
+      const it = state.single;
+      doc.setProperties({ title: title || it.name });
+      pdfRatiosPage(doc, it, title || it.name, (title ? it.name + '  ·  ' : '') + 'Lighting ratios  ·  ' + subLine());
+      doc.save(slug(title || it.name.replace(/\.[^.]+$/, '')) + '-ratios.pdf');
+    } else if (state.mode === 'single') {
+      const it = state.single;
+      doc.setProperties({ title: title || it.name });
+      pdfStillPage(doc, it, title || it.name, (title ? it.name + '  ·  ' : '') + subLine());
+      doc.save(slug(title || it.name.replace(/\.[^.]+$/, '')) + '-false-colour.pdf');
+    } else {
+      const inc = deckIncluded(), A = deckAnalysis(inc), T0 = title || 'False colour comparison';
+      const rows = orderRows(A.rows), perPage = Math.floor((PH - PM - (PM + 19) - 8) / 7);
+      const legH = Math.ceil((curBands().length + 1) / 2) * 6 + 10;
+      const chunks = []; for (let i = 0; i < rows.length; i += perPage) chunks.push(rows.slice(i, i + perPage));
+      const lastY = PM + 19 + 8 + chunks[chunks.length - 1].length * 7, legendOwnPage = lastY + legH > PH - PM;
+      const total = 1 + chunks.length + (legendOwnPage ? 1 : 0) + inc.length; let pg = 1;
+      doc.setProperties({ title: T0 });
+      // page 1: grid of false colour stills + summary
+      const top = pdfHeader(doc, T0, `${inc.length} still${inc.length > 1 ? 's' : ''}  ·  ${subLine()}`, `Page ${pg} of ${total}`);
+      const gw = PW - 2 * PM, gh = PH - PM - top - 26, gap = 3; let best = null;
+      for (let cols = 1; cols <= inc.length; cols++) {
+        const rws = Math.ceil(inc.length / cols), cw = (gw - (cols - 1) * gap) / cols, ch = (gh - (rws - 1) * gap) / rws;
+        if (ch <= 0) continue; const cell = Math.min(cw, ch * 1.7); if (!best || cell > best.cell) best = { cols, cw, ch, cell };
+      }
+      const list = orderRows(A.rows).map(r => r.it); let ry = top;
+      for (let r0 = 0; r0 < list.length; r0 += best.cols) {
+        const row = list.slice(r0, r0 + best.cols), sizes = row.map(it => fit(it.thumb.w, it.thumb.h, best.cw, best.ch));
+        const rh = Math.max(...sizes.map(s => s[1])), rowW = best.cols * best.cw + (best.cols - 1) * gap;
+        row.forEach((it, c) => { const [iw, ih] = sizes[c]; doc.addImage(fcUrl(it, 'thumb'), 'JPEG', PM + (gw - rowW) / 2 + c * (best.cw + gap) + (best.cw - iw) / 2, ry + (rh - ih) / 2, iw, ih, undefined, 'FAST'); });
+        ry += rh + gap;
+      }
+      let y = ry + 3; doc.setDrawColor(...RULE); doc.line(PM, y, PW - PM, y);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(12); const sc = A.score == null ? MUTED : A.score >= 80 ? [31, 138, 80] : A.score >= 60 ? [154, 100, 0] : [192, 57, 43];
+      doc.setTextColor(...sc); doc.text(A.score == null ? '-' : A.score + '%', PM, y + 8);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7.6); doc.setTextColor(...INK);
+      const [m0, m1] = A.ext('p50'), [s0, s1] = A.ext('p5'), [h0, h1] = A.ext('p95');
+      doc.text(T(`Consistency: ${scoreLbl(A.score)}   ·   Median ${Math.round(m0)}–${Math.round(m1)}%   ·   Shadows (P5) ${Math.round(s0)}–${Math.round(s1)}%   ·   Highlights (P95) ${Math.round(h0)}–${Math.round(h1)}%`), PM + 16, y + 5.5);
+      doc.setTextColor(...MUTED); doc.text(clipText(doc, verdictText(A).replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>'), PW - 2 * PM - 16), PM + 16, y + 10);
+      // range chart pages
+      chunks.forEach((ch, ci) => {
+        doc.addPage(); pg++;
+        const t2 = pdfHeader(doc, 'Exposure spread', `${T0}  ·  line 5th–95th percentile, box middle 50%, orange median, dashed set median`, `Page ${pg} of ${total}`);
+        const yEnd = pdfRangeRows(doc, ch, A.deckMed, t2 + 3);
+        if (ci === chunks.length - 1 && !legendOwnPage) { doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...MUTED); doc.text('CHART ACROSS THE SET  ·  average share (range across stills)', PM, yEnd + 7); pdfLegend(doc, A.avg, A.restAvg, PM, yEnd + 13, PW - 2 * PM, A.rng); }
+      });
+      if (legendOwnPage) { doc.addPage(); pg++; const t3 = pdfHeader(doc, 'Chart across the set', T0, `Page ${pg} of ${total}`); pdfLegend(doc, A.avg, A.restAvg, PM, t3 + 4, PW - 2 * PM, A.rng); }
+      list.forEach((it, i) => { doc.addPage(); pg++; pdfStillPage(doc, it, it.name, `Still ${i + 1} of ${inc.length}  ·  ${T0}  ·  ${subLine()}`, `Page ${pg} of ${total}`); });
+      doc.save(slug(T0) + '-false-colour.pdf');
+    }
+    toast('PDF exported');
+  } catch (e) { console.error(e); toast('Something went wrong building the PDF.', 4000); }
+};
+
+renderCustom();
+render();
+</script>
+<script>/* fth-adapter */
+(function(){
+  if (!window.fthStore) return;
+  let restoring = false;
+  const save = () => { if (restoring) return; const has = state.single || state.deck.length; fthStore.set('project', has ? fthData() : null); };
+  fthAutosave(save, 1500);
+  fthStore.get('project').then(async d => {
+    if (!d || !d.app) return;
+    restoring = true; const t = toast; toast = () => {};
+    try { await openProject({ text: async () => JSON.stringify(d) }); } finally { toast = t; restoring = false; }
+  });
+})();
+</script>
+</body>
+</html>

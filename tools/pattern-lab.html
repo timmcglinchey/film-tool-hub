@@ -1,0 +1,1043 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>html,body{margin:0}</style>
+</head>
+<body>
+<title>Lighting Pattern Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one-screen studio app. Viewport on the left like a tethered capture screen, a control rail on the right. Stacks on phones. */
+:root {
+  --bg: #121315;
+  --rail: #1a1b1e;
+  --line: #2a2c31;
+  --fg: #e9e6df;
+  --muted: #8d8a83;
+  --accent: #e7bd6a;      /* modelling-lamp amber */
+  --accent-ink: #1b1508;
+  --field: #232429;
+  --font-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 14px; line-height: 1.45;
+}
+.app {
+  height: 100%;
+  display: grid; grid-template-columns: minmax(0,1fr) 340px; gap: 14px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 14px;
+  box-sizing: border-box;
+}
+.stage {
+  position: relative; min-width: 0; min-height: 0;
+  border-radius: 10px; overflow: hidden; background: #2b2c2e;
+}
+#view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#view.dragging { cursor: grabbing; }
+.badge {
+  position: absolute; left: 16px; top: 14px; max-width: min(430px, calc(100% - 32px));
+  pointer-events: none;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-radius: 8px; padding: 10px 14px 12px;
+}
+.badge .eyebrow { font: 600 10.5px/1 var(--font-data); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.badge h2 {
+  margin: 6px 0 4px; font-family: var(--font-display); font-stretch: 72%; font-weight: 750;
+  font-size: clamp(26px, 3.4vw, 38px); line-height: 1; letter-spacing: -.01em; text-wrap: balance;
+}
+.badge p { margin: 0; color: #cfcbc3; font-size: 13px; }
+.stagebar {
+  position: absolute; left: 12px; right: 12px; bottom: 12px;
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between;
+  pointer-events: none;
+}
+.stagebar > * { pointer-events: auto; }
+.hint { font: 11.5px/1.3 var(--font-data); color: #d6d2ca; background: color-mix(in srgb, var(--bg) 70%, transparent); padding: 6px 9px; border-radius: 6px; }
+.seg { display: inline-flex; background: color-mix(in srgb, var(--bg) 78%, transparent); border-radius: 7px; padding: 3px; gap: 2px; }
+.seg button {
+  font: 600 12px/1 var(--font-body); color: var(--muted); background: transparent; border: 0;
+  padding: 7px 10px; border-radius: 5px; cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.seg button:focus-visible, .chip:focus-visible, .swatch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.stagebar .group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.rail {
+  min-width: 0; min-height: 0; overflow-y: auto;
+  background: var(--rail); border-radius: 10px;
+  display: flex; flex-direction: column;
+}
+.rail header { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+.rail h1 {
+  margin: 0; font-family: var(--font-display); font-stretch: 118%; font-weight: 800;
+  font-size: 19px; letter-spacing: .01em; text-transform: uppercase;
+}
+.rail header p { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; }
+.sec { padding: 14px 18px 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
+.sec:last-child { border-bottom: 0; }
+.sec h3 { margin: 0; font: 600 10.5px/1 var(--font-data); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font: 600 12.5px/1 var(--font-body); color: var(--fg); background: var(--field);
+  border: 1px solid var(--line); border-radius: 999px; padding: 7px 11px; cursor: pointer;
+}
+.chip:hover { border-color: var(--muted); }
+.chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+#plan { width: 100%; aspect-ratio: 1; max-width: 100%; display: block; border-radius: 8px; background: var(--field); touch-action: none; cursor: crosshair; }
+.readouts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ro { background: var(--field); border-radius: 7px; padding: 8px 10px; min-width: 0; }
+.ro .k { font: 10px/1 var(--font-data); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.ro .v { margin-top: 5px; font: 600 15px/1.1 var(--font-data); font-variant-numeric: tabular-nums; }
+.ro .s { margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+
+.ctl { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: baseline; }
+.ctl label { font-weight: 600; font-size: 13px; }
+.ctl output { font: 12px/1 var(--font-data); font-variant-numeric: tabular-nums; color: var(--accent); text-align: right; }
+.ctl input[type=range] { grid-column: 1 / -1; }
+input[type=range] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 22px; background: transparent; margin: 0; cursor: pointer;
+}
+input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: var(--line); }
+input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--line); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--fg); margin-top: -6px; border: 3px solid var(--rail); box-shadow: 0 0 0 1px var(--muted); }
+input[type=range]::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--fg); border: 3px solid var(--rail); box-shadow: 0 0 0 1px var(--muted); }
+input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 2px var(--accent); }
+input[type=range]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(--accent); }
+.ticks { grid-column: 1 / -1; display: flex; justify-content: space-between; font: 10px/1 var(--font-data); color: var(--muted); margin-top: -2px; }
+
+.swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+.swatch { width: 34px; height: 34px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
+.swatch.on { border-color: var(--accent); }
+.swatch.clay { background: #8e8e8c; }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 600; font-size: 13px; cursor: pointer; }
+.toggle small { display: block; font-weight: 400; color: var(--muted); font-size: 11.5px; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.note { color: var(--muted); font-size: 12px; margin: 0; }
+.err { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--fg); }
+
+@media (max-width: 820px) {
+  html, body { height: auto; }
+  .app { height: auto; grid-template-columns: minmax(0,1fr); }
+  .stage { height: min(72vh, 560px); min-height: 380px; }
+  .rail { overflow: visible; }
+  .badge p { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<style data-fth-map>
+:root:root:root{--bg:var(--fth-bg);--rail:var(--fth-surface);--line:var(--fth-line);--fg:var(--fth-text);--muted:var(--fth-muted);--accent:var(--fth-accent);--accent-ink:var(--fth-on-accent);--field:var(--fth-bg2);--font-display:var(--fth-display);--font-body:var(--fth-display);--font-data:var(--fth-mono);}
+.stage{--bg:#121315;--rail:#1a1b1e;--line:#2a2c31;--fg:#e9e6df;--muted:#8d8a83;--accent:#e7bd6a;--accent-ink:#1b1508;--field:#232429;color:var(--fg);color-scheme:dark}
+html,body{height:100%}
+body{display:flex;flex-direction:column}
+.app{flex:1;min-height:0;height:auto!important}
+.rail header{padding-top:14px}
+.rail header p{margin-top:0}
+@media (max-width:860px){body{display:block}}
+.stage .stagebar{--accent:var(--fth-cat);--accent-ink:#14110b}
+.modes button.on small{color:inherit!important;opacity:.78}
+</style>
+
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>03 · Visual Planning</span><h1 class="fth-title">Lighting Pattern Lab</h1></div>
+  
+  <div class="fth-actions"></div>
+</header>
+<div class="app">
+  <section class="stage" aria-label="Lighting preview">
+    <canvas id="view"></canvas>
+    <div class="badge" aria-live="polite">
+      <div class="eyebrow" id="patEyebrow">Pattern</div>
+      <h2 id="patName">Rembrandt</h2>
+      <p id="patDesc"></p>
+    </div>
+    <div class="stagebar">
+      <span class="hint" id="hint">Drag to move the light · Shift-drag to orbit · scroll to zoom</span>
+      <div class="group">
+        <div class="seg" role="group" aria-label="Drag moves">
+          <button id="dmLight" aria-pressed="true">Move light</button>
+          <button id="dmCam" aria-pressed="false">Orbit camera</button>
+        </div>
+        <div class="seg" role="group" aria-label="View">
+          <button id="vPortrait" aria-pressed="true">Portrait</button>
+          <button id="vWide" aria-pressed="false">Wide</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="rail">
+    <header>
+      <p>One key light, a sculpted head, real soft-shadow falloff.</p>
+    </header>
+
+    <div class="sec">
+      <h3>Classic setups</h3>
+      <div class="chips" id="presets"></div>
+    </div>
+
+    <div class="sec">
+      <h3>Floor plan · drag the light</h3>
+      <canvas id="plan" width="300" height="300" aria-label="Top-down floor plan. Drag the light to set its angle and distance."></canvas>
+      <div class="readouts">
+        <div class="ro"><div class="k">Source size</div><div class="v" id="roAng">—</div><div class="s" id="roAngS"></div></div>
+        <div class="ro"><div class="k">Exposure at face</div><div class="v" id="roEV">—</div><div class="s" id="roEVS"></div></div>
+        <div class="ro"><div class="k">Falloff ear to ear</div><div class="v" id="roFall">—</div><div class="s">inverse-square</div></div>
+        <div class="ro"><div class="k">Modifier</div><div class="v" id="roMod" style="font-size:13px">—</div><div class="s" id="roModS"></div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>Key light</h3>
+      <div class="ctl"><label for="sAz">Angle</label><output id="oAz"></output><input type="range" id="sAz" min="-180" max="180" step="1"><div class="ticks"><span>behind</span><span>camera L</span><span>on axis</span><span>camera R</span><span>behind</span></div></div>
+      <div class="ctl"><label for="sEl">Height</label><output id="oEl"></output><input type="range" id="sEl" min="-60" max="85" step="1"></div>
+      <div class="ctl"><label for="sDist">Distance</label><output id="oDist"></output><input type="range" id="sDist" min="0.4" max="4" step="0.05"></div>
+      <div class="ctl"><label for="sSize">Modifier size</label><output id="oSize"></output><input type="range" id="sSize" min="0" max="100" step="0.5"><div class="ticks"><span>bare bulb</span><span>beauty dish</span><span>octabox</span><span>scrim</span></div></div>
+      <div class="ctl"><label for="sPow">Power</label><output id="oPow"></output><input type="range" id="sPow" min="-3" max="3" step="0.1"></div>
+      <label class="toggle" for="tComp"><span>Hold exposure when distance changes<small>Like re-metering after moving the stand</small></span><input type="checkbox" id="tComp"></label>
+    </div>
+
+    <div class="sec">
+      <h3>Subject</h3>
+      <div class="chips" id="faces" role="group" aria-label="Face"></div>
+      <div class="ctl"><label for="sYaw">Head turn</label><output id="oYaw"></output><input type="range" id="sYaw" min="-45" max="45" step="1"></div>
+      <div class="ctl"><label for="sTilt">Chin</label><output id="oTilt"></output><input type="range" id="sTilt" min="-20" max="20" step="1"></div>
+      <div class="swatches" id="skins" role="group" aria-label="Surface"></div>
+    </div>
+
+    <div class="sec">
+      <h3>Room</h3>
+      <div class="ctl"><label for="sAmb">Ambient fill</label><output id="oAmb"></output><input type="range" id="sAmb" min="0" max="100" step="1"></div>
+      <label class="toggle" for="tZebra"><span>Highlight clipping<small>Zebra stripes where the image blows out</small></span><input type="checkbox" id="tZebra"></label>
+      <p class="note">Shadows are traced from a spherical source, so a bigger or closer light gives a wider penumbra, just as on set. Catchlights in the eyes show the modifier's size and position.</p>
+    </div>
+  </aside>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const DEG = Math.PI / 180;
+
+/* ---------- state ---------- */
+const S = {
+  az: 45, el: 40, dist: 1.2, size: 60, pow: 0, comp: true,
+  yaw: 0, tilt: 0, face: 0, amb: 14, skin: 0, zebra: false,
+  camYaw: 0, camPitch: 0.03, camD: 10.5, view: "portrait", drag: "light"
+};
+const SKINS = [
+  { name: "Fair",   css: "#e6b9a0", lin: [0.62, 0.43, 0.34] },
+  { name: "Medium", css: "#c99470", lin: [0.46, 0.29, 0.20] },
+  { name: "Tan",    css: "#a06a47", lin: [0.33, 0.19, 0.12] },
+  { name: "Deep",   css: "#6b4430", lin: [0.17, 0.095, 0.06] },
+  { name: "Clay",   css: null,      lin: [0.38, 0.38, 0.38] }
+];
+const FACES = [
+  { name: "Male 1", hair: [0.05, 0.033, 0.022] },
+  { name: "Female", hair: [0.11, 0.056, 0.03] },
+  { name: "Male 2", hair: [0.028, 0.026, 0.024] }
+];
+const PRESETS = [
+  { name: "Butterfly", az: 0,   el: 42, dist: 1.1, size: 55, yaw: 0 },
+  { name: "Loop",      az: 28,  el: 30, dist: 1.2, size: 60, yaw: 0 },
+  { name: "Rembrandt", az: 45,  el: 40, dist: 1.2, size: 60, yaw: 0 },
+  { name: "Split",     az: 90,  el: 5,  dist: 1.2, size: 50, yaw: 0 },
+  { name: "Short",     az: 65,  el: 35, dist: 1.2, size: 70, yaw: 25 },
+  { name: "Broad",     az: -20, el: 32, dist: 1.2, size: 70, yaw: 25 },
+  { name: "Rim",       az: 140, el: 20, dist: 1.4, size: 30, yaw: 0 },
+  { name: "Under",     az: 0,   el: -45, dist: 0.9, size: 30, yaw: 0 },
+  { name: "Hard noon", az: 15,  el: 70, dist: 4,   size: 3,  yaw: 0 }
+];
+
+/* size slider is logarithmic: 2 cm .. 200 cm diameter */
+const sizeFromSlider = v => 2 * Math.pow(100, v / 100);
+const sliderFromSize = s => 100 * Math.log(s / 2) / Math.log(100);
+
+/* ---------- WebGL ---------- */
+const cv = $("view");
+const gl = cv.getContext("webgl", { antialias: false, alpha: false, preserveDrawingBuffer: false, powerPreference: "high-performance" });
+if (!gl) {
+  const e = document.createElement("div"); e.className = "err";
+  e.textContent = "This preview needs WebGL, which your browser has turned off. Try another browser or enable hardware acceleration.";
+  cv.parentNode.appendChild(e); return;
+}
+
+const VS = `attribute vec2 a; void main(){ gl_Position = vec4(a,0.,1.); }`;
+const FS = `
+precision highp float;
+uniform vec2 uRes;
+uniform vec3 uCamPos, uCamR, uCamU, uCamF;
+uniform float uTanHalf;
+uniform vec3 uLightPos;
+uniform float uLightR, uPower, uAmb, uClay, uZebra, uShowLight;
+uniform vec2 uYawCS, uTiltCS;
+uniform vec3 uSkin, uHair;
+uniform float uFace;
+uniform vec3 uFW;
+
+const vec3 PIVOT = vec3(0.0, -0.7, -0.1);
+const float BZ = -16.0;
+const vec3 EYE_C = vec3(0.29, 0.115, 0.625);
+const float EYE_R = 0.125;
+
+float sdEll(vec3 p, vec3 r){ float k0 = length(p/r); float k1 = length(p/(r*r)); return k0*(k0-1.0)/k1; }
+float smin(float a, float b, float k){ float h = clamp(0.5+0.5*(b-a)/k, 0.0, 1.0); return mix(b,a,h) - k*h*(1.0-h); }
+float smax(float a, float b, float k){ return -smin(-a,-b,k); }
+float sdCap(vec3 p, vec3 a, vec3 b, float r){ vec3 pa=p-a, ba=b-a; float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h)-r; }
+float sdRoundCone(vec3 p, vec3 a, vec3 b, float r1, float r2){
+  vec3 ba = b-a; float l2 = dot(ba,ba); float rr = r1-r2; float a2 = l2-rr*rr; float il2 = 1.0/l2;
+  vec3 pa = p-a; float y = dot(pa,ba); float z = y-l2; vec3 xv = pa*l2-ba*y; float x2 = dot(xv,xv);
+  float y2 = y*y*l2; float z2 = z*z*l2; float k = sign(rr)*rr*rr*x2;
+  if (sign(z)*a2*z2 > k) return sqrt(x2+z2)*il2 - r2;
+  if (sign(y)*a2*y2 < k) return sqrt(x2+y2)*il2 - r1;
+  return (sqrt(x2*a2*il2)+y*rr)*il2 - r1;
+}
+
+vec3 toLocal(vec3 p){
+  vec3 q = p - PIVOT;
+  float c = uYawCS.x, s = uYawCS.y;
+  q = vec3(c*q.x - s*q.z, q.y, s*q.x + c*q.z);
+  float ct = uTiltCS.x, st = uTiltCS.y;
+  q = vec3(q.x, ct*q.y - st*q.z, st*q.y + ct*q.z);
+  return q + PIVOT;
+}
+
+#define F(a,b,c) ((a)*uFW.x + (b)*uFW.y + (c)*uFW.z)
+
+float hash3(vec3 p){ p = fract(p*0.3183099 + 0.1); p *= 17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
+float vnoise(vec3 x){
+  vec3 i = floor(x), f = fract(x); f = f*f*(3.0-2.0*f);
+  return mix(mix(mix(hash3(i), hash3(i+vec3(1,0,0)), f.x), mix(hash3(i+vec3(0,1,0)), hash3(i+vec3(1,1,0)), f.x), f.y),
+             mix(mix(hash3(i+vec3(0,0,1)), hash3(i+vec3(1,0,1)), f.x), mix(hash3(i+vec3(0,1,1)), hash3(i+vec3(1,1,1)), f.x), f.y), f.z);
+}
+
+/* almond-shaped lid opening, in eye-local coords (x>0 = toward the ear). <0 inside the opening */
+float eyeOpen(vec3 e, out float up, out float lo, out float y){
+  y = e.y - 0.1*e.x;
+  float hw = 0.118;
+  float t = clamp(e.x/hw, -1.0, 1.0);
+  float w = 1.0 - t*t;
+  up = F(0.043, 0.048, 0.04)*w*(1.0 - 0.18*t) + 0.003;
+  lo = -F(0.036, 0.038, 0.034)*w*(1.0 + 0.2*t) - 0.002;
+  return max(max(y - up, lo - y), abs(e.x) - hw);
+}
+float lids(vec3 s){
+  vec3 e = s - EYE_C;
+  float up, lo, y;
+  float o = eyeOpen(e, up, lo, y);
+  float shell = length(e) - (EYE_R + 0.014 + 0.008*smoothstep(0.0, 0.07, e.y));
+  float lid = max(shell, -o);
+  return smax(lid, sdEll(e - vec3(0.0, 0.0, 0.075), vec3(0.15, 0.12, 0.11)), 0.025);
+}
+
+float lipsD(vec3 q){
+  float uy = F(-0.605, -0.585, -0.62), ly = F(-0.71, -0.695, -0.72), lz = F(0.85, 0.84, 0.845);
+  vec3 ur = F(vec3(0.16,0.048,0.07), vec3(0.148,0.055,0.075), vec3(0.165,0.04,0.065));
+  vec3 lr = F(vec3(0.142,0.055,0.07), vec3(0.135,0.065,0.078), vec3(0.148,0.05,0.07));
+  float ax = abs(q.x);
+  vec3 uq = q - vec3(0.0, uy, lz);
+  uq.y -= 0.014*exp(-pow((ax - 0.04)/0.03, 2.0))*smoothstep(-0.02, 0.03, uq.y);   // cupid's bow
+  float l = sdEll(uq, ur);
+  l = smin(l, sdEll(q - vec3(0.0, uy - 0.022, lz + 0.03), vec3(0.04, 0.028, 0.04)), 0.03); // tubercle
+  l = smin(l, sdEll(q - vec3(0.0, ly, lz - 0.012), lr), 0.03);
+  return l;
+}
+
+float headSkin(vec3 q){
+  vec3 s = vec3(sqrt(q.x*q.x + 0.0006), q.y, q.z);
+  float d = sdEll(q - vec3(0.0,0.35,-0.15), F(vec3(0.78,0.95,0.98), vec3(0.76,0.94,0.97), vec3(0.79,0.95,0.98)));
+  d = smin(d, sdEll(q - vec3(0.0,F(-0.4,-0.38,-0.42),0.12), F(vec3(0.57,0.74,0.76), vec3(0.54,0.7,0.74), vec3(0.59,0.76,0.76))), 0.32);
+  // jaw
+  d = smin(d, sdEll(s - vec3(F(0.39,0.34,0.42), F(-0.64,-0.57,-0.69), -0.02),
+                    F(vec3(0.15,0.24,0.38), vec3(0.13,0.23,0.36), vec3(0.18,0.23,0.42))), 0.24);
+  // chin
+  d = smin(d, sdEll(q - vec3(0.0,F(-1.0,-0.94,-1.02),0.52), F(vec3(0.23,0.18,0.24), vec3(0.18,0.16,0.21), vec3(0.27,0.18,0.24))), 0.2);
+  d = smin(d, sdEll(q - vec3(0.0,F(-0.85,-0.8,-0.865),0.6), F(vec3(0.18,0.11,0.17), vec3(0.15,0.1,0.16), vec3(0.2,0.12,0.18))), 0.14);
+  // cheekbone + cheek, broad and soft
+  d = smin(d, sdEll(s - vec3(0.37,-0.07,0.47), F(vec3(0.19,0.12,0.21), vec3(0.19,0.12,0.22), vec3(0.18,0.11,0.2))), 0.3);
+  d = smin(d, sdEll(s - vec3(0.24,-0.37,0.6), F(vec3(0.17,0.17,0.18), vec3(0.17,0.17,0.185), vec3(0.16,0.15,0.17))), 0.3);
+  // brow ridge as a rounded bar following the orbit
+  d = smin(d, sdCap(s, vec3(0.07,0.33,0.75), vec3(0.4,0.31,0.6), F(0.07,0.055,0.075)), 0.16);
+  // glabella
+  d = smin(d, sdEll(q - vec3(0.0,0.27,0.79), vec3(0.09,0.09,0.06)), 0.1);
+  // eye socket, softly carved
+  d = smax(d, -sdEll(s - vec3(0.275,0.12,0.86), vec3(0.16,0.115,0.2)), 0.11);
+  d = smin(d, lids(s), 0.03);
+  // nose
+  float ny = F(-0.27,-0.24,-0.28), nz = F(1.0,0.96,1.0);
+  float n = sdRoundCone(q, vec3(0.0,0.24,0.8), vec3(0.0,ny,nz), F(0.05,0.044,0.056), F(0.07,0.06,0.076));
+  n = smin(n, length(q - vec3(0.0,ny-0.005,nz+0.02)) - F(0.068,0.058,0.074), 0.05);       // tip
+  n = smin(n, sdEll(s - vec3(F(0.1,0.088,0.11), ny-0.06, nz-0.11), F(vec3(0.072,0.062,0.082), vec3(0.062,0.054,0.072), vec3(0.078,0.064,0.086))), 0.05); // alae
+  n = smax(n, -sdEll(s - vec3(F(0.05,0.044,0.055), ny-0.135, nz-0.045), vec3(0.03,0.017,0.04)), 0.02); // nostrils
+  d = smin(d, n, 0.06);
+  // lips and mouth
+  float my = F(-0.66,-0.642,-0.675);
+  d = smin(d, lipsD(q), 0.08);
+  d = smax(d, -sdEll(q - vec3(0.0,my,0.92), vec3(0.13,0.008,0.08)), 0.014);
+    if (uFace > 1.5) d = smax(d, -sdEll(q - vec3(0.0,-1.0,0.8), vec3(0.02,0.045,0.03)), 0.05); // chin cleft
+  // ears
+  float ear = sdEll(s - vec3(0.77,0.02,-0.18), vec3(0.075,0.28,0.17));
+  ear = smax(ear, -sdEll(s - vec3(0.84,0.05,-0.17), vec3(0.045,0.19,0.11)), 0.025);
+  ear = smin(ear, sdEll(s - vec3(0.805,0.01,-0.17), vec3(0.025,0.13,0.07)), 0.03);       // antihelix
+  ear = smax(ear, -sdEll(s - vec3(0.83,-0.06,-0.12), vec3(0.04,0.055,0.05)), 0.02);      // concha
+  ear = smin(ear, sdEll(s - vec3(0.78,-0.06,-0.035), vec3(0.025,0.04,0.025)), 0.02);     // tragus
+  d = smin(d, ear, 0.05);
+  return d;
+}
+float headHair(vec3 q){
+  vec3 cr = q - vec3(0.0,0.35,-0.15);
+  if (uFace < 0.5) {
+    float line = (0.86 - q.y) - 0.95*clamp(0.35 - q.z, 0.0, 1.3);
+    float th = 0.08*smoothstep(0.0, 0.22, -line);
+    return max(sdEll(cr, vec3(0.78,0.95,0.98)) - th + 0.004, line*0.7);
+  } else if (uFace < 1.5) {
+    float line = (0.84 - q.y) - 0.55*clamp(0.4 - q.z, 0.0, 1.3);
+    float th = 0.12*smoothstep(0.0, 0.2, -line);
+    float top = max(sdEll(cr, vec3(0.76,0.94,0.97)) - th + 0.004, line*0.7);
+    float lng = sdEll(q - vec3(0.0,-0.62,-0.3), vec3(0.97,1.62,0.84));
+    lng = smax(lng, min(0.63 - abs(q.x), q.z + 0.05), 0.08);
+    float h = smin(top, lng, 0.1);
+    return h - 0.005*vnoise(q*vec3(30.0, 2.5, 30.0));
+  } else {
+    float line = (0.86 - q.y) - 1.0*clamp(0.32 - q.z, 0.0, 1.3);
+    float th = 0.07*smoothstep(0.0, 0.2, -line);
+    return max(sdEll(cr, vec3(0.79,0.95,0.98)) - th + 0.004, line*0.7);
+  }
+}
+float body(vec3 p){
+  bool fem = uFace > 0.5 && uFace < 1.5;
+  float nr = fem ? 0.36 : 0.42;
+  float n = sdRoundCone(p, vec3(0.0,-2.0,-0.32), vec3(0.0,-0.75,-0.28), nr + 0.1, nr);
+  vec3 a = vec3(abs(p.x), p.y, p.z);
+  float tr = sdCap(a, vec3(0.25,-1.8,-0.42), vec3(fem ? 1.15 : 1.35, -2.25, -0.35), fem ? 0.27 : 0.32);
+  float ch = sdEll(p - vec3(0.0,-2.8,-0.25), vec3(fem ? 1.35 : 1.6, 0.85, 0.72));
+  float b = smin(n, smin(tr, ch, 0.3), 0.35);
+  if (!fem) b = smin(b, sdEll(p - vec3(0.0,-1.5,0.15), vec3(0.07,0.09,0.06)), 0.06);   // Adam's apple
+  return b;
+}
+vec2 map(vec3 p){
+  float b = body(p);
+  vec3 q = toLocal(p);
+  float bound = length(q - vec3(0.0,0.05,0.05)) - 1.5;
+  if (uFace > 0.5 && uFace < 1.5) bound = min(bound, length(q - vec3(0.0,-0.6,-0.3)) - 1.7);
+  if (bound > 0.3) return vec2(min(bound, b), 1.0);
+  vec2 res = vec2(smin(headSkin(q), b, 0.12), 1.0);
+  vec3 s = vec3(abs(q.x), q.y, q.z);
+  float e = length(s - EYE_C) - EYE_R;
+  if (e < res.x) res = vec2(e, 2.0);
+  float h = headHair(q);
+  if (h < res.x) res = vec2(h, 3.0);
+  return res;
+}
+vec3 calcNormal(vec3 p){
+  const float e = 0.0022; vec2 k = vec2(1.0,-1.0);
+  return normalize(k.xyy*map(p+k.xyy*e).x + k.yyx*map(p+k.yyx*e).x + k.yxy*map(p+k.yxy*e).x + k.xxx*map(p+k.xxx*e).x);
+}
+float softShadow(vec3 ro, vec3 rd, float maxt, float tanA){
+  float res = 1.0; float t = 0.02;
+  for (int i = 0; i < 90; i++){
+    float h = map(ro + rd*t).x;
+    res = min(res, h/(tanA*t));
+    t += clamp(h, 0.006, 0.16);
+    if (res < -1.0 || t > maxt) break;
+  }
+  res = max(res, -1.0);
+  return 0.25*(1.0+res)*(1.0+res)*(2.0-res);
+}
+float calcAO(vec3 p, vec3 n){
+  float occ = 0.0, sca = 1.0;
+  for (int i = 0; i < 5; i++){
+    float h = 0.012 + 0.07*float(i);
+    occ += (h - map(p + n*h).x)*sca; sca *= 0.82;
+  }
+  return clamp(1.0 - 2.2*occ, 0.0, 1.0);
+}
+float iSphere(vec3 ro, vec3 rd, vec3 c, float r){
+  vec3 oc = ro-c; float b = dot(oc,rd); float h = b*b - (dot(oc,oc)-r*r);
+  if (h < 0.0) return -1.0; return -b - sqrt(h);
+}
+vec2 iBound(vec3 ro, vec3 rd){
+  vec3 oc = ro - vec3(0.0,-1.0,0.0); float b = dot(oc,rd); float h = b*b - (dot(oc,oc) - 3.3*3.3);
+  if (h < 0.0) return vec2(-1.0); h = sqrt(h); return vec2(-b-h, -b+h);
+}
+
+void lightTerms(vec3 pos, out vec3 L, out float dl, out float irr, out float sinA, out float tanA){
+  vec3 toL = uLightPos - pos; dl = length(toL); L = toL/dl;
+  float dm = dl*0.1;
+  irr = uPower/(dm*dm);
+  sinA = clamp(uLightR/dl, 0.0, 0.98);
+  tanA = max(sinA/sqrt(1.0 - sinA*sinA), 0.004);
+}
+
+vec3 shade(vec3 pos, vec3 gn, vec3 rd, float m){
+  vec3 q = toLocal(pos);
+  vec3 s = vec3(abs(q.x), q.y, q.z);
+  vec3 V = -rd, L; float dl, irr, sinA, tanA;
+  lightTerms(pos, L, dl, irr, sinA, tanA);
+  float sh = 0.0;
+  if (dot(gn, L) > -0.4) sh = softShadow(pos + gn*0.015, L, min(dl - uLightR, 9.0), tanA);
+  float ao = calcAO(pos, gn);
+  vec3 n = gn;
+
+  vec3 alb = uSkin; float rough = 0.42; float f0 = 0.028; vec3 wrap = vec3(0.26,0.11,0.06);
+  bool garment = m < 1.5 && pos.y < -2.02 + 0.3*smoothstep(0.3, 0.95, abs(pos.x));
+  bool hair = m > 2.5;
+  vec3 T = vec3(0.0);
+  if (garment) {
+    alb = vec3(0.04,0.045,0.052)*(0.85 + 0.3*vnoise(pos*vec3(60.0,60.0,60.0)));
+    rough = 0.85; f0 = 0.02; wrap = vec3(0.08);
+  } else if (hair) {
+    bool fem = uFace > 0.5 && uFace < 1.5;
+    vec3 dir = fem ? vec3(0.0,-1.0,0.0) : vec3(0.0,0.3,-1.0);
+    T = normalize(dir - n*dot(dir, n) + 1e-4);
+    float str = fem ? vnoise(q*vec3(160.0, 8.0, 160.0)) : vnoise(q*vec3(170.0, 170.0, 10.0));
+    alb = uHair*(0.6 + 0.8*str);
+    wrap = vec3(0.05);
+  } else if (m > 1.5) {
+    vec3 e = s - EYE_C; vec3 en = normalize(e);
+    float r = sqrt(max(1.0 - en.z*en.z, 0.0));
+    float ang = atan(en.y, en.x);
+    vec3 sclera = mix(vec3(0.63,0.6,0.57), vec3(0.6,0.42,0.4), smoothstep(0.55, 0.95, abs(en.x)));
+    vec3 irisC = F(vec3(0.09,0.048,0.022), vec3(0.075,0.085,0.04), vec3(0.06,0.085,0.12));
+    float fib = 0.6 + 0.6*vnoise(vec3(cos(ang)*5.0, sin(ang)*5.0, r*22.0));
+    vec3 iris = irisC*fib*mix(1.5, 0.75, smoothstep(0.22, 0.4, r));
+    iris *= 1.0 - 0.7*smoothstep(0.36, 0.425, r);
+    alb = mix(sclera, iris, 1.0 - smoothstep(0.42, 0.43, r));
+    alb = mix(alb, vec3(0.004), 1.0 - smoothstep(0.2, 0.21, r));
+    rough = 0.02; f0 = 0.04; wrap = vec3(0.0);
+  } else {
+    float lip = 1.0 - smoothstep(0.0, 0.022, lipsD(q));
+    alb *= mix(vec3(1.0), F(vec3(0.9,0.62,0.6), vec3(0.86,0.5,0.52), vec3(0.9,0.64,0.6)), lip*(1.0-uClay));
+    // warmth in thin, vascular skin
+    float red = 0.55*smoothstep(0.26, 0.0, length((s - vec3(0.3,-0.3,0.66))*vec3(1.0,1.0,1.3)))*F(1.0,1.3,0.8)
+              + 0.5*smoothstep(0.12, 0.0, length(q - vec3(0.0,-0.26,1.0)))
+              + 0.45*smoothstep(0.7, 0.8, s.x)*smoothstep(-0.4, -0.1, s.z);
+    alb *= mix(vec3(1.0), vec3(1.0,0.86,0.85), clamp(red, 0.0, 1.0)*(1.0-uClay));
+    // brows
+    float bx = (s.x - 0.27)/0.18;
+    float arch = 0.375 + F(0.0,0.012,-0.006) + F(0.03,0.04,0.022)*(1.0 - bx*bx) - 0.02*max(-bx, 0.0);
+    float thick = mix(F(0.032,0.022,0.036), F(0.012,0.008,0.014), clamp((s.x - 0.12)/0.33, 0.0, 1.0));
+    float brow = (1.0 - smoothstep(thick*0.5, thick, abs(s.y - arch))) * (1.0 - smoothstep(0.85, 1.0, abs(bx))) * smoothstep(0.5, 0.6, s.z);
+    brow *= 0.72 + 0.28*vnoise(vec3(s.x*140.0 + s.y*60.0, s.y*30.0, 0.0));
+    alb *= mix(1.0, 0.24, brow*(1.0-uClay));
+    // lash line along the upper lid margin
+    vec3 e = s - EYE_C; float up, lo, ly;
+    float o = eyeOpen(e, up, lo, ly);
+    float nearEye = 1.0 - smoothstep(EYE_R + 0.03, EYE_R + 0.045, length(e));
+    float lashU = (1.0 - smoothstep(0.0, F(0.012,0.016,0.011), ly - up)) * step(up - 0.004, ly);
+    float lashL = (1.0 - smoothstep(0.0, 0.006, lo - ly)) * step(ly, lo + 0.003) * 0.5;
+    float lash = nearEye * max(lashU, lashL) * (1.0 - smoothstep(0.1, 0.125, abs(e.x)));
+    alb *= mix(1.0, 0.12, lash*F(0.85,1.0,0.85)*(1.0-uClay));
+    rough = mix(0.42, 0.32, lip);
+    // pore-scale surface texture
+    vec3 pp = q*95.0; float n0 = vnoise(pp);
+    vec3 g = vec3(vnoise(pp + vec3(0.3,0.0,0.0)), vnoise(pp + vec3(0.0,0.3,0.0)), vnoise(pp + vec3(0.0,0.0,0.3))) - n0;
+    n = normalize(n - 0.13*(1.0-uClay)*(g - n*dot(g, n)));
+    rough *= 0.9 + 0.25*vnoise(q*30.0);
+  }
+  if (uClay > 0.5 && !garment) {
+    alb = vec3(0.38); rough = 0.6; f0 = 0.02; wrap = vec3(0.0);
+  }
+
+  float ndl = dot(n, L);
+  vec3 diff = clamp((vec3(ndl) + wrap)/(1.0 + wrap), 0.0, 1.0);
+  vec3 shc = pow(vec3(sh), vec3(1.0) - wrap*1.3);
+  vec3 col = alb*diff*shc*irr;
+
+  vec3 H = normalize(L + V);
+  float nol = max(ndl, 0.0);
+  if (hair && uClay < 0.5) {
+    float th = dot(T, H);
+    float s1 = pow(sqrt(max(1.0 - th*th, 0.0)), 90.0);
+    float th2 = dot(T, normalize(H - 0.25*n));
+    float s2 = pow(sqrt(max(1.0 - th2*th2, 0.0)), 22.0);
+    col += (vec3(0.16)*s1 + uHair*3.0*s2)*nol*sh*irr;
+  } else {
+    float noh = max(dot(n,H), 0.0), loh = max(dot(L,H), 0.0);
+    float a = rough*rough;
+    float ap = clamp(a + 0.5*sinA, 0.0, 1.0);
+    float a2 = ap*ap; float dd = noh*noh*(a2-1.0) + 1.0;
+    float D = a2/(3.14159*dd*dd);
+    float Fr = f0 + (1.0-f0)*pow(1.0-loh, 5.0);
+    col += vec3(D*Fr*0.25/max(loh*loh, 0.05)*nol)*sh*irr;
+  }
+
+  float sky = 0.55 + 0.45*n.y;
+  col += alb*uAmb*ao*sky;
+  return col;
+}
+
+vec3 backdrop(vec3 ro, vec3 rd, out float tb){
+  tb = 1e9;
+  vec3 base = vec3(0.16, 0.162, 0.168);
+  if (rd.z >= -1e-4) return base*uAmb*0.6;
+  tb = (BZ - ro.z)/rd.z;
+  vec3 p = ro + rd*tb;
+  vec3 L; float dl, irr, sinA, tanA;
+  lightTerms(p, L, dl, irr, sinA, tanA);
+  float ndl = max(L.z, 0.0);
+  float sh = 1.0;
+  if (ndl > 0.0) {
+    // only march where the subject could block the light
+    sh = softShadow(p + vec3(0.0,0.0,0.01), L, min(dl - uLightR, 40.0), tanA);
+  }
+  return base*(ndl*irr*sh + uAmb*0.6);
+}
+
+vec3 aces(vec3 x){ return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14), 0.0, 1.0); }
+
+void main(){
+  vec2 uv = (2.0*gl_FragCoord.xy - uRes)/uRes.y;
+  vec3 ro = uCamPos;
+  vec3 rd = normalize(uCamF + uv.x*uTanHalf*uCamR + uv.y*uTanHalf*uCamU);
+
+  float tHit = 1e9; float mHit = -1.0;
+  vec2 bb = iBound(ro, rd);
+  if (bb.y > 0.0) {
+    float t = max(bb.x, 0.0);
+    for (int i = 0; i < 160; i++){
+      vec2 h = map(ro + rd*t);
+      if (h.x < 0.00025*t) { tHit = t; mHit = h.y; break; }
+      t += h.x*0.9;
+      if (t > bb.y) break;
+    }
+  }
+  vec3 col;
+  float tb;
+  if (mHit > 0.0) {
+    vec3 p = ro + rd*tHit;
+    col = shade(p, calcNormal(p), rd, mHit);
+  } else {
+    col = backdrop(ro, rd, tb);
+    tHit = tb;
+  }
+  float tl = iSphere(ro, rd, uLightPos, uLightR);
+  if (uShowLight > 0.5 && tl > 0.0 && tl < tHit) {
+    vec3 pl = ro + rd*tl;
+    float edge = dot(normalize(pl - uLightPos), -rd);
+    col = mix(vec3(0.9,0.85,0.75)*2.0, vec3(1.0,0.98,0.94)*12.0, smoothstep(0.0, 0.35, edge));
+  }
+
+  col = aces(col*1.25);
+  col = pow(col, vec3(1.0/2.2));
+  if (uZebra > 0.5 && max(col.r, max(col.g, col.b)) > 0.975) {
+    float z = step(0.5, fract((gl_FragCoord.x + gl_FragCoord.y)/(10.0*uRes.y/700.0)));
+    col = mix(col, vec3(0.0), z*0.85);
+  }
+  col += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898,78.233)))*43758.5453) - 0.5)/255.0;
+  gl_FragColor = vec4(col, 1.0);
+}`;
+
+function compile(type, src) {
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+let prog;
+try {
+  prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+} catch (err) {
+  console.error(err);
+  const e = document.createElement("div"); e.className = "err";
+  e.textContent = "The renderer could not start on this device's graphics driver.";
+  cv.parentNode.appendChild(e); return;
+}
+gl.useProgram(prog);
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+const aLoc = gl.getAttribLocation(prog, "a");
+gl.enableVertexAttribArray(aLoc);
+gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
+const U = {};
+["uRes","uCamPos","uCamR","uCamU","uCamF","uTanHalf","uLightPos","uLightR","uPower","uAmb","uClay","uZebra","uYawCS","uTiltCS","uSkin","uShowLight","uHair","uFace","uFW"]
+  .forEach(n => U[n] = gl.getUniformLocation(prog, n));
+
+/* ---------- scene math (1 unit = 10 cm) ---------- */
+const LIGHT_TARGET = [0, -0.05, 0.35];
+const CAM_TARGET = { portrait: [0, -0.36, 0.2], wide: [0, -0.4, 2.5] };
+const FOV = { portrait: 23, wide: 44 };
+
+function lightPos() {
+  const a = S.az * DEG, e = S.el * DEG, d = S.dist * 10;
+  return [LIGHT_TARGET[0] + d * Math.sin(a) * Math.cos(e),
+          LIGHT_TARGET[1] + d * Math.sin(e),
+          LIGHT_TARGET[2] + d * Math.cos(a) * Math.cos(e)];
+}
+const norm = v => { const l = Math.hypot(v[0], v[1], v[2]); return [v[0]/l, v[1]/l, v[2]/l]; };
+const cross = (a, b) => [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+
+let scaleFull = Math.min(window.devicePixelRatio || 1, 1.5);
+let scaleLive = 0.5;
+let interacting = false, idleTimer = 0, dirty = true;
+
+function draw(scale) {
+  const r = cv.getBoundingClientRect();
+  const w = Math.max(2, Math.round(r.width * scale)), h = Math.max(2, Math.round(r.height * scale));
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  gl.viewport(0, 0, w, h);
+
+  let tgt = CAM_TARGET[S.view];
+  if (S.view === "wide") {
+    const l = lightPos();
+    tgt = [LIGHT_TARGET[0] + (l[0]-LIGHT_TARGET[0])*0.4, -0.6 + (l[1]+0.6)*0.3, LIGHT_TARGET[2] + (l[2]-LIGHT_TARGET[2])*0.4];
+  }
+  const cp = [tgt[0] + S.camD * Math.sin(S.camYaw) * Math.cos(S.camPitch),
+              tgt[1] + S.camD * Math.sin(S.camPitch),
+              tgt[2] + S.camD * Math.cos(S.camYaw) * Math.cos(S.camPitch)];
+  const f = norm([tgt[0]-cp[0], tgt[1]-cp[1], tgt[2]-cp[2]]);
+  const rr = norm(cross(f, [0,1,0]));
+  const uu = cross(rr, f);
+  const lp = lightPos();
+  const lr = S.size / 2 / 10;
+  const P0 = 1.0;
+  const power = P0 * Math.pow(2, S.pow) * (S.comp ? S.dist * S.dist : 1);
+  const sk = SKINS[S.skin];
+
+  gl.uniform2f(U.uRes, w, h);
+  gl.uniform3fv(U.uCamPos, cp); gl.uniform3fv(U.uCamR, rr); gl.uniform3fv(U.uCamU, uu); gl.uniform3fv(U.uCamF, f);
+  gl.uniform1f(U.uTanHalf, Math.tan(FOV[S.view] * DEG / 2));
+  gl.uniform3fv(U.uLightPos, lp);
+  gl.uniform1f(U.uLightR, lr);
+  gl.uniform1f(U.uPower, power);
+  gl.uniform1f(U.uAmb, (S.amb / 100) * 0.55);
+  gl.uniform1f(U.uClay, sk.css === null ? 1 : 0);
+  gl.uniform1f(U.uZebra, S.zebra ? 1 : 0);
+  gl.uniform2f(U.uYawCS, Math.cos(S.yaw * DEG), Math.sin(S.yaw * DEG));
+  gl.uniform2f(U.uTiltCS, Math.cos(S.tilt * DEG), Math.sin(S.tilt * DEG));
+  gl.uniform3fv(U.uSkin, sk.lin);
+  gl.uniform1f(U.uFace, S.face);
+  gl.uniform3f(U.uFW, S.face === 0 ? 1 : 0, S.face === 1 ? 1 : 0, S.face === 2 ? 1 : 0);
+  gl.uniform3fv(U.uHair, FACES[S.face].hair);
+  gl.uniform1f(U.uShowLight, S.view === "wide" ? 1 : 0);
+  const t0 = performance.now();
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  return t0;
+}
+
+function frame() {
+  requestAnimationFrame(frame);
+  if (!dirty) return;
+  dirty = false;
+  const scale = interacting ? scaleLive : scaleFull;
+  const t0 = performance.now();
+  draw(scale);
+  if (interacting) {
+    gl.finish();
+    const dt = performance.now() - t0;
+    if (dt > 45 && scaleLive > 0.28) scaleLive *= 0.85;
+    else if (dt < 14 && scaleLive < 0.75) scaleLive *= 1.08;
+  }
+}
+function touch() {
+  interacting = true; dirty = true;
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => { interacting = false; dirty = true; }, 180);
+}
+requestAnimationFrame(frame);
+new ResizeObserver(() => { dirty = true; drawPlan(); }).observe(cv);
+
+/* ---------- pattern naming ---------- */
+const PAT = {
+  flat:      ["Flat front light", "Light on the lens axis at eye level. Shadows almost vanish and the face's contours flatten."],
+  butterfly: ["Butterfly", "Light high and centred over the lens. Watch for the small butterfly shadow under the nose and the hollows under the cheekbones."],
+  loop:      ["Loop", "The nose shadow drops into a small loop toward the corner of the mouth without joining the cheek shadow."],
+  rembrandt: ["Rembrandt", "The nose shadow meets the cheek shadow, closing off a lit triangle under the shadow-side eye. Nudge the light to open or close it."],
+  lowside:   ["Low side light", "The light is at the side but near eye level. Raise it to 30–45° to drop the nose shadow onto the cheek and form a Rembrandt triangle."],
+  split:     ["Split", "The light is square to the side. The face divides down the line of the nose, one half lit and one in shadow."],
+  rim:       ["Rim light", "The light is behind the subject. Only the edge of the face, ear and hair catch it."],
+  under:     ["Under light", "Light from below eye level throws shadows upward, the campfire or horror look."],
+  top:       ["Top light", "Light almost straight overhead. The eye sockets fall into shadow and the nose shadow lands on the lip."]
+};
+function classify() {
+  let rel = S.az - S.yaw;
+  rel = ((rel + 540) % 360) - 180;
+  const a = Math.abs(rel), e = S.el;
+  let k;
+  if (a > 112) k = "rim";
+  else if (e < -12) k = "under";
+  else if (e > 68 && a < 62) k = "top";
+  else if (a <= 12) k = e >= 15 ? "butterfly" : "flat";
+  else if (a <= 34) k = "loop";
+  else if (a <= 64) k = e >= 18 ? "rembrandt" : "lowside";
+  else k = "split";
+  let side = "";
+  if (Math.abs(S.yaw) > 8 && (k === "loop" || k === "rembrandt" || k === "split" || k === "lowside")) {
+    side = Math.sign(rel) === Math.sign(-S.yaw) ? "Broad" : "Short";
+  }
+  const [name, desc] = PAT[k];
+  $("patName").textContent = name;
+  let eyebrow = "Pattern";
+  if (side === "Broad") eyebrow = "Pattern · broad lighting";
+  if (side === "Short") eyebrow = "Pattern · short lighting";
+  $("patEyebrow").textContent = eyebrow;
+  let d = desc;
+  if (side === "Broad") d += " The lit side faces the camera, which widens the face.";
+  if (side === "Short") d += " The shadow side faces the camera, which slims the face.";
+  $("patDesc").textContent = d;
+}
+
+/* ---------- readouts ---------- */
+function modifierName(cm) {
+  if (cm < 8) return ["Bare bulb / speedlight", "Crisp, defined shadows"];
+  if (cm < 28) return ["Reflector dish", "Hard with a short edge"];
+  if (cm < 48) return ["Beauty dish", "Punchy but rounded"];
+  if (cm < 85) return ["Medium softbox", "Gentle shadow edges"];
+  if (cm < 140) return ["Large octabox", "Wraps around the face"];
+  return ["Scrim / window", "Very soft, low contrast"];
+}
+const fmtSide = deg => {
+  const a = Math.round(deg);
+  if (a === 0) return "on axis";
+  const abs = Math.abs(a);
+  if (abs === 180) return "180° behind";
+  return `${abs}° camera ${a > 0 ? "R" : "L"}`;
+};
+function updateReadouts() {
+  const ang = 2 * Math.atan((S.size / 200) / S.dist) / DEG;
+  $("roAng").textContent = `${ang < 10 ? ang.toFixed(1) : Math.round(ang)}° wide`;
+  $("roAngS").textContent = ang < 4 ? "Hard shadow edge" : ang < 14 ? "Medium edge" : ang < 35 ? "Soft edge" : "Very soft";
+  const ev = S.comp ? S.pow : S.pow + Math.log2(1 / (S.dist * S.dist));
+  $("roEV").textContent = `${ev >= 0 ? "+" : "−"}${Math.abs(ev).toFixed(1)} EV`;
+  $("roEVS").textContent = S.comp ? "held constant" : "vs. power at 1 m";
+  const h = 0.075;
+  const fall = 2 * Math.log2((S.dist + h) / Math.max(S.dist - h, 0.05));
+  $("roFall").textContent = `${fall.toFixed(2)} stops`;
+  const [mn, ms] = modifierName(S.size);
+  $("roMod").textContent = mn; $("roModS").textContent = ms;
+
+  $("oAz").textContent = fmtSide(S.az);
+  $("oEl").textContent = `${S.el > 0 ? "+" : S.el < 0 ? "−" : ""}${Math.abs(S.el)}° ${S.el >= 0 ? "above" : "below"} eye`;
+  $("oDist").textContent = `${S.dist.toFixed(2)} m`;
+  $("oSize").textContent = `${Math.round(S.size)} cm`;
+  $("oPow").textContent = `${S.pow >= 0 ? "+" : "−"}${Math.abs(S.pow).toFixed(1)} EV`;
+  $("oYaw").textContent = S.yaw === 0 ? "to camera" : `${Math.abs(S.yaw)}° ${S.yaw > 0 ? "R" : "L"}`;
+  $("oTilt").textContent = S.tilt === 0 ? "level" : `${Math.abs(S.tilt)}° ${S.tilt > 0 ? "up" : "down"}`;
+  $("oAmb").textContent = `${S.amb}%`;
+  classify();
+}
+
+/* ---------- controls ---------- */
+const sliders = {
+  sAz:   { get: () => S.az,   set: v => S.az = v },
+  sEl:   { get: () => S.el,   set: v => S.el = v },
+  sDist: { get: () => S.dist, set: v => S.dist = v },
+  sSize: { get: () => sliderFromSize(S.size), set: v => S.size = sizeFromSlider(v) },
+  sPow:  { get: () => S.pow,  set: v => S.pow = v },
+  sYaw:  { get: () => S.yaw,  set: v => S.yaw = v },
+  sTilt: { get: () => S.tilt, set: v => S.tilt = v },
+  sAmb:  { get: () => S.amb,  set: v => S.amb = v }
+};
+function syncControls() {
+  for (const id in sliders) $(id).value = sliders[id].get();
+  $("tComp").checked = S.comp; $("tZebra").checked = S.zebra;
+  document.querySelectorAll(".swatch").forEach((b, i) => { b.classList.toggle("on", i === S.skin); b.setAttribute("aria-pressed", i === S.skin); });
+  [...$("faces").children].forEach((b, i) => { b.classList.toggle("on", i === S.face); b.setAttribute("aria-pressed", i === S.face); });
+  $("dmLight").setAttribute("aria-pressed", S.drag === "light");
+  $("dmCam").setAttribute("aria-pressed", S.drag === "camera");
+  $("vPortrait").setAttribute("aria-pressed", S.view === "portrait");
+  $("vWide").setAttribute("aria-pressed", S.view === "wide");
+  $("hint").textContent = S.drag === "light"
+    ? "Drag to move the light · Shift-drag to orbit · scroll to zoom"
+    : "Drag to orbit the camera · Shift-drag moves the light · scroll to zoom";
+  updateReadouts(); markPreset(); drawPlan();
+}
+function changed() { updateReadouts(); markPreset(); drawPlan(); touch(); }
+for (const id in sliders) {
+  $(id).addEventListener("input", e => { sliders[id].set(parseFloat(e.target.value)); changed(); });
+}
+$("tComp").addEventListener("change", e => { S.comp = e.target.checked; changed(); });
+$("tZebra").addEventListener("change", e => { S.zebra = e.target.checked; changed(); });
+
+const presetBox = $("presets");
+PRESETS.forEach(p => {
+  const b = document.createElement("button");
+  b.className = "chip"; b.type = "button"; b.textContent = p.name;
+  b.addEventListener("click", () => {
+    Object.assign(S, { az: p.az, el: p.el, dist: p.dist, size: p.size, yaw: p.yaw, tilt: 0 });
+    syncControls(); touch();
+  });
+  presetBox.appendChild(b);
+});
+function markPreset() {
+  [...presetBox.children].forEach((b, i) => {
+    const p = PRESETS[i];
+    const on = p.az === S.az && p.el === S.el && Math.abs(p.dist - S.dist) < 1e-6 && Math.abs(p.size - S.size) < 0.6 && p.yaw === S.yaw && S.tilt === 0;
+    b.classList.toggle("on", on);
+  });
+}
+const faceBox = $("faces");
+FACES.forEach((f, i) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "chip"; b.textContent = f.name;
+  b.addEventListener("click", () => { S.face = i; syncControls(); touch(); });
+  faceBox.appendChild(b);
+});
+const skinBox = $("skins");
+SKINS.forEach((s, i) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "swatch" + (s.css ? "" : " clay");
+  if (s.css) b.style.background = s.css;
+  b.title = s.css ? `${s.name} skin` : "Grey clay (shape only)";
+  b.setAttribute("aria-label", b.title);
+  b.addEventListener("click", () => { S.skin = i; syncControls(); touch(); });
+  skinBox.appendChild(b);
+});
+$("dmLight").addEventListener("click", () => { S.drag = "light"; syncControls(); });
+$("dmCam").addEventListener("click", () => { S.drag = "camera"; syncControls(); });
+function setView(v) {
+  S.view = v;
+  if (v === "wide") { S.camD = 25; S.camPitch = 0.38; S.camYaw = -0.8; }
+  else { S.camD = 10.5; S.camPitch = 0.03; S.camYaw = 0; }
+  syncControls(); touch();
+}
+$("vPortrait").addEventListener("click", () => setView("portrait"));
+$("vWide").addEventListener("click", () => setView("wide"));
+
+/* viewport drag */
+let drag = null;
+cv.addEventListener("pointerdown", e => {
+  cv.setPointerCapture(e.pointerId);
+  drag = { x: e.clientX, y: e.clientY, mode: (e.shiftKey ? (S.drag === "light" ? "camera" : "light") : S.drag) };
+  cv.classList.add("dragging");
+});
+cv.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.x = e.clientX; drag.y = e.clientY;
+  if (drag.mode === "light") {
+    let az = S.az + dx * 0.35;
+    az = ((az + 540) % 360) - 180;
+    S.az = Math.round(az);
+    S.el = Math.round(Math.max(-60, Math.min(85, S.el - dy * 0.3)));
+    // keep fractional motion smooth
+    drag.accAz = 0;
+    syncControls();
+  } else {
+    S.camYaw -= dx * 0.006;
+    S.camPitch = Math.max(-0.6, Math.min(1.1, S.camPitch + dy * 0.005));
+    drawPlan();
+  }
+  touch();
+});
+const endDrag = () => { drag = null; cv.classList.remove("dragging"); };
+cv.addEventListener("pointerup", endDrag);
+cv.addEventListener("pointercancel", endDrag);
+cv.addEventListener("wheel", e => {
+  e.preventDefault();
+  S.camD = Math.max(5, Math.min(60, S.camD * Math.exp(e.deltaY * 0.0012)));
+  drawPlan(); touch();
+}, { passive: false });
+
+/* ---------- floor plan ---------- */
+const plan = $("plan");
+const pctx = plan.getContext("2d");
+const MAXD = 4;
+function tok(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function planGeom() {
+  const w = plan.clientWidth || 300;
+  return { w, c: w / 2, R: w / 2 - 22 };
+}
+function drawPlan() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const { w, c, R } = planGeom();
+  if (plan.width !== Math.round(w * dpr)) { plan.width = Math.round(w * dpr); plan.height = Math.round(w * dpr); }
+  const g = pctx; g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, w);
+  const line = tok("--line"), muted = tok("--muted"), fg = tok("--fg"), acc = tok("--accent");
+  const mono = getComputedStyle(document.body).getPropertyValue("--font-data") || "monospace";
+
+  // distance rings
+  g.lineWidth = 1;
+  g.font = `10px ${tok("--font-data")}`;
+  g.textAlign = "left"; g.textBaseline = "middle";
+  [0.5, 1, 2, 3, 4].forEach(d => {
+    g.strokeStyle = line; g.beginPath(); g.arc(c, c, d / MAXD * R, 0, Math.PI * 2); g.stroke();
+    g.fillStyle = muted; g.fillText(`${d} m`, c + 3, c - d / MAXD * R - 6);
+  });
+  // angle spokes every 45°
+  g.strokeStyle = line; g.setLineDash([2, 4]);
+  for (let a = 0; a < 360; a += 45) {
+    const r = a * DEG; g.beginPath(); g.moveTo(c, c); g.lineTo(c + Math.sin(r) * R, c + Math.cos(r) * R); g.stroke();
+  }
+  g.setLineDash([]);
+
+  // camera
+  const cd = Math.min(S.camD / 10, MAXD) / MAXD * R;
+  const cx = c + Math.sin(S.camYaw) * cd, cy = c + Math.cos(S.camYaw) * cd;
+  g.save(); g.translate(cx, cy); g.rotate(-S.camYaw);
+  g.fillStyle = muted; g.fillRect(-9, -2, 18, 11); g.fillRect(-4, -6, 8, 5);
+  g.restore();
+  g.fillStyle = muted; g.textAlign = "center"; g.fillText("camera", cx, Math.min(w - 8, cy + 18));
+
+  // light beam + source
+  const la = S.az * DEG, ld = S.dist / MAXD * R;
+  const lx = c + Math.sin(la) * ld, ly = c + Math.cos(la) * ld;
+  const lrPx = Math.max(4, (S.size / 200) / MAXD * R);
+  const grad = g.createLinearGradient(lx, ly, c, c);
+  grad.addColorStop(0, acc + "88"); grad.addColorStop(1, acc + "00");
+  const perp = [Math.cos(la), -Math.sin(la)];
+  g.fillStyle = grad; g.beginPath();
+  g.moveTo(lx + perp[0] * lrPx, ly + perp[1] * lrPx);
+  g.lineTo(lx - perp[0] * lrPx, ly - perp[1] * lrPx);
+  g.lineTo(c, c); g.closePath(); g.fill();
+
+  // head
+  const ya = S.yaw * DEG;
+  g.save(); g.translate(c, c); g.rotate(-ya);
+  g.fillStyle = fg; g.beginPath(); g.ellipse(0, 0, 8, 10, 0, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.moveTo(-3, 9); g.lineTo(0, 14); g.lineTo(3, 9); g.fill();
+  g.restore();
+
+  // light
+  g.fillStyle = acc; g.strokeStyle = tok("--field"); g.lineWidth = 2;
+  g.beginPath(); g.arc(lx, ly, lrPx, 0, Math.PI * 2); g.fill(); g.stroke();
+  g.fillStyle = fg; g.textAlign = "center";
+  const ty = ly < c ? ly - lrPx - 9 : ly + lrPx + 11;
+  g.fillText(`${S.el >= 0 ? "↑" : "↓"}${Math.abs(S.el)}°`, lx, Math.max(8, Math.min(w - 8, ty)));
+}
+let pdrag = false;
+function planPick(e) {
+  const r = plan.getBoundingClientRect();
+  const { c, R } = planGeom();
+  const x = e.clientX - r.left - c, y = e.clientY - r.top - c;
+  S.az = Math.round(Math.atan2(x, y) / DEG);
+  S.dist = Math.round(Math.max(0.4, Math.min(MAXD, Math.hypot(x, y) / R * MAXD)) * 20) / 20;
+  syncControls(); touch();
+}
+plan.addEventListener("pointerdown", e => { pdrag = true; plan.setPointerCapture(e.pointerId); planPick(e); });
+plan.addEventListener("pointermove", e => { if (pdrag) planPick(e); });
+plan.addEventListener("pointerup", () => pdrag = false);
+plan.addEventListener("pointercancel", () => pdrag = false);
+
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawPlan);
+syncControls();
+window.__S = S;
+  /* fth-adapter */
+  if (window.fthStore) {
+    const keys = Object.keys(S).filter(k => typeof S[k] !== 'object' || S[k] === null);
+    fthStore.get('settings').then(o => {
+      if (o) { for (const k of keys) if (k in o && typeof o[k] === typeof S[k]) S[k] = o[k]; syncControls(); touch(); if (typeof drawPlan === 'function') drawPlan(); if (typeof drawProfile === 'function') drawProfile(); }
+      fthAutosave(() => { const o2 = {}; for (const k of keys) o2[k] = S[k]; fthStore.set('settings', o2); }, 800);
+    });
+  } window.__redraw = () => { dirty = true; };
+})();
+</script>
+
+</body>
+</html>

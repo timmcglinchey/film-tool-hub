@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shot List Builder</title>
+<style id="pageStyle">@page{size:A4 landscape;margin:9mm}</style>
+<style>
+:root{
+  --bg:var(--fth-bg);--panel:var(--fth-surface);--ink:var(--fth-text);--muted:var(--fth-muted);--line:var(--fth-line);--line2:var(--fth-line2);
+  --accent:var(--fth-accent-ink);--accent-soft:var(--fth-accent-soft);--good:var(--fth-good);--bad:var(--fth-bad);--warn:var(--fth-warn);
+  --field-hover:var(--fth-surface2);--head:var(--fth-bg2);--shadow:var(--fth-shadow-sm);
+  --sans:var(--fth-display);--mono:var(--fth-mono);
+}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.4 var(--sans)}
+button{font:inherit;color:inherit}
+.mono{font-family:var(--mono)}
+/* header (kit .fth-head) */
+.projtitle{flex:1 1 220px;min-width:160px;display:flex;align-items:center}
+.title-input{font:700 17px/1.2 var(--sans);border:1px solid transparent;background:transparent;color:inherit;padding:6px 8px;border-radius:8px;min-width:0;width:100%}
+.title-input:hover{background:var(--field-hover)}.title-input:focus{outline:none;border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.title-input::placeholder{color:var(--fth-faint)}
+.wrap{padding:16px 20px 60px;display:flex;flex-direction:column;gap:14px}
+.card{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--line);border-radius:var(--fth-radius);padding:14px 16px;box-shadow:var(--shadow)}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 12px}
+.field{display:flex;flex-direction:column;gap:3px;min-width:0}
+.field>span{font:500 10.5px/1.25 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.field input,.field select,.field textarea,.dlg input[type=text],.dlg input[type=number],.dlg select,.dlg textarea{border:1px solid var(--line2);background:var(--fth-bg2);color:inherit;font:inherit;padding:7px 10px;border-radius:8px;min-width:0;width:100%;transition:border-color .15s,box-shadow .15s}
+.field input:hover,.field select:hover,.field textarea:hover{border-color:var(--fth-line3)}
+.field input:focus,.field select:focus,.dlg input:focus,.dlg textarea:focus,.dlg select:focus{outline:none;border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--accent-soft)}
+details.proj>summary{cursor:pointer;font-weight:700;font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em;font-size:14px;list-style:none;display:flex;align-items:center;gap:8px}
+details.proj>summary::before{content:"▸";color:var(--muted);transition:transform .15s}
+details.proj[open]>summary::before{transform:rotate(90deg)}
+details.proj[open]>summary{margin-bottom:10px}
+.muted{color:var(--muted)}
+/* day tabs */
+.daybar{display:flex;align-items:flex-end;gap:4px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);border-bottom:0;background:transparent;padding:8px 14px;border-radius:9px 9px 0 0;cursor:pointer;font-weight:600;color:var(--muted)}
+.tab:hover{color:var(--ink);background:var(--field-hover)}
+.tab.on{background:var(--fth-surface);border-color:var(--line);color:var(--ink);box-shadow:inset 0 2px 0 var(--fth-cat)}
+.tab small{color:var(--fth-faint);font:500 11px var(--mono);margin-left:7px}
+.tab.ex{font-style:italic;color:var(--muted);border-style:dashed}
+.tab.ex.on{color:var(--ink)}
+.tab .exb{font-style:normal;font:500 9.5px var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-left:8px;padding:1px 6px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.exnote{margin:0 0 10px;padding:8px 12px;border-radius:7px;background:var(--accent-soft);font-size:13px}
+.dayfields{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px 12px;align-items:end}
+.dayactions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+/* summary */
+.stats{display:flex;flex-wrap:wrap;gap:8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:9px 13px;min-width:118px;box-shadow:var(--shadow)}
+.stat>span{display:block;font:500 10px/1.3 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.stat>b{display:block;font:600 18px/1.3 var(--mono)}
+.stat>small{color:var(--muted);font-size:12px}
+.stat.bad{border-color:var(--bad)}.stat.bad>b,.stat .bad{color:var(--bad)}
+.stat.good>b,.stat .good{color:var(--good)}
+.stat.live{border-color:var(--fth-accent-line);background:var(--accent-soft)}
+.toolrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:9px;overflow:hidden}
+.seg button{border:none;background:var(--panel);padding:7px 13px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted)}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:var(--ink);color:var(--bg);font-weight:600}
+.switch{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
+details.warn{background:color-mix(in srgb,var(--warn) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);border-radius:9px;padding:8px 12px}
+details.warn>summary{cursor:pointer;font-weight:600;color:var(--warn)}
+details.warn ul{margin:8px 0 2px;padding-left:18px}
+details.warn li{cursor:pointer;margin:3px 0}details.warn li:hover{text-decoration:underline}
+/* grid */
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:var(--fth-radius);background:var(--panel);max-height:78vh;box-shadow:var(--shadow)}
+table.grid{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
+.grid th{position:sticky;top:0;z-index:3;background:var(--head);font:500 10px/1.25 var(--mono);text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;padding:8px 7px;border-bottom:1px solid var(--line2);vertical-align:bottom;line-height:1.25}
+.grid td{border-bottom:1px solid var(--line);padding:2px;vertical-align:top;background:var(--panel)}
+.grid td input,.grid td select,.grid td textarea{width:100%;border:1px solid transparent;background:transparent;color:inherit;font:inherit;font-size:13.5px;padding:6px;border-radius:5px;min-width:0}
+.grid td input:hover,.grid td select:hover,.grid td textarea:hover{background:var(--field-hover)}
+.grid td input:focus,.grid td select:focus,.grid td textarea:focus{outline:none;border-color:var(--fth-accent);background:var(--panel)}
+.grid td select{cursor:pointer;text-overflow:ellipsis}
+.grid td textarea{resize:none;overflow:hidden;line-height:1.35;display:block;min-height:31px}
+.grid input[type=number]{font-family:var(--mono);text-align:right}
+.calc{display:block;padding:7px 6px;font:13px var(--mono);white-space:nowrap}
+.calc sup{font-size:9px;color:var(--muted);margin-left:1px}
+.grid td.h{width:56px;min-width:56px;color:var(--muted);padding:0}
+.grip{cursor:grab;display:inline-block;padding:8px 5px;user-select:none;font-size:14px;line-height:1}
+.grid td.act{white-space:nowrap;padding:3px 4px}
+.grid td.act button{border:none;background:transparent;cursor:pointer;padding:4px 5px;border-radius:5px;color:var(--muted);opacity:.35}
+.grid tr:hover td.act button,.grid td.act button:focus{opacity:1}
+.grid td.act button:hover{background:var(--field-hover);color:var(--ink)}
+.setupcell{display:flex;align-items:center}
+.eff{font:11px var(--mono);color:var(--good);white-space:nowrap;padding-right:4px;cursor:help}
+.flag{color:var(--warn);cursor:help;margin-left:3px;font-family:var(--sans)}
+.grid tr.tinted td{background:hsl(var(--h) 75% 50% / .07)}
+.grid tr.tinted td.h{box-shadow:inset 4px 0 0 hsl(var(--h) 65% 52%);background:linear-gradient(hsl(var(--h) 75% 50% / .07),hsl(var(--h) 75% 50% / .07)),var(--panel)}
+.grid th.h,.grid td.h{position:sticky;left:0;z-index:2;background:var(--panel)}
+.grid th.h{z-index:4;background:var(--head)}
+.hcell{display:flex;align-items:center;gap:0;padding:3px 2px 0 4px}
+.plus{border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;width:24px;height:24px;border-radius:6px;font-size:16px;line-height:1;padding:0}
+.plus:hover,.plus.on{border-color:var(--line2);background:var(--accent-soft);color:var(--accent)}
+.insmenu{position:fixed;z-index:50;background:var(--fth-surface2);border:1px solid var(--line2);border-radius:12px;box-shadow:var(--fth-shadow);padding:5px;min-width:190px;display:none}
+.insmenu.open{display:block}
+.insmenu .mh{font:500 10px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:6px 10px 4px}
+.insmenu button{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:none;background:transparent;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:13.5px}
+.insmenu button:hover,.insmenu button:focus{background:var(--fth-surface3);outline:none}
+.insmenu button span{width:18px;text-align:center}
+.grid tr.cut td>*:not(.act){opacity:.45}
+.grid tr.cut input:not([type=number]),.grid tr.cut textarea{text-decoration:line-through}
+.grid tr.got select[data-k=status]{color:var(--good);font-weight:600}
+.grid tr.cut select[data-k=status]{color:var(--bad);font-weight:600}
+.grid tr.nice select[data-k=priority]{color:var(--muted);font-style:italic}
+.grid tr.over [data-c=end],.grid tr.over [data-c=start]{color:var(--bad);font-weight:600}
+.grid tr.flash td{animation:flash 1.4s ease}
+@keyframes flash{0%,40%{background:var(--accent-soft)}}
+.grid tr.dragging{opacity:.4}
+.grid tr.drop-before td{box-shadow:inset 0 2px 0 var(--accent)}
+.grid tr.drop-after td{box-shadow:inset 0 -2px 0 var(--accent)}
+.grid tr.brk td{background:repeating-linear-gradient(-45deg,transparent 0 8px,var(--accent-soft) 8px 16px),var(--panel)}
+.brkin{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px;padding:3px 6px;position:sticky;left:58px;width:max-content}
+.brkin .bico{font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent)}
+.brkin input[data-k=label]{width:220px;font-weight:600}
+.brkin label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.brkin input[data-k=duration]{width:72px}
+.imgcell{position:relative;padding:3px}
+.imgcell img{display:block;max-width:100%;max-height:70px;border-radius:4px;cursor:zoom-in}
+.imgcell button{position:absolute;top:5px;right:5px;border:none;border-radius:50%;width:20px;height:20px;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;line-height:1;padding:0}
+.imgadd{border:1px dashed var(--line2);background:transparent;border-radius:5px;padding:6px 8px;margin:2px;cursor:pointer;color:var(--muted);font-size:12px;width:calc(100% - 4px)}
+.addbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sunhint{font-size:12px;color:var(--muted);margin-top:8px}
+.fitnote{font-size:13px;margin-top:10px;padding:8px 10px;border-radius:7px;background:var(--field-hover)}
+.fitnote.bad{background:color-mix(in srgb,var(--warn) 14%,var(--panel));color:var(--warn)}
+.dayfields .geo{align-self:end}
+.hint{font-size:12.5px;color:var(--muted)}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+footer.status{font:500 11px var(--mono);letter-spacing:.03em;color:var(--fth-faint)}
+/* dialogs */
+dialog.dlg{border:1px solid var(--line2);border-radius:16px;padding:0;background:var(--fth-surface);color:var(--ink);width:min(780px,94vw);max-height:88vh;box-shadow:var(--fth-shadow)}
+dialog.dlg::backdrop{background:rgba(5,6,8,.6);backdrop-filter:blur(3px)}
+.dlg-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--fth-surface);z-index:2}
+.dlg-head h2{margin:0;font-size:21px;font-weight:750;font-variation-settings:"wdth" 74;text-transform:uppercase;letter-spacing:.01em}
+.dlg-body{padding:14px 18px 18px}
+.coltable{width:100%;border-collapse:collapse}
+.coltable th{font:500 10px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:left;padding:4px 6px}
+.coltable td{padding:3px 6px;border-top:1px solid var(--line);vertical-align:middle}
+.coltable td.c{text-align:center}
+.coltable .mv button{border:none;background:transparent;cursor:pointer;color:var(--muted);padding:2px 4px}
+.coltable tr.off td{opacity:.6}
+.optgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.optgrid textarea{min-height:150px;font-size:13px;line-height:1.5;resize:vertical}
+.optgrid h3{margin:0 0 4px;font-size:13px}
+.setgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px 16px}
+.dlg h4{margin:20px 0 10px;font:500 10.5px var(--mono);text-transform:uppercase;letter-spacing:.1em;color:var(--fth-accent-ink)}
+.dlg h4:first-child{margin-top:0}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:13.5px}
+.check input{margin-top:3px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:500;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:100;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%)}
+#imgDlg img{max-width:100%;max-height:75vh;display:block;margin:auto}
+#printView{display:none}
+@media (max-width:700px){.wrap{padding-left:14px;padding-right:14px}}
+
+/* ---------- PRINT ---------- */
+@media print{
+  :root{color-scheme:light}
+  body{background:#fff;color:#111}
+  body>*:not(#printView){display:none!important}
+  #printView{display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+#printView{font-family:var(--sans);line-height:1.3;color:#111;font-size:8.5pt}
+#printView.measure{display:block;position:absolute;left:-20000px;top:0;visibility:hidden}
+#printView .pday+.pday{break-before:page}
+#printView .phead{display:flex;justify-content:space-between;gap:16px;border-bottom:1.5pt solid #111;padding-bottom:6pt;margin-bottom:6pt}
+#printView .ptitle{font-size:17pt;font-weight:700;line-height:1.1}
+#printView .psub{font-size:9pt;color:#555}
+#printView .pcrew{display:grid;grid-template-columns:repeat(3,auto);gap:1pt 14pt;font-size:8pt;align-content:start}
+#printView .pcrew b,#printView .pinfo b{font-weight:600;color:#666;text-transform:uppercase;font-size:6.5pt;letter-spacing:.05em;margin-right:4pt}
+#printView .pinfo{display:flex;flex-wrap:wrap;gap:3pt 16pt;margin-bottom:6pt;font-size:8.5pt}
+#printView .pinfo .big{font-size:11pt;font-weight:700}
+#printView table{width:100%;border-collapse:collapse}
+#printView th.lg{min-width:11em}#printView th.desc{min-width:17em}
+
+#printView thead{display:table-header-group}
+#printView tr{break-inside:avoid}
+#printView th,#printView td{border:.5pt solid #b9b9b9;padding:.3em .4em;vertical-align:top;text-align:left}
+#printView th{background:#ececec;font-size:.78em;text-transform:uppercase;letter-spacing:.03em;line-height:1.15}
+#printView td.n{font-family:var(--mono);white-space:nowrap}
+#printView tr.tinted td{background:hsl(var(--h) 75% 50% / .10)}
+#printView tr.tinted td:first-child{box-shadow:inset 3pt 0 0 hsl(var(--h) 65% 50%)}
+#printView tr.brk td{background:#f3ece3;font-weight:600}
+#printView tr.cut td{color:#999;text-decoration:line-through}
+#printView tr.over td.n.t{color:#b3261e;font-weight:700}
+#printView img{max-width:32mm;max-height:22mm;display:block}
+#printView .pwarn{margin-top:6pt;font-size:7.5pt;color:#7a4b00}
+#printView .pwarn ul{margin:2pt 0;padding-left:12pt}
+#printView .pfoot{margin-top:6pt;font-size:7.5pt;color:#555;display:flex;justify-content:space-between}
+#printView.density-comfortable th,#printView.density-comfortable td{padding:.45em .5em}
+</style>
+</head>
+<body>
+
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>03 · Visual Planning</span><h1 class="fth-title">Shot List Builder</h1></div>
+  <span class="fth-vsep"></span>
+  <div class="projtitle"><input class="title-input" data-p="title" placeholder="Untitled project" aria-label="Project title"></div>
+  <div class="fth-actions">
+    <button class="fth-btn ghost" data-open="colDlg">Columns</button>
+    <button class="fth-btn ghost" data-open="optDlg">Dropdowns</button>
+    <button class="fth-btn ghost" data-open="setDlg">Settings</button>
+    <span class="fth-vsep"></span>
+    <button class="fth-btn" id="btnImport" title="Import a .csv or .xlsx shot list">Import</button>
+    <button class="fth-btn" id="btnOpen" title="Open a shot list file">Open file</button>
+    <button class="fth-btn" id="btnSave" title="Download this shot list as a file">Download file</button>
+    <button class="fth-btn" id="btnCSV">Export CSV</button>
+    <span class="fth-vsep"></span>
+    <button class="fth-btn ghost" id="btnNew">New</button>
+    <button class="fth-btn primary" id="btnPDF">Export PDF</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <details class="card proj" id="projCard">
+    <summary>Project details <span class="muted" id="projSummary" style="font-weight:400"></span></summary>
+    <div class="fields">
+      <label class="field"><span>Production company</span><input data-p="company"></label>
+      <label class="field"><span>Director</span><input data-p="director"></label>
+      <label class="field"><span>DP</span><input data-p="dp"></label>
+      <label class="field"><span>1st AD</span><input data-p="ad"></label>
+      <label class="field"><span>Producer</span><input data-p="producer"></label>
+      <label class="field"><span>Main location</span><input data-p="location"></label>
+      <label class="field" style="grid-column:1/-1"><span>Notes for the PDF header</span><input data-p="notes" placeholder="e.g. Parking at rear, unit base in car park"></label>
+    </div>
+  </details>
+
+  <div>
+    <div class="daybar" id="tabs"></div>
+    <div class="card" style="border-top-left-radius:0">
+      <div class="exnote" id="exNote" hidden><b>Example day.</b> This is a sample to show how the builder works. It's left out of exports and saved files unless you turn that on in Settings. You can edit it freely or delete it.</div>
+      <div class="dayfields">
+        <label class="field"><span>Day name</span><input data-d="name"></label>
+        <label class="field"><span>Shoot date</span><input type="date" data-d="date"></label>
+        <label class="field"><span>Call time</span><input type="time" data-d="call"></label>
+        <label class="field"><span>Planned wrap</span><input type="time" data-d="wrap"></label>
+        <label class="field"><span>Sun times for</span><select data-d="sunPlace" id="sunPlace"></select></label>
+        <label class="field sunCustom"><span>Latitude</span><input type="number" step="0.0001" data-d="lat" placeholder="51.5074"></label>
+        <label class="field sunCustom"><span>Longitude</span><input type="number" step="0.0001" data-d="lon" placeholder="-0.1278"></label>
+        <button class="fth-btn geo" id="geoBtn" title="Use this device's location">📍 My location</button>
+        <label class="field"><span>Sunrise</span><input type="time" data-d="sunrise"></label>
+        <label class="field"><span>Sunset</span><input type="time" data-d="sunset"></label>
+      </div>
+      <div class="sunhint" id="sunHint"></div>
+      <div class="dayactions">
+        <button class="fth-btn" id="dayDup">Duplicate day</button>
+        <button class="fth-btn danger" id="dayDel">Delete day</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div id="warnBox"></div>
+
+  <div class="toolrow">
+    <div class="seg" id="viewSeg">
+      <button data-view="shooting">Shooting order</button>
+      <button data-view="script">Script order</button>
+    </div>
+    <label class="switch"><input type="checkbox" id="liveToggle"> Live tracking on the day</label>
+  </div>
+
+  <div class="tablewrap" id="tablewrap">
+    <table class="grid" id="grid"><thead></thead><tbody id="tbody"></tbody></table>
+  </div>
+
+  <div class="addbar" id="addbar">
+    <button class="fth-btn primary" data-add="shot">＋ New shot</button>
+    <button class="fth-btn" data-add="move">⇄ Company move</button>
+    <button class="fth-btn" data-add="break">☕ Break</button>
+    <button class="fth-btn" data-add="lunch">🍽 Lunch</button>
+    <button class="fth-btn" data-add="dinner">🍽 Dinner</button>
+    <span class="hint" id="hint"></span>
+  </div>
+  <footer class="status" id="saveState"></footer>
+</main>
+
+<div id="printView"></div>
+<div class="insmenu" id="insMenu" role="menu">
+  <div class="mh">Insert below</div>
+  <button data-ins="shot"><span>🎬</span>Shot</button>
+  <button data-ins="move"><span>⇄</span>Company move</button>
+  <button data-ins="break"><span>☕</span>Break</button>
+  <button data-ins="lunch"><span>🍽</span>Lunch</button>
+  <button data-ins="dinner"><span>🍽</span>Dinner</button>
+</div>
+
+<!-- Columns -->
+<dialog class="dlg" id="colDlg">
+  <div class="dlg-head"><h2>Columns</h2><button class="fth-btn ghost" data-close>Done</button></div>
+  <div class="dlg-body">
+    <p class="muted" style="margin-top:0">Choose what shows on screen and what prints on the PDF separately. Change any editable column to a dropdown, rename it, or reorder with the arrows.</p>
+    <table class="coltable"><thead><tr><th></th><th>Column</th><th class="c">Show</th><th class="c">Print</th><th>Type</th><th></th></tr></thead><tbody id="colList"></tbody></table>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button class="fth-btn" id="colAdd">＋ Add custom column</button>
+      <button class="fth-btn ghost" id="colAll">Show all</button>
+      <button class="fth-btn ghost" id="colReset">Reset to default</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Dropdowns -->
+<dialog class="dlg" id="optDlg" style="width:min(960px,94vw)">
+  <div class="dlg-head"><h2>Dropdown options</h2><button class="fth-btn ghost" data-close>Done</button></div>
+  <div class="dlg-body">
+    <p class="muted" style="margin-top:0">One option per line. You can also pick “＋ Add option…” straight from any dropdown in the table.</p>
+    <div class="optgrid" id="optList"></div>
+  </div>
+</dialog>
+
+<!-- Settings -->
+<dialog class="dlg" id="setDlg">
+  <div class="dlg-head"><h2>Settings</h2><button class="fth-btn ghost" data-close>Done</button></div>
+  <div class="dlg-body" id="setBody">
+    <h4>Scheduling</h4>
+    <div class="setgrid">
+      <label class="check" style="grid-column:1/-1"><input type="checkbox" data-s="smart"> <span><b>Lighting-aware setup times.</b> When a shot uses the same lighting setup as the shot before it, its setup time is capped at a shorter reset time.</span></label>
+      <label class="field"><span>Same setup (e.g. 4.1 → 4.1), mins</span><input type="number" min="0" data-s="sameMins"></label>
+      <label class="field"><span>Related setup (e.g. 4.1 → 4.2), mins</span><input type="number" min="0" data-s="relMins"></label>
+      <label class="field"><span>Warn after this many hours without a break (0 = off)</span><input type="number" min="0" step="0.5" data-s="breakHrs"></label>
+      <label class="field"><span>Time zone for sunrise / sunset</span><select data-s="tz" id="tzSel"></select></label>
+    </div>
+    <h4>Look</h4>
+    <div class="setgrid">
+      <label class="field"><span>Colour-code rows by</span><select data-s="colourBy"><option value="none">Nothing</option><option value="lighting">Lighting setup</option><option value="intext">INT / EXT</option><option value="location">Location</option><option value="scene">Scene</option></select></label>
+    </div>
+    <h4>PDF export</h4>
+    <div class="setgrid">
+      <label class="field"><span>Paper</span><select data-s="paper"><option>A4</option><option>A3</option><option value="letter">US Letter</option><option value="legal">US Legal</option></select></label>
+      <label class="field"><span>Orientation</span><select data-s="orient"><option value="landscape">Landscape</option><option value="portrait">Portrait</option></select></label>
+      <label class="field"><span>Text size</span><select data-s="density"><option value="compact">Standard</option><option value="comfortable">Larger</option></select></label>
+      <label class="field"><span>Days to include</span><select data-s="printDays"><option value="current">Current day only</option><option value="all">All days</option></select></label>
+      <label class="check"><input type="checkbox" data-s="printCut"> Include cut shots</label>
+      <label class="check"><input type="checkbox" data-s="printImages"> Include reference images</label>
+      <label class="check"><input type="checkbox" data-s="printWarnings"> Include scheduling warnings</label>
+      <label class="check"><input type="checkbox" data-s="exportExample"> Include the example day in exports and saved files</label>
+      <button class="fth-btn" id="restoreEx" type="button">Restore example day</button>
+    </div>
+    <div class="fitnote" id="fitNote"></div>
+    <p class="muted" style="margin-bottom:0">The PDF always shrinks to fit every printed column across the page. Choose which columns print in <b>Columns → Print</b>.</p>
+  </div>
+</dialog>
+
+<dialog class="dlg" id="imgDlg" style="width:auto;max-width:94vw">
+  <div class="dlg-head"><h2>Reference</h2><button class="fth-btn ghost" data-close>Close</button></div>
+  <div class="dlg-body"><img alt=""></div>
+</dialog>
+
+<input type="file" id="fileImport" accept=".csv,.tsv,.xlsx,.xls" hidden>
+<input type="file" id="fileOpen" accept=".json,.shotlist" hidden>
+<input type="file" id="fileImg" accept="image/*" hidden>
+<div class="toast" id="toast"></div>
+
+<script>
+(()=>{
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const uid=()=>Math.random().toString(36).slice(2,10);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{const n=parseFloat(v);return isFinite(n)&&n>0?n:0};
+const pad=n=>String(n).padStart(2,'0');
+const parseT=s=>{const m=/^(\d{1,2}):(\d{2})/.exec(s||'');return m?(+m[1])*60+(+m[2]):null};
+const fmt=m=>m==null?'—':`${pad(Math.floor(m/60)%24)}:${pad(Math.round(m)%60)}`;
+const fmtH=m=>m==null?'—':fmt(m)+(m>=1440?'<sup>+1</sup>':'');
+const fmtDur=m=>{m=Math.round(m);const h=Math.floor(m/60),r=m%60;return h?(r?`${h}h ${r}m`:`${h}h`):`${r}m`};
+const STORE='shot-list-builder-v1';
+
+const FIXED={status:['To do','Got it','Cut'],priority:['Must have','Nice to have']};
+const LOCKED=new Set(['shootingOrder','scriptOrder','setup','shoot','start','end','status','priority','image']);
+const COLS=[
+ ['scene','Scene','text',1,56],['shot','Shot','text',1,52],
+ ['shootingOrder','Shoot order','computed',1,62],['scriptOrder','Script order','computed',1,62],
+ ['lighting','Lighting setup','text',1,72],['intExt','INT / EXT','select',1,96],['tod','Time of day','select',1,104],
+ ['description','Shot description','long',1,270],['lens','Lens / focal length','select',1,124],
+ ['size','Shot size','select',1,108],['angle','Camera angle','select',1,114],['movement','Camera movement','select',1,128],
+ ['grip','Grip gear','select',1,138],['location','Location','select',1,120],['characters','Characters','text',1,150],
+ ['sound','Sound notes','long',1,140],['notes','Notes','long',1,230],
+ ['camera','Camera','select',0,76],['fps','Frame rate','select',0,84],['filters','Filters / ND','select',0,128],
+ ['soundType','Sound type','select',0,104],['props','Props','text',0,140],['wardrobe','Wardrobe / make-up','text',0,150],
+ ['vfx','VFX','select',0,116],['takes','Est. takes','number',0,66],['pages','Script pages','text',0,72],
+ ['storyboard','Storyboard ref','text',0,92],['image','Reference image','image',0,120],
+ ['priority','Priority','select',1,116],['setup','Setup (mins)','number',1,86],['shoot','Shoot (mins)','number',1,72],
+ ['start','Start shot at','computed',1,84],['end','End','computed',1,72],['status','Status','select',1,98],
+].map(([key,label,type,v,w])=>({key,label,type,visible:!!v,print:!!v&&key!=='status',w}));
+
+const DEFAULT_OPTIONS={
+ intExt:['INT','EXT','INT/EXT','EXT/INT'],
+ tod:['Day','Night','Morning','Afternoon','Dawn','Dusk','Golden hour'],
+ lens:['DZO 21mm','16mm','24mm','35mm','50mm','85mm','100mm macro','24–70mm zoom','70–200mm zoom'],
+ size:['Extreme wide','Wide','Full Shot','Medium wide','Mid Shot','M/MCU','MCU','MCU/CU','CU','ECU','Insert','Two shot','OTS','POV'],
+ angle:['Eye level','Low angle','High angle','Dutch','Overhead','Ground level','Shoulder level'],
+ movement:['Static','Pan','Tilt','Dolly Left','Dolly Right','Push in','Slow push in','Pull out','Tracking','Handheld','Crane / jib','Zoom','Rack focus'],
+ grip:['Tripod','Dana Dolly','Tilta Float/Gimbal','Shoulder Rig','Slider','Jib','Hi-hat','Car mount'],
+ location:[],
+ camera:['A','B','A + B','C'],
+ fps:['23.976','24','25','48','50','60','100','120'],
+ filters:['None','ND 0.3','ND 0.6','ND 0.9','ND 1.2','Variable ND','Black Pro-Mist 1/8','Black Pro-Mist 1/4','Polariser'],
+ soundType:['Sync','MOS','Wild track','VO','Playback'],
+ vfx:['None','Clean plate','Screen replace','Comp','Clean-up'],
+};
+const DEFAULT_SETTINGS={exportExample:false,tz:'Europe/London',smart:true,sameMins:5,relMins:15,breakHrs:6,colourBy:'lighting',paper:'A4',orient:'landscape',density:'compact',printDays:'current',printCut:false,printImages:true,printWarnings:true};
+
+const newShot=()=>({id:uid(),type:'shot',status:'To do',priority:'Must have',setup:15,shoot:10});
+const KINDS={break:{type:'break',label:'Break',duration:15,icon:'☕',name:'Break'},lunch:{type:'break',label:'Lunch',duration:30,icon:'🍽',name:'Lunch'},dinner:{type:'break',label:'Dinner',duration:30,icon:'🍽',name:'Dinner'},move:{type:'move',label:'Company move',duration:30,icon:'⇄',name:'Company move'}};
+const newBreak=k=>({id:uid(),type:KINDS[k].type,kind:k,label:KINDS[k].label,duration:KINDS[k].duration});
+const kindOf=r=>r.kind&&KINDS[r.kind]?r.kind:r.type==='move'?'move':/lunch/i.test(r.label)?'lunch':/dinner|supper/i.test(r.label)?'dinner':'break';
+const newDay=n=>({id:uid(),name:n,date:'',call:'08:00',wrap:'18:00',sunPlace:'london',lat:'',lon:'',sunrise:'',sunset:'',rows:[newShot()]});
+
+/* ---------- sunrise / sunset (NOAA sunrise equation) ---------- */
+const PLACES=[['london','London',51.5074,-0.1278],['birmingham','Birmingham',52.4862,-1.8904],['bristol','Bristol',51.4545,-2.5879],['brighton','Brighton',50.8225,-0.1372],['cardiff','Cardiff',51.4816,-3.1791],['plymouth','Plymouth',50.3755,-4.1427],['norwich','Norwich',52.6309,1.2974],['manchester','Manchester',53.4808,-2.2426],['liverpool','Liverpool',53.4084,-2.9916],['leeds','Leeds',53.8008,-1.5491],['newcastle','Newcastle',54.9783,-1.6178],['belfast','Belfast',54.5973,-5.9301],['glasgow','Glasgow',55.8642,-4.2518],['edinburgh','Edinburgh',55.9533,-3.1883],['aberdeen','Aberdeen',57.1497,-2.0943],['inverness','Inverness',57.4778,-4.2247]];
+function sunTimes(iso,lat,lon){
+ const rad=Math.PI/180, J=Date.parse(iso+'T12:00:00Z')/864e5+2440587.5;
+ const n=Math.ceil(J-2451545+0.0008), Js=n-lon/360;
+ const M=((357.5291+0.98560028*Js)%360+360)%360;
+ const C=1.9148*Math.sin(M*rad)+0.02*Math.sin(2*M*rad)+0.0003*Math.sin(3*M*rad);
+ const L=(M+C+180+102.9372)%360;
+ const Jt=2451545+Js+0.0053*Math.sin(M*rad)-0.0069*Math.sin(2*L*rad);
+ const sd=Math.sin(L*rad)*Math.sin(23.4397*rad), cd=Math.cos(Math.asin(sd));
+ const cw=(Math.sin(-0.833*rad)-Math.sin(lat*rad)*sd)/(Math.cos(lat*rad)*cd);
+ if(cw>1)return {polar:'night'}; if(cw<-1)return {polar:'day'};
+ const w=Math.acos(cw)/rad/360, toMs=j=>(j-2440587.5)*864e5;
+ return {rise:toMs(Jt-w),set:toMs(Jt+w)};
+}
+const tzTime=(ms,tz)=>{try{return new Intl.DateTimeFormat('en-GB',{timeZone:tz,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(ms)}catch(e){return new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(ms)}};
+const todayIn=tz=>{try{return new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())}catch(e){return new Date().toISOString().slice(0,10)}};
+function sunCoords(d){if(d.sunPlace==='custom'){const la=parseFloat(d.lat),lo=parseFloat(d.lon);return isFinite(la)&&isFinite(lo)?[la,lo,`${la.toFixed(3)}, ${lo.toFixed(3)}`]:null}const p=PLACES.find(x=>x[0]===d.sunPlace);return p?[p[2],p[3],p[1]]:null}
+function updateSun(d){
+ if(d.sunPlace==='manual'){d._sunNote='Entered manually';return}
+ const c=sunCoords(d);if(!c){d._sunNote='Enter a latitude and longitude';return}
+ const tz=state.settings.tz||'Europe/London',iso=d.date||todayIn(tz),t=sunTimes(iso,c[0],c[1]);
+ if(t.polar){d.sunrise='';d.sunset='';d._sunNote=t.polar==='day'?'The sun doesn\u2019t set on this date':'The sun doesn\u2019t rise on this date';return}
+ d.sunrise=tzTime(t.rise,tz);d.sunset=tzTime(t.set,tz);
+ const ds=new Date(iso+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+ d._sunNote=`Calculated for ${c[2]} on ${ds} (${tz.replace(/_/g,' ')})${d.date?'':' \u2014 using today\u2019s date until you set a shoot date'}`;
+}
+
+function sampleDay(){
+ const K=['scene','shot','lighting','intExt','tod','description','size','angle','movement','grip','characters','notes','setup','shoot'];
+ const D=[
+  [2,1,'3','INT','Night','Boxer enters into Bet Shop, walks past a desperate gambler','Mid Shot','Low angle?','Tracking','Tilta Float/Gimbal','Boxer, Bookie, Extras','Following behind Boxer, pan to gamblers he sees',20,20],
+  [2,2,'4.1','INT','Night',"Boxer reaches Bookie's desk, pulls cash and ID out and sets on desk",'Mid Shot','Low angle','Tilt','Tripod','Boxer, Bookie, Extras',"Dirty single, low angle from Bookie's shoulder, tilt and pull focus on ID",20,20],
+  [2,3,'4.1','INT','Night','Boxer begins to place bet until noticing poster on the wall','MCU','','Slow push in','Dana Dolly','Boxer, Bookie, Extras','Clean single',10,10],
+  [2,5,'4.3','INT','Night','Boxer spots poster on the wall','MCU','','Push in','Dana Dolly','Boxer','Single shot, turning point in story',10,10],
+  [2,10,'4.1','INT','Night',"Boxer thinking, ignoring Bookie's questioning, play out until end",'MCU/CU','','Handheld','Dana Dolly','Boxer, Bookie, Extras','Beginning of handheld, to build from start to end of shot',10,10],
+  [2,4,'4.2','INT','Night','Bookie takes bet info until Boxer pauses','Mid Shot','High angle','Slow push in','Dana Dolly','Boxer, Bookie, Extras','Dirty single, high angle on Bookie',10,10],
+  [2,11,'4.2','INT','Night','Bookie questionning Boxer on his bet, play out until end','MCU/CU','','Handheld','Shoulder Rig','Boxer, Bookie, Extras','From point Boxer becomes distracted by poster',10,10],
+  [2,13,'4.4','INT','Night',"Bookie's hands taking cash & ID, open ledger, follow line with finger to read betting odds",'CU','','Static','Tripod','Bookie','General close ups/B Roll',10,10],
+  'DINNER',
+  [2,6,'5','INT','Night','Poster on the wall','MCU','','Push in','Dana Dolly','None','Loose POV',10,5],
+  [2,9,'7.2','INT','Night','Boxer turning to look outside, first looking at Kingpin, then towards the car to see Jane','CU','','Handheld','Shoulder Rig','Boxer, Bookie, Extras','Careful with eye line looking between Kingpin and Jane',10,10],
+  [2,8,'7.1','EXT/INT','Night','Camera looking in at Boxer, Boxer ignoring Bookie, turning around etc. play out until end','Full Shot','','Push in','Dana Dolly','Boxer, Bookie, Extras','OTS. Could tent around door if still too bright',30,10],
+  [2,7,'6','INT/EXT','Night','Camera looking out at Kingpin, Kingpin staring in at Boxer, sceptical, play out until end','Mid Shot','','Push in','Dana Dolly','Boxer, Bookie, Extras','Single of Kingpin from inside (careful of reflections), car in background',30,10],
+  [1,2,'2.2','EXT','Night','Shot: Kingpin waits at door for Boxer, play out Scene 1','M/MCU','','Slow push in','Dana Dolly','Kingpin','Clean single. Could try left heavy framing.',20,10],
+  [1,3,'2.2','EXT','Night','Reverse Shot: Boxer reaches door of Bet Shop, play out Scene 1','M/MCU','','Slow push in','Dana Dolly','Boxer','Clean single. Could try right heavy framing.',5,10],
+  [1,1,'1','EXT','Night','Car parked outside Bet Shop. Engine off, Kingpin out, then Boxer.','Wide','','Dolly Left','Dana Dolly','Kingpin, Boxer','Could see about wet down',30,10],
+  [2,12,'8','EXT/INT','Night','Jane in car emerging out of silhouette into street light','MCU/CU','','Push in','Dana Dolly','Jane','Sillhouette beforehand, could be tricky to pull off',30,10],
+ ];
+ const d=newDay('The Bet'); d.example=true; d.call='17:00'; d.wrap='01:00';
+ d.rows=D.map(a=>{ if(a==='DINNER')return newBreak('dinner');
+  const r=newShot(); K.forEach((k,i)=>r[k]=typeof a[i]==='number'&&k!=='setup'&&k!=='shoot'?String(a[i]):a[i]);
+  r.lens='DZO 21mm'; r.location='Base Foods'; return r;});
+ return d;
+}
+
+function freshState(withExample){
+ const d=newDay('Day 1');
+ return {v:1,project:{title:'',company:'',director:'',dp:'',ad:'',producer:'',location:'',notes:''},
+  settings:clone(DEFAULT_SETTINGS),columns:clone(COLS),options:clone(DEFAULT_OPTIONS),view:'shooting',activeDay:d.id,days:withExample?[d,sampleDay()]:[d]};
+}
+const expDays=()=>state.days.filter(d=>!d.example||state.settings.exportExample);
+const workDays=()=>state.days.filter(d=>!d.example);
+function migrate(s){
+ s.settings={...DEFAULT_SETTINGS,...s.settings}; s.project={...freshState(false).project,...s.project};
+ s.options={...clone(DEFAULT_OPTIONS),...s.options}; s.columns=s.columns||clone(COLS);
+ const have=new Set(s.columns.map(c=>c.key)); COLS.forEach(c=>{if(!have.has(c.key))s.columns.push({...clone(c),visible:false,print:false})});
+ if(!s.days||!s.days.length) s.days=[newDay('Day 1')];
+ s.days.forEach(d=>{if(!d.sunPlace)d.sunPlace='london';d.rows.forEach(r=>{if(r.type!=='shot'&&!r.kind)r.kind=kindOf(r)})});
+ if(!s.days.find(d=>d.id===s.activeDay)) s.activeDay=s.days[0].id;
+ s.view=s.view||'shooting'; return s;
+}
+let state; let live=false;
+try{const s=JSON.parse(localStorage.getItem(STORE)); state=s&&s.days?migrate(s):freshState(true);}catch(e){state=freshState(true);}
+state.days.forEach(updateSun);
+
+let saveTimer;
+function save(){
+ clearTimeout(saveTimer);
+ saveTimer=setTimeout(()=>{
+  try{localStorage.setItem(STORE,JSON.stringify(state,(k,v)=>k==='_sunNote'?undefined:v));$('#saveState').textContent=`Autosaved in this browser at ${fmt(new Date().getHours()*60+new Date().getMinutes())}. Use “Save file” to keep a copy or share it.`;}
+  catch(e){$('#saveState').innerHTML='<b style="color:var(--bad)">Browser storage is full (reference images take space). Use “Save file” to keep your work.</b>';}
+ },300);
+}
+function toast(msg,ms=3200){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms)}
+
+const day=()=>state.days.find(d=>d.id===state.activeDay)||state.days[0];
+const col=k=>state.columns.find(c=>c.key===k);
+const visCols=()=>state.columns.filter(c=>c.visible);
+const opts=c=>FIXED[c.key]||state.options[c.key]||(state.options[c.key]=[]);
+const findRow=id=>{for(const d of state.days){const r=d.rows.find(r=>r.id===id);if(r)return {d,r}}return {}};
+const major=l=>String(l??'').trim().split('.')[0].trim();
+const cmpScript=(a,b)=>String(a.scene??'').localeCompare(String(b.scene??''),undefined,{numeric:true})||String(a.shot??'').localeCompare(String(b.shot??''),undefined,{numeric:true});
+const shotLabel=r=>`Sc ${r.scene||'?'} · Sh ${r.shot||'?'}`;
+
+/* ---------- scheduling engine ---------- */
+function compute(d){
+ const S=state.settings,res={},warnings=[];
+ const call=parseT(d.call), noCall=call==null;
+ let cur=noCall?0:call; let wrap=parseT(d.wrap); if(wrap!=null&&!noCall&&wrap<=call) wrap+=1440;
+ const sr=parseT(d.sunrise), ss=parseT(d.sunset);
+ const tot={setup:0,shoot:0,brk:0,shots:0,cut:0,got:0,niceN:0,niceM:0,saved:0};
+ let prev=null,lastMaj=null,order=0,sinceBreak=0,warnedBreak=false; const seen=new Set();
+ for(const r of d.rows){
+  const o={flags:[]}; res[r.id]=o;
+  if(r.type!=='shot'){const dur=num(r.duration);o.start=cur;o.end=cur+dur;cur=o.end;tot.brk+=dur;
+   if(r.type==='break'){sinceBreak=0;warnedBreak=false}else sinceBreak+=dur; continue;}
+  o.order=++order;
+  if(r.status==='Cut'){o.cut=true;tot.cut++;continue;}
+  const setup=num(r.setup),shoot=num(r.shoot); let eff=setup;
+  const L=String(r.lighting??'').trim(), M=major(L);
+  if(S.smart&&prev&&L){const pL=String(prev.lighting??'').trim();
+   if(pL===L) eff=Math.min(setup,num(S.sameMins)); else if(M&&major(pL)===M) eff=Math.min(setup,num(S.relMins));}
+  o.setup=setup;o.eff=eff;o.setupStart=cur;o.start=cur+eff;o.end=o.start+shoot;cur=o.end;
+  tot.setup+=eff;tot.shoot+=shoot;tot.shots++;tot.saved+=setup-eff;
+  if(r.status==='Got it')tot.got++;
+  if(r.priority==='Nice to have'&&r.status!=='Got it'){tot.niceN++;tot.niceM+=eff+shoot}
+  if(M){if(lastMaj!==null&&M!==lastMaj&&seen.has(M))o.flags.push(`Goes back to lighting setup ${M}, which has already been struck`);seen.add(M);lastMaj=M;}
+  sinceBreak+=eff+shoot;
+  if(num(S.breakHrs)>0&&!warnedBreak&&sinceBreak>num(S.breakHrs)*60){o.flags.push(`Over ${S.breakHrs}h without a break`);warnedBreak=true;}
+  if(!noCall){
+   if(wrap!=null&&o.end>wrap){o.over=o.end-wrap;o.flags.push(`Ends ${fmtDur(o.over)} after planned wrap`);}
+   const io=String(r.intExt||'').toUpperCase(), tod=String(r.tod||'').toLowerCase().trim();
+   if(sr!=null&&ss!=null&&io.includes('EXT')){
+    const a=o.start%1440,b=o.end%1440,dark=t=>t<sr||t>=ss;
+    if(['day','morning','afternoon'].includes(tod)&&(dark(a)||dark(b)))o.flags.push(`Day exterior lands in the dark (sunrise ${fmt(sr)}, sunset ${fmt(ss)})`);
+    if(tod==='night'&&(!dark(a)||!dark(b)))o.flags.push(`Night exterior lands in daylight (sunset ${fmt(ss)})`);
+    if((tod==='dusk'||tod==='golden hour')&&(a<ss-60||a>ss+20))o.flags.push(`${r.tod} shot isn't near sunset (${fmt(ss)})`);
+    if(tod==='dawn'&&(a<sr-40||a>sr+30))o.flags.push(`Dawn shot isn't near sunrise (${fmt(sr)})`);
+   }
+  }
+  o.flags.forEach(f=>warnings.push({id:r.id,label:shotLabel(r),text:f}));
+  prev=r;
+ }
+ const scriptRank={}; d.rows.filter(r=>r.type==='shot').sort(cmpScript).forEach((r,i)=>scriptRank[r.id]=i+1);
+ return {res,warnings,tot,call,wrap,finish:cur,noCall,scriptRank,sr,ss};
+}
+
+/* ---------- colour ---------- */
+const HUES=[215,32,150,330,265,5,185,90,50,290,120,240];
+const hashHue=s=>{let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))>>>0;return HUES[h%HUES.length]};
+function hueFor(r){
+ const by=state.settings.colourBy;
+ if(by==='lighting'){const m=major(r.lighting);if(!m)return null;const n=parseInt(m,10);return isFinite(n)?HUES[(n-1+HUES.length*10)%HUES.length]:hashHue(m)}
+ if(by==='intext'){const io=String(r.intExt||'').toUpperCase().replace(/\./g,'');if(!io)return null;if(io.includes('/'))return 150;if(io.startsWith('EXT'))return 32;if(io.startsWith('INT'))return 215;return null}
+ if(by==='location')return r.location?hashHue(r.location):null;
+ if(by==='scene')return r.scene?hashHue('s'+r.scene):null;
+ return null;
+}
+
+/* ---------- table rendering ---------- */
+function selectHTML(c,v){
+ const o=opts(c),fixed=!!FIXED[c.key]; v=String(v??'');
+ let h=`<select data-k="${c.key}" aria-label="${esc(c.label)}">`;
+ if(!fixed)h+=`<option value="">—</option>`;
+ const list=(v===''||o.includes(v))?o:[...o,v];
+ list.forEach(x=>h+=`<option${x===v?' selected':''}>${esc(x)}</option>`);
+ if(!fixed)h+=`<option value="__add">＋ Add option…</option>`;
+ return h+'</select>';
+}
+function cellHTML(c,r){
+ const v=r[c.key]??'';
+ if(c.key==='setup')return `<div class="setupcell"><input type="number" min="0" step="5" data-k="setup" value="${esc(v)}" aria-label="Setup minutes"><span class="eff" data-c="eff"></span></div>`;
+ if(c.key==='start')return `<span class="calc" data-c="start"></span>`;
+ if(c.type==='computed')return `<span class="calc" data-c="${c.key}"></span>`;
+ switch(c.type){
+  case 'number':return `<input type="number" min="0" step="${c.key==='shoot'?5:1}" data-k="${c.key}" value="${esc(v)}" aria-label="${esc(c.label)}">`;
+  case 'long':return `<textarea rows="1" data-k="${c.key}" aria-label="${esc(c.label)}">${esc(v)}</textarea>`;
+  case 'select':return selectHTML(c,v);
+  case 'image':return r.image?`<div class="imgcell"><img src="${r.image}" alt="Reference" data-a="imgview"><button data-a="imgdel" title="Remove image">×</button></div>`:`<button class="imgadd" data-a="imgadd">＋ Image</button>`;
+  default:return `<input data-k="${c.key}" value="${esc(v)}" aria-label="${esc(c.label)}">`;
+ }
+}
+function displayRows(d){return state.view==='script'?d.rows.filter(r=>r.type==='shot').sort(cmpScript):d.rows}
+
+function renderTable(){
+ const d=day(),cols=visCols(),shooting=state.view==='shooting';
+ $('#grid thead').innerHTML=`<tr><th class="h" title="Drag ⠿ to reorder · ＋ to insert below"></th>${cols.map(c=>`<th style="min-width:${c.w}px;width:${c.w}px">${esc(c.label)}</th>`).join('')}<th></th></tr>`;
+ const grip=`<div class="hcell">${shooting?`<span class="grip" title="Drag to reorder">⠿</span>`:'<span style="width:14px"></span>'}<button class="plus" data-a="menu" title="Insert below" aria-haspopup="menu">＋</button></div>`;
+ const rows=displayRows(d);
+ $('#tbody').innerHTML=rows.length?rows.map(r=>{
+  if(r.type!=='shot')return `<tr class="brk" data-id="${r.id}"><td class="h">${grip}</td><td colspan="${cols.length}"><div class="brkin"><span class="bico">${KINDS[kindOf(r)].icon} ${KINDS[kindOf(r)].name}</span><input data-k="label" value="${esc(r.label)}" placeholder="${r.type==='move'?'Where to?':'Name'}" aria-label="Name"><label><input type="number" min="0" step="5" data-k="duration" value="${esc(r.duration)}" aria-label="Duration"> mins</label><span class="calc" data-c="window"></span></div></td><td class="act"><button data-a="del" title="Delete">✕</button></td></tr>`;
+  return `<tr data-id="${r.id}"><td class="h">${grip}</td>${cols.map(c=>`<td>${cellHTML(c,r)}</td>`).join('')}<td class="act"><button data-a="dup" title="Duplicate">⧉</button><button data-a="del" title="Delete">✕</button></td></tr>`;
+ }).join(''):`<tr><td colspan="${cols.length+2}" class="empty">No shots yet. Use “＋ New shot” below, or Import a spreadsheet.</td></tr>`;
+ $$('#tbody textarea').forEach(autosize);
+ $('#hint').textContent=shooting?'Use ＋ on any row to insert below it. Drag ⠿ to reorder. Times run top to bottom from the call time.':'Script order view: times still follow shooting order. Switch back to drag rows.';
+ recompute();
+}
+function autosize(t){t.style.height='auto';t.style.height=t.scrollHeight+2+'px'}
+
+let lastC=null;
+function recompute(){
+ const d=day(),C=compute(d); lastC=C;
+ $$('#tbody tr[data-id]').forEach(tr=>{
+  const r=d.rows.find(x=>x.id===tr.dataset.id); if(!r)return; const o=C.res[r.id]||{};
+  const set=(k,h)=>{const e=tr.querySelector(`[data-c="${k}"]`);if(e)e.innerHTML=h};
+  if(r.type!=='shot'){set('window',C.noCall?'Set a call time':`${fmtH(o.start)} – ${fmtH(o.end)}`);return;}
+  set('shootingOrder',o.order??'');set('scriptOrder',C.scriptRank[r.id]??'');
+  const showT=!(o.cut||C.noCall);
+  const fl=o.flags&&o.flags.length?`<span class="flag" title="${esc(o.flags.join('\n'))}">⚠</span>`:'';
+  set('start',showT?fmtH(o.start)+fl:'—');set('end',showT?fmtH(o.end):'—');
+  const e=tr.querySelector('[data-c="eff"]');
+  if(e){if(!o.cut&&o.eff<o.setup){e.textContent=`→${o.eff}`;e.title=`Setup capped to ${o.eff} mins because the previous shot uses the same or a related lighting setup. Turn off in Settings.`}else{e.textContent='';e.title=''}}
+  tr.classList.toggle('cut',!!o.cut);tr.classList.toggle('got',r.status==='Got it');
+  tr.classList.toggle('nice',r.priority==='Nice to have');tr.classList.toggle('over',!!o.over);
+  const h=hueFor(r);tr.classList.toggle('tinted',h!=null);if(h!=null)tr.style.setProperty('--h',h);
+ });
+ renderSummary(C);
+ $$('#tabs .tab').forEach(b=>{const dd=state.days.find(x=>x.id===b.dataset.day);if(dd)b.querySelector('small').textContent=dd.rows.filter(r=>r.type==='shot').length});
+}
+
+function renderSummary(C){
+ const t=C.tot,stats=[];
+ const st=(label,val,sub,cls='')=>`<div class="stat ${cls}"><span>${label}</span><b>${val}</b>${sub?`<small>${sub}</small>`:''}</div>`;
+ stats.push(st('Shots',t.shots,`${t.got} got · ${t.cut} cut`));
+ stats.push(st('Setup time',fmtDur(t.setup),t.saved?`${fmtDur(t.saved)} saved by shared setups`:''));
+ stats.push(st('Shooting time',fmtDur(t.shoot)));
+ stats.push(st('Breaks & moves',fmtDur(t.brk)));
+ if(C.noCall)stats.push(st('Projected wrap','—','Set a call time','bad'));
+ else{
+  let sub='',cls='';
+  if(C.wrap!=null){const diff=C.finish-C.wrap;sub=diff>0?`<span class="bad">${fmtDur(diff)} over</span> planned ${fmt(C.wrap)}`:`<span class="good">${fmtDur(-diff)} spare</span> before ${fmt(C.wrap)}`;cls=diff>0?'bad':'good'}
+  stats.push(st('Projected wrap',fmtH(C.finish),sub,cls));
+  stats.push(st('Shoot day',fmtDur(C.finish-C.call),`Call ${fmt(C.call)}`));
+ }
+ if(t.niceN)stats.push(st('Nice-to-haves',`${t.niceN}`,`${fmtDur(t.niceM)} you could drop`));
+ if(live&&!C.noCall)stats.push(liveStat(C));
+ $('#stats').innerHTML=stats.join('');
+ const w=C.warnings;
+ const wb=$('#warnBox'), wasOpen=wb.querySelector('details')?.open;
+ wb.innerHTML=w.length?`<details class="warn"${wasOpen?' open':''}><summary>⚠ ${w.length} scheduling warning${w.length>1?'s':''}</summary><ul>${w.map(x=>`<li data-goto="${x.id}"><b>${esc(x.label)}</b> — ${esc(x.text)}</li>`).join('')}</ul></details>`:'';
+}
+function liveStat(C){
+ const d=day(),now=new Date();let n=now.getHours()*60+now.getMinutes();
+ if(n<C.call-360)n+=1440;
+ const next=d.rows.find(r=>r.type==='shot'&&r.status==='To do');
+ const st=(val,sub,cls='')=>`<div class="stat live ${cls}"><span>Live · ${fmt(n)}</span><b>${val}</b><small>${sub}</small></div>`;
+ if(n<C.call)return st('Before call',`Call at ${fmt(C.call)}`);
+ if(!next)return st('All done ✓','Every shot is marked Got it or Cut','good');
+ const o=C.res[next.id],delta=n-o.setupStart;
+ const nx=`Next: ${esc(shotLabel(next))}, planned ${fmt(o.setupStart)}`;
+ if(Math.abs(delta)<=2)return st('On schedule',nx,'good');
+ if(delta>0)return st(`${fmtDur(delta)} behind`,`${nx} · new wrap ≈ ${fmt(C.finish+delta)}`,'bad');
+ return st(`${fmtDur(-delta)} ahead`,`${nx} · new wrap ≈ ${fmt(C.finish+delta)}`,'good');
+}
+
+/* ---------- project / day panels ---------- */
+function renderProject(){
+ $$('[data-p]').forEach(i=>i.value=state.project[i.dataset.p]||'');
+ const p=state.project;$('#projSummary').textContent=[p.company,p.director&&'Dir. '+p.director,p.dp&&'DP '+p.dp].filter(Boolean).join(' · ');
+ document.title=(p.title?p.title+' · ':'')+'Shot List Builder';
+}
+function renderTabs(){
+ const ord=[...workDays(),...state.days.filter(d=>d.example)];
+ $('#tabs').innerHTML=ord.map(d=>`<button class="tab${d.example?' ex':''}${d.id===state.activeDay?' on':''}" data-day="${d.id}"${d.example?' title="Example day — not included in exports"':''}>${esc(d.name||'Untitled')}<small></small>${d.example?'<span class="exb">Example</span>':''}</button>`).join('')+`<button class="tab" id="dayAdd" title="Add a shoot day">＋ Day</button>`;
+}
+function renderDay(){const d=day();$('#exNote').hidden=!d.example;updateSun(d);$$('[data-d]').forEach(i=>{if(i.id!=='sunPlace')i.value=d[i.dataset.d]||''});renderSun()}
+function renderSun(){
+ const d=day(),sel=$('#sunPlace');
+ sel.innerHTML=PLACES.map(p=>`<option value="${p[0]}">${p[1]}</option>`).join('')+`<option value="custom">Custom coordinates</option><option value="manual">Enter manually</option>`;
+ sel.value=d.sunPlace||'london';
+ $$('.sunCustom').forEach(f=>f.style.display=d.sunPlace==='custom'?'':'none');
+ $$('[data-d=sunrise],[data-d=sunset]').forEach(i=>{if(document.activeElement!==i)i.value=d[i.dataset.d]||''});
+ $('#sunHint').textContent=(d._sunNote||'')+(d.sunPlace!=='manual'?'. Typing a time switches this day to manual.':'');
+}
+$('#geoBtn').onclick=()=>{
+ if(!navigator.geolocation){toast('Location isn’t available in this browser');return}
+ toast('Finding your location…');
+ navigator.geolocation.getCurrentPosition(p=>{const d=day();d.sunPlace='custom';d.lat=p.coords.latitude.toFixed(4);d.lon=p.coords.longitude.toFixed(4);renderDay();recompute();save();toast('Sun times set for your current location')},()=>toast('Couldn’t get your location. Pick a city or enter coordinates instead.',4500),{timeout:10000});
+};
+function renderView(){$$('#viewSeg button').forEach(b=>b.classList.toggle('on',b.dataset.view===state.view))}
+function renderAll(){renderProject();renderTabs();renderDay();renderView();renderTable()}
+
+/* ---------- events: table ---------- */
+const tbody=$('#tbody');
+function onEdit(e){
+ const el=e.target,k=el.dataset.k;if(!k)return;const tr=el.closest('tr[data-id]');const {r}=findRow(tr.dataset.id);if(!r)return;
+ if(el.tagName==='SELECT'&&el.value==='__add'){
+  const c=col(k);const v=prompt(`Add a new option to “${c.label}”:`);
+  if(v&&v.trim()){const t=v.trim(),o=opts(c);if(!o.includes(t))o.push(t);r[k]=t}
+  renderTable();save();return;
+ }
+ r[k]=el.value; if(el.tagName==='TEXTAREA')autosize(el);
+ if(state.view==='script'&&(k==='scene'||k==='shot')&&e.type==='change'){renderTable();save();return}
+ recompute();save();
+}
+tbody.addEventListener('input',e=>{if(e.target.tagName!=='SELECT')onEdit(e)});
+tbody.addEventListener('change',e=>{if(e.target.tagName==='SELECT'||((e.target.dataset.k==='scene'||e.target.dataset.k==='shot')&&state.view==='script'))onEdit(e)});
+tbody.addEventListener('keydown',e=>{
+ if(e.key!=='Enter'||e.target.tagName!=='INPUT'||e.shiftKey)return;
+ const k=e.target.dataset.k;let tr=e.target.closest('tr').nextElementSibling;
+ while(tr&&!tr.querySelector(`[data-k="${k}"]`))tr=tr.nextElementSibling;
+ if(tr){e.preventDefault();tr.querySelector(`[data-k="${k}"]`).focus()}
+});
+let imgTarget=null;
+tbody.addEventListener('click',e=>{
+ const b=e.target.closest('[data-a]');if(!b)return;const tr=b.closest('tr[data-id]');const d=day();const i=d.rows.findIndex(r=>r.id===tr.dataset.id);const r=d.rows[i];
+ switch(b.dataset.a){
+  case 'del':if(r.type==='shot'&&(r.description||r.notes)&&!confirm(`Delete ${shotLabel(r)}?`))return;d.rows.splice(i,1);break;
+  case 'dup':{const c=clone(r);c.id=uid();c.status='To do';d.rows.splice(i+1,0,c);break}
+  case 'menu':openInsMenu(b,r.id);return;
+  case 'imgadd':imgTarget=r;$('#fileImg').value='';$('#fileImg').click();return;
+  case 'imgdel':delete r.image;break;
+  case 'imgview':$('#imgDlg img').src=r.image;$('#imgDlg').showModal();return;
+ }
+ renderTable();save();
+});
+function focusRow(id){const tr=tbody.querySelector(`tr[data-id="${id}"]`);if(!tr)return;tr.scrollIntoView({block:'center',behavior:'smooth'});tr.classList.remove('flash');void tr.offsetWidth;tr.classList.add('flash');const f=tr.querySelector('input,textarea,select');f&&f.focus({preventScroll:true})}
+$('#fileImg').addEventListener('change',async e=>{
+ const f=e.target.files[0];if(!f||!imgTarget)return;
+ const url=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(f)});
+ const img=new Image();img.onload=()=>{const s=Math.min(1,640/Math.max(img.width,img.height));const cv=document.createElement('canvas');cv.width=Math.round(img.width*s);cv.height=Math.round(img.height*s);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);imgTarget.image=cv.toDataURL('image/jpeg',.8);imgTarget=null;renderTable();save()};img.src=url;
+});
+/* paste an image into a focused row */
+document.addEventListener('paste',e=>{
+ const tr=document.activeElement?.closest?.('#tbody tr[data-id]');if(!tr)return;
+ const item=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith('image/'));if(!item)return;
+ e.preventDefault();const {r}=findRow(tr.dataset.id);if(!r)return;imgTarget=r;
+ const dt=new DataTransfer();dt.items.add(item.getAsFile());$('#fileImg').files=dt.files;$('#fileImg').dispatchEvent(new Event('change'));
+ const c=col('image');if(!c.visible){c.visible=true;toast('Reference image column turned on')}
+});
+
+/* drag to reorder */
+let dragId=null;
+tbody.addEventListener('mousedown',e=>{const g=e.target.closest('.grip');if(g)g.closest('tr').draggable=true});
+document.addEventListener('mouseup',()=>{if(!dragId)$$('#tbody tr[draggable=true]').forEach(t=>t.draggable=false)});
+tbody.addEventListener('dragstart',e=>{const tr=e.target.closest('tr[data-id]');if(!tr||!tr.draggable)return;dragId=tr.dataset.id;tr.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragId)});
+tbody.addEventListener('dragover',e=>{if(!dragId)return;e.preventDefault();const tr=e.target.closest('tr[data-id]');$$('#tbody .drop-before,#tbody .drop-after').forEach(t=>t.classList.remove('drop-before','drop-after'));if(!tr||tr.dataset.id===dragId)return;const rc=tr.getBoundingClientRect();tr.classList.add(e.clientY<rc.top+rc.height/2?'drop-before':'drop-after')});
+tbody.addEventListener('drop',e=>{
+ if(!dragId)return;e.preventDefault();const tr=$('#tbody .drop-before,#tbody .drop-after');
+ if(tr){const d=day(),from=d.rows.findIndex(r=>r.id===dragId),[m]=d.rows.splice(from,1);let to=d.rows.findIndex(r=>r.id===tr.dataset.id);if(tr.classList.contains('drop-after'))to++;d.rows.splice(to,0,m);save()}
+ dragId=null;renderTable();
+});
+tbody.addEventListener('dragend',()=>{dragId=null;$$('#tbody tr').forEach(t=>{t.draggable=false;t.classList.remove('dragging','drop-before','drop-after')})});
+
+function toShootingView(){if(state.view!=='shooting'){state.view='shooting';renderView();toast('Switched to shooting order so you can see where it went.')}}
+const nextPickup=s=>{s=String(s||'').trim();if(!s)return '';const m=/^(.*?)([A-Za-z])$/.exec(s);if(m&&/\d/.test(m[1]))return m[1]+String.fromCharCode(m[2].toUpperCase().charCodeAt(0)+1);return s+'A'};
+function insertRow(kind,afterId){
+ const d=day();const r=kind==='shot'?newShot():newBreak(kind);
+ if(afterId){
+  const i=d.rows.findIndex(x=>x.id===afterId),ref=d.rows[i];
+  if(kind==='shot'&&state.view==='script'&&ref){r.scene=ref.scene;r.shot=nextPickup(ref.shot)}
+  else if(kind!=='shot')toShootingView();
+  d.rows.splice(i+1,0,r);
+ }else{toShootingView();d.rows.push(r)}
+ renderTable();save();focusRow(r.id);
+}
+$('#addbar').addEventListener('click',e=>{const t=e.target.closest('[data-add]')?.dataset.add;if(t)insertRow(t,null)});
+const insMenu=$('#insMenu');let insTarget=null,insBtn=null;
+function openInsMenu(btn,id){
+ closeInsMenu();insTarget=id;insBtn=btn;btn.classList.add('on');insMenu.classList.add('open');
+ placeInsMenu();insMenu.querySelector('button').focus({preventScroll:true});
+}
+function placeInsMenu(){
+ if(!insBtn||!insBtn.isConnected){closeInsMenu();return}
+ const rc=insBtn.getBoundingClientRect(),mh=insMenu.offsetHeight;
+ if(rc.bottom<0||rc.top>innerHeight){closeInsMenu();return}
+ insMenu.style.left=Math.max(8,Math.min(rc.left,innerWidth-insMenu.offsetWidth-8))+'px';
+ insMenu.style.top=(rc.bottom+mh+8>innerHeight?rc.top-mh-4:rc.bottom+4)+'px';
+}
+function closeInsMenu(){insMenu.classList.remove('open');if(insBtn)insBtn.classList.remove('on');insBtn=null}
+insMenu.addEventListener('click',e=>{const k=e.target.closest('[data-ins]')?.dataset.ins;if(!k)return;const id=insTarget;closeInsMenu();insertRow(k,id)});
+document.addEventListener('mousedown',e=>{if(insMenu.classList.contains('open')&&!insMenu.contains(e.target)&&!e.target.closest('.plus'))closeInsMenu()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&insMenu.classList.contains('open')){closeInsMenu()}
+ if(insMenu.classList.contains('open')&&(e.key==='ArrowDown'||e.key==='ArrowUp')){e.preventDefault();const bs=[...insMenu.querySelectorAll('button')],i=bs.indexOf(document.activeElement);bs[(i+(e.key==='ArrowDown'?1:-1)+bs.length)%bs.length].focus()}});
+window.addEventListener('scroll',()=>{if(insBtn)placeInsMenu()},true);window.addEventListener('resize',()=>{if(insBtn)placeInsMenu()});
+$('#warnBox').addEventListener('click',e=>{const li=e.target.closest('[data-goto]');if(li){if(state.view!=='shooting'){}focusRow(li.dataset.goto)}});
+
+/* ---------- events: header, days, view ---------- */
+document.addEventListener('input',e=>{
+ const p=e.target.dataset.p;if(p!=null){state.project[p]=e.target.value;renderProject();save()}
+ const dk=e.target.dataset.d;if(dk!=null){const d=day();d[dk]=e.target.value;if(dk==='name')renderTabs();
+  if(dk==='sunrise'||dk==='sunset'){if(d.sunPlace!=='manual'){d.sunPlace='manual';toast('Switched to manual sun times for this day.')}}
+  if(['date','sunPlace','lat','lon','sunrise','sunset'].includes(dk)){updateSun(d);renderSun()}
+  recompute();save()}
+});
+$('#tabs').addEventListener('click',e=>{
+ if(e.target.closest('#dayAdd')){const d=newDay(`Day ${workDays().length+1}`);const cur=day().example?(workDays().slice(-1)[0]||day()):day();d.call=cur.call;d.wrap=cur.wrap;d.sunPlace=cur.sunPlace;d.lat=cur.lat;d.lon=cur.lon;const wi=state.days.indexOf(workDays().slice(-1)[0]);state.days.splice(wi+1,0,d);state.activeDay=d.id;renderAll();save();return}
+ const b=e.target.closest('[data-day]');if(b){state.activeDay=b.dataset.day;renderAll();save()}
+});
+$('#dayDup').onclick=()=>{const c=clone(day());c.id=uid();c.name=(c.name||'Day')+' (copy)';delete c.example;c.rows.forEach(r=>{r.id=uid();if(r.type==='shot')r.status='To do'});state.days.splice(state.days.indexOf(day())+1,0,c);state.activeDay=c.id;renderAll();save()};
+$('#dayDel').onclick=()=>{if(!day().example&&workDays().length<2){toast('You need at least one shoot day');return}if(!confirm(`Delete “${day().name}” and all its shots?`))return;const i=state.days.indexOf(day());state.days.splice(i,1);state.activeDay=(workDays()[Math.max(0,Math.min(i,workDays().length)-1)]||state.days[0]).id;renderAll();save()};
+$('#restoreEx').onclick=()=>{if(state.days.some(d=>d.example)){state.activeDay=state.days.find(d=>d.example).id}else{const ex=sampleDay();state.days.push(ex);state.activeDay=ex.id}$('#setDlg').close();renderAll();save();toast('Example day restored')};
+$('#viewSeg').addEventListener('click',e=>{const v=e.target.dataset.view;if(v){state.view=v;renderView();renderTable();save()}});
+$('#liveToggle').addEventListener('change',e=>{live=e.target.checked;recompute()});
+setInterval(()=>{if(live)recompute()},20000);
+
+/* ---------- dialogs ---------- */
+$$('[data-open]').forEach(b=>b.onclick=()=>{const id=b.dataset.open;({colDlg:renderColList,optDlg:renderOptList,setDlg:renderSettings})[id]();$('#'+id).showModal()});
+$$('dialog').forEach(d=>{d.addEventListener('click',e=>{if(e.target===d||e.target.closest('[data-close]'))d.close()})});
+$('#optDlg').addEventListener('close',()=>renderTable());
+
+const TYPE_LABEL={text:'Text',long:'Long text',select:'Dropdown',number:'Number'};
+function renderColList(){
+ $('#colList').innerHTML=state.columns.map((c,i)=>{
+  const typeCell=LOCKED.has(c.key)?`<span class="muted">${c.type==='computed'?'Auto-calculated':c.type==='image'?'Image':FIXED[c.key]?'Fixed dropdown':'Number'}</span>`:`<select data-ci="${i}" data-ck="type">${Object.entries(TYPE_LABEL).map(([v,l])=>`<option value="${v}"${c.type===v?' selected':''}>${l}</option>`).join('')}</select>`;
+  return `<tr class="${c.visible?'':'off'}"><td class="mv"><button data-mv="-1" data-ci="${i}" title="Move up">▲</button><button data-mv="1" data-ci="${i}" title="Move down">▼</button></td><td><input type="text" data-ci="${i}" data-ck="label" value="${esc(c.label)}"></td><td class="c"><input type="checkbox" data-ci="${i}" data-ck="visible"${c.visible?' checked':''}></td><td class="c"><input type="checkbox" data-ci="${i}" data-ck="print"${c.print?' checked':''}></td><td>${typeCell}</td><td>${c.custom?`<button class="fth-btn ghost danger" data-cdel="${i}" title="Delete column">✕</button>`:''}</td></tr>`;
+ }).join('');
+}
+$('#colList').addEventListener('input',e=>{const i=e.target.dataset.ci,k=e.target.dataset.ck;if(i==null||!k)return;const c=state.columns[i];
+ if(e.target.type==='checkbox'){c[k]=e.target.checked;if(k==='visible'&&e.target.checked&&!c.print&&!c._printSet)c.print=true;if(k==='print')c._printSet=true;renderColList()}
+ else if(k==='type'){c.type=e.target.value;if(c.type==='select'){const o=opts(c);state.days.forEach(d=>d.rows.forEach(r=>{const v=String(r[c.key]??'').trim();if(v&&!o.includes(v))o.push(v)}))}}
+ else c[k]=e.target.value;
+ renderTable();save();
+});
+$('#colList').addEventListener('click',e=>{
+ const mv=e.target.closest('[data-mv]');if(mv){const i=+mv.dataset.ci,j=i+(+mv.dataset.mv);if(j<0||j>=state.columns.length)return;[state.columns[i],state.columns[j]]=[state.columns[j],state.columns[i]];renderColList();renderTable();save();return}
+ const del=e.target.closest('[data-cdel]');if(del){const c=state.columns[+del.dataset.cdel];if(!confirm(`Delete the “${c.label}” column and its contents?`))return;state.columns.splice(+del.dataset.cdel,1);state.days.forEach(d=>d.rows.forEach(r=>delete r[c.key]));renderColList();renderTable();save()}
+});
+$('#colAdd').onclick=()=>{const name=prompt('Name for the new column:','');if(!name)return;state.columns.splice(state.columns.findIndex(c=>c.key==='priority'),0,{key:'c_'+uid(),label:name.trim(),type:'text',visible:true,print:true,w:130,custom:true});renderColList();renderTable();save()};
+$('#colAll').onclick=()=>{state.columns.forEach(c=>c.visible=true);renderColList();renderTable();save()};
+$('#colReset').onclick=()=>{if(!confirm('Reset columns to the default set? Custom columns will be hidden, not deleted.'))return;const custom=state.columns.filter(c=>c.custom).map(c=>({...c,visible:false,print:false}));state.columns=[...clone(COLS),...custom];renderColList();renderTable();save()};
+
+function renderOptList(){
+ $('#optList').innerHTML=state.columns.filter(c=>c.type==='select'&&!FIXED[c.key]).map(c=>`<div><h3>${esc(c.label)}${c.visible?'':' <span class="muted" style="font-weight:400">(hidden)</span>'}</h3><textarea data-ok="${c.key}">${esc(opts(c).join('\n'))}</textarea></div>`).join('')||'<p class="muted">No dropdown columns. Change a column’s type to Dropdown in Columns.</p>';
+}
+$('#optList').addEventListener('input',e=>{const k=e.target.dataset.ok;if(!k)return;state.options[k]=[...new Set(e.target.value.split('\n').map(s=>s.trim()).filter(Boolean))];save()});
+
+function renderSettings(){
+ const tz=$('#tzSel');if(!tz.options.length){let zones=['Europe/London','Europe/Dublin','Europe/Paris','Europe/Berlin','America/New_York','America/Los_Angeles','Australia/Sydney'];try{zones=Intl.supportedValuesOf('timeZone');if(!zones.includes('Europe/London'))zones.unshift('Europe/London')}catch(e){}tz.innerHTML=zones.map(z=>`<option value="${z}">${z.replace(/_/g,' ')}</option>`).join('')}
+ updateFitNote();
+ $$('[data-s]').forEach(i=>{const v=state.settings[i.dataset.s];if(i.type==='checkbox')i.checked=!!v;else i.value=v})}
+$('#setBody').addEventListener('input',e=>{const k=e.target.dataset.s;if(!k)return;state.settings[k]=e.target.type==='checkbox'?e.target.checked:e.target.type==='number'?(parseFloat(e.target.value)||0):e.target.value;
+ if(k==='tz'){state.days.forEach(updateSun);renderSun()}
+ if(['paper','orient','density','printDays','printImages','printCut','printWarnings'].includes(k))updateFitNote();
+ recompute();save()});
+function updateFitNote(){const f=buildPrint(),n=$('#fitNote'),cols=state.columns.filter(c=>c.print).length;
+ n.className='fitnote'+(f.small?' bad':'');
+ n.textContent=f.small?`⚠ ${cols} printed columns → text shrinks to ${f.size}pt to fit, which may be hard to read. Try fewer print columns, A3 or landscape.`:`${cols} printed columns fit at ${f.size}pt${f.size<f.base?` (shrunk from ${f.base}pt)`:''}.`}
+
+/* ---------- values for print/CSV ---------- */
+function plainVal(c,r,o,C){
+ switch(c.key){
+  case 'shootingOrder':return o.order??'';
+  case 'scriptOrder':return C.scriptRank[r.id]??'';
+  case 'start':return o.cut||C.noCall||o.start==null?'':fmt(o.start)+(o.start>=1440?' (+1)':'');
+  case 'end':return o.cut||C.noCall||o.end==null?'':fmt(o.end)+(o.end>=1440?' (+1)':'');
+  case 'setup':return o.eff!=null&&o.eff<o.setup?o.eff:(r.setup??'');
+  case 'image':return r.image?'[image]':'';
+ }
+ return r[c.key]??'';
+}
+
+/* ---------- PDF ---------- */
+function buildPrint(){
+ const S=state.settings,p=state.project;
+ $('#pageStyle').textContent=`@page{size:${S.paper} ${S.orient};margin:9mm}`;
+ const pv=$('#printView');pv.className='density-'+S.density;
+ const days=S.printDays==='all'?expDays():[day()];
+ const cols=state.columns.filter(c=>c.print&&(c.type!=='image'||S.printImages));
+ const crew=[['Company',p.company],['Director',p.director],['DP',p.dp],['1st AD',p.ad],['Producer',p.producer],['Location',p.location]].filter(x=>x[1]);
+ pv.innerHTML=days.map(d=>{
+  const C=compute(d);
+  const date=d.date?new Date(d.date+'T12:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
+  const info=[[d.name,'',1],['Date',date],['Call',C.noCall?'':fmt(C.call),1],['Planned wrap',d.wrap],['Projected wrap',C.noCall?'':fmt(C.finish),1],['Sunrise',d.sunrise],['Sunset',d.sunset],['Shots',`${C.tot.shots}${C.tot.cut&&!S.printCut?'':''}`],['Setup / shoot',`${fmtDur(C.tot.setup)} / ${fmtDur(C.tot.shoot)}`]].filter(x=>x[1]||x[0]===d.name);
+  const body=d.rows.filter(r=>r.type!=='shot'||r.status!=='Cut'||S.printCut).map(r=>{
+   const o=C.res[r.id]||{};
+   if(r.type!=='shot')return `<tr class="brk"><td colspan="${cols.length}">${KINDS[kindOf(r)].icon} ${KINDS[kindOf(r)].name}${r.label&&r.label!==KINDS[kindOf(r)].name?' — '+esc(r.label):''} · ${num(r.duration)} mins${C.noCall?'':` · ${fmt(o.start)}–${fmt(o.end)}`}</td></tr>`;
+   const h=hueFor(r),cls=[h!=null?'tinted':'',o.cut?'cut':'',o.over?'over':''].join(' ');
+   return `<tr class="${cls}"${h!=null?` style="--h:${h}"`:''}>${cols.map(c=>{
+    if(c.type==='image')return `<td>${r.image?`<img src="${r.image}" alt="">`:''}</td>`;
+    let v=esc(plainVal(c,r,o,C)).replace(/\n/g,'<br>');
+    if(c.key==='start'&&S.printWarnings&&o.flags&&o.flags.length)v+=' ⚠';
+    const n=['setup','shoot','start','end','shootingOrder','scriptOrder','takes'].includes(c.key);
+    return `<td class="${n?'n':''}${c.key==='start'||c.key==='end'?' t':''}">${v}</td>`}).join('')}</tr>`;
+  }).join('');
+  return `<section class="pday">
+   <div class="phead"><div><div class="ptitle">${esc(p.title||'Shot List')}</div><div class="psub">Shot list${p.notes?' · '+esc(p.notes):''}</div></div>
+   <div class="pcrew">${crew.map(([k,v])=>`<div><b>${k}</b>${esc(v)}</div>`).join('')}</div></div>
+   <div class="pinfo">${info.map(([k,v,big])=>k===d.name?`<div class="big">${esc(k)}</div>`:`<div class="${big?'big':''}"><b>${k}</b>${esc(v)}</div>`).join('')}</div>
+   <table><thead><tr>${cols.map(c=>`<th class="${c.type==='long'?'lg':''}${c.key==='description'?' desc':''}">${esc(c.label)}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>
+   ${S.printWarnings&&C.warnings.length?`<div class="pwarn"><b>⚠ Scheduling warnings</b><ul>${C.warnings.map(w=>`<li>${esc(w.label)} — ${esc(w.text)}</li>`).join('')}</ul></div>`:''}
+   <div class="pfoot"><span>${esc(p.company||'')}</span><span>Printed ${new Date().toLocaleDateString('en-GB')}</span></div>
+  </section>`;
+ }).join('');
+ return fitPrint();
+}
+const PAPER={A4:[210,297],A3:[297,420],letter:[215.9,279.4],legal:[215.9,355.6]};
+function fitPrint(){
+ const S=state.settings,pv=$('#printView'),[w,h]=PAPER[S.paper]||PAPER.A4;
+ const widthPx=((S.orient==='landscape'?Math.max(w,h):Math.min(w,h))-18)*96/25.4;
+ const base=S.density==='comfortable'?10:8.5;let size=base;
+ const target=Math.floor(widthPx*0.98);pv.classList.add('measure');pv.style.width=target+'px';
+ const fits=()=>$$('table',pv).every(t=>t.offsetWidth<=target+1);
+ pv.style.fontSize=size+'pt';
+ while(!fits()&&size>4){size=Math.round((size-0.25)*100)/100;pv.style.fontSize=size+'pt'}
+ const ok=fits();pv.classList.remove('measure');pv.style.width='';
+ return {size,base,small:size<6||!ok,ok};
+}
+window.addEventListener('beforeprint',buildPrint);
+function exampleOK(){if(!day().example||state.settings.exportExample)return true;return confirm('You’re on the example day (The Bet). It’s normally left out of exports.\n\nExport the example anyway?')}
+$('#btnPDF').onclick=()=>{if(state.settings.printDays!=='all'&&!exampleOK())return;if(state.settings.printDays==='all'&&!expDays().length){toast('No shoot days to export');return}const f=buildPrint(),n=state.columns.filter(c=>c.print).length;
+ if(f.small&&!confirm(`Heads up: with ${n} columns set to print, the text will shrink to about ${f.size}pt to fit the page, which may be hard to read.\n\nYou can reduce print columns in Columns, or switch to A3 in Settings.\n\nPrint anyway?`))return;
+ toast('In the print window, choose “Save as PDF” as the destination.',5000);setTimeout(()=>window.print(),150)};
+
+/* ---------- files ---------- */
+const fileBase=()=>(state.project.title||'Shot list').replace(/[\\/:*?"<>|]+/g,'').trim()||'Shot list';
+function download(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+$('#btnSave').onclick=()=>{const days=expDays();if(!days.length){toast('No shoot days to save');return}const out={...state,days,activeDay:days.some(d=>d.id===state.activeDay)?state.activeDay:days[0].id};download(JSON.stringify(out,(k,v)=>k==='_sunNote'?undefined:v,1),`${fileBase()}.shotlist.json`,'application/json');toast('Saved. Open it later with “Open”.')};
+$('#btnOpen').onclick=()=>{$('#fileOpen').value='';$('#fileOpen').click()};
+$('#fileOpen').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const s=JSON.parse(await f.text());if(!s.days)throw 0;const ex=state.days.filter(d=>d.example);state=migrate(s);if(!state.days.some(d=>d.example))state.days.push(...ex);state.days.forEach(updateSun);renderAll();save();toast(`Opened ${f.name}`)}catch(err){toast('That file isn’t a shot list saved from this tool. For spreadsheets, use Import.')}});
+const csvEsc=v=>{v=String(v??'');return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+$('#btnCSV').onclick=()=>{
+ if(!exampleOK())return;
+ const d=day(),C=compute(d),cols=visCols().filter(c=>c.type!=='image');
+ const lines=[cols.map(c=>c.label)];
+ d.rows.forEach(r=>{const o=C.res[r.id]||{};
+  if(r.type!=='shot'){lines.push(cols.map((c,i)=>i===0?`${KINDS[kindOf(r)].name.toUpperCase()}: ${r.label||''} (${num(r.duration)} mins)`:c.key==='start'?plainVal(c,{},o,C):c.key==='end'?plainVal(c,{},o,C):''));return}
+  lines.push(cols.map(c=>plainVal(c,r,o,C)));});
+ download('﻿'+lines.map(l=>l.map(csvEsc).join(',')).join('\r\n'),`${fileBase()} - ${d.name}.csv`,'text/csv');
+};
+$('#btnNew').onclick=()=>{
+ if(!confirm('Start a new, empty project? Save a file first if you want to keep this one. Your columns, dropdowns, settings and the example day are kept.'))return;
+ const f=freshState(false);state.project=f.project;state.days=[...f.days,...state.days.filter(d=>d.example)];state.activeDay=f.activeDay;renderAll();save();$('#projCard').open=true;
+};
+
+/* import */
+const ALIAS={scene:['scenenumber','scene','sc','sceneno'],shot:['shotnumber','shot','shotno'],lighting:['lightingsetup','lighting'],intExt:['intext'],tod:['timeofday','tod'],description:['shotdescription','description'],lens:['lensfocallength','lens','focallength'],size:['shotsize','size'],angle:['cameraangle','angle'],movement:['cameramovement','movement'],grip:['gripgear','grip'],location:['location'],characters:['characters','cast'],sound:['soundnotes'],notes:['notes'],setup:['setuptimemins','setuptime','setupmins','setup'],shoot:['shootingtimemins','shootingtime','shoottime','shootmins'],status:['status'],priority:['priority'],_order:['shootingorder']};
+const norm=s=>String(s??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+function mapHeader(row){const map={};(row||[]).forEach((h,i)=>{const n=norm(h);if(!n)return;let k=Object.keys(ALIAS).find(a=>ALIAS[a].includes(n));if(!k){const c=state.columns.find(c=>c.type!=='computed'&&norm(c.label)===n);if(c)k=c.key}if(k&&!(k in map))map[k]=i});return map}
+function tableToDay(aoa,name){
+ const hi=aoa.findIndex(r=>Object.keys(mapHeader(r)).length>=3);if(hi<0)return null;const map=mapHeader(aoa[hi]);const rows=[];
+ for(const line of aoa.slice(hi+1)){
+  const g=k=>map[k]!=null?String(line[map[k]]??'').trim():'';
+  if(!g('scene')&&!g('shot')&&!g('description'))continue;
+  const r=newShot();Object.keys(map).forEach(k=>{r[k]=g(k)});
+  r._order=parseFloat(r._order);r.setup=num(r.setup);r.shoot=num(r.shoot);
+  if(r.intExt)r.intExt=r.intExt.replace(/\.$/,'');
+  if(!FIXED.status.includes(r.status))r.status='To do';if(!FIXED.priority.includes(r.priority))r.priority='Must have';
+  rows.push(r);
+ }
+ if(!rows.length)return null;
+ if(rows.some(r=>isFinite(r._order)))rows.sort((a,b)=>(isFinite(a._order)?a._order:1e9)-(isFinite(b._order)?b._order:1e9));
+ rows.forEach(r=>{delete r._order;state.columns.forEach(c=>{if(c.type==='select'&&!FIXED[c.key]&&r[c.key]){const o=opts(c);if(!o.includes(r[c.key]))o.push(r[c.key])}})});
+ const d=newDay(name);d.rows=rows;updateSun(d);return d;
+}
+function parseCSV(t,sep=','){const out=[];let row=[],f='',q=false;for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}else if(c==='"')q=true;else if(c===sep){row.push(f);f=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(f);out.push(row);row=[];f=''}else f+=c}if(f||row.length){row.push(f);out.push(row)}return out}
+const loadScript=src=>new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej();document.head.appendChild(s)});
+$('#btnImport').onclick=()=>{$('#fileImport').value='';$('#fileImport').click()};
+$('#fileImport').addEventListener('change',async e=>{
+ const f=e.target.files[0];if(!f)return;const ext=f.name.split('.').pop().toLowerCase();let sheets=[];
+ try{
+  if(ext==='csv'||ext==='tsv')sheets=[{name:f.name.replace(/\.[^.]+$/,''),aoa:parseCSV((await f.text()).replace(/^﻿/,''),ext==='tsv'?'\t':',')}];
+  else{if(!window.XLSX){toast('Loading the Excel reader…');await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js')}
+   const wb=XLSX.read(await f.arrayBuffer());sheets=wb.SheetNames.map(n=>({name:n,aoa:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:''})}))}
+ }catch(err){toast('Couldn’t read that file. Excel import needs an internet connection; you can also save the sheet as CSV and import that.',6000);return}
+ const days=sheets.map(s=>tableToDay(s.aoa,s.name)).filter(Boolean);
+ if(!days.length){toast('No shots found. The file needs a header row with columns like Scene, Shot and Shot Description.',6000);return}
+ const wi=state.days.indexOf(workDays().slice(-1)[0]);state.days.splice(wi+1,0,...days);state.activeDay=days[0].id;renderAll();save();
+ toast(`Imported ${days.reduce((a,d)=>a+d.rows.length,0)} shots into ${days.length} new day tab${days.length>1?'s':''}. Check the call time.`,5000);
+});
+
+renderAll();
+if(!localStorage.getItem(STORE))save();
+})();
+</script>
+</body>
+</html>
