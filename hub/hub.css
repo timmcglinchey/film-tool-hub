@@ -272,3 +272,4 @@ dialog::backdrop{background:rgba(5,6,8,.7);backdrop-filter:blur(3px)}
 /* admin-only controls (adding and replacing tools) */
 body:not(.admin) #addBtn,body:not(.admin) .cardw .more,body:not(.admin) #barActions [data-act="menu"],
 body:not(.admin) .foot #storeNote,body:not(.admin) #restoreBtn,body:not(.admin) #resetBtn,body:not(.admin) #banner{display:none!important}
+.foot a.lnk{text-decoration:none}.foot a.lnk:hover{text-decoration:underline}.psignin a{color:var(--muted)}

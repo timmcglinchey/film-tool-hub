@@ -684,7 +684,7 @@ function renderStrip() {
       <span class="pmeta">${changed(p) ? '<b class="un">Unsaved changes</b> · ' : ''}Saved ${esc(fmtWhen(p.savedAt))}${p.backupAt ? ' · Backup ' + esc(fmtWhen(p.backupAt)) : ''}${p.driveFileId ? ' · On Google Drive' : ''}</span></div>
     <div class="pused">${used.length ? used.map(x => `<a class="pchip" href="#/tool/${encodeURIComponent(x.t.id)}" style="--cat:${catOf(x.t.category).color}" title="Last changed ${esc(fmtWhen(x.at))}"><span class="sw"></span>${esc(x.t.name)}<small>${esc(fmtWhen(x.at))}</small></a>`).join('') : '<span class="pnone">No tools used in this project yet. Open any tool to start; its work is filed under this project.</span>'}</div>
     <div class="pacts"><button class="btn ghost" data-pact="manage">Manage projects</button><button class="btn" data-pact="new">New project</button></div>
-    ${driveOn() && !account ? `<div class="psignin">${GLOGO}<span><b>Sign in with Google</b> to keep your projects in your own Google Drive and carry on from any computer.</span><button class="btn primary" data-pact="signin">Sign in</button></div>` : ''}
+    ${driveOn() && !account ? `<div class="psignin">${GLOGO}<span><b>Sign in with Google</b> to keep your projects in your own Google Drive and carry on from any computer. <a href="privacy.html">Privacy</a></span><button class="btn primary" data-pact="signin">Sign in</button></div>` : ''}
   </div>`;
 }
 const pmenu = () => $('#pmenu');
