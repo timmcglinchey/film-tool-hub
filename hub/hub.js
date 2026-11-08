@@ -4,6 +4,7 @@
 /* The tool list (tools/tools.json) and the shared look (hub/kit.css) are separate files. */
 const getText = async (url, kind) => { const r = await fetch(url, {cache: 'no-cache'}); if (!r.ok) throw new Error(url + ' ' + r.status); return kind === 'json' ? r.json() : r.text(); };
 let manifest;
+const CONFIG = await getText('hub/config.json', 'json').catch(() => ({}));
 try { manifest = await getText('tools/tools.json', 'json'); }
 catch (e) {
   document.body.innerHTML = '<div style="font:15px/1.5 system-ui;max-width:560px;margin:15vh auto;padding:24px">'
@@ -151,7 +152,7 @@ const BACKUP_EVERY = 5 * 60 * 1000, KEEP_RECENT = 20, KEEP_DAYS = 30;
 let projects = [], curId = null;
 const cur = () => projects.find(p => p.id === curId) || null;
 const projById = id => projects.find(p => p.id === id);
-const activeProjects = () => projects.filter(p => !p.archived).sort((a, b) => (b.openedAt || 0) - (a.openedAt || 0));
+const activeProjects = () => projects.filter(p => !p.archived && mine(p)).sort((a, b) => (b.openedAt || 0) - (a.openedAt || 0));
 const newId = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const fmtWhen = t => {
   if (!t) return 'never';
@@ -238,14 +239,19 @@ const needsBackup = p => p && (p.changedAt || 0) > (p.backupAt || 0);
 
 async function saveProject(quiet) {
   const p = cur(); if (!p) return;
+  const tp = driveOn() && account ? getToken(true).catch(() => null) : null;   /* ask Google while the click still counts */
+  let snap;
   try {
-    const snap = await snapshot(p.id);
+    snap = await snapshot(p.id);
     await store.gtx('saves', 'readwrite', s => s.put({id: p.id, at: snap.at, snap}));
-    p.savedAt = snap.at; if (!p.backupAt || p.backupAt < p.changedAt) p.backupAt = p.backupAt || 0;
+    p.savedAt = snap.at;
     await putProject(p);
     renderProjUI();
-    if (!quiet) toast(`Saved “${p.name}”`);
-  } catch (e) { toast('Couldn’t save in this browser: ' + (e.message || e)); }
+  } catch (e) { toast('Couldn’t save in this browser: ' + (e.message || e)); return; }
+  if (!tp) { if (!quiet) toast(driveOn() ? `Saved “${p.name}” in this browser. Sign in to save it to Google Drive.` : `Saved “${p.name}”`); return; }
+  if (!(await tp)) { renderAccount(); toast(`Saved “${p.name}” in this browser only. Reconnect Google Drive to save it there too.`); return; }
+  try { toast('Saving to Google Drive…'); await driveSave(p, snap); await putProject(p); renderAccount(); renderProjUI(); if (!quiet) toast(`Saved “${p.name}” to Google Drive`); }
+  catch (e) { renderAccount(); toast('Saved in this browser, but Google Drive didn’t accept it: ' + e.message); }
 }
 async function backupProject(p, reason) {
   if (!p) return;
@@ -254,6 +260,7 @@ async function backupProject(p, reason) {
     await store.gtx('backups', 'readwrite', s => s.add({projectId: p.id, at: snap.at, reason: reason || 'auto', snap}));
     p.backupAt = snap.at; await putProject(p);
     await pruneBackups(p.id);
+    if (driveOn() && account && hasToken() && mine(p)) driveBackup(p, snap, reason).catch(() => {});
   } catch (e) {}
 }
 async function backupsFor(pid) {
@@ -284,10 +291,13 @@ async function restoreFrom(snap, label) {
 
 async function switchProject(id) {
   const next = projById(id); if (!next || id === curId) return;
+  const tp = (next.needsDownload || next.remoteNewer) && account ? getToken(true).catch(() => null) : null;
+  if (next.needsDownload && !(tp && await tp)) { toast('Connect Google Drive to open this project'); renderAccount(); return; }
   const old = cur(); if (needsBackup(old)) backupProject(old, 'auto');
   curId = id; next.openedAt = Date.now(); putProject(next);
   try { localStorage.setItem(CUR_KEY, id); } catch (e) {}
   window.__fthHub.project = id;
+  if (tp && await tp) { await offerPull(next); }
   reloadFrames(); renderProjUI(); render(); toast(`Project: ${next.name}`);
 }
 async function createProject(name) {
@@ -299,12 +309,13 @@ async function createProject(name) {
 }
 async function archiveProject(id, on) {
   const p = projById(id); if (!p) return;
-  p.archived = !!on; await putProject(p);
+  p.archived = !!on; await putProject(p); driveMeta(p);
   if (on && id === curId) { const other = activeProjects().find(x => x.id !== id); if (other) await switchProject(other.id); else await createProject('Untitled project'); }
   renderProjUI(); render();
 }
 async function deleteProject(id) {
   const p = projById(id); if (!p) return;
+  if (p.driveFileId && account) { if (await getToken(true).catch(() => null)) await driveTrash(p); }
   if (id === curId) await unloadFrames();
   await wipeProjectData(id);
   await store.gtx('saves', 'readwrite', s => s.delete(id)).catch(() => {});
@@ -326,6 +337,299 @@ window.__fthHub = {
   save() { saveProject(); }
 };
 
+
+/* ───────── Google sign-in + Google Drive ─────────
+   Each person signs in with Google. Their projects are saved as files in a "Film Tool Hub" folder in
+   their own Google Drive (Projects + Backups). The site can only see files it created itself
+   (the drive.file permission). Nothing goes through anyone else's server.
+   Set hub/config.json → googleClientId to switch this on; adminEmails lists who sees the admin controls. */
+const GOOGLE_ID = String(CONFIG.googleClientId || '').trim();
+const ADMINS = (CONFIG.adminEmails || []).map(s => String(s).trim().toLowerCase()).filter(Boolean);
+const ACCT_KEY = 'filmtoolhub-account';
+const DRIVE_API = 'https://www.googleapis.com/drive/v3', DRIVE_UP = 'https://www.googleapis.com/upload/drive/v3';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file openid email profile';
+const driveOn = () => !!GOOGLE_ID;
+let account = null;
+try { account = JSON.parse(localStorage.getItem(ACCT_KEY) || 'null'); } catch (e) {}
+let token = null, tokenExp = 0, tokenClient = null, tokenWait = null, folders = null, driveSyncing = false;
+const hasToken = () => !!token && Date.now() < tokenExp - 60e3;
+const isAdmin = () => !driveOn() || (!!account && ADMINS.includes(String(account.email || '').toLowerCase()));
+/* a project belongs to whoever saved it to Drive; on a shared computer you only see your own */
+const mine = p => !p.owner || (!!account && p.owner === account.email);
+
+const gisReady = !driveOn() ? Promise.resolve(false) : new Promise(res => {
+  const s = document.createElement('script');
+  s.src = 'https://accounts.google.com/gsi/client'; s.async = true;
+  s.onload = () => {
+    try {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_ID, scope: SCOPES,
+        callback: r => { const w = tokenWait; tokenWait = null; if (!w) return; if (r && r.access_token) { token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000; w.res(token); } else w.rej(new Error((r && r.error) || 'sign-in failed')); },
+        error_callback: e => { const w = tokenWait; tokenWait = null; if (w) w.rej(new Error((e && e.type) || 'sign-in cancelled')); }
+      });
+      res(true);
+    } catch (e) { res(false); }
+  };
+  s.onerror = () => res(false);
+  document.head.appendChild(s);
+});
+
+/* ask Google for access. interactive=true may open Google's sign-in popup, so call it straight from a click */
+function getToken(interactive) {
+  if (hasToken()) return Promise.resolve(token);
+  if (!interactive || !tokenClient) return Promise.reject(new Error('not connected'));
+  if (tokenWait) tokenWait.rej(new Error('superseded'));
+  return new Promise((res, rej) => {
+    tokenWait = {res, rej};
+    try { tokenClient.requestAccessToken(account ? {prompt: '', login_hint: account.email} : {prompt: 'consent'}); }
+    catch (e) { tokenWait = null; rej(e); }
+  });
+}
+async function gapi(url, opts = {}) {
+  if (!hasToken()) throw new Error('not connected');
+  const r = await fetch(url, {...opts, headers: {...(opts.headers || {}), Authorization: 'Bearer ' + token}});
+  if (r.status === 401) { token = null; renderAccount(); throw new Error('not connected'); }
+  if (!r.ok) throw new Error('Google Drive error ' + r.status);
+  return r;
+}
+const gjson = async (url, opts) => (await gapi(url, opts)).json();
+const qs = o => Object.entries(o).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+const qEsc = s => String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+async function findFiles(q, fields) {
+  const out = []; let pageToken = '';
+  do {
+    const r = await gjson(`${DRIVE_API}/files?` + qs({q: q + ' and trashed=false', spaces: 'drive', pageSize: 200, fields: `nextPageToken,files(${fields || 'id,name,modifiedTime,appProperties'})`, ...(pageToken ? {pageToken} : {})}));
+    out.push(...(r.files || [])); pageToken = r.nextPageToken || '';
+  } while (pageToken);
+  return out;
+}
+const byProp = (k, v) => `appProperties has { key='${qEsc(k)}' and value='${qEsc(v)}' }`;
+async function folder(name, props, parent) {
+  const q = Object.entries(props).map(([k, v]) => byProp(k, v)).join(' and ') + (parent ? ` and '${qEsc(parent)}' in parents` : '');
+  const hit = (await findFiles(q + " and mimeType='application/vnd.google-apps.folder'"))[0];
+  if (hit) return hit.id;
+  const meta = {name, mimeType: 'application/vnd.google-apps.folder', appProperties: props, ...(parent ? {parents: [parent]} : {})};
+  return (await gjson(`${DRIVE_API}/files?fields=id`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(meta)})).id;
+}
+async function ensureFolders() {
+  if (folders) return folders;
+  const root = await folder('Film Tool Hub', {fth: 'root'});
+  const [projectsF, backupsF] = await Promise.all([folder('Projects', {fth: 'projects'}, root), folder('Backups', {fth: 'backups'}, root)]);
+  return (folders = {root, projects: projectsF, backups: backupsF});
+}
+/* upload (create when no fileId) with a resumable session, so big projects (script PDFs, stills) fit */
+async function uploadFile(meta, text, fileId) {
+  const start = await gapi(`${DRIVE_UP}/files${fileId ? '/' + fileId : ''}?uploadType=resumable&fields=id,modifiedTime`, {
+    method: fileId ? 'PATCH' : 'POST', headers: {'Content-Type': 'application/json; charset=UTF-8', 'X-Upload-Content-Type': 'application/json'}, body: JSON.stringify(meta)});
+  const loc = start.headers.get('Location'); if (!loc) throw new Error('upload not started');
+  const r = await fetch(loc, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: new Blob([text], {type: 'application/json'})});
+  if (!r.ok) throw new Error('upload failed ' + r.status);
+  return r.json();
+}
+
+/* snapshots can hold binary data (script PDFs, stills): turn it into text and back */
+const b64of = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+const u8of = b64 => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+async function packValue(v) {
+  if (v == null || typeof v !== 'object') return v;
+  if (v instanceof ArrayBuffer) return {__fth: 'ab', b: b64of(new Uint8Array(v))};
+  if (ArrayBuffer.isView(v)) return {__fth: 'ta', t: v.constructor.name, b: b64of(new Uint8Array(v.buffer, v.byteOffset, v.byteLength))};
+  if (typeof Blob !== 'undefined' && v instanceof Blob) return {__fth: 'blob', t: v.type, b: b64of(new Uint8Array(await v.arrayBuffer()))};
+  if (v instanceof Date) return {__fth: 'date', v: v.getTime()};
+  if (Array.isArray(v)) { const a = []; for (const x of v) a.push(await packValue(x)); return a; }
+  const o = {}; for (const k of Object.keys(v)) o[k] = await packValue(v[k]); return o;
+}
+function unpackValue(v) {
+  if (v == null || typeof v !== 'object') return v;
+  if (Array.isArray(v)) return v.map(unpackValue);
+  if (v.__fth === 'ab') return u8of(v.b).buffer;
+  if (v.__fth === 'ta') { const u = u8of(v.b), T = self[v.t] || Uint8Array; return new T(u.buffer, 0, u.byteLength / (T.BYTES_PER_ELEMENT || 1)); }
+  if (v.__fth === 'blob') return new Blob([u8of(v.b)], {type: v.t || ''});
+  if (v.__fth === 'date') return new Date(v.v);
+  const o = {}; for (const k of Object.keys(v)) o[k] = unpackValue(v[k]); return o;
+}
+const projectMeta = p => ({id: p.id, name: p.name, created: p.created, archived: !!p.archived, tools: p.tools || {}});
+const fileName = p => `${p.name}.filmtoolhub.json`;
+
+async function driveSave(p, snap) {
+  const f = await ensureFolders();
+  const body = JSON.stringify({app: 'film-tool-hub', v: 1, savedAt: snap.at, project: projectMeta(p), snap: await packValue(snap)});
+  const meta = {name: fileName(p), mimeType: 'application/json', appProperties: {fth: 'project', fthId: p.id, archived: p.archived ? '1' : '0'}};
+  let r;
+  try { r = await uploadFile(p.driveFileId ? meta : {...meta, parents: [f.projects]}, body, p.driveFileId); }
+  catch (e) { if (!p.driveFileId) throw e; p.driveFileId = null; r = await uploadFile({...meta, parents: [f.projects]}, body); }
+  p.driveFileId = r.id; p.driveSyncedAt = Date.parse(r.modifiedTime) || Date.now(); p.owner = account && account.email;
+  p.remoteNewer = 0; p.needsDownload = false;
+}
+async function driveBackupFolder(p) {
+  const f = await ensureFolders();
+  return folder(p.name, {fth: 'pbackups', fthId: p.id}, f.backups);
+}
+async function driveBackup(p, snap, reason) {
+  const dir = await driveBackupFolder(p);
+  const d = new Date(snap.at), pad = n => String(n).padStart(2, '0');
+  const name = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}.${pad(d.getMinutes())} (${reason || 'auto'}).json`;
+  const body = JSON.stringify({app: 'film-tool-hub', v: 1, savedAt: snap.at, reason: reason || 'auto', project: projectMeta(p), snap: await packValue(snap)});
+  await uploadFile({name, parents: [dir], mimeType: 'application/json', appProperties: {fth: 'backup', fthId: p.id, at: String(snap.at), reason: reason || 'auto'}}, body);
+  await pruneDriveBackups(p);
+}
+async function driveBackupsFor(p) {
+  const list = await findFiles(byProp('fth', 'backup') + ' and ' + byProp('fthId', p.id));
+  return list.map(f => ({fileId: f.id, at: +((f.appProperties || {}).at) || Date.parse(f.modifiedTime), reason: (f.appProperties || {}).reason || 'auto'})).sort((a, b) => b.at - a.at);
+}
+async function pruneDriveBackups(p) {
+  const list = await driveBackupsFor(p), keep = new Set(), days = new Set(), cutoff = Date.now() - KEEP_DAYS * 864e5;
+  list.forEach((b, i) => {
+    const day = new Date(b.at).toDateString();
+    if (i < KEEP_RECENT) { keep.add(b.fileId); days.add(day); return; }
+    if (b.at >= cutoff && !days.has(day)) { keep.add(b.fileId); days.add(day); }
+  });
+  for (const b of list) if (!keep.has(b.fileId)) await gapi(`${DRIVE_API}/files/${b.fileId}`, {method: 'DELETE'}).catch(() => {});
+}
+async function driveRead(fileId) {
+  const data = await gjson(`${DRIVE_API}/files/${fileId}?alt=media`);
+  if (!data || data.app !== 'film-tool-hub' || !data.snap) throw new Error('not a Film Tool Hub file');
+  return {...data, snap: unpackValue(data.snap)};
+}
+async function driveMeta(p) {   /* rename / archive without a full save */
+  if (!p.driveFileId || !hasToken()) return;
+  try {
+    await gapi(`${DRIVE_API}/files/${p.driveFileId}?fields=id`, {method: 'PATCH', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({name: fileName(p), appProperties: {archived: p.archived ? '1' : '0'}})});
+  } catch (e) {}
+}
+async function driveTrash(p) {
+  if (!hasToken()) return;
+  const ids = [];
+  if (p.driveFileId) ids.push(p.driveFileId);
+  try { (await findFiles(byProp('fth', 'pbackups') + ' and ' + byProp('fthId', p.id))).forEach(f => ids.push(f.id)); } catch (e) {}
+  for (const id of ids) await gapi(`${DRIVE_API}/files/${id}?fields=id`, {method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({trashed: true})}).catch(() => {});
+}
+
+/* bring a project's Drive copy into this browser */
+async function pullProject(p, fileId) {
+  const data = await driveRead(fileId || p.driveFileId);
+  const here = p.id === curId;
+  if (here) await unloadFrames();
+  await restoreSnapshot(p.id, data.snap);
+  Object.assign(p, {name: data.project.name || p.name, tools: data.project.tools || p.tools || {}, archived: !!data.project.archived,
+    savedAt: data.savedAt, changedAt: data.savedAt, backupAt: data.savedAt, needsDownload: false, remoteNewer: 0, owner: account && account.email});
+  if (!fileId || fileId === p.driveFileId) p.driveSyncedAt = Math.max(p.driveSyncedAt || 0, data.savedAt || 0);
+  await putProject(p);
+  if (here) reloadFrames();
+}
+/* compare this browser with Drive: new projects from other computers appear, newer saves are offered */
+async function driveSync(askAboutCurrent) {
+  if (!hasToken() || driveSyncing) return;
+  driveSyncing = true; renderAccount();
+  try {
+    await ensureFolders();
+    const files = await findFiles(byProp('fth', 'project'));
+    for (const f of files) {
+      const id = (f.appProperties || {}).fthId; if (!id) continue;
+      const mod = Date.parse(f.modifiedTime) || 0;
+      let p = projById(id);
+      if (!p) {
+        p = {id, name: f.name.replace(/\.filmtoolhub\.json$/i, ''), created: mod, openedAt: 0, tools: {}, archived: (f.appProperties || {}).archived === '1',
+          owner: account.email, driveFileId: f.id, driveSyncedAt: 0, needsDownload: true, savedAt: mod};
+        projects.push(p); await putProject(p); continue;
+      }
+      if (p.owner && p.owner !== account.email) continue;
+      p.owner = account.email; p.driveFileId = f.id;
+      if (mod > (p.driveSyncedAt || 0) + 3000) p.remoteNewer = mod;
+      await putProject(p);
+    }
+    const c = cur();
+    if (c && (c.needsDownload || c.remoteNewer) && askAboutCurrent !== false) await offerPull(c);
+  } catch (e) { if (e.message !== 'not connected') toast('Couldn’t reach Google Drive: ' + e.message); }
+  driveSyncing = false;
+  if (!mine(cur() || {})) { const m = activeProjects()[0]; if (m) await switchProject(m.id); }
+  renderAccount(); renderProjUI(); render();
+}
+async function offerPull(p) {
+  if (p.needsDownload) { try { await pullProject(p); toast(`Loaded “${p.name}” from Google Drive`); } catch (e) { toast('Couldn’t load from Google Drive'); } return; }
+  const when = fmtWhen(p.remoteNewer);
+  const localEdits = (p.changedAt || 0) > (p.driveSyncedAt || 0) + 3000;
+  const ok = !localEdits ? true : await confirmDlg('Newer version on Google Drive', `“${p.name}” was saved on another computer (${when}). Load that version here? What’s on this computer now is backed up first.`, 'Load from Drive');
+  if (!ok) { p.remoteNewer = 0; p.driveSyncedAt = Date.now(); putProject(p); return; }
+  await backupProject(p, 'before loading from Drive');
+  try { await pullProject(p); toast(`Loaded the newer version of “${p.name}”`); } catch (e) { toast('Couldn’t load from Google Drive'); }
+}
+
+async function signIn() {
+  const tp = getToken(true);   /* first, while the click still counts */
+  try {
+    await tp;
+    const me = await gjson('https://www.googleapis.com/oauth2/v3/userinfo');
+    const prev = account && account.email;
+    account = {email: me.email, name: me.name || me.email, picture: me.picture || ''};
+    try { localStorage.setItem(ACCT_KEY, JSON.stringify(account)); } catch (e) {}
+    if (!prev) projects.filter(p => !p.owner).forEach(p => { p.owner = account.email; putProject(p); });
+    toast(`Signed in as ${account.email}`);
+    renderAccount(); render();
+    await driveSync(true);
+    /* an untouched starter project on this computer isn't needed once Drive has your projects */
+    const empties = projects.filter(p => mine(p) && !p.driveFileId && !p.savedAt && !Object.keys(p.tools || {}).length);
+    if (empties.length && projects.some(p => mine(p) && p.driveFileId && !p.archived)) {
+      const keep = activeProjects().find(p => p.driveFileId);
+      if (keep && empties.some(e => e.id === curId)) await switchProject(keep.id);
+      for (const e of empties) await deleteProject(e.id);
+    }
+  } catch (e) { if (!/cancel|closed|superseded/i.test(e.message)) toast('Couldn’t sign in: ' + e.message); renderAccount(); }
+}
+async function reconnect() { try { await getToken(true); renderAccount(); await driveSync(true); } catch (e) { renderAccount(); } }
+async function signOut() {
+  const clear = await confirmDlg('Sign out',
+    'Also remove your projects from this computer? Do this on a shared computer. Anything you’ve saved stays safe in your Google Drive; unsaved changes here would be lost.',
+    'Sign out and remove', true, 'Just sign out');
+  if (clear === null) return;
+  try { if (token && window.google) google.accounts.oauth2.revoke(token, () => {}); } catch (e) {}
+  const email = account && account.email;
+  token = null; tokenExp = 0; folders = null; account = null;
+  try { localStorage.removeItem(ACCT_KEY); } catch (e) {}
+  if (clear) {
+    await unloadFrames();
+    for (const p of projects.filter(p => p.owner === email || !p.owner)) {
+      await wipeProjectData(p.id);
+      await store.gtx('saves', 'readwrite', s => s.delete(p.id)).catch(() => {});
+      for (const b of await backupsFor(p.id)) await store.gtx('backups', 'readwrite', s => s.delete(b.id)).catch(() => {});
+      await store.gtx('projects', 'readwrite', s => s.delete(p.id)).catch(() => {});
+    }
+    projects = projects.filter(p => p.owner && p.owner !== email);
+  }
+  if (!activeProjects().length) { curId = null; await createProject('My first project'); }
+  else if (!mine(cur() || {})) { curId = null; await switchProject(activeProjects()[0].id); }
+  reloadFrames(); renderAccount(); renderProjUI(); render();
+  toast('Signed out');
+}
+
+/* account button + menu */
+const GLOGO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z"/></svg>';
+function renderAccount() {
+  document.body.classList.toggle('admin', isAdmin());
+  const b = $('#acctBtn'); if (!b) return;
+  b.hidden = !driveOn();
+  if (!driveOn()) return;
+  if (!account) { b.className = 'ibtn acct signin'; b.innerHTML = GLOGO + '<span class="t">Sign in</span>'; b.title = 'Sign in with Google to keep your projects in your Google Drive'; return; }
+  const initial = (account.name || account.email || '?').trim()[0].toUpperCase();
+  b.className = 'ibtn acct' + (hasToken() ? '' : ' off') + (driveSyncing ? ' busy' : '');
+  b.innerHTML = (account.picture ? `<img src="${esc(account.picture)}" alt="" referrerpolicy="no-referrer">` : `<span class="av">${esc(initial)}</span>`) + '<i class="dot"></i>';
+  b.title = account.email + (hasToken() ? ' · saving to Google Drive' : ' · click to reconnect Google Drive');
+}
+function openAcctMenu() {
+  const m = $('#amenu'), b = $('#acctBtn');
+  m.innerHTML = `<div class="who"><b>${esc(account.name)}</b><small>${esc(account.email)}</small></div>
+    <div class="st ${hasToken() ? 'ok' : 'off'}">${hasToken() ? 'Saving to your Google Drive' : 'Not connected to Google Drive right now'}</div>
+    ${hasToken() ? '' : `<button data-am="reconnect">${GLOGO}Reconnect Google Drive</button>`}
+    ${hasToken() ? `<button data-am="sync">${UI.reload}Check Drive for changes</button>` : ''}
+    ${folders ? `<a data-am="folder" href="https://drive.google.com/drive/folders/${esc(folders.root)}" target="_blank" rel="noopener">${UI.newtab}Open my Film Tool Hub folder</a>` : ''}
+    <hr><button data-am="signout">${UI.close}Sign out…</button>`;
+  m.hidden = false;
+  const r = b.getBoundingClientRect();
+  m.style.left = Math.max(8, Math.min(r.right - m.offsetWidth, innerWidth - m.offsetWidth - 8)) + 'px'; m.style.top = (r.bottom + 6) + 'px';
+}
+const closeAcctMenu = () => { const m = $('#amenu'); if (m) m.hidden = true; };
+
 /* first run with projects: file existing tool work under a starter project (originals are left in place) */
 async function migrateIntoProject(p) {
   const pre = PFX(p.id), keep = /^(filmtoolhub-|fth-current-project$|fth:p:)/;
@@ -339,9 +643,10 @@ async function initProjects() {
     await migrateIntoProject(p);
     projects.push(p); await putProject(p);
   }
+  if (!activeProjects().length) { const s0 = {id: newId(), name: 'My first project', created: Date.now(), openedAt: Date.now(), tools: {}, archived: false}; projects.push(s0); await putProject(s0); }
   let want = null; try { want = localStorage.getItem(CUR_KEY); } catch (e) {}
   const p = projById(want);
-  curId = p && !p.archived ? p.id : activeProjects()[0].id;
+  curId = p && !p.archived && mine(p) ? p.id : activeProjects()[0].id;
   try { localStorage.setItem(CUR_KEY, curId); } catch (e) {}
   window.__fthHub.project = curId;
 }
@@ -352,7 +657,7 @@ function renderProjUI() {
   $('#projName').textContent = p.name;
   const sb = $('#saveBtn'), dirty = changed(p);
   sb.classList.toggle('dirty', dirty);
-  sb.title = (dirty ? 'Unsaved changes. ' : '') + 'Save “' + p.name + '” (Ctrl/⌘+S). Last saved: ' + fmtWhen(p.savedAt);
+  sb.title = (dirty ? 'Unsaved changes. ' : '') + 'Save “' + p.name + '”' + (account ? ' to your Google Drive' : '') + ' (Ctrl/⌘+S). Last saved: ' + fmtWhen(p.savedAt);
   $('#saveLbl').textContent = dirty ? 'Save' : 'Saved';
   renderStrip();
 }
@@ -361,9 +666,10 @@ function renderStrip() {
   const used = Object.entries(p.tools || {}).map(([id, at]) => ({t: byId(id), at})).filter(x => x.t).sort((a, b) => b.at - a.at);
   el.innerHTML = `<div class="pstrip">
     <div class="pmain"><span class="plbl">Current project</span><h2>${esc(p.name)}</h2>
-      <span class="pmeta">${changed(p) ? '<b class="un">Unsaved changes</b> · ' : ''}Saved ${esc(fmtWhen(p.savedAt))}${p.backupAt ? ' · Backup ' + esc(fmtWhen(p.backupAt)) : ''}</span></div>
+      <span class="pmeta">${changed(p) ? '<b class="un">Unsaved changes</b> · ' : ''}Saved ${esc(fmtWhen(p.savedAt))}${p.backupAt ? ' · Backup ' + esc(fmtWhen(p.backupAt)) : ''}${p.driveFileId ? ' · On Google Drive' : ''}</span></div>
     <div class="pused">${used.length ? used.map(x => `<a class="pchip" href="#/tool/${encodeURIComponent(x.t.id)}" style="--cat:${catOf(x.t.category).color}" title="Last changed ${esc(fmtWhen(x.at))}"><span class="sw"></span>${esc(x.t.name)}<small>${esc(fmtWhen(x.at))}</small></a>`).join('') : '<span class="pnone">No tools used in this project yet. Open any tool to start; its work is filed under this project.</span>'}</div>
     <div class="pacts"><button class="btn ghost" data-pact="manage">Manage projects</button><button class="btn" data-pact="new">New project</button></div>
+    ${driveOn() && !account ? `<div class="psignin">${GLOGO}<span><b>Sign in with Google</b> to keep your projects in your own Google Drive and carry on from any computer.</span><button class="btn primary" data-pact="signin">Sign in</button></div>` : ''}
   </div>`;
 }
 const pmenu = () => $('#pmenu');
@@ -387,7 +693,7 @@ function renameDialog(id) {
   const p = projById(id); if (!p) return;
   showDlg(`<h3>Rename project</h3><div class="field"><label for="f-pname">Project name</label><input id="f-pname" name="name" required value="${esc(p.name)}" maxlength="80"></div>
     <div class="dlg-actions"><button class="btn ghost" value="cancel">Cancel</button><button class="btn primary" value="ok">Rename</button></div>`,
-    fd => { const n = String(fd.get('name') || '').trim(); if (!n) return false; p.name = n; putProject(p).then(() => { renderProjUI(); }); });
+    fd => { const n = String(fd.get('name') || '').trim(); if (!n) return false; p.name = n; putProject(p).then(() => { renderProjUI(); driveMeta(p); }); });
 }
 function projRow(p) {
   const n = Object.keys(p.tools || {}).length;
@@ -399,7 +705,7 @@ function projRow(p) {
     </div></div>`;
 }
 function manageDialog() {
-  const act = activeProjects(), arch = projects.filter(p => p.archived);
+  const act = activeProjects(), arch = projects.filter(p => p.archived && mine(p));
   showDlg(`<h3>Projects</h3><p class="sub">Archive projects you've finished with to tidy the list. Archived projects keep all their work and can be restored.</p>
     <div class="plist">${act.map(projRow).join('')}</div>
     ${arch.length ? `<div class="psec">Archived</div><div class="plist">${arch.map(projRow).join('')}</div>` : ''}
@@ -411,12 +717,18 @@ async function backupsDialog(id) {
   const list = await backupsFor(id);
   const saved = await store.gtx('saves', 'readonly', s => s.get(id)).catch(() => null);
   if (id !== curId) { toast('Open the project first to restore it'); }
+  let onDrive = null;
+  if (account && hasToken() && p.owner === account.email) { try { onDrive = await driveBackupsFor(p); } catch (e) {} }
+  const driveRows = onDrive === null ? (account ? '<div class="pnone" style="padding:12px 4px">Reconnect Google Drive (account button, top right) to see the backups kept there.</div>' : '')
+    : onDrive.length ? onDrive.map(b => `<div class="prow"><div class="pi"><b>${esc(new Date(b.at).toLocaleString())}</b><small>${b.reason === 'auto' ? 'Automatic backup' : esc(b.reason[0].toUpperCase() + b.reason.slice(1))} · Google Drive</small></div><div class="pb">${id === curId ? `<button type="button" class="btn sm" data-pa="restore-drive" data-bid="${esc(b.fileId)}">Restore</button>` : ''}</div></div>`).join('')
+    : '<div class="pnone" style="padding:12px 4px">No backups on Google Drive yet.</div>';
   showDlg(`<h3>Backups</h3><p class="sub">“${esc(p.name)}”: a backup is taken every few minutes while work changes. The latest ${KEEP_RECENT} are kept, plus one a day for ${KEEP_DAYS} days. Restoring takes a backup of the current state first, so nothing is lost.</p>
     <div class="plist">
       ${saved ? `<div class="prow"><div class="pi"><b>Last save</b><small>${esc(new Date(saved.at).toLocaleString())}</small></div><div class="pb">${id === curId ? `<button type="button" class="btn sm" data-pa="restore-save" data-id="${esc(id)}">Restore</button>` : ''}</div></div>` : ''}
       ${list.length ? list.map(b => `<div class="prow"><div class="pi"><b>${esc(new Date(b.at).toLocaleString())}</b><small>${b.reason === 'auto' ? 'Automatic backup' : esc(b.reason[0].toUpperCase() + b.reason.slice(1))}</small></div><div class="pb">${id === curId ? `<button type="button" class="btn sm" data-pa="restore" data-bid="${b.id}">Restore</button>` : ''}</div></div>`).join('')
         : '<div class="pnone" style="padding:14px 4px">No backups yet. The first one is taken a few minutes after you change something.</div>'}
     </div>
+    ${account ? `<div class="psec">On Google Drive</div><div class="plist">${driveRows}</div>` : ''}
     <div class="dlg-actions"><button type="button" class="btn left" data-pa="manage">All projects</button><button class="btn primary" value="cancel">Done</button></div>`);
   dlg.classList.add('wide');
 }
@@ -437,6 +749,13 @@ async function projAction(a, id, bid) {
     case 'restore-save': {
       dlg.close(); const s = await store.gtx('saves', 'readonly', st => st.get(id)).catch(() => null);
       if (s && await confirmDlg('Restore last save?', 'Every tool in this project goes back to how it was at the last save. The current state is backed up first.', 'Restore')) await restoreFrom(s.snap, 'last save');
+      break;
+    }
+    case 'restore-drive': {
+      dlg.close();
+      if (await confirmDlg('Restore backup from Google Drive?', 'Every tool in this project goes back to that backup. The current state is backed up first.', 'Restore')) {
+        try { const d = await driveRead(bid); await restoreFrom(d.snap, 'backup from Google Drive'); } catch (e) { toast('Couldn’t read that backup: ' + e.message); }
+      }
       break;
     }
     case 'restore': {
@@ -884,10 +1203,10 @@ function showDlg(html, onSubmit) {
   dlg.showModal();
   const first = form.querySelector('input:not([type=hidden]),select,textarea'); if (first) first.focus();
 }
-function confirmDlg(title, msg, okLabel, danger) {
+function confirmDlg(title, msg, okLabel, danger, altLabel) {
   return new Promise(res => {
-    showDlg(`<h3>${esc(title)}</h3><p class="sub">${esc(msg)}</p><div class="dlg-actions"><button class="btn ghost" value="cancel">Cancel</button><button class="btn ${danger ? 'danger' : 'primary'}" value="ok">${esc(okLabel)}</button></div>`);
-    dlg.addEventListener('close', () => res(dlg.returnValue === 'ok'), {once:true});
+    showDlg(`<h3>${esc(title)}</h3><p class="sub">${esc(msg)}</p><div class="dlg-actions"><button class="btn ghost" value="cancel">Cancel</button>${altLabel ? `<button class="btn" value="alt">${esc(altLabel)}</button>` : ''}<button class="btn ${danger ? 'danger' : 'primary'}" value="ok">${esc(okLabel)}</button></div>`);
+    dlg.addEventListener('close', () => res(dlg.returnValue === 'ok' ? true : dlg.returnValue === 'alt' ? false : (altLabel ? null : false)), {once:true});
   });
 }
 const catOptions = sel => CATS.map(c => `<option value="${c.id}"${c.id === sel ? ' selected' : ''}>${esc(c.num + ' · ' + c.name)}</option>`).join('');
@@ -1030,7 +1349,17 @@ document.addEventListener('click', e => { if (!pmenu().hidden && !e.target.close
 $('#saveBtn').onclick = () => saveProject();
 document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); saveProject(); } });
 form.addEventListener('click', e => { const b = e.target.closest('[data-pa]'); if (!b) return; e.preventDefault(); projAction(b.dataset.pa, b.dataset.id, b.dataset.bid); });
-document.addEventListener('click', e => { const b = e.target.closest('[data-pact]'); if (!b) return; if (b.dataset.pact === 'manage') manageDialog(); if (b.dataset.pact === 'new') newProjectDialog(); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-pact]'); if (!b) return; if (b.dataset.pact === 'signin') signIn(); if (b.dataset.pact === 'manage') manageDialog(); if (b.dataset.pact === 'new') newProjectDialog(); });
+$('#acctBtn').onclick = e => { e.stopPropagation(); if (!account) { signIn(); return; } const m = $('#amenu'); if (!m.hidden) closeAcctMenu(); else { closeProjMenu(); closeMenu(); openAcctMenu(); } };
+$('#amenu').addEventListener('click', e => {
+  const b = e.target.closest('[data-am]'); if (!b) return;
+  if (b.dataset.am === 'folder') { closeAcctMenu(); return; }
+  closeAcctMenu();
+  if (b.dataset.am === 'reconnect') reconnect();
+  if (b.dataset.am === 'sync') driveSync(true);
+  if (b.dataset.am === 'signout') signOut();
+});
+document.addEventListener('click', e => { if (!$('#amenu').hidden && !e.target.closest('#amenu,#acctBtn')) closeAcctMenu(); });
 window.addEventListener('pagehide', () => { const p = cur(); if (p) putProject(p); });
 $('#addBtn').onclick = addFromButton;
 $('#helpBtn').onclick = helpDialog;
@@ -1047,9 +1376,10 @@ qEl.addEventListener('input', () => { if (filter !== 'all' && qEl.value) filter 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !menu.hidden) { closeMenu(); return; }
   if (e.key === 'Escape' && !pmenu().hidden) { closeProjMenu(); return; }
+  if (e.key === 'Escape' && !$('#amenu').hidden) { closeAcctMenu(); return; }
   if (e.key === '/' && !active && !dlg.open && !/input|textarea|select/i.test(document.activeElement.tagName)) { e.preventDefault(); qEl.focus(); }
 });
-window.addEventListener('resize', () => { closeMenu(); closeProjMenu(); });
+window.addEventListener('resize', () => { closeMenu(); closeProjMenu(); closeAcctMenu(); });
 window.addEventListener('scroll', () => { closeMenu(); closeProjMenu(); }, {passive:true});
 window.addEventListener('hashchange', route);
 
@@ -1057,13 +1387,13 @@ window.addEventListener('hashchange', route);
 const drop = $('#drop'); let depth = 0, overCard = null;
 const hasFiles = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
 const setOver = el => { if (overCard === el) return; if (overCard) overCard.classList.remove('drop'); overCard = el; if (el) el.classList.add('drop'); };
-window.addEventListener('dragenter', e => { if (!hasFiles(e) || active) return; depth++; drop.hidden = false; });
+window.addEventListener('dragenter', e => { if (!hasFiles(e) || active || !isAdmin()) return; depth++; drop.hidden = false; });
 window.addEventListener('dragleave', () => { if (--depth <= 0) { depth = 0; drop.hidden = true; setOver(null); } });
-window.addEventListener('dragover', e => { if (!hasFiles(e) || active) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setOver(e.target.closest && e.target.closest('.cardw')); });
+window.addEventListener('dragover', e => { if (!hasFiles(e) || active || !isAdmin()) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setOver(e.target.closest && e.target.closest('.cardw')); });
 window.addEventListener('drop', e => {
   if (!hasFiles(e)) return; e.preventDefault();
   const cw = e.target.closest && e.target.closest('.cardw'); depth = 0; drop.hidden = true; setOver(null);
-  if (active) return;
+  if (active || !isAdmin()) return;
   const f = e.dataTransfer.files[0]; if (!f) return;
   if (cw) startUpdate(cw.dataset.id, f); else handleNewFile(f);
 });
@@ -1083,6 +1413,7 @@ window.addEventListener('drop', e => {
   const solo = location.hash.match(/^#\/solo\/(.+)$/);
   const st = solo && byId(decodeURIComponent(solo[1]));
   if (st) { try { await loadHtml(st); } catch (e) {} const s2 = byId(st.id); if (s2 && s2.html != null) { setTimeout(() => { document.open(); document.write(themed(s2)); document.close(); }, 0); return; } }
+  renderAccount(); gisReady.then(renderAccount);
   render(); route(); renderProjUI();
   setInterval(renderProjUI, 60 * 1000);
 })();

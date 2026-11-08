@@ -23,6 +23,7 @@
   <nav id="tabs" aria-label="Open tools"></nav>
   <div id="barActions"></div>
   <button class="ibtn savebtn" id="saveBtn" title="Save this project (Ctrl/⌘+S)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></svg><span class="t" id="saveLbl">Save</span><i class="dot"></i></button>
+  <button class="ibtn acct" id="acctBtn" hidden></button>
   <button class="ibtn" id="themeBtn" title="Switch light / dark theme for the hub and every tool" aria-label="Toggle light or dark theme">
     <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
     <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
@@ -73,6 +74,7 @@
 <div id="workspace" hidden></div>
 <div id="menu" role="menu" hidden></div>
 <div id="pmenu" class="pmenu" role="menu" hidden></div>
+<div id="amenu" class="pmenu amenu" role="menu" hidden></div>
 <div id="drop" hidden><div>Drop an HTML file to add it, or drop it on a tool to update it</div></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="filePick" accept=".html,.htm,text/html" hidden>

@@ -10,6 +10,7 @@ The website for Film Tool Hub: 14 filmmaking tools in one place, with projects a
 | `hub/hub.css` | How the hub page looks |
 | `hub/hub.js` | How the hub works (tabs, projects, saving, light/dark) |
 | `hub/kit.css` | The shared look every tool uses: fonts, colours, buttons, the tool header |
+| `hub/config.json` | Settings: the Google sign-in key (Client ID) and the email addresses that see the admin controls |
 | `tools/tools.json` | The list of tools: name, category, description and order |
 | `tools/<name>.html` | One file per tool |
 
@@ -22,6 +23,10 @@ The website for Film Tool Hub: 14 filmmaking tools in one place, with projects a
 **Change a tool's name, description or category.** Edit its entry in `tools/tools.json`.
 
 **Undo a change.** Every change is kept in the history (the clock icon, "History"). Any earlier version can be brought back.
+
+## Who sees the admin controls
+
+The buttons for adding and replacing tools (Add tool, the ⋯ menus) only show for the Google accounts listed under `adminEmails` in `hub/config.json`, once they've signed in. Add an address in quotes, separated by commas, e.g. `"adminEmails": ["you@gmail.com", "colleague@gmail.com"]`.
 
 ## Rules that keep people's saved work safe
 

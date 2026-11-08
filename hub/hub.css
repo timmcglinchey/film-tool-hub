@@ -244,3 +244,31 @@ dialog::backdrop{background:rgba(5,6,8,.7);backdrop-filter:blur(3px)}
   .controls{position:static}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Google account */
+.acct{padding:0 6px;position:relative}
+.acct.signin{padding:0 11px;border-color:var(--line2);color:var(--text)}
+.acct.signin:hover{background:var(--surface2)}
+.acct svg{width:16px;height:16px}
+.acct img,.acct .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;object-fit:cover}
+.acct .av{background:var(--accent);color:#14110b;font:700 12.5px var(--display)}
+.acct .dot{position:absolute;right:3px;bottom:5px;width:9px;height:9px;border-radius:50%;background:var(--good,#5cc98a);box-shadow:0 0 0 2px var(--bg)}
+.acct.off .dot{background:var(--faint)}
+.acct.busy .dot{background:var(--accent);animation:fthpulse 1s ease-in-out infinite}
+@keyframes fthpulse{50%{opacity:.35}}
+.amenu{min-width:280px}
+.amenu .who{padding:8px 10px 6px;display:flex;flex-direction:column;gap:2px}
+.amenu .who b{font-size:14px}.amenu .who small{font:500 11.5px var(--mono);color:var(--muted)}
+.amenu .st{margin:2px 10px 6px;font:500 11px var(--mono);letter-spacing:.04em;color:var(--muted);display:flex;align-items:center;gap:7px}
+.amenu .st::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--faint)}
+.amenu .st.ok::before{background:#5cc98a}
+.amenu a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:13.5px;color:var(--text);text-decoration:none}
+.amenu a:hover{background:var(--surface3)}
+.amenu a svg{width:16px;height:16px;color:var(--muted)}
+.psignin{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px dashed var(--line2);font-size:13.5px;color:var(--muted)}
+.psignin svg{width:20px;height:20px;flex:none}
+.psignin b{color:var(--text)}
+.psignin .btn{margin-left:auto;height:34px}
+/* admin-only controls (adding and replacing tools) */
+body:not(.admin) #addBtn,body:not(.admin) .cardw .more,body:not(.admin) #barActions [data-act="menu"],
+body:not(.admin) .foot #storeNote,body:not(.admin) #restoreBtn,body:not(.admin) #resetBtn,body:not(.admin) #banner{display:none!important}
