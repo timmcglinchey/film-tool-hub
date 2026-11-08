@@ -364,7 +364,16 @@ const gisReady = !driveOn() ? Promise.resolve(false) : new Promise(res => {
     try {
       tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_ID, scope: SCOPES,
-        callback: r => { const w = tokenWait; tokenWait = null; if (!w) return; if (r && r.access_token) { token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000; w.res(token); } else w.rej(new Error((r && r.error) || 'sign-in failed')); },
+        callback: r => {
+          const w = tokenWait; tokenWait = null; if (!w) return;
+          if (!r || !r.access_token) { w.rej(new Error((r && r.error) || 'sign-in failed')); return; }
+          /* Google lets people untick the Drive permission on the sign-in screen */
+          let driveOk = true;
+          try { driveOk = google.accounts.oauth2.hasGrantedAllScopes(r, 'https://www.googleapis.com/auth/drive.file'); } catch (e) {}
+          token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000;
+          if (!driveOk) { token = null; w.rej(new Error('Google Drive access wasn’t allowed. Sign in again and tick the box that lets Film Tool Hub use its files in your Google Drive.')); return; }
+          w.res(token);
+        },
         error_callback: e => { const w = tokenWait; tokenWait = null; if (w) w.rej(new Error((e && e.type) || 'sign-in cancelled')); }
       });
       res(true);
@@ -389,7 +398,13 @@ async function gapi(url, opts = {}) {
   if (!hasToken()) throw new Error('not connected');
   const r = await fetch(url, {...opts, headers: {...(opts.headers || {}), Authorization: 'Bearer ' + token}});
   if (r.status === 401) { token = null; renderAccount(); throw new Error('not connected'); }
-  if (!r.ok) throw new Error('Google Drive error ' + r.status);
+  if (!r.ok) {
+    let why = '';
+    try { const j = await r.json(); why = (j.error && (j.error.message || (j.error.errors && j.error.errors[0] && j.error.errors[0].message))) || ''; } catch (e) {}
+    if (r.status === 403 && /has not been used|is disabled|accessNotConfigured/i.test(why)) why = 'the Google Drive API isn’t switched on in the Google Cloud project (APIs & Services → Library → Google Drive API → Enable)';
+    else if (r.status === 403 && /insufficient|scope/i.test(why)) why = 'Drive access wasn’t allowed at sign-in. Sign out, sign in again and tick the Drive box';
+    throw new Error('Google Drive error ' + r.status + (why ? ': ' + why : ''));
+  }
   return r;
 }
 const gjson = async (url, opts) => (await gapi(url, opts)).json();
@@ -541,7 +556,7 @@ async function driveSync(askAboutCurrent) {
     }
     const c = cur();
     if (c && (c.needsDownload || c.remoteNewer) && askAboutCurrent !== false) await offerPull(c);
-  } catch (e) { if (e.message !== 'not connected') toast('Couldn’t reach Google Drive: ' + e.message); }
+  } catch (e) { if (e.message !== 'not connected') toastLong('Couldn’t reach Google Drive. ' + e.message); }
   driveSyncing = false;
   if (!mine(cur() || {})) { const m = activeProjects()[0]; if (m) await switchProject(m.id); }
   renderAccount(); renderProjUI(); render();
@@ -575,7 +590,7 @@ async function signIn() {
       if (keep && empties.some(e => e.id === curId)) await switchProject(keep.id);
       for (const e of empties) await deleteProject(e.id);
     }
-  } catch (e) { if (!/cancel|closed|superseded/i.test(e.message)) toast('Couldn’t sign in: ' + e.message); renderAccount(); }
+  } catch (e) { if (!/cancel|closed|superseded/i.test(e.message)) toastLong('Couldn’t sign in. ' + e.message); renderAccount(); }
 }
 async function reconnect() { try { await getToken(true); renderAccount(); await driveSync(true); } catch (e) { renderAccount(); } }
 async function signOut() {
@@ -1315,6 +1330,7 @@ function refreshAfterChange(id, reloadFrame) {
 
 /* ───────── toast ───────── */
 let toastT;
+function toastLong(msg) { toast(msg); clearTimeout(toastT); toastT = setTimeout(() => $('#toast').classList.remove('show'), 12000); }
 function toast(msg) { const el = $('#toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 3200); }
 
 /* ───────── events ───────── */
