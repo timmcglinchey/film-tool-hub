@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--fth-standalone-->
+<!-- Film Tool Hub: this block is only used when this file is opened on its own (for example while working on it).
+     Inside the hub it is removed and the hub supplies the same look from hub/kit.css. Keep it, but don't edit it here. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═════════ Film Tool Hub kit ═════════
+   Shared look for every tool. The hub injects this at the top of each tool's <head>,
+   sets data-theme="light|dark" on the tool's <html>, and sets --fth-cat to the tool's
+   category colour. Tools use the --fth-* tokens and the .fth-* components. */
+:root{
+  --fth-bg:#0b0c0e; --fth-bg2:#101216; --fth-surface:#15181d; --fth-surface2:#1b1f26; --fth-surface3:#232831;
+  --fth-line:#242931; --fth-line2:#333a45; --fth-line3:#46505e;
+  --fth-text:#f0ece5; --fth-muted:#9aa0aa; --fth-faint:#666c77;
+  --fth-good:#5cc98a; --fth-bad:#ff8f7a; --fth-warn:#f2bd5c;
+  /* accent tokens (--fth-cat, --fth-accent, --fth-accent-ink, --fth-accent-soft, --fth-accent-line, --fth-on-accent)
+     are written by the hub for each tool's category, as plain colours for both themes */
+  --fth-cat:#ffb547; --fth-accent:#ffb547; --fth-accent-ink:#ffb547; --fth-accent-soft:rgba(255,181,71,.14); --fth-accent-line:rgba(255,181,71,.45); --fth-on-accent:#14110b;
+  --fth-paper-backdrop:#07080a;
+  --fth-shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --fth-shadow-sm:none;
+  --fth-radius:14px; --fth-radius-sm:9px;
+  --fth-display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --fth-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --fth-script:"Courier Prime","Courier New",Courier,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --fth-bg:#f3f0ea; --fth-bg2:#f9f7f3; --fth-surface:#ffffff; --fth-surface2:#f1ede5; --fth-surface3:#e6e1d6;
+  --fth-line:#e3ded4; --fth-line2:#d2ccc0; --fth-line3:#b4ad9f;
+  --fth-text:#16181c; --fth-muted:#565c66; --fth-faint:#878c95;
+  --fth-good:#22804a; --fth-bad:#c0392b; --fth-warn:#9a6200;
+  --fth-paper-backdrop:#e4dfd5;
+  --fth-shadow:0 14px 30px -16px rgba(70,50,20,.30);
+  --fth-shadow-sm:0 1px 2px rgba(60,45,20,.05),0 4px 14px rgba(60,45,20,.05);
+  color-scheme:light;
+}
+
+/* base */
+html{background:var(--fth-bg)}
+body{background:var(--fth-bg);color:var(--fth-text);font-family:var(--fth-display);-webkit-font-smoothing:antialiased}
+::selection{background:var(--fth-accent-line)}
+:focus-visible{outline:2px solid var(--fth-accent);outline-offset:2px}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--fth-line2);border-radius:6px;border:2px solid var(--fth-bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--fth-line3)}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+
+/* tool header: category eyebrow, tool name, then actions on the right */
+.fth-head{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 20px;
+  background:color-mix(in srgb,var(--fth-bg) 88%,transparent);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  border-bottom:1px solid var(--fth-line)}
+.fth-head::before{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:linear-gradient(90deg,var(--fth-cat),transparent 38%);opacity:.75;pointer-events:none}
+.fth-id{display:flex;flex-direction:column;gap:5px;min-width:0;flex:none}
+.fth-eyebrow{display:flex;align-items:center;gap:8px;font:500 10.5px/1 var(--fth-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fth-accent-ink);white-space:nowrap}
+.fth-eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fth-cat);box-shadow:0 0 0 3px var(--fth-accent-soft);flex:none}
+.fth-title{margin:0;font-weight:800;font-variation-settings:"wdth" 68;font-size:23px;line-height:1;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap}
+.fth-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.fth-vsep{width:1px;height:22px;background:var(--fth-line2);margin:0 3px;flex:none}
+
+/* buttons */
+.fth-btn{height:34px;padding:0 13px;border-radius:var(--fth-radius-sm);border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);
+  font:600 13px/1 var(--fth-display);display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  transition:background-color .15s,border-color .15s,color .15s}
+.fth-btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.fth-btn:disabled{opacity:.45;cursor:default}
+.fth-btn.primary{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.fth-btn.primary:hover{filter:brightness(1.08)}
+.fth-btn.ghost{background:transparent;border-color:transparent;color:var(--fth-muted)}
+.fth-btn.ghost:hover{background:var(--fth-surface2);border-color:var(--fth-line2);color:var(--fth-text)}
+.fth-btn.danger{color:var(--fth-bad)}
+.fth-btn.sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.fth-btn.icon{width:30px;height:30px;padding:0}
+
+/* labels, fields */
+.fth-label{font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.fth-input{width:100%;min-width:0;background:var(--fth-bg2);border:1px solid var(--fth-line2);border-radius:8px;padding:7px 10px;color:var(--fth-text);font:14px/1.35 var(--fth-display);outline:none;transition:border-color .15s,box-shadow .15s}
+.fth-input:hover{border-color:var(--fth-line3)}
+.fth-input:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+select.fth-input{cursor:pointer}
+textarea.fth-input{resize:vertical;line-height:1.45}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-accent)}
+
+/* sections & surfaces */
+.fth-card{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);box-shadow:var(--fth-shadow-sm)}
+.fth-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.fth-sec::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+.fth-sec .fth-num{font:600 11px var(--fth-mono);color:var(--fth-accent-ink);letter-spacing:.08em}
+.fth-muted{color:var(--fth-muted)}
+.fth-mono{font-family:var(--fth-mono)}
+
+/* notes */
+.fth-tip{background:var(--fth-accent-soft);border-left:2px solid var(--fth-accent);color:var(--fth-text);padding:7px 10px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.45}
+.fth-warn{background:color-mix(in srgb,var(--fth-warn) 10%,var(--fth-surface));border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent);color:var(--fth-text);border-radius:10px;padding:10px 12px;font-size:13px}
+.fth-warn b:first-child{color:var(--fth-warn)}
+.fth-info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--fth-line3);color:var(--fth-muted);font:600 10px/1 var(--fth-mono);text-transform:none;letter-spacing:0;cursor:pointer;user-select:none;vertical-align:1px;margin-left:5px;transition:.15s}
+.fth-info:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+
+/* toast */
+.fth-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;z-index:200;background:var(--fth-text);color:var(--fth-bg);padding:10px 16px;border-radius:10px;font:500 13.5px var(--fth-display);box-shadow:var(--fth-shadow);transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.fth-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* paper: a printable page shown on screen stays paper-white in both themes */
+.fth-paper-wrap{background:var(--fth-paper-backdrop)}
+.fth-paper{background:#fff;color:#000;color-scheme:light;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55)}
+
+@media print{
+  html,body{background:#fff!important;color:#000}
+  .fth-head{display:none!important}
+  .fth-paper-wrap{background:#fff!important}
+  .fth-paper{box-shadow:none!important}
+}
+@media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
+@media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
+
+:root{--fth-cat:#97a3ff;--fth-accent:#97a3ff;--fth-accent-ink:#97a3ff;--fth-accent-soft:rgba(151,163,255,0.14);--fth-accent-line:rgba(151,163,255,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#585f94;--fth-accent-ink:#585f94;--fth-accent-soft:rgba(151,163,255,0.16);--fth-accent-line:rgba(151,163,255,0.6);--fth-on-accent:#ffffff}
+</style>
+<script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
+<!--/fth-standalone-->
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Depth of Field Lab</title>
+<style>
+html,body{margin:0}
+:root {
+  --bg: #121315; --rail: #1a1b1e; --line: #2a2c31; --fg: #e9e6df; --muted: #8d8a83;
+  --accent: #e7bd6a; --accent-ink: #1b1508; --field: #232429;
+  --ov: rgba(18,19,21,.76); --ov-fg: #e9e6df; --ov-muted: #a9a59d;
+  --sharp: #4deb80; --soft: #52a6d9; --blur: #528cff;
+  --font-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+button { font-family: inherit; }
+.app {
+  height: 100%; display: grid; grid-template-columns: minmax(0,1fr) 350px; gap: 14px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: max(14px, env(safe-area-inset-top, 0px)); padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+}
+.stage { position: relative; min-width: 0; min-height: 0; border-radius: 10px; overflow: hidden; background: #0d0d0e; }
+#view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+#view.dragging { cursor: grabbing; }
+#view.lens { cursor: crosshair; }
+#labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.tag {
+  position: absolute; transform: translate(-50%, -100%); margin-top: -6px; white-space: nowrap;
+  font: 600 10.5px/1.15 var(--font-data); color: var(--ov-fg); background: var(--ov);
+  border-radius: 5px; padding: 3px 6px; border: 1px solid transparent;
+}
+.tag.focus { color: var(--sharp); border-color: color-mix(in srgb, var(--sharp) 55%, transparent); }
+.tag.lim { color: #b9e9c8; }
+.tag.cam { color: var(--accent); }
+.tag .d { color: var(--ov-muted); font-weight: 400; }
+.badge {
+  position: absolute; left: 16px; top: 14px; max-width: min(440px, calc(100% - 32px)); pointer-events: none;
+  background: var(--ov); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border-radius: 8px; padding: 10px 14px 12px; color: var(--ov-fg);
+}
+.badge .eyebrow { font: 600 10.5px/1 var(--font-data); letter-spacing: .12em; text-transform: uppercase; color: #e7bd6a; }
+.badge h2 { margin: 6px 0 4px; font-family: var(--font-display); font-stretch: 72%; font-weight: 750; font-size: clamp(26px, 3.4vw, 38px); line-height: 1; letter-spacing: -.01em; }
+.badge p { margin: 0; color: #cfcbc3; font-size: 13px; }
+.legend {
+  position: absolute; right: 14px; top: 14px; pointer-events: none;
+  background: var(--ov); border-radius: 8px; padding: 8px 10px; color: var(--ov-muted);
+  font: 10.5px/1 var(--font-data);
+}
+.legend .grad { width: 190px; height: 10px; border-radius: 2px; margin: 2px 0 6px; }
+.legend .row { display: flex; justify-content: space-between; gap: 10px; }
+.legend .row span:first-child { color: var(--sharp); }
+.legend .row span:last-child { color: var(--blur); }
+.stagebar {
+  position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; flex-wrap: wrap; gap: 8px;
+  align-items: center; justify-content: space-between; pointer-events: none;
+}
+.stagebar > * { pointer-events: auto; }
+.hint { font: 11.5px/1.3 var(--font-data); color: #d6d2ca; background: var(--ov); padding: 6px 9px; border-radius: 6px; }
+.seg { display: inline-flex; background: var(--ov); border-radius: 7px; padding: 3px; gap: 2px; }
+.seg button, .btn {
+  font: 600 12px/1 var(--font-body); color: #a9a59d; background: transparent; border: 0;
+  padding: 7px 10px; border-radius: 5px; cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: #e7bd6a; color: #1b1508; }
+.btn { background: var(--ov); color: #e9e6df; padding: 10px 12px; border-radius: 7px; }
+.btn:hover { color: #e7bd6a; }
+.stagebar .group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.seg button:focus-visible, .chip:focus-visible, .btn:focus-visible, .rbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.toast {
+  position: absolute; left: 50%; top: 18px; transform: translate(-50%, -8px); opacity: 0; pointer-events: none;
+  font: 600 12px/1 var(--font-data); color: #10140f; background: var(--sharp); padding: 8px 12px; border-radius: 999px;
+  transition: opacity .2s, transform .2s; z-index: 6;
+}
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+.inset {
+  position: absolute; right: 14px; bottom: 62px; width: min(38%, 420px); z-index: 2;
+  background: var(--ov); border-radius: 9px; padding: 7px 7px 8px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.inset .head { cursor: move; touch-action: none; user-select: none; -webkit-user-select: none; }
+.inset.moving { box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+.inset .grip { position: absolute; right: 3px; bottom: 3px; width: 14px; height: 14px; cursor: nwse-resize; touch-action: none;
+  background: linear-gradient(135deg, transparent 0 45%, #8d8a83 45% 52%, transparent 52% 64%, #8d8a83 64% 71%, transparent 71%); opacity: .7; }
+.inset .grip:hover { opacity: 1; }
+.inset.min .grip { display: none; }
+.inset.min { width: auto !important; }
+.inset .foot { padding-right: 16px; }
+.inset .head { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 0 3px 6px; font: 600 10.5px/1.2 var(--font-data); }
+.inset .head b { color: #e7bd6a; letter-spacing: .1em; text-transform: uppercase; font-weight: 600; }
+.inset .head span { color: #d6d2ca; text-align: right; flex: 1; }
+.inset .head button { font: 600 10.5px/1 var(--font-data); background: #2a2c31; color: #e9e6df; border: 0; border-radius: 4px; padding: 4px 7px; cursor: pointer; }
+.inset .head button:hover { color: #e7bd6a; }
+#mini { display: block; width: 100%; aspect-ratio: 3 / 2; border-radius: 4px; background: #000; cursor: crosshair; touch-action: none; }
+.inset.world #mini { cursor: default; }
+.inset .foot { padding: 6px 3px 0; font: 10.5px/1.3 var(--font-data); color: var(--ov-muted); }
+.inset.min #mini, .inset.min .foot { display: none; }
+.inset.min { width: auto; }
+
+.rail { min-width: 0; min-height: 0; overflow-y: auto; background: var(--rail); border-radius: 10px; display: flex; flex-direction: column; }
+.rail header { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+.rail h1 { margin: 0; font-family: var(--font-display); font-stretch: 118%; font-weight: 800; font-size: 18px; letter-spacing: .01em; text-transform: uppercase; }
+.rail header p { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; }
+.sec { padding: 14px 18px 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
+.sec:last-child { border-bottom: 0; }
+.sec h3 { margin: 0; font: 600 10.5px/1 var(--font-data); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 600 12.5px/1 var(--font-body); color: var(--fg); background: var(--field); border: 1px solid var(--line); border-radius: 999px; padding: 7px 11px; cursor: pointer; }
+.chip:hover { border-color: var(--muted); }
+.chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.modes.two { grid-template-columns: repeat(2, 1fr); }
+.modes button { font: 600 12.5px/1.15 var(--font-body); color: var(--fg); background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 9px 6px; cursor: pointer; }
+.modes button small { display: block; font-weight: 400; font-size: 10.5px; color: var(--muted); margin-top: 3px; }
+.modes button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.modes button.on small { color: color-mix(in srgb, var(--accent-ink) 65%, var(--accent)); }
+.note { color: var(--muted); font-size: 12px; margin: 0; }
+.note b { color: var(--fg); font-weight: 600; }
+#plan { width: 100%; aspect-ratio: 1; display: block; border-radius: 8px; background: var(--field); touch-action: none; cursor: crosshair; }
+#bar { width: 100%; height: 78px; display: block; border-radius: 8px; background: var(--field); }
+.readouts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ro { background: var(--field); border-radius: 7px; padding: 8px 10px; min-width: 0; }
+.ro .k { font: 10px/1 var(--font-data); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.ro .v { margin-top: 5px; font: 600 15px/1.1 var(--font-data); font-variant-numeric: tabular-nums; }
+.ro .s { margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+.ctl { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: baseline; }
+.ctl label { font-weight: 600; font-size: 13px; }
+.ctl input.num {
+  font: 12px/1 var(--font-data); font-variant-numeric: tabular-nums; color: var(--accent); text-align: right;
+  background: transparent; border: 1px solid transparent; border-radius: 5px; padding: 4px 6px; margin: -4px -7px -4px 0;
+  width: 10em; min-width: 0; cursor: text;
+}
+.ctl input.num:hover { border-color: var(--line); }
+.ctl input.num:focus { outline: none; border-color: var(--accent); background: var(--field); color: var(--fg); }
+.ctl input[type=range] { grid-column: 1 / -1; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 22px; background: transparent; margin: 0; cursor: pointer; }
+input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: var(--line); }
+input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--line); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--fg); margin-top: -6px; border: 3px solid var(--rail); box-shadow: 0 0 0 1px var(--muted); }
+input[type=range]::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--fg); border: 3px solid var(--rail); box-shadow: 0 0 0 1px var(--muted); }
+input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 2px var(--accent); }
+.ticks { grid-column: 1 / -1; display: flex; justify-content: space-between; font: 10px/1 var(--font-data); color: var(--muted); margin-top: -2px; }
+.toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 600; font-size: 13px; cursor: pointer; }
+.toggle small { display: block; font-weight: 400; color: var(--muted); font-size: 11.5px; }
+.toggle input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.sub { display: flex; flex-direction: column; gap: 9px; }
+.inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.rbtn { font: 600 12.5px/1 var(--font-body); color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 7px; padding: 8px 12px; cursor: pointer; }
+.rbtn.ghost { background: var(--field); color: var(--fg); border: 1px solid var(--line); }
+.err { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: #e9e6df; }
+
+@media (max-width: 860px) {
+  html, body { height: auto; }
+  .app { height: auto; grid-template-columns: minmax(0,1fr); }
+  .stage { height: min(74vh, 600px); min-height: 420px; }
+  .rail { overflow: visible; }
+  .badge p { display: none; }
+  .legend { display: none; }
+  .inset { width: min(54%, 340px); }
+  .hint { display: none; }
+  .inset .foot, .inset .head span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<style data-fth-map>
+:root:root:root{--bg:var(--fth-bg);--rail:var(--fth-surface);--line:var(--fth-line);--fg:var(--fth-text);--muted:var(--fth-muted);--accent:var(--fth-accent);--accent-ink:var(--fth-on-accent);--field:var(--fth-bg2);--font-display:var(--fth-display);--font-body:var(--fth-display);--font-data:var(--fth-mono);}
+.stage{--bg:#121315;--rail:#1a1b1e;--line:#2a2c31;--fg:#e9e6df;--muted:#8d8a83;--accent:#e7bd6a;--accent-ink:#1b1508;--field:#232429;color:var(--fg);color-scheme:dark}
+html,body{height:100%}
+body{display:flex;flex-direction:column}
+.app{flex:1;min-height:0;height:auto!important}
+.rail header{padding-top:14px}
+.rail header p{margin-top:0}
+@media (max-width:860px){body{display:block}}
+.stage .seg button[aria-pressed="true"]{background:var(--fth-cat);color:#14110b}
+</style>
+</head>
+<body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>03 · Visual Planning</span><h1 class="fth-title">Depth of Field Lab</h1></div>
+  <div class="fth-actions"></div>
+</header>
+<div class="app">
+  <section class="stage" aria-label="3D depth of field view">
+    <canvas id="view"></canvas>
+    <div id="labels"></div>
+    <div class="badge" aria-live="polite">
+      <div class="eyebrow" id="bEyebrow">Depth of field</div>
+      <h2 id="bTitle">—</h2>
+      <p id="bDesc"></p>
+    </div>
+    <div class="legend" id="legend" aria-label="Focus colour key">
+      <div class="grad" id="legGrad"></div>
+      <div class="row"><span>In focus</span><span style="color:#8fc6e6">nearly</span><span>Out of focus</span></div>
+    </div>
+    <div class="inset" id="inset">
+      <div class="head"><b id="inTitle">Camera</b><span id="inSet"></span><button id="inSwap" title="Swap the big view and this one">Swap</button><button id="inMin" title="Hide or show this panel">Hide</button></div>
+      <canvas id="mini"></canvas>
+      <div class="foot" id="inFoot">Click the picture to focus on whatever is under the pointer.</div>
+      <div class="grip" id="inGrip" title="Drag to resize"></div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <div class="stagebar">
+      <span class="hint" id="hint">Drag: orbit · Scroll: zoom · Click a shape to focus · Arrow keys drive the camera</span>
+      <div class="group">
+        <div class="seg" role="group" aria-label="View">
+          <button data-view="side" aria-pressed="true">Side</button>
+          <button data-view="behind" aria-pressed="false">Behind</button>
+          <button data-view="top" aria-pressed="false">Top</button>
+          <button data-view="lens" aria-pressed="false" title="Look through the camera">Through lens</button>
+        </div>
+        <button class="btn" id="bShuffle" title="Scatter a new set of shapes">New shapes</button>
+      </div>
+    </div>
+  </section>
+
+  <aside class="rail">
+    <header>
+      <p>Move a camera through a field of shapes and watch what's sharp. The prism is what the lens sees, coloured green where it's in focus and blue where it isn't.</p>
+    </header>
+
+    <div class="sec">
+      <h3>Demos</h3>
+      <div class="chips" id="presets"></div>
+      <p class="note" id="presetNote">Each demo changes only the lens. Move the camera yourself.</p>
+    </div>
+
+    <div class="sec">
+      <h3>Sensor</h3>
+      <div class="modes" id="sensors">
+        <button data-sensor="ff" class="on">Full frame<small>36 × 24 mm</small></button>
+        <button data-sensor="apsc">APS-C<small>23.5 × 15.6 · ≈ S35</small></button>
+        <button data-sensor="mft">Micro 4/3<small>17.3 × 13 mm</small></button>
+      </div>
+      <div class="chips" id="aspects" role="group" aria-label="Frame shape">
+        <button class="chip on" data-aspect="native">Whole sensor</button>
+        <button class="chip" data-aspect="169">16:9 video crop</button>
+      </div>
+      <label class="toggle" for="tKeep"><span>Keep the framing when I switch sensor<small>Changes the focal length so the field of view stays the same</small></span><input type="checkbox" id="tKeep"></label>
+    </div>
+
+    <div class="sec">
+      <h3>Lens</h3>
+      <div class="ctl"><label for="sF">Focal length</label><input class="num" id="oF" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sF" min="0" max="1000" step="1"><div class="ticks"><span>8</span><span>16</span><span>35</span><span>85</span><span>200</span><span>400 mm</span></div></div>
+      <div class="ctl"><label for="sN">Aperture</label><input class="num" id="oN" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sN" min="0" max="27" step="1"><div class="ticks"><span>f/1</span><span>f/2</span><span>f/4</span><span>f/8</span><span>f/16</span><span>f/22</span></div></div>
+      <div class="ctl"><label for="sS">Focus distance</label><input class="num" id="oS" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sS" min="0" max="1000" step="1"><div class="ticks"><span>0.25</span><span>1</span><span>4</span><span>16</span><span>64 m</span><span>∞</span></div></div>
+      <div class="inline">
+        <button class="rbtn" id="bCentre">Focus on frame centre</button>
+        <button class="rbtn ghost" id="bHyper">Focus at hyperfocal</button>
+      </div>
+      <p class="note">Click any shape, in the big view or the camera picture, to focus on it. Click a value to type it: <b>85</b> mm, <b>f/2.8</b>, <b>3.5</b> m or <b>inf</b>.</p>
+    </div>
+
+    <div class="sec">
+      <h3>What's sharp</h3>
+      <canvas id="bar" aria-label="Distance scale showing the sharp zone"></canvas>
+      <div class="readouts">
+        <div class="ro"><div class="k">Near limit</div><div class="v" id="roNear">—</div><div class="s" id="roNearS"></div></div>
+        <div class="ro"><div class="k">Far limit</div><div class="v" id="roFar">—</div><div class="s" id="roFarS"></div></div>
+        <div class="ro"><div class="k">Hyperfocal</div><div class="v" id="roH">—</div><div class="s">focus here: sharp to ∞</div></div>
+        <div class="ro"><div class="k">Field of view</div><div class="v" id="roFov">—</div><div class="s" id="roFovS"></div></div>
+        <div class="ro"><div class="k">Full-frame equiv.</div><div class="v" id="roEq">—</div><div class="s" id="roEqS"></div></div>
+        <div class="ro"><div class="k">Background blur</div><div class="v" id="roBg">—</div><div class="s">disc at ∞, % of frame width</div></div>
+      </div>
+      <div class="chips" id="cocs" role="group" aria-label="Sharpness standard">
+        <button class="chip on" data-coc="std">Standard sharpness</button>
+        <button class="chip" data-coc="crit">Critical · 4K</button>
+      </div>
+      <p class="note" id="cocNote"></p>
+    </div>
+
+    <div class="sec">
+      <h3>Camera position · drag on the plan</h3>
+      <canvas id="plan" aria-label="Top-down plan. Drag the camera to move it, drag the round handle to aim it."></canvas>
+      <div class="ctl"><label for="sX">Left ↔ right</label><input class="num" id="oX" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sX" min="-30" max="30" step="0.1"></div>
+      <div class="ctl"><label for="sZ">Back ↔ forward</label><input class="num" id="oZ" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sZ" min="-30" max="30" step="0.1"></div>
+      <div class="ctl"><label for="sY">Lens height</label><input class="num" id="oY" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sY" min="0.1" max="5" step="0.05"></div>
+      <div class="ctl"><label for="sPan">Pan</label><input class="num" id="oPan" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sPan" min="-180" max="180" step="1"></div>
+      <div class="ctl"><label for="sTilt">Tilt</label><input class="num" id="oTilt" type="text" inputmode="decimal" autocomplete="off" spellcheck="false"><input type="range" id="sTilt" min="-60" max="60" step="1"></div>
+      <button class="rbtn ghost" id="bCamReset" style="align-self:flex-start">Reset camera position</button>
+      <p class="note"><b>Keyboard:</b> ↑ ↓ move forward and back, ← → step sideways. Hold <b>Shift</b> to tilt (↑ ↓) and pan (← →). Hold <b>Option/Alt</b> to raise and lower the camera (↑ ↓).</p>
+    </div>
+
+    <div class="sec">
+      <h3>Display</h3>
+      <label class="toggle" for="tPrism"><span>Field-of-view prism<small>What the lens sees, coloured by sharpness</small></span><input type="checkbox" id="tPrism" checked></label>
+      <label class="toggle" for="tTint"><span>Colour shapes and floor by sharpness<small>Only where they're inside the frame</small></span><input type="checkbox" id="tTint" checked></label>
+      <label class="toggle" for="tPlanes"><span>Focus, near and far planes<small>Outlines across the prism</small></span><input type="checkbox" id="tPlanes" checked></label>
+      <div class="sub">
+        <div class="toggle" style="cursor:default"><span>Blur in the camera picture<small id="blurNote"></small></span></div>
+        <div class="chips" id="blurs" role="group" aria-label="Blur strength">
+          <button class="chip" data-blur="0">Off</button>
+          <button class="chip" data-blur="1">True to life</button>
+          <button class="chip" data-blur="2">2× stronger</button>
+          <button class="chip" data-blur="4">4× stronger</button>
+        </div>
+      </div>
+      <label class="toggle" for="tPeak"><span>Focus peaking in the camera picture<small>Red edges where detail is within the sharp zone</small></span><input type="checkbox" id="tPeak"></label>
+      <label class="toggle" for="tOver"><span>Sharpness colours in the camera picture<small>The prism's green-to-blue laid over the image</small></span><input type="checkbox" id="tOver"></label>
+      <p class="note">The blur strength only changes the camera picture. The prism, colours and numbers always use the real optics. "In focus" means the blur spot is no bigger than the circle of confusion: about 1/1500 of the sensor diagonal (Standard) or 1/3000 (Critical, for big screens and 4K). The colour fades to blue by 3× that size.</p>
+    </div>
+  </aside>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const DEG = Math.PI / 180;
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+/* ---------- optics ---------- */
+const SENSORS = {
+  ff:   { name: "Full frame", short: "FF", w: 36, h: 24 },
+  apsc: { name: "APS-C", short: "APS-C", w: 23.5, h: 15.6 },
+  mft:  { name: "Micro Four Thirds", short: "MFT", w: 17.3, h: 13 },
+};
+const FF_DIAG = Math.hypot(36, 24);
+const STOPS = [1, 1.1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.5, 2.8, 3.2, 3.5, 4, 4.5, 5, 5.6, 6.3, 7.1, 8, 9, 10, 11, 13, 14, 16, 18, 20, 22];
+const CAM0 = { x: 0, y: 1.3, z: 20, yaw: 0, tilt: -3 };
+
+const S = {
+  sensor: "ff", aspect: "native", keep: false, f: 50, N: 2.8, s: 4.2, inf: false, coc: "std",
+  cam: { ...CAM0 }, prism: true, tint: true, planes: true, blurX: 2, peak: false, over: false,
+  view: "side", swap: false, seed: 11,
+};
+
+function frame() {
+  const sn = SENSORS[S.sensor];
+  let w = sn.w, h = sn.h;
+  if (S.aspect === "169") h = Math.min(h, w * 9 / 16);
+  return { w, h, diag: Math.hypot(sn.w, sn.h), sn };
+}
+function optics() {
+  const fr = frame();
+  const f = S.f / 1000, N = S.N;
+  const c = fr.diag / (S.coc === "crit" ? 3000 : 1500) / 1000;
+  const H = f * f / (N * c) + f;
+  let s = S.inf ? Infinity : Math.max(S.s, f * 1.2);
+  let near, far;
+  if (!isFinite(s)) { near = H - f; far = Infinity; }
+  else {
+    near = s * (H - f) / (H + s - 2 * f);
+    far = s < H ? s * (H - f) / (H - s) : Infinity;
+  }
+  const tanX = fr.w / 2 / S.f, tanY = fr.h / 2 / S.f;
+  return { f, N, s, c, H, near, far, tanX, tanY, fr, hfov: 2 * Math.atan(tanX) / DEG, vfov: 2 * Math.atan(tanY) / DEG };
+}
+/* blur-spot diameter on the sensor (m) for a point at distance d (m) */
+function blurM(o, d) {
+  d = Math.max(d, 1e-3);
+  if (!isFinite(o.s)) return o.f * o.f / (o.N * d);
+  return o.f * o.f / o.N * Math.abs(d - o.s) / (d * Math.max(o.s - o.f, 1e-5));
+}
+const G = [0.30, 0.92, 0.50], B = [0.32, 0.55, 1.0];
+function tOf(r) { if (r <= 1) return 0; const t = Math.min(1, Math.log2(r) / Math.log2(3)); return t * t * (3 - 2 * t); }
+function fcol(r) { const t = tOf(r); return [G[0] + (B[0] - G[0]) * t, G[1] + (B[1] - G[1]) * t, G[2] + (B[2] - G[2]) * t]; }
+const css = (c, a = 1) => `rgba(${Math.round(c[0] * 255)},${Math.round(c[1] * 255)},${Math.round(c[2] * 255)},${a})`;
+(() => { // legend gradient
+  const st = []; for (let i = 0; i <= 10; i++) { const r = Math.pow(4, i / 10); st.push(`${css(fcol(r))} ${i * 10}%`); }
+  $("legGrad").style.background = `linear-gradient(90deg, ${st.join(",")})`;
+})();
+
+function fmtM(d) {
+  if (!isFinite(d)) return "∞";
+  if (d < 1) return d.toFixed(2) + " m";
+  if (d < 10) return d.toFixed(2) + " m";
+  if (d < 100) return d.toFixed(1) + " m";
+  return Math.round(d) + " m";
+}
+function fmtN(n) { return "f/" + (n >= 10 ? String(Math.round(n * 10) / 10).replace(/\.0$/, "") : (Math.round(n * 10) / 10).toFixed(1).replace(/\.0$/, "")); }
+function fmtMM(f) { return (f >= 100 ? Math.round(f) : Math.round(f * 10) / 10) + " mm"; }
+
+/* camera basis */
+function camBasis() {
+  const c = S.cam, y = c.yaw * DEG, p = c.tilt * DEG;
+  const fwd = [Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p)];
+  const right = norm(cross(fwd, [0, 1, 0]));
+  const up = cross(right, fwd);
+  return { pos: [c.x, c.y, c.z], fwd, right, up };
+}
+
+/* ---------- math ---------- */
+function cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+function add(a, b) { return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]; }
+function mul(a, s) { return [a[0] * s, a[1] * s, a[2] * s]; }
+function norm(a) { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
+const M = {
+  persp(fovy, asp, n, f) {
+    const t = 1 / Math.tan(fovy / 2), m = new Float32Array(16);
+    m[0] = t / asp; m[5] = t; m[10] = (f + n) / (n - f); m[11] = -1; m[14] = 2 * f * n / (n - f); return m;
+  },
+  look(e, t, u) {
+    const z = norm(sub(e, t)), x = norm(cross(u, z)), y = cross(z, x);
+    return new Float32Array([x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, -dot(x, e), -dot(y, e), -dot(z, e), 1]);
+  },
+  mul(a, b) {
+    const o = new Float32Array(16);
+    for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) {
+      let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k]; o[c * 4 + r] = s;
+    }
+    return o;
+  },
+  inv(m) {
+    const a = m, o = new Float32Array(16);
+    const b00 = a[0] * a[5] - a[1] * a[4], b01 = a[0] * a[6] - a[2] * a[4], b02 = a[0] * a[7] - a[3] * a[4];
+    const b03 = a[1] * a[6] - a[2] * a[5], b04 = a[1] * a[7] - a[3] * a[5], b05 = a[2] * a[7] - a[3] * a[6];
+    const b06 = a[8] * a[13] - a[9] * a[12], b07 = a[8] * a[14] - a[10] * a[12], b08 = a[8] * a[15] - a[11] * a[12];
+    const b09 = a[9] * a[14] - a[10] * a[13], b10 = a[9] * a[15] - a[11] * a[13], b11 = a[10] * a[15] - a[11] * a[14];
+    let det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06; if (!det) return o; det = 1 / det;
+    o[0] = (a[5] * b11 - a[6] * b10 + a[7] * b09) * det; o[1] = (a[2] * b10 - a[1] * b11 - a[3] * b09) * det;
+    o[2] = (a[13] * b05 - a[14] * b04 + a[15] * b03) * det; o[3] = (a[10] * b04 - a[9] * b05 - a[11] * b03) * det;
+    o[4] = (a[6] * b08 - a[4] * b11 - a[7] * b07) * det; o[5] = (a[0] * b11 - a[2] * b08 + a[3] * b07) * det;
+    o[6] = (a[14] * b02 - a[12] * b05 - a[15] * b01) * det; o[7] = (a[8] * b05 - a[10] * b02 + a[11] * b01) * det;
+    o[8] = (a[4] * b10 - a[5] * b08 + a[7] * b06) * det; o[9] = (a[1] * b08 - a[0] * b10 - a[3] * b06) * det;
+    o[10] = (a[12] * b04 - a[13] * b02 + a[15] * b00) * det; o[11] = (a[9] * b02 - a[8] * b04 - a[11] * b00) * det;
+    o[12] = (a[5] * b07 - a[4] * b09 - a[6] * b06) * det; o[13] = (a[0] * b09 - a[1] * b07 + a[2] * b06) * det;
+    o[14] = (a[13] * b01 - a[12] * b03 - a[14] * b00) * det; o[15] = (a[8] * b03 - a[9] * b01 + a[10] * b00) * det;
+    return o;
+  },
+  xf(m, p) { const x = p[0], y = p[1], z = p[2]; const w = m[3] * x + m[7] * y + m[11] * z + m[15];
+    return [(m[0] * x + m[4] * y + m[8] * z + m[12]) / w, (m[1] * x + m[5] * y + m[9] * z + m[13]) / w, (m[2] * x + m[6] * y + m[10] * z + m[14]) / w, w]; },
+  xd(m, d) { return [m[0] * d[0] + m[4] * d[1] + m[8] * d[2], m[1] * d[0] + m[5] * d[1] + m[9] * d[2], m[2] * d[0] + m[6] * d[1] + m[10] * d[2]]; },
+  model(p, ry, rx, s) { // T * Ry * Rx * S
+    const cy = Math.cos(ry), sy = Math.sin(ry), cx = Math.cos(rx), sx = Math.sin(rx);
+    // R = Ry*Rx columns
+    const c0 = [cy, 0, -sy], c1 = [sy * sx, cx, cy * sx], c2 = [sy * cx, -sx, cy * cx];
+    return new Float32Array([c0[0] * s[0], c0[1] * s[0], c0[2] * s[0], 0, c1[0] * s[1], c1[1] * s[1], c1[2] * s[1], 0, c2[0] * s[2], c2[1] * s[2], c2[2] * s[2], 0, p[0], p[1], p[2], 1]);
+  },
+  basis(p, r, u, f, s) { // columns: right, up, -fwd? we use x=right,y=up,z=fwd
+    return new Float32Array([r[0] * s[0], r[1] * s[0], r[2] * s[0], 0, u[0] * s[1], u[1] * s[1], u[2] * s[1], 0, f[0] * s[2], f[1] * s[2], f[2] * s[2], 0, p[0], p[1], p[2], 1]);
+  },
+  nrm(m) { // inverse-transpose of upper 3x3 as mat3
+    const i = M.inv(m);
+    return new Float32Array([i[0], i[4], i[8], i[1], i[5], i[9], i[2], i[6], i[10]]);
+  },
+};
+
+/* ---------- geometry ---------- */
+function mk(P, N, I) { return { p: new Float32Array(P), n: new Float32Array(N), i: new Uint16Array(I) }; }
+function gBox() {
+  const P = [], N = [], I = [];
+  const faces = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+  for (const n of faces) {
+    const u = n[1] ? [1, 0, 0] : [0, 1, 0], v = cross(n, u), b = P.length / 3;
+    for (const [s, t] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      P.push(.5 * (n[0] + s * u[0] + t * v[0]), .5 * (n[1] + s * u[1] + t * v[1]), .5 * (n[2] + s * u[2] + t * v[2])); N.push(...n);
+    }
+    I.push(b, b + 1, b + 2, b, b + 2, b + 3);
+  }
+  return mk(P, N, I);
+}
+function gSphere(seg = 36, rings = 22) {
+  const P = [], N = [], I = [];
+  for (let j = 0; j <= rings; j++) { const v = j / rings * Math.PI;
+    for (let i = 0; i <= seg; i++) { const u = i / seg * 2 * Math.PI;
+      const n = [Math.sin(v) * Math.cos(u), Math.cos(v), Math.sin(v) * Math.sin(u)]; P.push(...mul(n, .5)); N.push(...n); } }
+  for (let j = 0; j < rings; j++) for (let i = 0; i < seg; i++) { const a = j * (seg + 1) + i, b = a + seg + 1; I.push(a, b, a + 1, a + 1, b, b + 1); }
+  return mk(P, N, I);
+}
+function gCyl(seg = 36, top = 0.5) { // top radius: 0.5 = cylinder, 0 = cone
+  const P = [], N = [], I = [];
+  const slope = (0.5 - top); // dr over height 1
+  for (let i = 0; i <= seg; i++) { const u = i / seg * 2 * Math.PI, c = Math.cos(u), s = Math.sin(u);
+    const n = norm([c, slope, s]);
+    P.push(c * .5, -.5, s * .5); N.push(...n); P.push(c * top, .5, s * top); N.push(...n); }
+  for (let i = 0; i < seg; i++) { const a = i * 2; I.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+  const cap = (y, r, ny) => { if (r <= 0) return; const b = P.length / 3; P.push(0, y, 0); N.push(0, ny, 0);
+    for (let i = 0; i <= seg; i++) { const u = i / seg * 2 * Math.PI; P.push(Math.cos(u) * r, y, Math.sin(u) * r); N.push(0, ny, 0); }
+    for (let i = 0; i < seg; i++) I.push(b, b + 1 + i, b + 2 + i); };
+  cap(-.5, .5, -1); cap(.5, top, 1);
+  return mk(P, N, I);
+}
+function gTorus(R = .35, r = .15, s1 = 44, s2 = 18) {
+  const P = [], N = [], I = [];
+  for (let j = 0; j <= s1; j++) { const u = j / s1 * 2 * Math.PI;
+    for (let i = 0; i <= s2; i++) { const v = i / s2 * 2 * Math.PI;
+      const n = [Math.cos(v) * Math.cos(u), Math.sin(v), Math.cos(v) * Math.sin(u)];
+      P.push((R + r * Math.cos(v)) * Math.cos(u), r * Math.sin(v), (R + r * Math.cos(v)) * Math.sin(u)); N.push(...n); } }
+  for (let j = 0; j < s1; j++) for (let i = 0; i < s2; i++) { const a = j * (s2 + 1) + i, b = a + s2 + 1; I.push(a, b, a + 1, a + 1, b, b + 1); }
+  return mk(P, N, I);
+}
+function gFlat(V, F) { const P = [], N = [], I = [];
+  for (const f of F) { const a = V[f[0]], b = V[f[1]], c = V[f[2]]; const n = norm(cross(sub(b, a), sub(c, a)));
+    const o = P.length / 3; P.push(...a, ...b, ...c); N.push(...n, ...n, ...n); I.push(o, o + 1, o + 2); }
+  return mk(P, N, I); }
+function gIco() {
+  const t = (1 + Math.sqrt(5)) / 2;
+  let V = [[-1, t, 0], [1, t, 0], [-1, -t, 0], [1, -t, 0], [0, -1, t], [0, 1, t], [0, -1, -t], [0, 1, -t], [t, 0, -1], [t, 0, 1], [-t, 0, -1], [-t, 0, 1]];
+  V = V.map(v => mul(norm(v), .5));
+  const F = [[0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11], [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8], [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9], [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]];
+  return gFlat(V, F);
+}
+function gPyr() {
+  const V = [[-.5, -.5, -.5], [.5, -.5, -.5], [.5, -.5, .5], [-.5, -.5, .5], [0, .5, 0]];
+  return gFlat(V, [[0, 1, 2], [0, 2, 3], [0, 4, 1], [1, 4, 2], [2, 4, 3], [3, 4, 0]]);
+}
+const GEO = { box: gBox(), sphere: gSphere(), cyl: gCyl(), cone: gCyl(36, 0), torus: gTorus(), ico: gIco(), pyr: gPyr() };
+
+/* ---------- scene ---------- */
+const PALETTE = ["#d9734e", "#ecdcc0", "#c9504f", "#9a6fb0", "#c7c2b8", "#e39a7a", "#b3485f", "#f0e6d8", "#d8a03c", "#8a7f74", "#e8c25a", "#c26a8a"];
+const hex = h => [parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255];
+let OBJ = [];
+function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function buildScene(seed) {
+  const R = rng(seed), out = [];
+  const types = ["box", "sphere", "cyl", "cone", "torus", "ico", "pyr"];
+  const free = (x, z, r) => {
+    if (Math.hypot(x - CAM0.x, z - CAM0.z) < r + 1.4) return false;
+    for (const o of out) if (Math.hypot(o.p[0] - x, o.p[2] - z) < o.r + r + 0.35) return false;
+    return true;
+  };
+  const add1 = (type, x, z, size, float) => {
+    let s, y, rx = 0, ry = R() * Math.PI * 2;
+    if (type === "box") s = [size * (0.6 + R() * 0.8), size * (0.6 + R() * 0.9), size * (0.6 + R() * 0.8)];
+    else if (type === "cyl") { const r = size * (0.5 + R() * 0.5); s = [r, size * (0.8 + R() * 1.2), r]; }
+    else if (type === "cone" || type === "pyr") { const r = size * (0.7 + R() * 0.4); s = [r, size * (0.9 + R() * 0.9), r]; }
+    else s = [size, size, size];
+    if (type === "torus") rx = Math.PI / 2;
+    y = s[1] / 2;
+    if (type === "torus") y = s[0] / 2;
+    if (float) { y += 0.6 + R() * 2.2; rx += (R() - .5) * 1.2; }
+    const r = Math.max(s[0], s[2]) * 0.55;
+    out.push({ type, p: [x, y, z], ry, rx, s, r, col: hex(PALETTE[Math.floor(R() * PALETTE.length)]), float });
+  };
+  // a line of shapes down the starting view so the first frame has things at many distances
+  const hero = [2.4, 3.6, 5.2, 7.5, 10.5, 15, 22, 31, 42];
+  hero.forEach((d, i) => {
+    const side = (i % 2 ? 1 : -1) * (0.25 + R() * 0.5) * (0.35 + d * 0.06);
+    const size = 0.5 + Math.min(1.6, d * 0.04) + R() * 0.3;
+    add1(types[Math.floor(R() * types.length)], CAM0.x + side, CAM0.z - d, size, false);
+  });
+  let tries = 0;
+  while (out.length < 78 && tries++ < 4000) {
+    const x = (R() * 2 - 1) * 29, z = (R() * 2 - 1) * 29;
+    const pillar = R() < 0.07;
+    const size = pillar ? 0.5 : 0.35 + R() * 1.1;
+    if (!free(x, z, size * 0.75)) continue;
+    if (pillar) { out.push({ type: R() < .5 ? "box" : "cyl", p: [x, 0, z], ry: R() * 6.3, rx: 0, s: [0.5, 2.5 + R() * 3, 0.5], r: 0.35, col: hex(PALETTE[Math.floor(R() * PALETTE.length)]), float: false });
+      const o = out[out.length - 1]; o.p[1] = o.s[1] / 2; continue; }
+    add1(types[Math.floor(R() * types.length)], x, z, size, R() < 0.22);
+  }
+  for (const o of out) { o.m = M.model(o.p, o.ry, o.rx, o.s); o.nm = M.nrm(o.m); o.im = M.inv(o.m); }
+  OBJ = out;
+}
+
+/* ---------- shaders ---------- */
+const FOCUS = `
+uniform float uF, uN, uS, uC;
+float bm(float d){ d = max(d, 1e-3); return uF*uF/uN * abs(d-uS) / (d*max(uS-uF,1e-5)); }
+float br(float d){ return bm(d)/uC; }
+float tf(float r){ if(r<=1.) return 0.; float t = clamp(log2(r)/log2(3.),0.,1.); return t*t*(3.-2.*t); }
+vec3 fcol(float r){ return mix(vec3(.30,.92,.50), vec3(.32,.55,1.), tf(r)); }
+`;
+const VS_MESH = `#version 300 es
+layout(location=0) in vec3 aP; layout(location=1) in vec3 aN;
+uniform mat4 uVP, uM; uniform mat3 uNM;
+out vec3 vW; out vec3 vN;
+void main(){ vec4 w = uM*vec4(aP,1.); vW = w.xyz; vN = uNM*aN; gl_Position = uVP*w; }`;
+const TINT = `
+uniform int uTint; uniform mat4 uCamVP; uniform vec3 uCamPos, uCamFwd;
+vec3 tint(vec3 c, vec3 w, float lit){
+  if(uTint==0) return c;
+  vec4 cl = uCamVP*vec4(w,1.);
+  if(cl.w<=0. || abs(cl.x)>cl.w || abs(cl.y)>cl.w) return c;
+  float d = dot(w-uCamPos, uCamFwd);
+  return mix(c, fcol(br(d))*(0.35+0.75*lit), 0.58);
+}`;
+const FS_OBJ = `#version 300 es
+precision highp float;
+in vec3 vW; in vec3 vN; out vec4 o;
+uniform vec3 uCol, uEye, uHor; uniform float uFog;
+${FOCUS}${TINT}
+void main(){
+  vec3 n = normalize(vN);
+  vec3 L = normalize(vec3(.45,.85,.30));
+  float dif = max(dot(n,L),0.), hemi = .5+.5*n.y;
+  vec3 c = uCol*(0.16+0.30*hemi+0.70*dif);
+  vec3 V = normalize(uEye-vW);
+  c += vec3(pow(max(dot(reflect(-L,n),V),0.),28.)*.22);
+  c = tint(c, vW, dif*0.8+hemi*0.25);
+  float fog = 1.-exp(-length(vW-uEye)*uFog);
+  o = vec4(mix(c,uHor,fog),1.);
+}`;
+const FS_FLOOR = `#version 300 es
+precision highp float;
+in vec3 vW; in vec3 vN; out vec4 o;
+uniform vec3 uEye, uHor; uniform float uFog; uniform vec4 uBlob[96]; uniform int uBlobN;
+${FOCUS}${TINT}
+float grid(vec2 p, float s){ vec2 q = p/s; vec2 w = fwidth(q); vec2 g = abs(fract(q-.5)-.5)/max(w,1e-4); return (1.-min(min(g.x,g.y),1.)) * clamp(1.-max(w.x,w.y)*2.5,0.,1.); }
+void main(){
+  vec2 p = vW.xz;
+  vec3 c = vec3(.165,.172,.185);
+  c = mix(c, vec3(.24,.25,.27), grid(p,1.)*.55);
+  c = mix(c, vec3(.32,.33,.36), grid(p,5.)*.8);
+  float sh = 1.;
+  for(int i=0;i<96;i++){ if(i>=uBlobN) break; vec4 b = uBlob[i]; float d = length(p-b.xy);
+    sh *= 1. - b.w*(1.-smoothstep(b.z*0.35, b.z*1.35, d)); }
+  c *= mix(.45, 1., sh);
+  c = tint(c, vW, sh*.9);
+  float fog = 1.-exp(-length(vW-uEye)*uFog);
+  o = vec4(mix(c,uHor,fog),1.);
+}`;
+const VS_FS = `#version 300 es
+out vec2 vUv; void main(){ vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2); vUv = p; gl_Position = vec4(p*2.-1.,0.,1.); }`;
+const FS_SKY = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o; uniform mat4 uInv; uniform vec3 uHor, uZen;
+void main(){ vec2 n = vUv*2.-1.; vec4 a = uInv*vec4(n,-1.,1.), b = uInv*vec4(n,1.,1.);
+  vec3 d = normalize(b.xyz/b.w - a.xyz/a.w);
+  o = vec4(mix(uHor, uZen, smoothstep(-.02,.55,d.y)),1.); }`;
+const VS_POS = `#version 300 es
+layout(location=0) in vec3 aP; uniform mat4 uVP; out vec3 vW;
+void main(){ vW = aP; gl_Position = uVP*vec4(aP,1.); }`;
+const FS_PRISM = `#version 300 es
+precision highp float;
+in vec3 vW; out vec4 o; uniform vec3 uCamPos, uCamFwd; uniform float uA, uLen;
+${FOCUS}
+void main(){ float d = dot(vW-uCamPos,uCamFwd); float r = br(d); float t = tf(r);
+  float a = uA*(0.45+0.55*(1.-t))*(1.-smoothstep(uLen*.5,uLen,d));
+  o = vec4(fcol(r), a); }`;
+const FS_FLAT = `#version 300 es
+precision highp float; in vec3 vW; out vec4 o; uniform vec4 uCol; void main(){ o = uCol; }`;
+const FS_DOF = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uColT, uDepT; uniform vec2 uPx; uniform float uNear, uFar, uK, uMaxR, uRS, uLod;
+${FOCUS}
+float lin(float z){ float zn = z*2.-1.; return 2.*uNear*uFar/(uFar+uNear-zn*(uFar-uNear)); }
+float coc(float d){ return min(bm(d)*uK, uMaxR); }
+void main(){
+  vec3 c0 = textureLod(uColT,vUv,uLod).rgb; float d0 = lin(texture(uDepT,vUv).r);
+  float s0 = coc(d0); vec3 acc = c0; float tot = 1., rad = uRS, ang = 0., fg = 0.;
+  for(int i=0;i<2000;i++){
+    if(rad>=uMaxR) break;
+    vec2 tc = vUv + vec2(cos(ang),sin(ang))*uPx*rad;
+    vec3 sc = textureLod(uColT,tc,uLod).rgb; float sd = lin(texture(uDepT,tc).r); float ss = coc(sd);
+    if(sd>d0) ss = clamp(ss,0.,s0*2.);
+    float m = smoothstep(rad-.5,rad+.5,ss);
+    if(sd<d0) fg += m*ss;
+    acc += mix(acc/tot, sc, m); tot += 1.;
+    rad += uRS/rad; ang += 2.39996323;
+  }
+  float reff = max(s0, min(uMaxR, 2.*fg/tot));
+  o = vec4(acc/tot, reff/max(uMaxR,1e-3));
+}`;
+const FS_COMP = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform sampler2D uColT, uDepT, uBlurT; uniform vec2 uPx; uniform float uNear, uFar, uK, uMaxR, uScale; uniform int uBlur, uPeak, uOver;
+${FOCUS}
+float lin(float z){ float zn = z*2.-1.; return 2.*uNear*uFar/(uFar+uNear-zn*(uFar-uNear)); }
+float coc(float d){ return min(bm(d)*uK, uMaxR); }
+float luma(vec2 uv){ return dot(textureLod(uColT,uv,0.).rgb, vec3(.299,.587,.114)); }
+void main(){
+  vec3 sharp = textureLod(uColT,vUv,0.).rgb; float d0 = lin(texture(uDepT,vUv).r);
+  vec3 col = sharp;
+  if(uBlur==1){
+    vec2 bp = uPx/uScale*.8;
+    vec4 bl = (texture(uBlurT,vUv)*2. + texture(uBlurT,vUv+vec2(bp.x,bp.y)) + texture(uBlurT,vUv+vec2(-bp.x,bp.y))
+             + texture(uBlurT,vUv+vec2(bp.x,-bp.y)) + texture(uBlurT,vUv+vec2(-bp.x,-bp.y)))/6.;
+    float R = max(coc(d0), min(bl.a, texture(uBlurT,vUv).a)*uMaxR);
+    vec3 mid = sharp;
+    if(R>0.5){ vec3 a = sharp; float n = 1.;
+      for(int i=0;i<16;i++){ float rr = R*sqrt((float(i)+.5)/16.), an = float(i)*2.39996323;
+        a += textureLod(uColT, vUv+vec2(cos(an),sin(an))*uPx*rr, 0.).rgb; n += 1.; }
+      mid = a/n; }
+    float k = uScale > .999 ? smoothstep(.5,1.2,R) : smoothstep(.6,1.4,R*uScale);
+    col = mix(mid, bl.rgb, k);
+  }
+  float r0 = br(d0);
+  if(uOver==1) col = mix(col, fcol(r0)*(.25+.9*dot(sharp,vec3(.33))), .5);
+  if(uPeak==1 && r0<=1.){
+    float gx = luma(vUv+vec2(uPx.x,0.))-luma(vUv-vec2(uPx.x,0.));
+    float gy = luma(vUv+vec2(0.,uPx.y))-luma(vUv-vec2(0.,uPx.y));
+    col = mix(col, vec3(1.,.22,.2), clamp((length(vec2(gx,gy))-.06)*9.,0.,1.));
+  }
+  o = vec4(col,1.);
+}`;
+const FS_BLIT = `#version 300 es
+precision highp float; in vec2 vUv; out vec4 o; uniform sampler2D uT; void main(){ o = texture(uT,vUv); }`;
+
+/* ---------- renderer ---------- */
+const ENV = { hor: [0.235, 0.245, 0.27], zen: [0.075, 0.08, 0.09], fog: 0.009 };
+function Renderer(canvas) {
+  const gl = canvas.getContext("webgl2", { antialias: true, alpha: false, premultipliedAlpha: false });
+  if (!gl) return null;
+  function sh(type, src) { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) + "\n" + src.slice(0, 200)); return s; }
+  function prog(vs, fs) { const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(p); if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    const loc = {}; return { p, u: n => (n in loc ? loc[n] : (loc[n] = gl.getUniformLocation(p, n))) }; }
+  const P = {
+    obj: prog(VS_MESH, FS_OBJ), floor: prog(VS_MESH, FS_FLOOR), sky: prog(VS_FS, FS_SKY),
+    prism: prog(VS_POS, FS_PRISM), flat: prog(VS_POS, FS_FLAT), dof: prog(VS_FS, FS_DOF), comp: prog(VS_FS, FS_COMP),
+  };
+  const meshes = {};
+  function upload(g) {
+    const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+    const b1 = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b1); gl.bufferData(gl.ARRAY_BUFFER, g.p, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+    const b2 = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b2); gl.bufferData(gl.ARRAY_BUFFER, g.n, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 0, 0);
+    const ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, g.i, gl.STATIC_DRAW);
+    gl.bindVertexArray(null); return { vao, n: g.i.length };
+  }
+  for (const k in GEO) meshes[k] = upload(GEO[k]);
+  meshes.floor = upload(mk([-400, 0, -400, 400, 0, -400, 400, 0, 400, -400, 0, 400], [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], [0, 1, 2, 0, 2, 3]));
+  const dyn = gl.createVertexArray(), dynB = gl.createBuffer();
+  gl.bindVertexArray(dyn); gl.bindBuffer(gl.ARRAY_BUFFER, dynB); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0); gl.bindVertexArray(null);
+  const emptyVao = gl.createVertexArray();
+
+  // render targets
+  let rt = null;
+  function tex(fmtI, fmt, type, w, h, filter) {
+    const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texImage2D(gl.TEXTURE_2D, 0, fmtI, w, h, 0, fmt, type, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    return t;
+  }
+  function ensureRT(w, h, dw, dh) {
+    if (rt && rt.w === w && rt.h === h && rt.dw === dw && rt.dh === dh) return rt;
+    if (rt) { gl.deleteTexture(rt.c); gl.deleteTexture(rt.d); gl.deleteTexture(rt.o); gl.deleteFramebuffer(rt.f1); gl.deleteFramebuffer(rt.f2); }
+    const c = tex(gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, w, h, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.generateMipmap(gl.TEXTURE_2D);
+    const d = tex(gl.DEPTH_COMPONENT24, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, w, h, gl.NEAREST);
+    const o = tex(gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, dw, dh, gl.LINEAR);
+    const f1 = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f1);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, c, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, d, 0);
+    const f2 = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f2);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, o, 0);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return (rt = { w, h, dw, dh, c, d, o, f1, f2 });
+  }
+
+  function setFocus(p, o) {
+    gl.uniform1f(p.u("uF"), o.f); gl.uniform1f(p.u("uN"), o.N);
+    gl.uniform1f(p.u("uS"), isFinite(o.s) ? o.s : 1e5); gl.uniform1f(p.u("uC"), o.c);
+  }
+  function setTint(p, on, ctx) {
+    gl.uniform1i(p.u("uTint"), on ? 1 : 0);
+    gl.uniformMatrix4fv(p.u("uCamVP"), false, ctx.camVP);
+    gl.uniform3fv(p.u("uCamPos"), ctx.cb.pos); gl.uniform3fv(p.u("uCamFwd"), ctx.cb.fwd);
+  }
+  function drawScene(VP, eye, ctx, tintOn, withBody) {
+    const inv = M.inv(VP);
+    gl.disable(gl.DEPTH_TEST); gl.depthMask(false);
+    gl.useProgram(P.sky.p); gl.uniformMatrix4fv(P.sky.u("uInv"), false, inv);
+    gl.uniform3fv(P.sky.u("uHor"), ENV.hor); gl.uniform3fv(P.sky.u("uZen"), ENV.zen);
+    gl.bindVertexArray(emptyVao); gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.enable(gl.DEPTH_TEST); gl.depthMask(true); gl.disable(gl.BLEND); gl.disable(gl.CULL_FACE);
+    // floor
+    const fp = P.floor; gl.useProgram(fp.p);
+    gl.uniformMatrix4fv(fp.u("uVP"), false, VP); gl.uniformMatrix4fv(fp.u("uM"), false, M.model([0, 0, 0], 0, 0, [1, 1, 1]));
+    gl.uniformMatrix3fv(fp.u("uNM"), false, new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+    gl.uniform3fv(fp.u("uEye"), eye); gl.uniform3fv(fp.u("uHor"), ENV.hor); gl.uniform1f(fp.u("uFog"), ENV.fog);
+    gl.uniform4fv(fp.u("uBlob[0]"), ctx.blobs); gl.uniform1i(fp.u("uBlobN"), ctx.blobN);
+    setFocus(fp, ctx.o); setTint(fp, tintOn, ctx);
+    gl.bindVertexArray(meshes.floor.vao); gl.drawElements(gl.TRIANGLES, meshes.floor.n, gl.UNSIGNED_SHORT, 0);
+    // objects
+    const op = P.obj; gl.useProgram(op.p);
+    gl.uniformMatrix4fv(op.u("uVP"), false, VP); gl.uniform3fv(op.u("uEye"), eye); gl.uniform3fv(op.u("uHor"), ENV.hor); gl.uniform1f(op.u("uFog"), ENV.fog);
+    setFocus(op, ctx.o); setTint(op, tintOn, ctx);
+    for (const ob of OBJ) {
+      const m = meshes[ob.type]; gl.bindVertexArray(m.vao);
+      gl.uniformMatrix4fv(op.u("uM"), false, ob.m); gl.uniformMatrix3fv(op.u("uNM"), false, ob.nm); gl.uniform3fv(op.u("uCol"), ob.col);
+      gl.drawElements(gl.TRIANGLES, m.n, gl.UNSIGNED_SHORT, 0);
+    }
+    if (withBody) {
+      gl.uniform1i(op.u("uTint"), 0);
+      for (const part of ctx.body) {
+        const m = meshes[part.type]; gl.bindVertexArray(m.vao);
+        gl.uniformMatrix4fv(op.u("uM"), false, part.m); gl.uniformMatrix3fv(op.u("uNM"), false, part.nm); gl.uniform3fv(op.u("uCol"), part.col);
+        gl.drawElements(gl.TRIANGLES, m.n, gl.UNSIGNED_SHORT, 0);
+      }
+    }
+  }
+  function lines(VP, arr, col, mode = gl.LINES) {
+    if (!arr.length) return;
+    gl.useProgram(P.flat.p); gl.uniformMatrix4fv(P.flat.u("uVP"), false, VP); gl.uniform4fv(P.flat.u("uCol"), col);
+    gl.bindVertexArray(dyn); gl.bindBuffer(gl.ARRAY_BUFFER, dynB); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.DYNAMIC_DRAW);
+    gl.drawArrays(mode, 0, arr.length / 3);
+  }
+
+  function renderWorld(ctx, view, vx, vy, vw, vh) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(vx, vy, vw, vh);
+    const VP = M.mul(M.persp(view.fov, vw / vh, 0.05, 900), M.look(view.eye, view.target, [0, 1, 0]));
+    drawScene(VP, view.eye, ctx, S.tint, true);
+    // prism
+    const fz = ctx.frustum;
+    if (S.prism) {
+      gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
+      const pp = P.prism; gl.useProgram(pp.p); gl.uniformMatrix4fv(pp.u("uVP"), false, VP);
+      gl.uniform3fv(pp.u("uCamPos"), ctx.cb.pos); gl.uniform3fv(pp.u("uCamFwd"), ctx.cb.fwd);
+      gl.uniform1f(pp.u("uA"), 0.42); gl.uniform1f(pp.u("uLen"), fz.L); setFocus(pp, ctx.o);
+      gl.bindVertexArray(dyn); gl.bindBuffer(gl.ARRAY_BUFFER, dynB); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(fz.faces), gl.DYNAMIC_DRAW);
+      gl.drawArrays(gl.TRIANGLES, 0, fz.faces.length / 3);
+      lines(VP, fz.edges, [0.85, 0.88, 0.9, 0.35]);
+      gl.depthMask(true);
+    }
+    if (S.planes) {
+      gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
+      if (fz.focusQuad.length) lines(VP, fz.focusQuad, [0.30, 0.92, 0.50, 0.16], gl.TRIANGLES);
+      lines(VP, fz.focusRect, [0.42, 1.0, 0.6, 0.95]);
+      lines(VP, fz.limRect, [0.62, 0.92, 0.72, 0.55]);
+      lines(VP, fz.axis, [0.9, 0.74, 0.42, 0.5]);
+      gl.depthMask(true);
+    }
+    gl.disable(gl.BLEND);
+    return VP;
+  }
+
+  function renderLens(ctx, vx, vy, vw, vh, maxW) {
+    const o = ctx.o, X = S.blurX;
+    const scale = Math.min(1, maxW / vw);
+    const w = Math.max(2, Math.round(vw * scale)), h = Math.max(2, Math.round(vh * scale));
+    // blur diameter on the sensor (m) -> blur radius in pixels, times the chosen exaggeration
+    const K = w / (o.fr.w / 1000) * 0.5 * X;
+    const dn = clamp((isFinite(o.s) ? o.s : 10) * 0.5, 0.12, 0.6);
+    const maxR = Math.min(w * 0.16, Math.max(blurM(o, dn), blurM(o, 1e5)) * K);
+    const on = X > 0 && maxR > 0.6;
+    // big blurs are gathered at reduced resolution, then blended with the sharp image
+    const sc = on ? clamp(16 / maxR, 0.25, 1) : 1;
+    const dw = Math.max(2, Math.round(w * sc)), dh = Math.max(2, Math.round(h * sc));
+    const r = ensureRT(w, h, dw, dh);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, r.f1); gl.viewport(0, 0, w, h);
+    gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    drawScene(ctx.camVPr, ctx.cb.pos, ctx, false, false);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, r.c); gl.generateMipmap(gl.TEXTURE_2D);
+    gl.disable(gl.DEPTH_TEST); gl.bindVertexArray(emptyVao);
+    if (on) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, r.f2); gl.viewport(0, 0, dw, dh);
+      const dp = P.dof; gl.useProgram(dp.p);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, r.c); gl.uniform1i(dp.u("uColT"), 0);
+      gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, r.d); gl.uniform1i(dp.u("uDepT"), 1);
+      gl.uniform2f(dp.u("uPx"), 1 / dw, 1 / dh);
+      gl.uniform1f(dp.u("uNear"), ctx.camNear); gl.uniform1f(dp.u("uFar"), ctx.camFar);
+      const mr = maxR * dw / w;
+      gl.uniform1f(dp.u("uK"), K * dw / w); gl.uniform1f(dp.u("uMaxR"), mr);
+      gl.uniform1f(dp.u("uRS"), Math.max(0.5, mr * mr / 1400)); gl.uniform1f(dp.u("uLod"), Math.log2(w / dw));
+      setFocus(dp, o);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(vx, vy, vw, vh);
+    const cp = P.comp; gl.useProgram(cp.p);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, r.c); gl.uniform1i(cp.u("uColT"), 0);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, r.d); gl.uniform1i(cp.u("uDepT"), 1);
+    gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, r.o); gl.uniform1i(cp.u("uBlurT"), 2);
+    gl.uniform2f(cp.u("uPx"), 1 / w, 1 / h);
+    gl.uniform1f(cp.u("uNear"), ctx.camNear); gl.uniform1f(cp.u("uFar"), ctx.camFar);
+    gl.uniform1f(cp.u("uK"), K); gl.uniform1f(cp.u("uMaxR"), maxR); gl.uniform1f(cp.u("uScale"), dw / w);
+    gl.uniform1i(cp.u("uBlur"), on ? 1 : 0); gl.uniform1i(cp.u("uPeak"), S.peak ? 1 : 0); gl.uniform1i(cp.u("uOver"), S.over ? 1 : 0);
+    setFocus(cp, o);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.activeTexture(gl.TEXTURE0); gl.enable(gl.DEPTH_TEST);
+  }
+  function clear() { gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, canvas.width, canvas.height); gl.clearColor(0.04, 0.04, 0.045, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); }
+  return { gl, renderWorld, renderLens, clear };
+}
+
+/* ---------- per-frame context ---------- */
+function makeCtx() {
+  const o = optics(), cb = camBasis();
+  const aspect = o.fr.w / o.fr.h;
+  const camNear = 0.03, camFar = 700;
+  const fovy = 2 * Math.atan(o.tanY);
+  const camV = M.look(cb.pos, add(cb.pos, cb.fwd), [0, 1, 0]);
+  const camVP = M.mul(M.persp(fovy, aspect, 0.01, 1e5), camV);
+  const camVPr = M.mul(M.persp(fovy, aspect, camNear, camFar), camV);
+  // frustum geometry
+  const L = 90;
+  const corner = (d, sx, sy) => add(add(add(cb.pos, mul(cb.fwd, d)), mul(cb.right, sx * d * o.tanX)), mul(cb.up, sy * d * o.tanY));
+  const C = [corner(L, -1, -1), corner(L, 1, -1), corner(L, 1, 1), corner(L, -1, 1)];
+  const faces = [], edges = [];
+  for (let i = 0; i < 4; i++) { const a = C[i], b = C[(i + 1) % 4]; faces.push(...cb.pos, ...a, ...b); edges.push(...cb.pos, ...a); }
+  const rect = d => { const q = [corner(d, -1, -1), corner(d, 1, -1), corner(d, 1, 1), corner(d, -1, 1)], out = [];
+    for (let i = 0; i < 4; i++) out.push(...q[i], ...q[(i + 1) % 4]); return out; };
+  const focusD = isFinite(o.s) ? o.s : null;
+  const focusRect = focusD && focusD < L ? rect(focusD) : [];
+  let focusQuad = [];
+  if (focusD && focusD < L) { const q = [corner(focusD, -1, -1), corner(focusD, 1, -1), corner(focusD, 1, 1), corner(focusD, -1, 1)]; focusQuad = [...q[0], ...q[1], ...q[2], ...q[0], ...q[2], ...q[3]]; }
+  const limRect = [...(o.near < L ? rect(o.near) : []), ...(isFinite(o.far) && o.far < L ? rect(o.far) : [])];
+  const axis = [...cb.pos, ...add(cb.pos, mul(cb.fwd, Math.min(L, isFinite(o.far) ? Math.max(o.far * 1.3, 8) : L)))];
+  // blob shadows
+  const blobs = new Float32Array(96 * 4); let blobN = 0;
+  for (const ob of OBJ) { if (blobN >= 96) break; const hgt = ob.p[1] - ob.s[1] / 2;
+    blobs.set([ob.p[0], ob.p[2], ob.r * 1.15, ob.float ? Math.max(0.12, 0.5 - hgt * 0.12) : 0.6], blobN * 4); blobN++; }
+  blobs.set([cb.pos[0], cb.pos[2], 0.3, 0.5], blobN * 4); blobN = Math.min(96, blobN + 1);
+  // camera body (exaggerated so it's visible from far away)
+  const body = [];
+  const k = 0.75, dark = [0.22, 0.225, 0.24], amber = hex("#e7bd6a");
+  const part = (type, off, s, col, rot) => {
+    const p = add(add(add(cb.pos, mul(cb.right, off[0] * k)), mul(cb.up, off[1] * k)), mul(cb.fwd, off[2] * k));
+    let m;
+    if (rot === "lens") m = M.basis(p, cb.right, cb.fwd, mul(cb.up, -1), mul(s, k)); // cylinder axis along fwd
+    else m = M.basis(p, cb.right, cb.up, cb.fwd, mul(s, k));
+    body.push({ type, m, nm: M.nrm(m), col });
+  };
+  part("box", [0, 0.02, -0.32], [0.36, 0.26, 0.3], dark);
+  part("box", [0, 0.17, -0.34], [0.14, 0.06, 0.18], amber);
+  part("cyl", [0, 0, -0.08], [0.2, 0.22, 0.2], [0.13, 0.13, 0.14], "lens");
+  part("cyl", [0, 0, 0.01], [0.21, 0.03, 0.21], amber, "lens");
+  // tripod legs
+  const legTop = add(cb.pos, mul(cb.fwd, -0.24 * k));
+  if (cb.pos[1] > 0.35) for (let i = 0; i < 3; i++) {
+    const a = i / 3 * Math.PI * 2 + S.cam.yaw * DEG, foot = [legTop[0] + Math.sin(a) * cb.pos[1] * 0.42, 0, legTop[2] - Math.cos(a) * cb.pos[1] * 0.42];
+    const top = [legTop[0], legTop[1] - 0.14 * k, legTop[2]];
+    const dv = sub(top, foot), len = Math.hypot(...dv), dir = norm(dv);
+    const r1 = norm(cross(dir, [1, 0, 0.3])), r2 = cross(dir, r1);
+    const m = M.basis(mul(add(top, foot), 0.5), r1, dir, r2, [0.035, len, 0.035]);
+    body.push({ type: "cyl", m, nm: M.nrm(m), col: [0.3, 0.3, 0.32] });
+  }
+  return { o, cb, camVP, camVPr, camNear, camFar, aspect, blobs, blobN, body,
+    frustum: { L, faces, edges, focusRect, focusQuad, limRect, axis } };
+}
+
+/* ---------- views ---------- */
+const orbit = { yaw: 0.9, pitch: 0.42, dist: 17, target: [0, 1, 14], fov: 50 * DEG };
+function viewParams(v) {
+  const cb = camBasis(), cy = S.cam.yaw * DEG, orbit = { fov: 50 * DEG };
+  if (v === "side") { orbit.target = add(cb.pos, [cb.fwd[0] * 7, -cb.pos[1] + 0.8, cb.fwd[2] * 7]); orbit.yaw = -cy + 1.15; orbit.pitch = 0.36; orbit.dist = 19; }
+  if (v === "behind") { orbit.target = add(cb.pos, [cb.fwd[0] * 9, -cb.pos[1] + 1, cb.fwd[2] * 9]); orbit.yaw = -cy + 0.22; orbit.pitch = 0.3; orbit.dist = 15; }
+  if (v === "top") { orbit.target = add(cb.pos, [cb.fwd[0] * 16, -cb.pos[1], cb.fwd[2] * 16]); orbit.yaw = -cy; orbit.pitch = 1.5; orbit.dist = 58; }
+  return orbit;
+}
+function setView(v, keep) {
+  S.view = v;
+  if (v !== "lens") Object.assign(orbit, viewParams(v));
+  document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === v)));
+  S.swap = v === "lens";
+  if (!keep) touch();
+}
+function orbitView() {
+  const cp = Math.cos(orbit.pitch);
+  const eye = add(orbit.target, mul([Math.sin(orbit.yaw) * cp, Math.sin(orbit.pitch), Math.cos(orbit.yaw) * cp], orbit.dist));
+  return { eye, target: orbit.target, fov: orbit.fov };
+}
+
+/* ---------- setup ---------- */
+const view = $("view"), mini = $("mini");
+let R1, R2;
+try {
+  R1 = Renderer(view); R2 = Renderer(mini);
+  if (!R1 || !R2) throw new Error("WebGL 2 isn't available in this browser.");
+} catch (e) {
+  const d = document.createElement("div"); d.className = "err";
+  d.textContent = "The 3D view couldn't start: " + e.message; document.querySelector(".stage").appendChild(d);
+  console.error(e); return;
+}
+buildScene(S.seed);
+
+let dirty = true, lastCtx = null, lastWorldVP = null, mainRect = null, miniRect = null;
+function touch() { dirty = true; }
+
+function fitCanvas(cv) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const r = cv.getBoundingClientRect();
+  const w = Math.max(2, Math.round(r.width * dpr)), h = Math.max(2, Math.round(r.height * dpr));
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  return { w, h, dpr, cssW: r.width, cssH: r.height };
+}
+function letterbox(W, H, asp) { let w = W, h = Math.round(W / asp); if (h > H) { h = H; w = Math.round(H * asp); } return { x: Math.round((W - w) / 2), y: Math.round((H - h) / 2), w, h }; }
+
+function frame_() {
+  requestAnimationFrame(frame_);
+  if (!dirty) return; dirty = false;
+  const ctx = makeCtx(); lastCtx = ctx;
+  mini.style.aspectRatio = `${ctx.o.fr.w} / ${ctx.o.fr.h}`;
+  const a = fitCanvas(view), b = fitCanvas(mini);
+  R1.clear(); R2.clear();
+  if (!S.swap) {
+    lastWorldVP = R1.renderWorld(ctx, orbitView(), 0, 0, a.w, a.h); mainRect = null;
+    R2.renderLens(ctx, 0, 0, b.w, b.h, 900); miniRect = { x: 0, y: 0, w: b.w, h: b.h, dpr: b.dpr, lens: true };
+  } else {
+    const lb = letterbox(a.w, a.h, ctx.aspect);
+    R1.renderLens(ctx, lb.x, lb.y, lb.w, lb.h, 1200); mainRect = { ...lb, dpr: a.dpr }; lastWorldVP = null;
+    const ov = { ...orbit }; Object.assign(orbit, viewParams("behind"));
+    const bv = orbitView(); Object.assign(orbit, ov);
+    R2.renderWorld(ctx, bv, 0, 0, b.w, b.h);
+    miniRect = { x: 0, y: 0, w: b.w, h: b.h, dpr: b.dpr, lens: false };
+  }
+  $("inset").classList.toggle("world", S.swap);
+  $("inTitle").textContent = S.swap ? "Set" : "Camera";
+  $("inFoot").textContent = S.swap ? "The view from behind the camera. Drag the title bar to move this panel." : "Click the picture to focus. Drag the title bar to move this panel, or the corner to resize it.";
+  view.classList.toggle("lens", S.swap);
+  $("hint").textContent = S.swap ? "Drag to pan and tilt · click a shape to focus · arrow keys drive the camera" : "Drag: orbit · Scroll: zoom · Click a shape to focus · Arrow keys drive the camera";
+  drawLabels(ctx, a);
+  updateText(ctx.o);
+  drawPlan(ctx); drawBar(ctx.o);
+}
+
+/* ---------- labels ---------- */
+const labels = $("labels");
+function drawLabels(ctx, a) {
+  labels.innerHTML = "";
+  if (S.swap || !lastWorldVP) return;
+  const o = ctx.o, cb = ctx.cb;
+  const placed = [];
+  const put = (p, html, cls) => {
+    const q = M.xf(lastWorldVP, p); if (q[3] <= 0 || Math.abs(q[0]) > 1.05 || Math.abs(q[1]) > 1.05) return;
+    const el = document.createElement("div"); el.className = "tag " + cls; el.innerHTML = html; labels.appendChild(el);
+    const w = el.offsetWidth, h = el.offsetHeight + 3, x = (q[0] + 1) / 2 * a.cssW;
+    let y = (1 - q[1]) / 2 * a.cssH;
+    for (let k = 0; k < 8; k++) {
+      const hit = placed.find(r => Math.abs(r.x - x) < (r.w + w) / 2 && Math.abs(r.y - y) < h);
+      if (!hit) break; y = hit.y - h;
+    }
+    placed.push({ x, y, w });
+    el.style.left = x + "px"; el.style.top = y + "px";
+  };
+  const at = d => add(add(cb.pos, mul(cb.fwd, d)), mul(cb.up, d * o.tanY));
+  put(add(cb.pos, [0, 0.45, 0]), "Camera", "cam");
+  if (!S.planes) return;
+  if (o.near < 90) put(at(o.near), `Near <span class="d">${fmtM(o.near)}</span>`, "lim");
+  if (isFinite(o.s) && o.s < 90) put(at(o.s), `Focus <span class="d">${fmtM(o.s)}</span>`, "focus");
+  if (isFinite(o.far) && o.far < 90) put(at(o.far), `Far <span class="d">${fmtM(o.far)}</span>`, "lim");
+}
+
+/* ---------- text readouts ---------- */
+function updateText(o) {
+  const total = o.far - o.near;
+  $("bTitle").textContent = isFinite(total) ? fmtM(total) + " deep" : "to infinity";
+  let desc;
+  if (!isFinite(o.far)) desc = `Sharp from ${fmtM(o.near)} all the way to the horizon.`;
+  else {
+    const front = o.s - o.near, back = o.far - o.s;
+    desc = `Sharp from ${fmtM(o.near)} to ${fmtM(o.far)}. ${Math.round(front / total * 100)}% of it is in front of the focus point, ${Math.round(back / total * 100)}% behind.`;
+  }
+  $("bDesc").textContent = desc;
+  $("roNear").textContent = fmtM(o.near); $("roNearS").textContent = isFinite(o.s) ? fmtM(o.s - o.near) + " in front of focus" : "";
+  $("roFar").textContent = fmtM(o.far); $("roFarS").textContent = isFinite(o.far) ? fmtM(o.far - o.s) + " behind focus" : "nothing past here goes soft";
+  $("roH").textContent = fmtM(o.H);
+  $("roFov").textContent = o.hfov.toFixed(1) + "°"; $("roFovS").textContent = `horizontal · ${o.vfov.toFixed(1)}° vertical`;
+  const crop = FF_DIAG / o.fr.diag;
+  $("roEq").textContent = S.sensor === "ff" ? "—" : `${fmtMM(S.f * crop)} ${fmtN(S.N * crop)}`;
+  $("roEqS").textContent = S.sensor === "ff" ? "this is full frame" : `same framing and depth · ×${crop.toFixed(2)} crop`;
+  const bg = blurM(o, 1e6) * 1000 / o.fr.w * 100;
+  $("roBg").textContent = bg < 0.1 ? bg.toFixed(2) + "%" : bg.toFixed(1) + "%";
+  $("cocNote").textContent = `Circle of confusion: ${(o.c * 1000).toFixed(3)} mm on ${SENSORS[S.sensor].name.toLowerCase()}.`;
+  $("inSet").textContent = `${fmtMM(S.f)} · ${fmtN(S.N)} · ${SENSORS[S.sensor].short}${S.aspect === "169" ? " 16:9" : ""}${S.blurX > 1 ? ` · blur ×${S.blurX}` : S.blurX === 0 ? " · no blur" : ""}`;
+}
+
+/* ---------- light / dark for the plan and distance bar ----------
+   Colours come from the hub's shared colours, read each time they're drawn. */
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function theme() {
+  const light = document.documentElement.getAttribute("data-theme") === "light";
+  return {
+    light, fg: tok("--fg") || "#e9e6df", muted: tok("--muted") || "#8d8a83", field: tok("--field") || "#17181b",
+    mono: tok("--font-data") || '"JetBrains Mono", monospace',
+    grid: light ? "rgba(0,0,0,.07)" : "rgba(255,255,255,.05)",
+    edge: light ? "rgba(29,28,26,.35)" : "rgba(233,230,223,.35)",
+    limit: light ? "#2e9a58" : "#c9f5d6",
+    limitLine: light ? "rgba(34,128,74,.7)" : "rgba(201,245,214,.6)",
+    focusLine: light ? "#1f9d52" : "#6dff97",
+  };
+}
+
+/* ---------- distance bar ---------- */
+const bar = $("bar"), bctx = bar.getContext("2d");
+function drawBar(o) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2), r = bar.getBoundingClientRect();
+  const W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
+  if (bar.width !== W || bar.height !== H) { bar.width = W; bar.height = H; }
+  const c = bctx; c.setTransform(dpr, 0, 0, dpr, 0, 0); const w = r.width, h = r.height;
+  c.clearRect(0, 0, w, h);
+  const T = theme();
+  const pad = 10, infW = 22, x0 = pad, x1 = w - pad - infW, dmin = 0.25, dmax = 128;
+  const X = d => !isFinite(d) || d >= dmax ? x1 + infW * 0.6 : x0 + (Math.log(Math.max(d, dmin) / dmin) / Math.log(dmax / dmin)) * (x1 - x0);
+  const by = 24, bh = 18;
+  for (let x = x0; x <= x1; x++) {
+    const d = dmin * Math.pow(dmax / dmin, (x - x0) / (x1 - x0));
+    c.fillStyle = css(fcol(blurM(o, d) / o.c)); c.fillRect(x, by, 1.5, bh);
+  }
+  c.fillStyle = css(fcol(blurM(o, 1e6) / o.c)); c.fillRect(x1 + 4, by, infW - 4, bh);
+  c.fillStyle = "rgba(0,0,0,.25)"; c.fillRect(x1 + 1, by, 3, bh);
+  c.font = `10px ${T.mono}`; c.textAlign = "center"; c.fillStyle = T.muted;
+  for (const d of [0.5, 1, 2, 5, 10, 20, 50, 100]) {
+    const x = X(d); c.fillStyle = "rgba(0,0,0,.35)"; c.fillRect(x, by + bh - 5, 1, 5);
+    c.fillStyle = T.muted; c.fillText(d < 1 ? d : String(d), x, by + bh + 13);
+  }
+  c.fillText("∞", x1 + 4 + (infW - 4) / 2, by + bh + 13);
+  // markers
+  const mark = (d, col, label, top) => {
+    const x = X(d); c.fillStyle = col; c.fillRect(x - 1, by - 3, 2, bh + 6);
+    c.font = `600 10px ${T.mono}`; const tw = c.measureText(label).width;
+    let lx = clamp(x - tw / 2, 2, w - tw - 2); c.fillText(label, lx, top);
+  };
+  c.fillStyle = "rgba(255,255,255,.08)";
+  const nx = X(o.near), fx = X(o.far);
+  mark(o.near, T.limit, "", 14);
+  mark(o.far, T.limit, "", 14);
+  c.fillStyle = T.fg; const fxs = X(o.s);
+  c.fillRect(fxs - 1.5, by - 6, 3, bh + 12);
+  c.font = `600 10px ${T.mono}`;
+  const lab = `focus ${fmtM(o.s)}`, tw = c.measureText(lab).width;
+  c.fillStyle = T.fg; c.fillText(lab, clamp(fxs - tw / 2, 2, w - tw - 2), 13);
+  void nx; void fx;
+}
+
+/* ---------- plan ---------- */
+const plan = $("plan"), pctx = plan.getContext("2d");
+const PLAN = 31; // half-size in m
+function drawPlan(ctx) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2), r = plan.getBoundingClientRect();
+  const W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
+  if (plan.width !== W || plan.height !== H) { plan.width = W; plan.height = H; }
+  const c = pctx; c.setTransform(dpr, 0, 0, dpr, 0, 0); const w = r.width, h = r.height;
+  const sc = w / (PLAN * 2), PX = x => w / 2 + x * sc, PY = z => h / 2 + z * sc;
+  c.clearRect(0, 0, w, h);
+  const T = theme();
+  c.strokeStyle = T.grid; c.lineWidth = 1;
+  for (let g = -30; g <= 30; g += 5) { c.beginPath(); c.moveTo(PX(g), 0); c.lineTo(PX(g), h); c.moveTo(0, PY(g)); c.lineTo(w, PY(g)); c.stroke(); }
+  const o = ctx.o, cb = ctx.cb;
+  // horizontal footprint of the frame, banded by sharpness
+  const fx = [cb.fwd[0], cb.fwd[2]], fl = Math.hypot(fx[0], fx[1]) || 1, fd = [fx[0] / fl, fx[1] / fl], rt = [-fd[1], fd[0]];
+  const tx = o.tanX, steps = 220, dmin = 0.05, dmax = 90;
+  const pt = (d, s) => [cb.pos[0] + fd[0] * d + rt[0] * s * d * tx, cb.pos[2] + fd[1] * d + rt[1] * s * d * tx];
+  c.save(); c.beginPath(); c.rect(0, 0, w, h); c.clip();
+  let dPrev = dmin;
+  for (let i = 1; i <= steps; i++) {
+    const d = dmin * Math.pow(dmax / dmin, i / steps);
+    const a = pt(dPrev, -1), b = pt(dPrev, 1), cc = pt(d, 1), dd = pt(d, -1);
+    const dm = Math.sqrt(dPrev * d);
+    c.fillStyle = css(fcol(blurM(o, dm) / o.c), 0.33 * (1 - clamp((d - 55) / 35, 0, 1)) + 0.05);
+    c.beginPath(); c.moveTo(PX(a[0]), PY(a[1])); c.lineTo(PX(b[0]), PY(b[1])); c.lineTo(PX(cc[0]), PY(cc[1])); c.lineTo(PX(dd[0]), PY(dd[1])); c.closePath(); c.fill();
+    dPrev = d;
+  }
+  c.strokeStyle = T.edge; c.beginPath();
+  let e = pt(dmax, -1); c.moveTo(PX(e[0]), PY(e[1])); c.lineTo(PX(cb.pos[0]), PY(cb.pos[2])); e = pt(dmax, 1); c.lineTo(PX(e[0]), PY(e[1])); c.stroke();
+  const across = (d, col, lw) => { if (!isFinite(d)) return; const a = pt(d, -1), b = pt(d, 1); c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); c.moveTo(PX(a[0]), PY(a[1])); c.lineTo(PX(b[0]), PY(b[1])); c.stroke(); };
+  across(o.near, T.limitLine, 1); across(o.far, T.limitLine, 1); across(o.s, T.focusLine, 2);
+  c.restore();
+  // objects
+  for (const ob of OBJ) {
+    c.fillStyle = css(ob.col, ob.float ? 0.55 : 0.95);
+    const x = PX(ob.p[0]), y = PY(ob.p[2]), rr = Math.max(1.6, ob.r * sc * 0.95);
+    c.beginPath();
+    if (ob.type === "box" || ob.type === "pyr") { c.save(); c.translate(x, y); c.rotate(-ob.ry); c.rect(-ob.s[0] / 2 * sc, -ob.s[2] / 2 * sc, ob.s[0] * sc, ob.s[2] * sc); c.restore(); }
+    else c.arc(x, y, rr, 0, Math.PI * 2);
+    c.fill();
+  }
+  // camera
+  const cx = PX(cb.pos[0]), cy = PY(cb.pos[2]), ang = Math.atan2(fd[1], fd[0]);
+  c.save(); c.translate(cx, cy); c.rotate(ang);
+  c.fillStyle = "#e7bd6a"; c.fillRect(-9, -6, 9, 12); c.fillRect(0, -3.5, 5, 7); c.restore();
+  const hx = PX(cb.pos[0] + fd[0] * 6), hy = PY(cb.pos[2] + fd[1] * 6);
+  c.strokeStyle = "rgba(231,189,106,.7)"; c.lineWidth = 1.5; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(cx, cy); c.lineTo(hx, hy); c.stroke(); c.setLineDash([]);
+  c.fillStyle = T.field; c.strokeStyle = "#e7bd6a"; c.lineWidth = 2; c.beginPath(); c.arc(hx, hy, 6, 0, Math.PI * 2); c.fill(); c.stroke();
+  plan._m = { sc, PX, PY, w, h, hx, hy, cx, cy };
+}
+let planDrag = null;
+plan.addEventListener("pointerdown", e => {
+  const m = plan._m; if (!m) return; const r = plan.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  planDrag = Math.hypot(x - m.hx, y - m.hy) < 13 ? "aim" : "move";
+  plan.setPointerCapture(e.pointerId); planMove(e);
+});
+plan.addEventListener("pointermove", e => { if (planDrag) planMove(e); });
+plan.addEventListener("pointerup", () => { planDrag = null; });
+plan.addEventListener("pointercancel", () => { planDrag = null; });
+function planMove(e) {
+  const m = plan._m, r = plan.getBoundingClientRect();
+  const wx = (e.clientX - r.left - m.w / 2) / m.sc, wz = (e.clientY - r.top - m.h / 2) / m.sc;
+  if (planDrag === "aim") { const dx = wx - S.cam.x, dz = wz - S.cam.z; if (Math.hypot(dx, dz) > 0.3) S.cam.yaw = Math.round(Math.atan2(dx, -dz) / DEG); }
+  else { S.cam.x = clamp(wx, -30, 30); S.cam.z = clamp(wz, -30, 30); }
+  syncControls(); touch();
+}
+
+/* ---------- picking ---------- */
+function rayHit(o, d) {
+  let best = Infinity;
+  for (const ob of OBJ) {
+    const lo = M.xf(ob.im, o), ld = M.xd(ob.im, d), g = GEO[ob.type];
+    // quick bounding sphere test in local space (radius ~0.87)
+    const oc = lo.slice(0, 3), b = dot(oc, ld), cc = dot(oc, oc) - 0.8, aa = dot(ld, ld);
+    if (b * b - aa * cc < 0) continue;
+    const P = g.p, I = g.i;
+    for (let i = 0; i < I.length; i += 3) {
+      const a = I[i] * 3, b1 = I[i + 1] * 3, c1 = I[i + 2] * 3;
+      const v0 = [P[a], P[a + 1], P[a + 2]], e1 = [P[b1] - v0[0], P[b1 + 1] - v0[1], P[b1 + 2] - v0[2]], e2 = [P[c1] - v0[0], P[c1 + 1] - v0[1], P[c1 + 2] - v0[2]];
+      const pv = cross(ld, e2), det = dot(e1, pv); if (Math.abs(det) < 1e-12) continue;
+      const inv = 1 / det, tv = sub(oc, v0), u = dot(tv, pv) * inv; if (u < 0 || u > 1) continue;
+      const qv = cross(tv, e1), v = dot(ld, qv) * inv; if (v < 0 || u + v > 1) continue;
+      const t = dot(e2, qv) * inv; if (t > 1e-4 && t < best) best = t;
+    }
+  }
+  if (d[1] < 0) { const t = -o[1] / d[1]; if (t > 0 && t < best) best = t; }
+  return isFinite(best) ? add(o, mul(d, best)) : null;
+}
+function rayFromVP(VP, nx, ny) {
+  const inv = M.inv(VP); const a = M.xf(inv, [nx, ny, -1]), b = M.xf(inv, [nx, ny, 1]);
+  return { o: a.slice(0, 3), d: norm(sub(b.slice(0, 3), a.slice(0, 3))) };
+}
+function focusAtRay(ray) {
+  const hit = rayHit(ray.o, ray.d); const cb = camBasis();
+  if (!hit) { toast("Nothing there to focus on"); return; }
+  const d = dot(sub(hit, cb.pos), cb.fwd);
+  if (d < 0.1) { toast("That's behind the camera"); return; }
+  S.inf = false; S.s = clamp(d, 0.1, 500); syncControls(); touch();
+  const o = optics(); const vis = M.xf(lastCtx ? lastCtx.camVP : M.persp(1, 1, 1, 2), hit);
+  const inFrame = vis[3] > 0 && Math.abs(vis[0]) <= 1 && Math.abs(vis[1]) <= 1;
+  toast(`Focused at ${fmtM(o.s)}${inFrame ? "" : " (that's outside the frame)"}`);
+}
+function focusLensAt(nx, ny) { if (!lastCtx) return; focusAtRay(rayFromVP(lastCtx.camVP, nx, ny)); }
+let toastT = 0;
+function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), 1600); }
+
+/* ---------- main view pointer ---------- */
+const ptrs = new Map(); let gesture = null;
+view.addEventListener("contextmenu", e => e.preventDefault());
+view.addEventListener("pointerdown", e => {
+  view.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  gesture = { x0: e.clientX, y0: e.clientY, moved: false, pan: e.shiftKey || e.button === 2, multi: ptrs.size > 1 };
+  if (ptrs.size === 2) { const [p, q] = [...ptrs.values()]; gesture.pinch = Math.hypot(p.x - q.x, p.y - q.y); gesture.mid = [(p.x + q.x) / 2, (p.y + q.y) / 2]; }
+  view.classList.add("dragging");
+});
+view.addEventListener("pointermove", e => {
+  if (!ptrs.has(e.pointerId) || !gesture) return;
+  const prev = ptrs.get(e.pointerId); const dx = e.clientX - prev.x, dy = e.clientY - prev.y;
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (Math.hypot(e.clientX - gesture.x0, e.clientY - gesture.y0) > 4) gesture.moved = true;
+  if (!gesture.moved) return;
+  if (S.swap) { // through-lens: drag pans/tilts the camera
+    const o = optics(), k = 2 * Math.atan(o.tanX) / DEG / view.clientWidth;
+    S.cam.yaw = ((S.cam.yaw - dx * k + 540) % 360) - 180; S.cam.tilt = clamp(S.cam.tilt + dy * k, -60, 60);
+    syncControls(); touch(); return;
+  }
+  if (ptrs.size === 2) {
+    const [p, q] = [...ptrs.values()]; const dd = Math.hypot(p.x - q.x, p.y - q.y), mid = [(p.x + q.x) / 2, (p.y + q.y) / 2];
+    orbit.dist = clamp(orbit.dist * gesture.pinch / dd, 1.5, 160); gesture.pinch = dd;
+    panBy(mid[0] - gesture.mid[0], mid[1] - gesture.mid[1]); gesture.mid = mid; gesture.multi = true; touch(); return;
+  }
+  if (gesture.pan) panBy(dx, dy);
+  else { orbit.yaw -= dx * 0.006; orbit.pitch = clamp(orbit.pitch + dy * 0.005, -0.1, 1.53); }
+  markFree(); touch();
+});
+function panBy(dx, dy) {
+  const v = orbitView(), f = norm(sub(v.target, v.eye)), r = norm(cross(f, [0, 1, 0])), u = cross(r, f);
+  const k = orbit.dist * Math.tan(orbit.fov / 2) * 2 / view.clientHeight;
+  orbit.target = add(orbit.target, add(mul(r, -dx * k), mul(u, dy * k)));
+}
+function markFree() { if (S.view !== "free") { S.view = "free"; document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", "false")); } }
+function endPtr(e) {
+  if (!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId);
+  if (gesture && !gesture.moved && !gesture.multi && ptrs.size === 0 && e.type === "pointerup") {
+    const r = view.getBoundingClientRect(), x = (e.clientX - r.left), y = (e.clientY - r.top);
+    if (S.swap && mainRect) {
+      const dpr = mainRect.dpr, px = x * dpr, py = (r.height - y) * dpr;
+      const nx = (px - mainRect.x) / mainRect.w * 2 - 1, ny = (py - mainRect.y) / mainRect.h * 2 - 1;
+      if (Math.abs(nx) <= 1 && Math.abs(ny) <= 1) focusLensAt(nx, ny);
+    } else if (lastWorldVP) focusAtRay(rayFromVP(lastWorldVP, x / r.width * 2 - 1, 1 - y / r.height * 2));
+  }
+  if (ptrs.size === 0) { gesture = null; view.classList.remove("dragging"); }
+}
+view.addEventListener("pointerup", endPtr); view.addEventListener("pointercancel", endPtr);
+view.addEventListener("wheel", e => {
+  e.preventDefault();
+  if (S.swap) { // zoom the lens
+    S.f = clamp(S.f * Math.exp(-e.deltaY * 0.0015), 8, 400); syncControls(); touch(); return;
+  }
+  orbit.dist = clamp(orbit.dist * Math.exp(e.deltaY * 0.0012), 1.5, 160); markFree(); touch();
+}, { passive: false });
+
+mini.addEventListener("click", e => {
+  if (S.swap) return;
+  const r = mini.getBoundingClientRect();
+  focusLensAt((e.clientX - r.left) / r.width * 2 - 1, 1 - (e.clientY - r.top) / r.height * 2);
+});
+$("inSwap").addEventListener("click", () => { if (S.swap) setView("side"); else setView("lens"); });
+/* drag the camera picture by its header, resize from the corner */
+const inset = $("inset"), stage = document.querySelector(".stage");
+let inPos = null;
+try { inPos = JSON.parse(localStorage.getItem("dofLab.inset") || "null"); } catch (e) {}
+function applyInset() {
+  if (!inPos) { inset.style.left = inset.style.top = inset.style.width = ""; inset.style.right = inset.style.bottom = ""; return; }
+  const sw = stage.clientWidth, sh = stage.clientHeight;
+  const w = clamp(inPos.w, 200, Math.max(200, sw - 16));
+  inset.style.width = w + "px"; inset.style.right = "auto"; inset.style.bottom = "auto";
+  const iw = inset.offsetWidth, ih = inset.offsetHeight;
+  inset.style.left = clamp(inPos.l * sw, 4, Math.max(4, sw - iw - 4)) + "px";
+  inset.style.top = clamp(inPos.t * sh, 4, Math.max(4, sh - ih - 4)) + "px";
+}
+function saveInset() { try { localStorage.setItem("dofLab.inset", JSON.stringify(inPos)); } catch (e) {} }
+let inDrag = null;
+function inStart(e, mode) {
+  if (e.button > 0 || e.target.closest("button")) return;
+  e.preventDefault();
+  const sr = stage.getBoundingClientRect(), ir = inset.getBoundingClientRect();
+  inPos = { l: (ir.left - sr.left) / sr.width, t: (ir.top - sr.top) / sr.height, w: ir.width };
+  inDrag = { mode, x: e.clientX, y: e.clientY, l: ir.left - sr.left, t: ir.top - sr.top, w: ir.width };
+  e.currentTarget.setPointerCapture(e.pointerId); inset.classList.add("moving");
+}
+function inMove(e) {
+  if (!inDrag) return;
+  const sw = stage.clientWidth, sh = stage.clientHeight, dx = e.clientX - inDrag.x, dy = e.clientY - inDrag.y;
+  if (inDrag.mode === "move") { inPos.l = (inDrag.l + dx) / sw; inPos.t = (inDrag.t + dy) / sh; }
+  else inPos.w = clamp(inDrag.w + dx, 200, sw - inDrag.l - 4);
+  applyInset(); touch();
+}
+function inEnd() { if (!inDrag) return; inDrag = null; inset.classList.remove("moving"); saveInset(); }
+const inHead = inset.querySelector(".head"), inGrip = $("inGrip");
+for (const [el, mode] of [[inHead, "move"], [inGrip, "size"]]) {
+  el.addEventListener("pointerdown", e => inStart(e, mode));
+  el.addEventListener("pointermove", inMove); el.addEventListener("pointerup", inEnd); el.addEventListener("pointercancel", inEnd);
+}
+inHead.addEventListener("dblclick", e => { if (e.target.closest("button")) return; inPos = null; applyInset(); saveInset(); touch(); });
+window.addEventListener("resize", () => { applyInset(); touch(); });
+applyInset();
+$("inMin").addEventListener("click", () => { const m = $("inset").classList.toggle("min"); $("inMin").textContent = m ? "Show" : "Hide"; touch(); });
+document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => setView(b.dataset.view)));
+$("bShuffle").addEventListener("click", () => { S.seed = (S.seed * 7919 + 13) % 100000; buildScene(S.seed); touch(); });
+
+/* ---------- controls ---------- */
+const fToV = f => Math.round(Math.log(f / 8) / Math.log(50) * 1000);
+const vToF = v => 8 * Math.pow(50, v / 1000);
+const sToV = s => Math.round(clamp(Math.log(s / 0.25) / Math.log(400) * 990, 0, 990));
+const vToS = v => 0.25 * Math.pow(400, v / 990);
+const nIdx = n => { let b = 0; STOPS.forEach((s, i) => { if (Math.abs(Math.log(s / n)) < Math.abs(Math.log(STOPS[b] / n))) b = i; }); return b; };
+function syncControls() {
+  $("sF").value = fToV(S.f); $("oF").value = fmtMM(S.f);
+  $("sN").value = nIdx(S.N); $("oN").value = fmtN(S.N);
+  $("sS").value = S.inf ? 1000 : sToV(S.s); $("oS").value = S.inf ? "∞" : fmtM(Math.max(S.s, S.f / 1000 * 1.2));
+  $("sX").value = S.cam.x; $("oX").value = S.cam.x.toFixed(1) + " m";
+  $("sZ").value = -S.cam.z; $("oZ").value = (-S.cam.z).toFixed(1) + " m";
+  $("sY").value = S.cam.y; $("oY").value = S.cam.y.toFixed(2) + " m";
+  $("sPan").value = S.cam.yaw; $("oPan").value = Math.round(S.cam.yaw) + "°";
+  $("sTilt").value = S.cam.tilt; $("oTilt").value = Math.round(S.cam.tilt) + "°";
+  document.querySelectorAll("[data-sensor]").forEach(b => b.classList.toggle("on", b.dataset.sensor === S.sensor));
+  document.querySelectorAll("[data-aspect]").forEach(b => b.classList.toggle("on", b.dataset.aspect === S.aspect));
+  document.querySelectorAll("[data-coc]").forEach(b => b.classList.toggle("on", b.dataset.coc === S.coc));
+  $("tKeep").checked = S.keep;
+  for (const [id, k] of [["tPrism", "prism"], ["tTint", "tint"], ["tPlanes", "planes"], ["tPeak", "peak"], ["tOver", "over"]]) $(id).checked = S[k];
+  document.querySelectorAll("[data-blur]").forEach(b => b.classList.toggle("on", +b.dataset.blur === S.blurX));
+  $("blurNote").textContent = ["Off: everything sharp, to compare", "The blur a real lens would give", "Twice what a real lens would give, so it's easier to see", "Four times what a real lens would give"][S.blurX > 2 ? 3 : S.blurX];
+}
+const onIn = (id, fn) => $(id).addEventListener("input", e => { fn(+e.target.value); syncControls(); touch(); });
+onIn("sF", v => { S.f = Math.round(vToF(v) * 10) / 10; });
+onIn("sN", v => { S.N = STOPS[v]; });
+onIn("sS", v => { if (v >= 995) S.inf = true; else { S.inf = false; S.s = vToS(v); } });
+onIn("sX", v => { S.cam.x = v; });
+onIn("sZ", v => { S.cam.z = -v; });
+onIn("sY", v => { S.cam.y = v; });
+onIn("sPan", v => { S.cam.yaw = v; });
+onIn("sTilt", v => { S.cam.tilt = v; });
+const num = t => { const m = String(t).replace(",", ".").match(/-?\d*\.?\d+/); return m ? parseFloat(m[0]) : NaN; };
+function onType(id, fn) {
+  const el = $(id);
+  const commit = () => { fn(el.value); syncControls(); touch(); };
+  el.addEventListener("change", commit);
+  el.addEventListener("keydown", e => { if (e.key === "Enter") { el.blur(); } if (e.key === "Escape") { syncControls(); el.blur(); } });
+  el.addEventListener("focus", () => el.select());
+}
+onType("oF", t => { const v = num(t); if (v > 0) S.f = clamp(v, 4, 1200); });
+onType("oN", t => { const v = num(t.replace(/^\s*f\s*\/?/i, "")); if (v > 0) S.N = clamp(v, 0.7, 64); });
+onType("oS", t => { if (/inf|∞/i.test(t)) { S.inf = true; return; } const v = num(t); if (v > 0) { S.inf = false; S.s = clamp(/cm/i.test(t) ? v / 100 : /ft|'/i.test(t) ? v * 0.3048 : v, 0.05, 5000); } });
+onType("oX", t => { const v = num(t); if (isFinite(v)) S.cam.x = clamp(v, -30, 30); });
+onType("oZ", t => { const v = num(t); if (isFinite(v)) S.cam.z = -clamp(v, -30, 30); });
+onType("oY", t => { const v = num(t); if (isFinite(v)) S.cam.y = clamp(v, 0.05, 20); });
+onType("oPan", t => { const v = num(t); if (isFinite(v)) S.cam.yaw = ((v + 540) % 360) - 180; });
+onType("oTilt", t => { const v = num(t); if (isFinite(v)) S.cam.tilt = clamp(v, -89, 89); });
+
+document.querySelectorAll("[data-sensor]").forEach(b => b.addEventListener("click", () => {
+  const old = frame().diag; S.sensor = b.dataset.sensor;
+  if (S.keep) S.f = Math.round(S.f * frame().diag / old * 10) / 10;
+  syncControls(); touch();
+}));
+document.querySelectorAll("[data-aspect]").forEach(b => b.addEventListener("click", () => { S.aspect = b.dataset.aspect; syncControls(); touch(); }));
+document.querySelectorAll("[data-coc]").forEach(b => b.addEventListener("click", () => { S.coc = b.dataset.coc; syncControls(); touch(); }));
+$("tKeep").addEventListener("change", e => { S.keep = e.target.checked; });
+document.querySelectorAll("[data-blur]").forEach(b => b.addEventListener("click", () => { S.blurX = +b.dataset.blur; syncControls(); touch(); }));
+for (const [id, k] of [["tPrism", "prism"], ["tTint", "tint"], ["tPlanes", "planes"], ["tPeak", "peak"], ["tOver", "over"]])
+  $(id).addEventListener("change", e => { S[k] = e.target.checked; touch(); });
+$("bCentre").addEventListener("click", () => focusLensAt(0, 0));
+$("bHyper").addEventListener("click", () => { const o = optics(); S.inf = false; S.s = o.H; syncControls(); touch(); toast(`Focused at the hyperfocal distance, ${fmtM(o.H)}`); });
+$("bCamReset").addEventListener("click", () => { S.cam = { ...CAM0 }; syncControls(); setView(S.swap ? "lens" : "side"); });
+
+const PRESETS = [
+  { n: "Portrait · 85 mm f/1.8", p: { f: 85, N: 1.8, s: 3.6 }, note: "A short telephoto wide open: a thin slice of sharpness and a soft background." },
+  { n: "Landscape · 24 mm f/11", p: { f: 24, N: 11, hyper: true }, note: "Focused at the hyperfocal distance, so everything from about half that distance to the horizon is sharp." },
+  { n: "Documentary · 35 mm f/4", p: { f: 35, N: 4, s: 3.6 }, note: "A forgiving middle ground: a few metres of sharpness for moving subjects." },
+  { n: "Telephoto · 200 mm f/2.8", p: { f: 200, N: 2.8, s: 15 }, note: "Long lenses at a distance: even far away, the sharp zone is only a few metres deep." },
+  { n: "Close-up · 50 mm f/2.8", p: { f: 50, N: 2.8, s: 0.6 }, note: "Focusing close shrinks the depth of field to a few centimetres. Move the camera near a shape to see it." },
+];
+PRESETS.forEach((pr, i) => {
+  const b = document.createElement("button"); b.className = "chip"; b.textContent = pr.n;
+  b.addEventListener("click", () => {
+    document.querySelectorAll("#presets .chip").forEach(c => c.classList.toggle("on", c === b));
+    S.f = pr.p.f; S.N = pr.p.N; S.inf = false;
+    if (pr.p.hyper) { S.s = optics().H; } else S.s = pr.p.s;
+    $("presetNote").textContent = pr.note; syncControls(); touch();
+  });
+  $("presets").appendChild(b);
+});
+
+/* ---------- keyboard driving ----------
+   arrows: forward / back / sideways · Shift+arrows: tilt / pan · Option/Alt+arrows: height / pan */
+const held = new Set(); let keyT = 0, keyLoop = 0, mods = { shift: false, alt: false };
+const ARROWS = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+function typingIn(el) { return el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable); }
+window.addEventListener("keydown", e => {
+  mods = { shift: e.shiftKey, alt: e.altKey };
+  if (!ARROWS.includes(e.key) || typingIn(document.activeElement) || e.metaKey || e.ctrlKey) return;
+  e.preventDefault(); held.add(e.key);
+  if (!keyLoop) { keyT = performance.now(); keyLoop = requestAnimationFrame(drive); }
+});
+window.addEventListener("keyup", e => { held.delete(e.key); mods = { shift: e.shiftKey, alt: e.altKey }; });
+window.addEventListener("blur", () => held.clear());
+function drive(now) {
+  const dt = Math.min(0.15, Math.max(0, (now - keyT) / 1000)); keyT = now;
+  if (!held.size) { keyLoop = 0; return; }
+  const ax = (held.has("ArrowRight") ? 1 : 0) - (held.has("ArrowLeft") ? 1 : 0);
+  const ay = (held.has("ArrowUp") ? 1 : 0) - (held.has("ArrowDown") ? 1 : 0);
+  const c = S.cam;
+  if (mods.shift) {
+    c.yaw = ((c.yaw + ax * 40 * dt + 540) % 360) - 180;
+    c.tilt = clamp(c.tilt + ay * 28 * dt, -60, 60);
+  } else if (mods.alt) {
+    c.y = clamp(c.y + ay * 1.0 * dt, 0.1, 5);
+    c.yaw = ((c.yaw + ax * 40 * dt + 540) % 360) - 180;
+  } else {
+    const y = c.yaw * DEG, sp = 3 * dt;
+    c.x = clamp(c.x + (Math.sin(y) * ay + Math.cos(y) * ax) * sp, -30, 30);
+    c.z = clamp(c.z + (-Math.cos(y) * ay + Math.sin(y) * ax) * sp, -30, 30);
+  }
+  if (["side", "behind", "top"].includes(S.view)) Object.assign(orbit, viewParams(S.view)); // preset views follow the camera
+  syncControls(); touch();
+  keyLoop = requestAnimationFrame(drive);
+}
+
+new ResizeObserver(touch).observe(view); new ResizeObserver(touch).observe(mini);
+new ResizeObserver(touch).observe(plan);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(touch);
+syncControls(); setView("side", true);
+requestAnimationFrame(frame_);
+window.__S = S; window.__touch = touch; window.__optics = optics; window.__ok = true;
+  /* fth-adapter: the hub keeps these settings with the current project (Save, backups, Google Drive) */
+  if (window.fthStore) {
+    const keys = ["sensor", "aspect", "keep", "f", "N", "s", "inf", "coc", "prism", "tint", "planes", "blurX", "peak", "over", "view", "seed"];
+    const ok = { sensor: v => v in SENSORS, aspect: v => v === "native" || v === "169", coc: v => v === "std" || v === "crit",
+      view: v => ["side", "behind", "top", "lens", "free"].includes(v) };
+    fthStore.get("settings").then(o => {
+      if (o && typeof o === "object") {
+        const seed0 = S.seed;
+        for (const k of keys) if (k in o && typeof o[k] === typeof S[k] && (typeof o[k] !== "number" || isFinite(o[k])) && (!ok[k] || ok[k](o[k]))) S[k] = o[k];
+        if (o.cam && typeof o.cam === "object") for (const k in CAM0) if (typeof o.cam[k] === "number" && isFinite(o.cam[k])) S.cam[k] = o.cam[k];
+        if (S.seed !== seed0) buildScene(S.seed);
+        syncControls(); setView(S.view === "free" ? "side" : S.view, true); touch();
+      }
+      fthAutosave(() => { const o2 = {}; for (const k of keys) o2[k] = S[k]; o2.cam = { ...S.cam }; fthStore.set("settings", o2); }, 800);
+    });
+  }
+})();
+</script>
+</body>
+</html>
