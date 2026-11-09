@@ -99,7 +99,16 @@ const CATS = manifest.categories.slice();
 if (!CATS.some(c => c.id === 'other')) CATS.push({id:'other', num:String(CATS.length + 1).padStart(2, '0'), name:'Other tools', blurb:'Tools added to the hub that sit outside the main stages.', color:'#b9bec7'});
 const catOf = id => CATS.find(c => c.id === id) || CATS.find(c => c.id === 'other');
 
-const base = manifest.tools.map(t => ({...t, html: null}));
+/* a tool's "rev" in tools.json is when its file last changed: date and time as YYYYMMDDHHMM
+   (e.g. 202611091430), a date as YYYYMMDD, or a timestamp. A newer published file replaces any older
+   version tried out in this browser. */
+function revMs(r) {
+  const s = String(r == null ? '' : r).trim(), n = (a, b) => +s.slice(a, b);
+  if (/^\d{12}$/.test(s)) return Date.UTC(n(0, 4), n(4, 6) - 1, n(6, 8), n(8, 10), n(10, 12));
+  if (/^\d{8}$/.test(s)) return Date.UTC(n(0, 4), n(4, 6) - 1, n(6, 8), 23, 59);
+  return Number(s) || 0;
+}
+const base = manifest.tools.map(t => ({...t, rev: revMs(t.rev), html: null}));
 /* each tool's file is fetched the first time it's opened */
 const htmlLoads = new Map();
 function loadHtml(t) {

@@ -34,7 +34,7 @@ The buttons for adding and replacing tools (Add tool, the ⋯ menus) only show f
 
 1. **Never change a tool's `id`** in `tools.json`. Its saved work is filed under that id. Changing the display `name` is fine.
 2. **When a tool changes what it saves, it must still read the old format.**
-3. **When a tool's file changes, raise its `rev` number** in `tools.json` (any bigger number, e.g. today's date as 20261108). This makes sure everyone gets the new version rather than an older copy they tried out in their browser.
+3. **When a tool's file changes, update its `rev`** in `tools.json` to the current date and time written as YYYYMMDDHHMM (e.g. `202611091430` for 9 November 2026 at 14:30). This makes sure everyone gets the new version rather than an older copy someone tried out in their browser.
 
 ## Trying the site on your own computer
 

@@ -30,4 +30,4 @@ Each tool is one self-contained HTML file. It runs inside Film Tool Hub, which g
 
 ## Putting a finished tool back on the site
 
-Replace its file in the `tools` folder on GitHub. Then raise that tool's `rev` number in `tools/tools.json` to any bigger number (for example today's date, `20261108`), so everyone gets the new version. Or hand the file to Claude in the main Film Tool Hub chat to do both.
+Replace its file in the `tools` folder on GitHub. Then set that tool's `rev` in `tools/tools.json` to the current date and time written as YYYYMMDDHHMM (for example `202611091430` for 9 November 2026 at 14:30), so everyone gets the new version. Or hand the file to Claude in the main Film Tool Hub chat to do both.
