@@ -1011,6 +1011,7 @@ const TOOL_THEME = {
   'script-lining': {kit: true},
   lighting:      {kit: true},
   falsecolour:   {kit: true, after: 'drawHist'},
+  'dof-lab':     {kit: true},
 };
 
 /* Shared kit (fonts, colours, buttons, fields, tool header). Tools marked kit:true in TOOL_THEME
