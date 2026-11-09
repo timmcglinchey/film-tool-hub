@@ -2,7 +2,10 @@
 'use strict';
 
 /* The tool list (tools/tools.json) and the shared look (hub/kit.css) are separate files. */
-const getText = async (url, kind) => { const r = await fetch(url, {cache: 'no-cache'}); if (!r.ok) throw new Error(url + ' ' + r.status); return kind === 'json' ? r.json() : r.text(); };
+/* the single-file (offline) version carries every file inside itself in window.__FTH_EMBED */
+const getText = async (url, kind) => {
+  const E = window.__FTH_EMBED; if (E && Object.prototype.hasOwnProperty.call(E, url)) return kind === 'json' ? JSON.parse(E[url]) : E[url];
+  const r = await fetch(url, {cache: 'no-cache'}); if (!r.ok) throw new Error(url + ' ' + r.status); return kind === 'json' ? r.json() : r.text(); };
 let manifest;
 const CONFIG = await getText('hub/config.json', 'json').catch(() => ({}));
 try { manifest = await getText('tools/tools.json', 'json'); }
