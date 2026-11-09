@@ -267,6 +267,25 @@
       "file": "tools/palette.html"
     },
     {
+      "id": "dof-lab",
+      "name": "Depth of Field Lab",
+      "desc": "Move a camera through a 3D field of shapes and see exactly what's sharp for any sensor, lens, aperture and focus distance.",
+      "category": "visual",
+      "tags": [
+        "DP",
+        "Focus puller",
+        "Learning"
+      ],
+      "icon": "generic",
+      "fileName": "Depth of Field Lab.html",
+      "origTitle": "Depth of Field Lab",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611091233,
+      "file": "tools/dof-lab.html"
+    },
+    {
       "id": "callsheet",
       "name": "Call Sheet Builder",
       "desc": "Fill in production, location, scenes, weather and catering details while the call sheet builds alongside.",
