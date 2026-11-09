@@ -1,8 +1,24 @@
 {
   "categories": [
     {
-      "id": "write",
+      "id": "pipelines",
       "num": "01",
+      "short": "Pipelines",
+      "name": "Film Production Pipelines",
+      "color": "#8bd16a",
+      "blurb": "See how a film comes together, stage by stage, from pre-production to post."
+    },
+    {
+      "id": "technical",
+      "num": "02",
+      "short": "Technical",
+      "name": "Technical Development Tools",
+      "color": "#e889c8",
+      "blurb": "Get to grips with light, exposure and lenses before you're on set."
+    },
+    {
+      "id": "write",
+      "num": "03",
       "short": "Write",
       "name": "Writing & Script Prep",
       "color": "#f5b14c",
@@ -10,15 +26,15 @@
     },
     {
       "id": "plan",
-      "num": "02",
+      "num": "04",
       "short": "Plan",
       "name": "Planning & Scheduling",
       "color": "#4fc7b5",
-      "blurb": "Map out pre-production and build the shooting schedule."
+      "blurb": "Build the shooting schedule."
     },
     {
       "id": "visual",
-      "num": "03",
+      "num": "05",
       "short": "Visualise",
       "name": "Visual Planning",
       "color": "#97a3ff",
@@ -26,7 +42,7 @@
     },
     {
       "id": "shoot",
-      "num": "04",
+      "num": "06",
       "short": "Shoot day",
       "name": "Shoot-Day Paperwork",
       "color": "#ff7152",
@@ -34,6 +50,62 @@
     }
   ],
   "tools": [
+    {
+      "id": "preprod",
+      "name": "Pre-Production Timeline",
+      "desc": "A department-by-department roadmap from idea to shoot-ready, with trackable tasks, filters and an editable glossary.",
+      "category": "pipelines",
+      "tags": [
+        "All crew",
+        "Checklist"
+      ],
+      "icon": "timeline",
+      "fileName": "Pre-Production Timeline.html",
+      "origTitle": "Short Film Pre-Production",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611091200,
+      "file": "tools/preprod.html"
+    },
+    {
+      "id": "pattern-lab",
+      "name": "Lighting Pattern Lab",
+      "desc": "Learn classic portrait lighting on a 3D head: Rembrandt, loop, butterfly, split, broad and short. Move the key light and see real soft-shadow falloff.",
+      "category": "technical",
+      "tags": [
+        "DP",
+        "Gaffer",
+        "Learning"
+      ],
+      "icon": "portrait",
+      "fileName": "Lighting Pattern Lab.html",
+      "origTitle": "Lighting Pattern Lab",
+      "ver": 2,
+      "updated": 1793998377844,
+      "note": "",
+      "rev": 202611091200,
+      "file": "tools/pattern-lab.html"
+    },
+    {
+      "id": "exposure",
+      "name": "Exposure Lab",
+      "category": "technical",
+      "icon": "exposure",
+      "desc": "Explore falloff, collimation and hard vs soft light from arm's length to a kilometre, with an exposure triangle, ND and a live camera preview.",
+      "tags": [
+        "DP",
+        "Gaffer",
+        "Learning"
+      ],
+      "fileName": "Exposure Lab.html",
+      "origTitle": "Exposure Lab",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611091200,
+      "file": "tools/exposure.html"
+    },
     {
       "id": "script-dev",
       "name": "Script Development Tool",
@@ -93,24 +165,6 @@
       "note": "",
       "rev": 202611091200,
       "file": "tools/breakdown.html"
-    },
-    {
-      "id": "preprod",
-      "name": "Pre-Production Timeline",
-      "desc": "A department-by-department roadmap from idea to shoot-ready, with trackable tasks, filters and an editable glossary.",
-      "category": "plan",
-      "tags": [
-        "All crew",
-        "Checklist"
-      ],
-      "icon": "timeline",
-      "fileName": "Pre-Production Timeline.html",
-      "origTitle": "Short Film Pre-Production",
-      "ver": 1,
-      "updated": null,
-      "note": "",
-      "rev": 202611091200,
-      "file": "tools/preprod.html"
     },
     {
       "id": "schedule",
@@ -188,44 +242,6 @@
       "note": "",
       "rev": 202611091200,
       "file": "tools/lighting.html"
-    },
-    {
-      "id": "pattern-lab",
-      "name": "Lighting Pattern Lab",
-      "desc": "Learn classic portrait lighting on a 3D head: Rembrandt, loop, butterfly, split, broad and short. Move the key light and see real soft-shadow falloff.",
-      "category": "visual",
-      "tags": [
-        "DP",
-        "Gaffer",
-        "Learning"
-      ],
-      "icon": "portrait",
-      "fileName": "Lighting Pattern Lab.html",
-      "origTitle": "Lighting Pattern Lab",
-      "ver": 2,
-      "updated": 1793998377844,
-      "note": "",
-      "rev": 202611091200,
-      "file": "tools/pattern-lab.html"
-    },
-    {
-      "id": "exposure",
-      "name": "Exposure Lab",
-      "category": "visual",
-      "icon": "exposure",
-      "desc": "Explore falloff, collimation and hard vs soft light from arm's length to a kilometre, with an exposure triangle, ND and a live camera preview.",
-      "tags": [
-        "DP",
-        "Gaffer",
-        "Learning"
-      ],
-      "fileName": "Exposure Lab.html",
-      "origTitle": "Exposure Lab",
-      "ver": 1,
-      "updated": null,
-      "note": "",
-      "rev": 202611091200,
-      "file": "tools/exposure.html"
     },
     {
       "id": "falsecolour",

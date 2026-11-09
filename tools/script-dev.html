@@ -1028,7 +1028,7 @@ function renderShell(){
     {label:'How saving works', icon:'help', fn: savingHelp}
   ])}, svgIcon(IC.more));
 
-  const top = h('header', {class:'top fth-head'}, h('div', {class:'fth-id'}, h('span', {class:'fth-eyebrow'}, window.__fthCat ? __fthCat.num + ' · ' + __fthCat.name : '01 · Writing & Script Prep'), h('h1', {class:'fth-title'}, 'Script Development')), h('span', {class:'fth-vsep'}), h('div', {class:'brand-txt'}, title), tabs, h('div', {class:'top-actions'}, saveStateEl, more));
+  const top = h('header', {class:'top fth-head'}, h('div', {class:'fth-id'}, h('span', {class:'fth-eyebrow'}, window.__fthCat ? __fthCat.num + ' · ' + __fthCat.name : '03 · Writing & Script Prep'), h('h1', {class:'fth-title'}, 'Script Development')), h('span', {class:'fth-vsep'}), h('div', {class:'brand-txt'}, title), tabs, h('div', {class:'top-actions'}, saveStateEl, more));
   app.append(top);
   if (bootNotice) app.append(bootBanner());
   if (!storageOK) app.append(h('div', {class:'banner'}, 'This browser isn\'t letting the page save automatically, so your work will be lost when you close it.'));
