@@ -123,7 +123,7 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Scaffolded Scriptwriting</title>
+<title>Script Development Tool</title>
 <style>
 :root{
   --ui:"Instrument Sans","Segoe UI",system-ui,-apple-system,sans-serif;
@@ -472,6 +472,18 @@ details.disc[open]>summary::before{transform:rotate(90deg)}
 .mhinge{text-align:center;padding:14px 18px;border-radius:14px;border:2px solid var(--mid);background:color-mix(in srgb,var(--mid) 9%,var(--card));margin:0 auto;width:min(440px,100%)}
 .mhinge b{font:700 12px var(--ui);letter-spacing:.1em;text-transform:uppercase;color:var(--mid)}
 
+.structpick{padding:14px 20px;margin-bottom:18px}
+.tl-under.alt{height:84px}
+.tl-under.alt .tl-mlab{margin-top:4px}
+.tl-m.alt .dia{top:auto;bottom:18px;transform:translate(-50%,0) rotate(45deg);width:14px;height:14px}
+.tl-m.alt::before{opacity:.75}
+.altsec{margin-bottom:22px}
+.altsec-h{display:flex;align-items:center;gap:10px;margin:0 0 4px;padding-bottom:6px;border-bottom:2px solid var(--c)}
+.altsec-h h3{font-size:18px}
+.mtag{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+.mtl-ticks{position:absolute;left:0;right:0;top:0;height:12px;pointer-events:none}
+.mtl-tick{position:absolute;top:-3px;width:3px;height:18px;border-radius:2px;background:var(--c);transform:translateX(-1.5px);box-shadow:0 0 0 1px var(--bg)}
+.moment.alt .mlab{right:15ch}
 /* ---------- write ---------- */
 .write{min-height:100%}
 .wbar{position:sticky;top:0;z-index:15;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -652,7 +664,7 @@ details.disc[open]>summary::before{transform:rotate(90deg)}
 (function(){
 'use strict';
 /* =====================================================================
-   Scaffolded Scriptwriting — single-file app
+   Script Development Tool — single-file app
    Snapshot of pristine page (used by "Back up" to clone this file)
    ===================================================================== */
 const TEMPLATE = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
@@ -771,6 +783,96 @@ const ARC_BEATS = {
   fall: [[.05,'Believes the Lie.'],[.16,'The Truth is offered, and rejected.'],[.05,'Chooses in line with the Lie.'],[.14,'Doubles down on the Lie.'],[.4,'The Truth is glimpsed.'],[.28,'Resists the Truth.'],[.45,'Last chance: the Truth is undeniable.'],[.03,'Rejects the Truth and clings to the Lie.'],[.02,'Destroyed or trapped by the Lie.']],
   disillusionment: [[.05,'Believes the Lie.'],[.12,'The Lie is challenged.'],[.05,'Chooses in line with the Lie.'],[.2,'Pursues the Lie; doubts surface.'],[.5,'Realisation: the Lie begins to unravel.'],[.62,'Sees more clearly, at growing cost.'],[.38,'Everything they relied on collapses.'],[.88,'Lets go of the Lie, accepting a hard truth.'],[1,'Believes the Tragic Truth: clear-eyed, but at a cost.']]
 };
+/* =====================================================================
+   STORY STRUCTURES — each: beats (fillable), bands (stretches shaded on the
+   Write page), moments (single points drawn as lines), sections (grouping)
+   ===================================================================== */
+const mkBeats = arr => arr.map(([id, name, s, e, fam, desc]) => ({id, name, s, e, fam, desc, m: s === e}));
+const STRUCTS = {
+  scaffold: {
+    key:'scaffold', name:'Scaffolded Structure', short:'Scaffolded',
+    blurb:'Character & Setting › Problem › Choice › Act 2 › Midpoint › Act 2 › Problem › Choice › Character & Setting. Built for short films, with guided steps and a mirror view.',
+    grid:[12.5, 25, 50, 75, 87.5]
+  },
+  stc: {
+    key:'stc', name:'Save the Cat Beat Sheet', short:'Save the Cat',
+    blurb:'Blake Snyder\'s 15 beats. Percentages are based on his 110-page model.',
+    beats: mkBeats([
+      ['oi','Opening Image',1,1,'cs','A snapshot of the hero and their world before the story begins: the “before” picture that the Final Image will answer.'],
+      ['ts','Theme Stated',5,5,'cs','Someone (usually not the hero) states the theme in passing: the Truth the hero will need to learn. The hero doesn\'t get it yet.'],
+      ['su','Set-Up',1,9,'cs','Introduce the hero, their world and what\'s missing in their life. Show the flaws and the “things that need fixing”, and plant what will pay off later.'],
+      ['cat','Catalyst',11,11,'pr','The life-changing event that knocks the hero out of their status quo: a telegram, a knock at the door, the bad news.'],
+      ['deb','Debate',11,23,'pr','The hero hesitates. Should I go? Can I? It\'s the last chance to resist the change the Catalyst demands.'],
+      ['b2','Break into Two',23,23,'ch','The hero makes a choice and steps into the upside-down world of Act Two. It must be their decision, not something done to them.'],
+      ['bs','B Story',27,27,'a2','A new relationship (love interest, mentor, friend, rival) that carries the theme and will help the hero learn the Truth.'],
+      ['fg','Fun and Games',27,50,'a2','The “promise of the premise”: the hero explores the new world. These are the scenes the audience came for, the trailer moments.'],
+      ['mp','Midpoint',50,50,'mid','A false victory or a false defeat. The stakes are raised, fun and games are over, and the A and B stories often cross.'],
+      ['bg','Bad Guys Close In',50,68,'pr','Pressure builds from outside (the bad guys regroup) and inside (doubt, jealousy, the team frays). Things start to fall apart.'],
+      ['al','All Is Lost',68,68,'ch','The opposite of the Midpoint: the lowest point, often with a “whiff of death”. Something or someone dies, literally or figuratively.'],
+      ['dn','Dark Night of the Soul',68,77,'ch','The hero wallows in hopelessness, the darkness before the dawn, until they finally reach the insight they need.'],
+      ['b3','Break into Three',77,77,'ch','Thanks to what the B Story taught them, the hero finds the solution and chooses to act on the Truth.'],
+      ['fin','Finale',77,100,'cs','The hero applies what they\'ve learned to defeat the bad guys and fix the world, proving that they\'ve changed.'],
+      ['fi','Final Image',100,100,'cs','The opposite of the Opening Image: proof that change has occurred.']
+    ]),
+    bands:[
+      {s:0,  e:11,  fam:'cs', label:'Set-Up',               ids:['su']},
+      {s:11, e:23,  fam:'pr', label:'Debate',               ids:['deb']},
+      {s:23, e:50,  fam:'a2', label:'Fun and Games',        ids:['fg']},
+      {s:50, e:68,  fam:'pr', label:'Bad Guys Close In',    ids:['bg']},
+      {s:68, e:77,  fam:'ch', label:'Dark Night of the Soul', ids:['dn']},
+      {s:77, e:100, fam:'cs', label:'Finale',               ids:['fin']}
+    ],
+    momentIds:['oi','ts','cat','b2','bs','mp','al','b3','fi'],
+    sections:[
+      {label:'Act One · Thesis', s:0, e:23, desc:'The world as it is, before the adventure.'},
+      {label:'Act Two · Antithesis', s:23, e:77, desc:'The upside-down world, the opposite of everything in Act One.'},
+      {label:'Act Three · Synthesis', s:77, e:100, desc:'The hero combines who they were with what they\'ve learned, and a new world is made.'}
+    ],
+    grid:[11, 23, 50, 68, 77]
+  },
+  three: {
+    key:'three', name:'Three-Act Structure', short:'Three-Act',
+    blurb:'The classic structure, with the stretches between its key points described after K.M. Weiland.',
+    beats: mkBeats([
+      ['hook','Hook',1,1,'cs','Opens the story, establishes normal life and hints at conflict.'],
+      ['inc','Inciting Event',12,12,'pr','The call to adventure that disrupts the normal world.'],
+      ['pp1','First Plot Point',25,25,'ch','Crosses into the main conflict; ends Act I.'],
+      ['pin1','First Pinch Point',37,37,'a2','A reminder or show of force from the antagonist.'],
+      ['mp','Midpoint (Second Plot Point)',50,50,'mid','A major revelation or turning point where the protagonist shifts from reactive to proactive.'],
+      ['pin2','Second Pinch Point',62,62,'pr','Mirrors the first pinch point, raising stakes and pressing the protagonist.'],
+      ['pp3','Third Plot Point',75,75,'ch','A moment of apparent defeat or low point; starts Act III.'],
+      ['cli','Climax',88,88,'ch','The final showdown or peak conflict.'],
+      ['res','Resolution (Denouement)',98,98,'cs','Wrapping up loose ends.']
+    ]),
+    bands:[
+      {s:0,  e:25,  fam:'cs', label:'Act I · Setup', tag:'The Normal World', ids:[], desc:'Establish the character, their world and what\'s wrong with it. The Inciting Event disrupts it, but they haven\'t fully committed to the conflict yet.'},
+      {s:25, e:50,  fam:'a2', label:'Act II · Reaction', tag:'Reacting to the First Plot Point', ids:[], desc:'The reaction phase. The protagonist acts, but every action is a response to the First Plot Point, and they aren\'t yet effective. Often where they learn the rules of the new world.'},
+      {s:50, e:75,  fam:'pr', label:'Act II · Action', tag:'Acting with new understanding', ids:[], desc:'The action phase. After the Midpoint the protagonist stops reacting and starts acting, making more informed, effective choices. They still aren\'t in full control, and the main inner and outer problems are saved for Act III.'},
+      {s:75, e:98,  fam:'ch', label:'Act III · Confrontation', tag:'The final battle', ids:[], desc:'From the low moment of the Third Plot Point the protagonist regroups and faces the antagonistic force, inner and outer, in the Climax.'},
+      {s:98, e:100, fam:'cs', label:'Resolution', tag:'The New Normal World', ids:[], desc:'Tie up loose ends and show what has changed.'}
+    ],
+    momentIds:['hook','inc','pp1','pin1','mp','pin2','pp3','cli','res'],
+    grid:[12, 25, 37, 50, 62, 75, 88]
+  }
+};
+STRUCTS.three.sections = STRUCTS.three.bands;
+STRUCTS.scaffold.beats = BEATS.map(b => ({id:b.id, name:beatFull(b.id), s:b.s, e:b.e, fam:b.fam, desc:BEAT_DESC[b.id], m:!!b.m}));
+STRUCTS.scaffold.bands = SPANS.map(sp => ({s:sp.s, e:sp.e, fam:sp.fam, label:spanLabel(sp), ids:sp.ids, grp:sp.grp}));
+STRUCTS.scaffold.momentIds = ['mid'];
+for (const st of Object.values(STRUCTS)){ st.beat = Object.fromEntries(st.beats.map(b => [b.id, b])); st.moments = st.momentIds.map(id => st.beat[id]); }
+const curStruct = () => STRUCTS[S.outline.structure] || STRUCTS.scaffold;
+function beatStore(key){
+  key = key || S.outline.structure || 'scaffold';
+  if (key === 'scaffold') return S.outline.beats;
+  if (!S.outline.alt) S.outline.alt = {};
+  const a = S.outline.alt[key] || (S.outline.alt[key] = {});
+  STRUCTS[key].beats.forEach(b => { if (!a[b.id]) a[b.id] = {summary:'', items:[]}; else { a[b.id].summary = a[b.id].summary || ''; a[b.id].items = a[b.id].items || []; } });
+  return a;
+}
+const rangeOf = b => b.s === b.e ? `≈ ${b.s}%` : `${b.s}–${b.e}%`;
+/* nearest point of the protagonist's arc to a story position */
+function arcNoteAt(pct){ const ab = ARC_BEATS[S.develop.arc]; let best = 0, d = 1e9; BEATS.forEach((b, i) => { const dd = Math.abs(beatPos(b) - pct); if (dd < d){ d = dd; best = i; } }); return ab[best]; }
+
 const TOPICS = 'LOVE|JUDGEMENT|BIAS|REVENGE|POWER/CONTROL|VALUE/WORTH|PROGRESS|RESPONSIBILITY|HISTORY|GREED|HEALING|DIS/CONTENTMENT|WEALTH|HUMILITY|CHALLENGE/SUFFERING|AUTHORITY|TECHNOLOGY|HATE|FEAR|TRUST|IGNORANCE|OBSESSION|ARROGANCE|ISOLATION/COMMUNITY|LONGING|FREEDOM|HOPE|ALIENATION|REBELLION|AMBITION|SELF-AWARENESS|SUCCESS/FAILURE|DESPOTISM|PATRIOTISM|VALIDATION|ETERNITY/MORTALITY|REALITY|VIOLENCE/RAGE|FAITH|SACRIFICE|INDIVIDUALITY/INDIVIDUALISM|CHANGE|CONSCIOUSNESS/PERSONHOOD|TIME|GRIEF|SURVIVAL|DENIAL|OUT-OF-PLACE-NESS|VULNERABILITY|HIERARCHY|RECKLESSNESS|REALISATION|JUSTICE|BETRAYAL|DECEPTION/TRUTH-TELLING|HONOUR/SHAME|INTEGRITY|PRIDE|RESPECT|TRAUMA|FATE|RADICALISATION|HERO WORSHIP/WORSHIP|LOSS|ENVY|CLOSE-MINDEDNESS|DEPRESSION/DEFEATISM|UNITY|PURPOSE|REGRET|IDEALISM|CYNICISM|NIHILISM|FUNCTION|DOUBT|DESPAIR|BALANCE|BIGOTRY|CONNECTION|DESIRE|UNDERSTANDING/SENSE/SENSIBILITY|PERFECTIONISM|REPRESSION|ACCEPTANCE|POLITICS|BEAUTY/UGLINESS|SELF-IMAGE|MATERIALISM|CONFORMITY/NONCONFORMITY|MASCULINITY/FEMININITY|PRESSURE|SELFISHNESS/SELFLESSNESS|INTELLIGENCE|PEER-PRESSURE|BARGAINING/COMPROMISE|ANXIETY|PREPAREDNESS|EMBARRASSMENT|ABILITY/DISABILITY|RISK|PRIVACY|NATURE'.split('|');
 
 const GLOSS = {
@@ -811,7 +913,7 @@ function blankProject(){
     develop:{ idea:'', genre:'', targetPages:'', logline:'', lb:{incident:'',protagonist:'',goal:'',stakes:''}, lb2:{incident:'',protagonist:'',action:'',antagonist:''}, lbMode:'when', lbConn:'or else',
       topic:'', lie:'', truth:'', tragic:'', arc:'positive', themeNotes:'', checks:{}, norm:'',
       characters:[newChar('Protagonist')], settings:[], refs:[], notes:'' },
-    outline:{ step:0, view:'toggle', beats:Object.fromEntries(BEAT_IDS.map(id => [id, {summary:'', items:[]}])) },
+    outline:{ step:0, view:'toggle', structure:'scaffold', alt:{}, beats:Object.fromEntries(BEAT_IDS.map(id => [id, {summary:'', items:[]}])) },
     script:{ text:'', basedOn:'' },
     drafts:[],
     ui:{ tab:'develop', live:true, bar:true, checks:true, togo:true, scenes:true, smart:true, zoom:1, welcomed:false, tips:true }
@@ -1034,7 +1136,7 @@ function renderShell(){
   if (!storageOK) app.append(h('div', {class:'banner'}, 'This browser isn\'t letting the page save automatically, so your work will be lost when you close it.'));
   app.append(h('main', {id:'view'}));
   gDerived.push(updateSaveState);
-  const setDocTitle = () => { const t = S.title.trim() || 'Scaffolded Scriptwriting'; if (document.title !== t) document.title = t; };
+  const setDocTitle = () => { const t = S.title.trim() || 'Script Development Tool'; if (document.title !== t) document.title = t; };
   gDerived.push(setDocTitle); setDocTitle();
   updateSaveState();
 }
@@ -1432,7 +1534,8 @@ const truthTxt = () => (S.develop.arc === 'disillusionment' && S.develop.tragic.
 const fillPrompt = id => BEAT_PROMPT[id].replace('{L}', esc(lieTxt())).replace('{T}', esc(truthTxt()));
 function beatFilled(id){ const b = S.outline.beats[id]; return !!(b.summary.trim() || b.items.some(i => i.title.trim())); }
 
-function arcChart(){
+function arcChart(st){
+  st = st || STRUCTS.scaffold;
   const wrap = h('div', {class:'arcchart'});
   const draw = () => {
     const d = S.develop, arc = d.arc, topCol = arc === 'disillusionment' ? 'var(--tragic)' : 'var(--truth)';
@@ -1451,7 +1554,7 @@ function arcChart(){
     let svg = `<svg viewBox="0 0 1000 100" preserveAspectRatio="none">
       <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${topCol}" stop-opacity=".16"/><stop offset=".5" stop-color="${topCol}" stop-opacity="0"/><stop offset=".5" stop-color="var(--lie)" stop-opacity="0"/><stop offset="1" stop-color="var(--lie)" stop-opacity=".14"/></linearGradient></defs>
       <rect x="0" y="0" width="1000" height="100" fill="url(#ag)" rx="0"/>`;
-    [12.5, 25, 50, 75, 87.5].forEach(x => { svg += `<line x1="${x*10}" y1="0" x2="${x*10}" y2="100" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke" ${x === 50 ? '' : 'stroke-dasharray="3 4"'}/>`; });
+    st.grid.forEach(x => { svg += `<line x1="${x*10}" y1="0" x2="${x*10}" y2="100" stroke="var(--line)" stroke-width="1" vector-effect="non-scaling-stroke" ${x === 50 ? '' : 'stroke-dasharray="3 4"'}/>`; });
     const others = S.develop.characters.filter(c => c.role !== 'Protagonist' && c.arcOn && c.name.trim());
     others.forEach((c, k) => { const pts = ARC_BEATS[c.arc].map((b, i) => [beatPos(BEATS[i]), Y(b[0])]); svg += `<path d="${curve(pts)}" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-dasharray="${['6 5','2 4','10 4 2 4','1 6'][k % 4]}" vector-effect="non-scaling-stroke"/>`; });
     svg += `<path d="${curve(main)}" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`;
@@ -1461,9 +1564,9 @@ function arcChart(){
     const mix = b => `color-mix(in srgb, ${topCol} ${Math.round(b*100)}%, var(--lie))`;
     ARC_BEATS[arc].forEach((b, i) => {
       const x = beatPos(BEATS[i]);
-      wrap.append(h('div', {class:'adot', style:`left:${x}%;top:${Y(b[0])}%;background:${mix(b[0])}`}), h('div', {class:'atip', style:`left:${x}%;top:${Y(b[0])}%`}, beatLabel(BEATS[i]) + ': ' + b[1]));
+      wrap.append(h('div', {class:'adot', style:`left:${x}%;top:${Y(b[0])}%;background:${mix(b[0])}`}), h('div', {class:'atip', style:`left:${x}%;top:${Y(b[0])}%`}, (st.key === 'scaffold' ? beatLabel(BEATS[i]) : '≈ ' + Math.round(x) + '%') + ': ' + b[1]));
     });
-    others.forEach(c => ARC_BEATS[c.arc].forEach((b, i) => { const x = beatPos(BEATS[i]); wrap.append(h('div', {class:'adot sm', style:`left:${x}%;top:${Y(b[0])}%;background:var(--ink3)`}), h('div', {class:'atip', style:`left:${x}%;top:${Y(b[0])}%`}, c.name + ' · ' + beatLabel(BEATS[i]) + ': ' + b[1])); }));
+    others.forEach(c => ARC_BEATS[c.arc].forEach((b, i) => { const x = beatPos(BEATS[i]); wrap.append(h('div', {class:'adot sm', style:`left:${x}%;top:${Y(b[0])}%;background:var(--ink3)`}), h('div', {class:'atip', style:`left:${x}%;top:${Y(b[0])}%`}, c.name + ' · ' + (st.key === 'scaffold' ? beatLabel(BEATS[i]) : '≈ ' + Math.round(x) + '%') + ': ' + b[1])); }));
   };
   draw();
   derived.push(draw);
@@ -1501,6 +1604,7 @@ function timeline(onPick, selFn){
 }
 
 function renderOutline(v){
+  if ((S.outline.structure || 'scaffold') !== 'scaffold') return renderAltOutline(v);
   const O = S.outline;
   if (O.pass !== 2) O.pass = 1;
   if (!(O.step >= 0 && O.step < OSTEPS.length)) O.step = 0;
@@ -1515,7 +1619,7 @@ function renderOutline(v){
     arcChart(), arcLegend(),
     timeline(id => { const i = OSTEPS.findIndex(s => s.beats.includes(id)); setStep(i >= 0 ? i : SI('det'), PAYOFF.has(id) ? 2 : 1, id); }, selBeats));
   derived.push(() => { const p = glance.querySelector('.glance-head .pill'); if (p) p.textContent = ARCS[S.develop.arc].from + ' → ' + ARCS[S.develop.arc].to; });
-  root.append(glance, stepsEl, body);
+  root.append(structPicker(v), glance, stepsEl, body);
 
   const drawSteps = () => stepsEl.replaceChildren(...OSTEPS.map((s, i) => {
     const done = s.k === 'arc' ? !!(S.develop.lie.trim() && S.develop.truth.trim()) : s.k === 'det' ? BEAT_IDS.some(id => S.outline.beats[id].items.length) : s.beats.every(beatFilled);
@@ -1636,7 +1740,7 @@ function stepDetail(){
   return wrap;
 }
 function itemsEditor(id, redraw, opts={}){
-  const B = S.outline.beats[id];
+  const B = (opts.store || S.outline.beats)[id];
   const list = h('div', {class:'items'});
   B.items.forEach((it, i) => {
     const t = h('input', {placeholder:'Plot point…'}); bindInput(t, it, 'title');
@@ -1731,6 +1835,112 @@ function mirrorView(redraw){
   el.append(h('div', {class:'mhinge'}, h('b', null, 'Midpoint · the hinge'), ms,
     MB.items.length ? h('ul', {style:'text-align:left;margin:8px 0 0'}, MB.items.map(i => h('li', null, i.title || '…'))) : null));
   return el;
+}
+
+/* =====================================================================
+   STRUCTURE SWITCHER + Save the Cat / Three-Act outlines
+   ===================================================================== */
+function structPicker(v){
+  const cur = S.outline.structure || 'scaffold';
+  const blurb = h('p', {class:'small muted', style:'margin:6px 0 0'}, STRUCTS[cur].blurb, ' ', h('span', {class:'teach'}, 'Each structure keeps its own outline, and the Write page follows whichever one is selected.'));
+  return h('div', {class:'card structpick'},
+    h('div', {class:'row', style:'flex-wrap:wrap;gap:12px'},
+      h('span', {class:'eyebrow'}, 'Story structure'),
+      h('div', {class:'seg'}, Object.values(STRUCTS).map(st => h('button', {class: st.key === cur ? 'on' : '', onclick: () => {
+        if (st.key === (S.outline.structure || 'scaffold')) return;
+        S.outline.structure = st.key; touch();
+        derived.length = 0; v.replaceChildren(); v.scrollTop = 0; renderOutline(v);
+        requestAnimationFrame(() => { $$('textarea', v).forEach(autosize); runDerived(); });
+        toast(st.name + ': the Write page now follows this structure.');
+      }}, st.short)))),
+    blurb);
+}
+function altTimeline(st, store, onPick){
+  const wrap = h('div', {class:'tl'});
+  const draw = () => {
+    const row = h('div', {class:'tl-row'});
+    st.bands.forEach(b => {
+      const id = b.ids[0];
+      const sum = id ? (store[id].summary.trim() || store[id].items.map(i => i.title).filter(Boolean).join(' · ')) : '';
+      const inBand = st.moments.filter(m => m.s >= b.s && m.s < b.e);
+      row.append(h('div', {class:'tl-seg', style:`width:${b.e - b.s}%`},
+        h('div', {class:`tl-part fam-${b.fam}`, title: b.label + (sum ? ': ' + sum : ''), onclick: () => onPick(id || (inBand[0] && inBand[0].id))},
+          b.e - b.s >= 5 ? [h('div', {class:'tn'}, b.label), h('div', {class:'ts' + (sum ? '' : ' e')}, sum || (id ? 'Not outlined yet' : (b.tag || '')))] : null)));
+    });
+    const tl = h('div', {style:'position:relative'}, row);
+    const under = h('div', {class:'tl-under alt', style:'position:relative'});
+    const W = 11.5, rowsEnd = [];   // label width in % of the timeline; greedy row packing so labels never overlap
+    st.moments.forEach(m => {
+      const B = store[m.id], sum = B.summary.trim();
+      const x = clamp(m.s, 0.6, 99.4);
+      tl.append(h('div', {class:`tl-m alt fam-${m.fam}` + (sum ? ' filled' : ''), style:`left:${x}%`, title: m.name + (sum ? ': ' + sum : ''), onclick: () => onPick(m.id)}, h('div', {class:'dia'})));
+      const L = m.s < 7 ? x : m.s > 93 ? x - W : x - W / 2;
+      let r = rowsEnd.findIndex(end => end <= L); if (r < 0){ r = rowsEnd.length; rowsEnd.push(0); }
+      rowsEnd[r] = L + W + 0.5;
+      const tx = m.s < 7 ? '0%' : m.s > 93 ? '-100%' : '-50%';
+      under.append(h('div', {class:`tl-mlab fam-${m.fam}`, style:`left:${x}%;transform:translateX(${tx});top:${r * 40}px;width:${W}%`, onclick: () => onPick(m.id)}, h('b', null, m.name + ' · ' + m.s + '%'), h('span', null, sum || '…')));
+    });
+    under.style.height = (rowsEnd.length * 40 + 6) + 'px';
+    const scale = h('div', {class:'tl-scale'}, [0, ...st.grid, 100].map(x => h('span', {style:`left:${x}%`}, x + '%')));
+    wrap.replaceChildren(tl, scale, under);
+  };
+  draw(); derived.push(draw);
+  return wrap;
+}
+function renderAltOutline(v){
+  const st = curStruct(), store = beatStore();
+  const root = h('div', {class:'ol'});
+  v.append(root);
+  const list = h('div');
+  const focusBeat = id => {
+    if (!id) return;
+    store[id]._open = true; drawList();
+    requestAnimationFrame(() => { const el = list.querySelector(`[data-beat="${id}"]`); if (!el) return; el.scrollIntoView({behavior:'smooth', block:'center'}); el.classList.add('hl'); setTimeout(() => el.classList.remove('hl'), 1400); const ta = el.querySelector('textarea'); ta && ta.focus({preventScroll:true}); });
+  };
+  const glance = h('section', {class:'card glance'},
+    h('div', {class:'glance-head'}, h('h2', null, 'Your story at a glance'), h('span', {class:'spacer'}),
+      h('span', {class:'pill'}, ARCS[S.develop.arc].from + ' → ' + ARCS[S.develop.arc].to), h('button', {class:'btn sm', onclick: () => go('write')}, 'Ready to write? Go to Write ', svgIcon(IC.right))),
+    arcChart(st), arcLegend(),
+    altTimeline(st, store, focusBeat));
+  const body = h('section', {class:'card stepbody'},
+    h('div', {class:'stephead'}, h('div', {style:'flex:1'}, h('h2', null, st.name), h('p', null, 'Fill in each beat in your own words: a summary, then as many plot points as you need. Percentages show roughly where each beat falls; the Write page shows them against your script.')),
+      h('button', {class:'btn sm', onclick: () => { st.beats.forEach(b => store[b.id]._open = true); drawList(); }}, 'Expand all'),
+      h('button', {class:'btn sm', onclick: () => { st.beats.forEach(b => store[b.id]._open = false); drawList(); }}, 'Collapse all')),
+    list,
+    h('div', {class:'stepnav'}, h('span'), h('button', {class:'btn primary', onclick: () => go('write')}, 'Start writing →')));
+  root.append(structPicker(v), glance, body);
+
+  function altBeat(b){
+    const B = store[b.id];
+    const sumEl = h('span', {class:'tsum'});
+    const upd = () => { const s = B.summary.trim(); sumEl.textContent = s || 'Not outlined yet'; sumEl.className = 'tsum' + (s ? '' : ' e'); };
+    upd(); derived.push(upd);
+    const an = arcNoteAt(b.m ? b.s : (b.s + b.e) / 2);
+    const topCol = S.develop.arc === 'disillusionment' ? 'var(--tragic)' : 'var(--truth)';
+    const t = h('div', {class:`tgl fam-${b.fam}` + (B._open ? ' open' : ''), 'data-beat': b.id},
+      h('div', {class:'tgl-h', onclick: () => { B._open = !B._open; t.classList.toggle('open', B._open); requestAnimationFrame(() => $$('textarea', t).forEach(autosize)); }},
+        svgIcon(IC.right, 'ico car'), h('span', {class:'tt'}, b.name), h('span', {class:'pill'}, rangeOf(b)), b.m ? h('span', {class:'mtag'}, 'moment') : null, sumEl, h('span', {class:'pill'}, String(B.items.length))),
+      h('div', {class:'tgl-b'},
+        h('p', {class:'bdesc teach', style:'margin-top:4px'}, b.desc),
+        h('div', {class:'barc teach'}, h('span', {class:'bdot', style:`background:color-mix(in srgb, ${topCol} ${Math.round(an[0]*100)}%, var(--lie))`}), h('span', null, h('b', null, ARCS[S.develop.arc].name + ' arc around here: '), an[1])),
+        field('Summary', B, 'summary', {multi:true, ph:'What happens here, in a sentence or two?'}),
+        h('div', {class:'flabel', style:'margin-top:4px'}, 'Plot points'),
+        itemsEditor(b.id, drawList, {store})));
+    return t;
+  }
+  function drawList(){
+    list.replaceChildren(...st.sections.map((sec, i) => {
+      const last = i === st.sections.length - 1;
+      const bs = st.beats.filter(b => b.s >= sec.s && (b.s < sec.e || (last && b.s <= sec.e))).sort((x, y) => x.s - y.s || (x.m ? -1 : 1));
+      return h('div', {class:`altsec fam-${sec.fam || 'a2'}`},
+        h('div', {class:'altsec-h'}, h('h3', null, sec.label), h('span', {class:'pill'}, `${sec.s}–${sec.e}%`), sec.tag ? h('span', {class:'small muted'}, sec.tag) : null),
+        h('p', {class:'bdesc teach'}, sec.desc),
+        bs.length ? bs.map(altBeat) : h('div', {class:'small muted', style:'margin-bottom:10px'}, 'No key point in this stretch.'));
+    }));
+    requestAnimationFrame(() => $$('textarea', list).forEach(autosize));
+  }
+  drawList();
+  if (S.outline._focus){ const f = S.outline._focus; delete S.outline._focus; setTimeout(() => focusBeat(f), 60); }
 }
 
 /* =====================================================================
@@ -2280,11 +2490,12 @@ function renderWrite(v){
     const maxR = Math.max(total, U.live ? R : 0);
     for (let p = 1; p * LPP < maxR; p++) frag.append(h('div', {class:'pline', style:`top:${edTop + yAt(p * LPP)}px`}, h('span', null, (p + 1) + '.')));
     if (U.live){
-      SPANS.forEach(sp => {
+      const st = curStruct();
+      st.bands.forEach(sp => {
         const y0 = yAt(sp.s / 100 * R), y1 = yAt(sp.e / 100 * R);
-        frag.append(h('div', {class:`band fam-${sp.fam}` + (sp.grp ? ' grp' : ''), style:`top:${edTop + y0}px;height:${Math.max(2, y1 - y0)}px`}, h('div', {class:'strip'}), (y1 - y0) > 36 ? h('div', {class:'blab'}, spanLabel(sp)) : null));
+        frag.append(h('div', {class:`band fam-${sp.fam}` + (sp.grp ? ' grp' : ''), style:`top:${edTop + y0}px;height:${Math.max(2, y1 - y0)}px`}, h('div', {class:'strip'}), (y1 - y0) > 36 ? h('div', {class:'blab'}, sp.label) : null));
       });
-      frag.append(h('div', {class:'moment fam-mid', style:`top:${edTop + yAt(0.5 * R)}px`}, h('span', {class:'mlab'}, 'Midpoint')));
+      st.moments.forEach((m, k) => frag.append(h('div', {class:`moment fam-${m.fam}` + (k % 2 && st.moments.length > 2 ? ' alt' : ''), style:`top:${edTop + yAt(Math.min(m.s, 99.6) / 100 * R)}px`}, h('span', {class:'mlab'}, m.name))));
       if (tp && total > R) frag.append(h('div', {class:'overband', style:`top:${edTop + yAt(R)}px;height:${yAt(total) - yAt(R)}px`}, h('span', null, 'Over target')));
     }
     ovl.replaceChildren(frag);
@@ -2307,21 +2518,22 @@ function renderWrite(v){
     return P.starts[i] || 0;
   }
   function beatAt(frac){
-    const pct = frac * 100;
-    const span = SPANS.find(sp => pct >= sp.s && pct < sp.e) || SPANS[SPANS.length - 1];
-    const near = Math.abs(pct - 50) <= 3 ? BEAT.mid : null;
-    return {span, near};
+    const pct = frac * 100, st = curStruct();
+    const span = st.bands.find(sp => pct >= sp.s && pct < sp.e) || st.bands[st.bands.length - 1];
+    let near = null, d = 3.01;
+    st.moments.forEach(m => { const dd = Math.abs(pct - m.s); if (dd <= d){ d = dd; near = m; } });
+    return {span, near, st};
   }
   function drawMTL(){
     if (U.bar === false){ mtl.style.display = 'none'; return; }
     mtl.style.display = '';
-    const R = refLines(), total = P.total, tp = targetPages();
-    const segs = [];
-    SPANS.forEach(sp => { if (sp.ids[0] === 'a2b') segs.push(h('div', {class:'m fam-mid', title:'Midpoint'})); segs.push(h('div', {class:`fam-${sp.fam}` + (sp.grp ? ' grp' : ''), style:`flex:${sp.e - sp.s} 1 0`, title: spanLabel(sp)})); });
+    const R = refLines(), total = P.total, tp = targetPages(), st = curStruct();
+    const segs = st.bands.map(sp => h('div', {class:`fam-${sp.fam}` + (sp.grp ? ' grp' : ''), style:`flex:${sp.e - sp.s} 1 0`, title: sp.label}));
     const row = h('div', {class:'mtl-row'}, segs);
-    const kids = [row];
+    const ticks = h('div', {class:'mtl-ticks'}, st.moments.map(m => h('div', {class:`mtl-tick fam-${m.fam}`, style:`left:${m.s}%`, title: m.name + ' · ' + m.s + '%'})));
+    const kids = [row, ticks];
     const scale = tp && total > R ? R / total : 1;
-    if (scale < 1){ row.style.right = (100 - scale * 100) + '%'; kids.push(h('div', {class:'mtl-over', style:`left:${scale * 100}%;right:0`, title:'Over target'})); }
+    if (scale < 1){ row.style.right = ticks.style.right = (100 - scale * 100) + '%'; kids.push(h('div', {class:'mtl-over', style:`left:${scale * 100}%;right:0`, title:'Over target'})); }
     if (tp && total < R) kids.push(h('div', {class:'mtl-end', style:`left:0;width:${total / R * 100}%`, title:'Written so far'}));
     const cr = caretR(); const f = Math.min(1, (cr / (scale < 1 ? total : R)) || 0);
     kids.push(h('div', {class:'mtl-cur', style:`left:${f * 100}%`, 'data-l': 'You are here · ' + Math.round(cr / R * 100) + '%'}));
@@ -2331,30 +2543,46 @@ function renderWrite(v){
     if (!geo) return;
     root.style.setProperty('--wbarh', bar.offsetHeight + 'px');
     if (!U.live){ setCols(null, null, null, 'off'); return; }
-    const R = refLines(), r = caretR(), frac = Math.min(.9999, r / R);
-    const {span, near} = beatAt(frac);
-    const key = span.ids.join() + '|' + (near ? 'mid' : '') + '|' + S.develop.arc + '|' + Math.round(R);
-    const pgOf = pct => (pct / 100 * R / LPP);
+    const R = refLines(), r = caretR(), frac = Math.min(.9999, r / R), pct = frac * 100;
+    const {span, near, st} = beatAt(frac);
+    const store = beatStore(st.key);
+    const key = st.key + '|' + span.s + '|' + (near ? near.id : '') + '|' + S.develop.arc + '|' + Math.round(R);
+    const pgOf = p => (p / 100 * R / LPP);
     const fmtP = x => x < 10 ? x.toFixed(1) : Math.round(x);
-    const ab = ARC_BEATS[S.develop.arc];
     const topCol = S.develop.arc === 'disillusionment' ? 'var(--tragic)' : 'var(--truth)';
-    const arcRow = id => { const a = ab[BEAT_IDS.indexOf(id)]; return h('div', {class:'barc', style:'margin:6px 0 10px'}, h('span', {class:'bdot', style:`background:color-mix(in srgb, ${topCol} ${Math.round(a[0]*100)}%, var(--lie))`}), h('span', null, a[1])); };
-    const nextSp = [...SPANS.map(sp => ({label: spanLabel(sp), s: sp.s})), {label:'Midpoint', s:50}].filter(x => x.s > frac * 100).sort((x, y) => x.s - y.s)[0];
+    const arcRowAt = p => { const a = arcNoteAt(p); return h('div', {class:'barc', style:'margin:6px 0 10px'}, h('span', {class:'bdot', style:`background:color-mix(in srgb, ${topCol} ${Math.round(a[0]*100)}%, var(--lie))`}), h('span', null, a[1])); };
+    const bOf = id => st.beat[id];
+    const title = span.label;
+    const rangeTxt = span.ids.length === 1 && st.key !== 'scaffold' ? rangeOf(bOf(span.ids[0])) : (span.ids.length && st.key === 'scaffold' ? beatRange(BEAT[span.ids[0]]) : `${span.s}–${span.e}%`);
+    const inside = st.moments.filter(m => m.s >= span.s && m.s < span.e && m !== near);
+    const upcoming = [...st.bands.map(b => ({label:b.label, s:b.s})), ...st.moments.map(m => ({label:m.name, s:m.s}))].filter(x => x.s > pct + 0.01).sort((x, y) => x.s - y.s)[0];
+    const descBits = span.ids.length
+      ? span.ids.flatMap(id => [span.ids.length > 1 ? h('p', {class:`fam-${bOf(id).fam}`, style:'margin-bottom:0'}, h('b', {style:'color:var(--c)'}, (st.key === 'scaffold' ? BEAT[id].name : bOf(id).name) + ': '), bOf(id).desc) : h('p', null, bOf(id).desc)])
+      : [h('p', null, span.desc || '')];
     const left = h('div', {class:`pcard beat fam-${span.fam}` + (span.grp ? ' grp' : '')},
-      h('div', {class:'pk'}, h('span', null, 'Where you are'), h('span', null, beatRange(span))),
-      h('h4', null, span.grp ? spanLabel(span) : beatFull(span.ids[0])),
+      h('div', {class:'pk'}, h('span', null, 'Where you are'), h('span', null, rangeTxt)),
+      h('h4', null, title),
       h('div', {class:'small muted'}, `≈ ${fmtP(pgOf(span.s))}–${fmtP(pgOf(span.e))} of ${fmtP(R / LPP)} pages${targetPages() ? '' : ' (current length)'}`),
-      ...span.ids.flatMap(id => [span.grp ? h('p', {class:`fam-${BEAT[id].fam}`, style:'margin-bottom:0'}, h('b', {style:'color:var(--c)'}, BEAT[id].name + ': '), BEAT_DESC[id]) : h('p', null, BEAT_DESC[id]), arcRow(id)]),
-      near ? h('div', {class:'near fam-mid'}, h('b', null, (Math.abs(frac*100 - 50) < .6 ? 'Here: ' : 'Close to: ') + 'Midpoint · 50%'), h('p', {style:'margin:4px 0 0'}, BEAT_DESC.mid)) : null,
-      nextSp ? h('div', {class:'next'}, `Coming up: `, h('b', null, nextSp.label), ` ≈ ${fmtP(pgOf(nextSp.s))} pages in`) : null);
-    const outlineBits = id => { const BB = S.outline.beats[id]; return [BB.summary.trim() ? h('p', {style:'color:var(--ink)'}, BB.summary.trim()) : h('p', {class:'muted', style:'font-style:italic'}, 'Nothing outlined for this stage yet.'), BB.items.length ? h('ul', null, BB.items.map(i => h('li', null, i.title || '…'))) : null]; };
+      ...descBits, arcRowAt(pct),
+      near ? h('div', {class:`near fam-${near.fam}`}, h('b', null, (Math.abs(pct - near.s) < .6 ? 'Here: ' : 'Close to: ') + near.name + ' · ' + near.s + '%'), h('p', {style:'margin:4px 0 0'}, near.desc)) : null,
+      inside.length ? h('div', {class:'next', style:'border-top:0;padding-top:0'}, 'In this stretch: ', inside.map((m, i) => [i ? ', ' : '', h('b', null, m.name), ` (≈ ${fmtP(pgOf(m.s))} pages in)`])) : null,
+      upcoming ? h('div', {class:'next'}, `Coming up: `, h('b', null, upcoming.label), ` ≈ ${fmtP(pgOf(upcoming.s))} pages in`) : null);
+    const outlineBits = id => { const BB = store[id]; return [BB.summary.trim() ? h('p', {style:'color:var(--ink)'}, BB.summary.trim()) : h('p', {class:'muted', style:'font-style:italic'}, 'Nothing outlined for this yet.'), BB.items.length ? h('ul', null, BB.items.map(i => h('li', null, i.title || '…'))) : null]; };
+    const editId = span.ids[0] || (near && near.id) || (inside[0] && inside[0].id);
+    const edit = h('a', {href:'#', onclick: e => { e.preventDefault(); const id = editId;
+      if (st.key === 'scaffold'){ const i = OSTEPS.findIndex(s => s.beats.includes(id)); S.outline.step = i >= 0 ? i : OSTEPS.length - 1; S.outline.pass = PAYOFF.has(id) ? 2 : 1; }
+      else if (id) S.outline._focus = id;
+      go('outline'); }}, 'Edit');
+    const momentOutline = m => h('div', {class:`near fam-${m.fam}`}, h('b', null, m.name), ...outlineBits(m.id));
     const right = h('div', {class:`pcard beat fam-${span.fam}` + (span.grp ? ' grp' : '')},
-      h('div', {class:'pk'}, h('span', null, 'Your outline'), h('a', {href:'#', onclick: e => { e.preventDefault(); const id = span.ids[0]; const i = OSTEPS.findIndex(s => s.beats.includes(id)); S.outline.step = i >= 0 ? i : OSTEPS.length - 1; S.outline.pass = PAYOFF.has(id) ? 2 : 1; go('outline'); }}, 'Edit')),
-      h('h4', null, span.grp ? spanLabel(span) : beatFull(span.ids[0])),
-      ...span.ids.flatMap(id => span.grp ? [h('div', {class:`pk fam-${BEAT[id].fam}`, style:'margin:10px 0 0;color:var(--c)'}, BEAT[id].name), ...outlineBits(id)] : outlineBits(id)),
-      near ? h('div', {class:'near fam-mid'}, h('b', null, 'Midpoint'), ...outlineBits('mid')) : null);
-    const B = S.outline.beats[span.ids[0]];
-    setCols(left, right, h('div', {class:`pcard beat fam-${span.fam}`}, h('div', {class:'pk'}, h('span', null, 'Where you are'), h('span', null, beatRange(span))), h('h4', null, span.grp ? spanLabel(span) : beatFull(span.ids[0])), B.summary.trim() ? h('p', null, B.summary.trim()) : null), key);
+      h('div', {class:'pk'}, h('span', null, 'Your outline'), edit),
+      h('h4', null, title),
+      ...(span.ids.length ? span.ids.flatMap(id => span.ids.length > 1 ? [h('div', {class:`pk fam-${bOf(id).fam}`, style:'margin:10px 0 0;color:var(--c)'}, st.key === 'scaffold' ? BEAT[id].name : bOf(id).name), ...outlineBits(id)] : outlineBits(id))
+        : (!near && !inside.length ? [h('p', {class:'muted', style:'font-style:italic'}, 'This stretch has no key point of its own. Your outline for the points either side is in the Outline tab.')] : [])),
+      near ? momentOutline(near) : null,
+      ...inside.map(momentOutline));
+    const firstSum = span.ids.length ? store[span.ids[0]].summary.trim() : (near ? store[near.id].summary.trim() : '');
+    setCols(left, right, h('div', {class:`pcard beat fam-${span.fam}`}, h('div', {class:'pk'}, h('span', null, 'Where you are'), h('span', null, rangeTxt)), h('h4', null, title), firstSum ? h('p', null, firstSum) : null), key);
   }
   function setCols(left, right, flt, key){
     key += '|' + (U.scenes !== false) + (U.checks !== false);
