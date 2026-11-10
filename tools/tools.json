@@ -52,7 +52,7 @@
   "tools": [
     {
       "id": "preprod",
-      "name": "Pre-Production Timeline",
+      "name": "Pre-Production Pipeline",
       "desc": "A department-by-department roadmap from idea to shoot-ready, with trackable tasks, filters and an editable glossary.",
       "category": "pipelines",
       "tags": [
@@ -60,13 +60,31 @@
         "Checklist"
       ],
       "icon": "timeline",
-      "fileName": "Pre-Production Timeline.html",
+      "fileName": "Pre-Production Pipeline.html",
       "origTitle": "Short Film Pre-Production",
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611091200,
+      "rev": 202611101500,
       "file": "tools/preprod.html"
+    },
+    {
+      "id": "production",
+      "name": "Production Pipeline",
+      "desc": "The shoot day from crew call to wrap: set-up, the repeating shot cycle and tear down, with guidance for every department.",
+      "category": "pipelines",
+      "tags": [
+        "All crew",
+        "Shoot day"
+      ],
+      "icon": "production",
+      "fileName": "Production Pipeline.html",
+      "origTitle": "Short Film Production",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611101500,
+      "file": "tools/production.html"
     },
     {
       "id": "postprod",

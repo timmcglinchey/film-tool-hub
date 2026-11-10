@@ -1,0 +1,2151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--fth-standalone-->
+<!-- Film Tool Hub: this block is only used when this file is opened on its own (for example while working on it).
+     Inside the hub it is removed and the hub supplies the same look from hub/kit.css. Keep it, but don't edit it here. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═════════ Film Tool Hub kit ═════════
+   Shared look for every tool. The hub injects this at the top of each tool's <head>,
+   sets data-theme="light|dark" on the tool's <html>, and sets --fth-cat to the tool's
+   category colour. Tools use the --fth-* tokens and the .fth-* components. */
+:root{
+  --fth-bg:#0b0c0e; --fth-bg2:#101216; --fth-surface:#15181d; --fth-surface2:#1b1f26; --fth-surface3:#232831;
+  --fth-line:#242931; --fth-line2:#333a45; --fth-line3:#46505e;
+  --fth-text:#f0ece5; --fth-muted:#9aa0aa; --fth-faint:#666c77;
+  --fth-good:#5cc98a; --fth-bad:#ff8f7a; --fth-warn:#f2bd5c;
+  /* accent tokens (--fth-cat, --fth-accent, --fth-accent-ink, --fth-accent-soft, --fth-accent-line, --fth-on-accent)
+     are written by the hub for each tool's category, as plain colours for both themes */
+  --fth-cat:#ffb547; --fth-accent:#ffb547; --fth-accent-ink:#ffb547; --fth-accent-soft:rgba(255,181,71,.14); --fth-accent-line:rgba(255,181,71,.45); --fth-on-accent:#14110b;
+  --fth-paper-backdrop:#07080a;
+  --fth-shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --fth-shadow-sm:none;
+  --fth-radius:14px; --fth-radius-sm:9px;
+  --fth-display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --fth-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --fth-script:"Courier Prime","Courier New",Courier,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --fth-bg:#f3f0ea; --fth-bg2:#f9f7f3; --fth-surface:#ffffff; --fth-surface2:#f1ede5; --fth-surface3:#e6e1d6;
+  --fth-line:#e3ded4; --fth-line2:#d2ccc0; --fth-line3:#b4ad9f;
+  --fth-text:#16181c; --fth-muted:#565c66; --fth-faint:#878c95;
+  --fth-good:#22804a; --fth-bad:#c0392b; --fth-warn:#9a6200;
+  --fth-paper-backdrop:#e4dfd5;
+  --fth-shadow:0 14px 30px -16px rgba(70,50,20,.30);
+  --fth-shadow-sm:0 1px 2px rgba(60,45,20,.05),0 4px 14px rgba(60,45,20,.05);
+  color-scheme:light;
+}
+
+/* base */
+html{background:var(--fth-bg)}
+body{background:var(--fth-bg);color:var(--fth-text);font-family:var(--fth-display);-webkit-font-smoothing:antialiased}
+::selection{background:var(--fth-accent-line)}
+:focus-visible{outline:2px solid var(--fth-accent);outline-offset:2px}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--fth-line2);border-radius:6px;border:2px solid var(--fth-bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--fth-line3)}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+
+/* tool header: category eyebrow, tool name, then actions on the right */
+.fth-head{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 20px;
+  background:color-mix(in srgb,var(--fth-bg) 88%,transparent);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  border-bottom:1px solid var(--fth-line)}
+.fth-head::before{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:linear-gradient(90deg,var(--fth-cat),transparent 38%);opacity:.75;pointer-events:none}
+.fth-id{display:flex;flex-direction:column;gap:5px;min-width:0;flex:none}
+.fth-eyebrow{display:flex;align-items:center;gap:8px;font:500 10.5px/1 var(--fth-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fth-accent-ink);white-space:nowrap}
+.fth-eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fth-cat);box-shadow:0 0 0 3px var(--fth-accent-soft);flex:none}
+.fth-title{margin:0;font-weight:800;font-variation-settings:"wdth" 68;font-size:23px;line-height:1;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap}
+.fth-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.fth-vsep{width:1px;height:22px;background:var(--fth-line2);margin:0 3px;flex:none}
+
+/* buttons */
+.fth-btn{height:34px;padding:0 13px;border-radius:var(--fth-radius-sm);border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);
+  font:600 13px/1 var(--fth-display);display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  transition:background-color .15s,border-color .15s,color .15s}
+.fth-btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.fth-btn:disabled{opacity:.45;cursor:default}
+.fth-btn.primary{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.fth-btn.primary:hover{filter:brightness(1.08)}
+.fth-btn.ghost{background:transparent;border-color:transparent;color:var(--fth-muted)}
+.fth-btn.ghost:hover{background:var(--fth-surface2);border-color:var(--fth-line2);color:var(--fth-text)}
+.fth-btn.danger{color:var(--fth-bad)}
+.fth-btn.sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.fth-btn.icon{width:30px;height:30px;padding:0}
+
+/* labels, fields */
+.fth-label{font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.fth-input{width:100%;min-width:0;background:var(--fth-bg2);border:1px solid var(--fth-line2);border-radius:8px;padding:7px 10px;color:var(--fth-text);font:14px/1.35 var(--fth-display);outline:none;transition:border-color .15s,box-shadow .15s}
+.fth-input:hover{border-color:var(--fth-line3)}
+.fth-input:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+select.fth-input{cursor:pointer}
+textarea.fth-input{resize:vertical;line-height:1.45}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-accent)}
+
+/* sections & surfaces */
+.fth-card{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);box-shadow:var(--fth-shadow-sm)}
+.fth-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.fth-sec::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+.fth-sec .fth-num{font:600 11px var(--fth-mono);color:var(--fth-accent-ink);letter-spacing:.08em}
+.fth-muted{color:var(--fth-muted)}
+.fth-mono{font-family:var(--fth-mono)}
+
+/* notes */
+.fth-tip{background:var(--fth-accent-soft);border-left:2px solid var(--fth-accent);color:var(--fth-text);padding:7px 10px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.45}
+.fth-warn{background:color-mix(in srgb,var(--fth-warn) 10%,var(--fth-surface));border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent);color:var(--fth-text);border-radius:10px;padding:10px 12px;font-size:13px}
+.fth-warn b:first-child{color:var(--fth-warn)}
+.fth-info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--fth-line3);color:var(--fth-muted);font:600 10px/1 var(--fth-mono);text-transform:none;letter-spacing:0;cursor:pointer;user-select:none;vertical-align:1px;margin-left:5px;transition:.15s}
+.fth-info:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+
+/* toast */
+.fth-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;z-index:200;background:var(--fth-text);color:var(--fth-bg);padding:10px 16px;border-radius:10px;font:500 13.5px var(--fth-display);box-shadow:var(--fth-shadow);transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.fth-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* paper: a printable page shown on screen stays paper-white in both themes */
+.fth-paper-wrap{background:var(--fth-paper-backdrop)}
+.fth-paper{background:#fff;color:#000;color-scheme:light;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55)}
+
+@media print{
+  html,body{background:#fff!important;color:#000}
+  .fth-head{display:none!important}
+  .fth-paper-wrap{background:#fff!important}
+  .fth-paper{box-shadow:none!important}
+}
+@media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
+@media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
+
+:root{--fth-cat:#8bd16a;--fth-accent:#8bd16a;--fth-accent-ink:#8bd16a;--fth-accent-soft:rgba(139,209,106,0.14);--fth-accent-line:rgba(139,209,106,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#51793d;--fth-accent-ink:#51793d;--fth-accent-soft:rgba(139,209,106,0.16);--fth-accent-line:rgba(139,209,106,0.6);--fth-on-accent:#ffffff}
+</style>
+<script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
+<!--/fth-standalone-->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Short Film Production</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #0D1117; --navy-mid: #161B27; --navy-card: #1C2333; --navy-border: #252E42;
+    --teal: #2ABFBF; --teal-dim: #1E9494; --teal-glow: rgba(42,191,191,0.12);
+    --slate: #8B9BB4; --slate-light: #B8C5D6; --white: #EEF2F7;
+    --green: #4CAF7D; --danger: #E05C5C;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--navy); color: var(--white); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+  .filmstrip { width:100%; height:36px; background:#111; display:flex; align-items:center; overflow:hidden; position:relative; }
+  .filmstrip::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(90deg,transparent 0,transparent 14px,var(--navy) 14px,var(--navy) 22px,transparent 22px,transparent 36px); opacity:0.9; }
+  .filmstrip-inner { display:flex; gap:12px; padding:0 12px; animation:scroll-strip 18s linear infinite; white-space:nowrap; }
+  .filmstrip-label { font-family:var(--fth-display);font-weight:800;font-variation-settings:'wdth' 64;text-transform:uppercase; font-size:11px; letter-spacing:4px; color:var(--teal); opacity:0.7; user-select:none; }
+  @keyframes scroll-strip { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+  @media(prefers-reduced-motion:reduce){.filmstrip-inner{animation:none}}
+
+  .hero { padding:60px 48px 40px; max-width:1200px; margin:0 auto; }
+  .hero-eyebrow { font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--teal); margin-bottom:16px; }
+  .hero-title { font-family:var(--fth-display);font-weight:800;font-variation-settings:'wdth' 64;text-transform:uppercase; font-size:clamp(52px,8vw,96px); line-height:0.9; letter-spacing:2px; color:var(--white); margin-bottom:8px; }
+  .hero-title span { color:var(--teal); }
+  .hero-sub { font-size:15px; color:var(--slate); font-weight:300; max-width:480px; line-height:1.6; margin-top:20px; }
+
+  .progress-bar-wrap { max-width:1200px; margin:0 auto; padding:0 48px 20px; display:flex; align-items:center; gap:16px; }
+  .progress-track { flex:1; height:4px; background:var(--navy-border); border-radius:2px; overflow:hidden; }
+  .progress-fill { height:100%; width:0%; background:var(--teal); border-radius:2px; transition:width .4s ease; }
+  .progress-label { font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--slate); white-space:nowrap; }
+
+  .timeline-wrapper { max-width:1200px; margin:0 auto; padding:0 48px 80px; }
+  .phase-block { margin-bottom:2px; }
+  .phase { display:grid; grid-template-columns:220px 1fr; gap:0; position:relative; transition:opacity .3s; }
+  .phase.completed { opacity:.45; }
+  .phase-block.hidden { display:none; }
+
+  .phase-label { padding:28px 24px 28px 0; display:flex; flex-direction:column; justify-content:flex-start; border-right:1px solid var(--navy-border); position:relative; }
+  .phase-label::after { content:''; position:absolute; right:-5px; top:32px; width:9px; height:9px; border-radius:50%; background:var(--teal); box-shadow:0 0 12px var(--teal); transition:background .3s,box-shadow .3s; }
+  .phase.completed .phase-label::after { background:var(--green); box-shadow:0 0 12px var(--green); }
+  .phase-number { font-family:var(--fth-display);font-weight:800;font-variation-settings:'wdth' 64;text-transform:uppercase; font-size:11px; letter-spacing:3px; color:var(--teal-dim); margin-bottom:6px; }
+  .phase-name { font-family:var(--fth-display);font-weight:800;font-variation-settings:'wdth' 64;text-transform:uppercase; font-size:26px; letter-spacing:1px; color:var(--white); line-height:1.1; margin-bottom:10px; }
+
+  .phase-timing { margin-top:4px; margin-bottom:10px; }
+  .phase-timing-label { font-size:10px; color:var(--slate); letter-spacing:0.5px; margin-bottom:5px; }
+  .phase-timing-track { width:100%; height:3px; background:var(--navy-border); border-radius:2px; overflow:hidden; position:relative; }
+  .phase-timing-fill { height:100%; background:var(--teal); border-radius:2px; position:absolute; transition:background .3s; }
+  .phase.completed .phase-timing-fill { background:var(--green); }
+  .phase-progress-text { font-size:10px; color:var(--slate); margin-top:8px; letter-spacing:.5px; }
+
+  .phase-tasks { padding:24px 0 24px 32px; display:flex; flex-direction:column; gap:10px; }
+
+  /* ---- CYCLE BADGE on the phase label ---- */
+  .cycle-badge { display:inline-flex; align-items:center; gap:5px; margin-top:8px; background:var(--teal-glow); border:1px solid var(--fth-accent-line); border-radius:20px; padding:4px 10px; width:fit-content; }
+  .cycle-badge-icon { font-size:11px; }
+  .cycle-badge-label { font-size:9px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--teal); }
+
+  /* ---- Cycle return arrow in task list ---- */
+  .cycle-return { display:flex; align-items:center; gap:10px; padding:8px 16px; margin:4px 0; opacity:0.5; }
+  .cycle-return-line { flex:1; height:1px; background:repeating-linear-gradient(90deg, var(--teal) 0, var(--teal) 6px, transparent 6px, transparent 12px); }
+  .cycle-return-label { font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--teal); white-space:nowrap; }
+  .cycle-return-arrow { font-size:14px; color:var(--teal); }
+
+  /* ---- Standard tasks ---- */
+  .task { background:var(--navy-card); border:1px solid var(--navy-border); border-radius:6px; position:relative; overflow:hidden; transition:border-color .2s,background .2s,opacity .3s; cursor:pointer; }
+  .task::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--navy-border); transition:background .2s; }
+  .task:hover { border-color:var(--fth-accent-line); background:var(--navy-mid); }
+  .task:hover::before { background:var(--teal); }
+  .task.completed { opacity:.4; }
+  .task.completed::before { background:var(--green) !important; }
+  .task.open { border-color:var(--teal); background:var(--navy-mid); }
+  .task.open::before { background:var(--teal); }
+  .task.filtered-out { display:none; }
+
+  .task-header { padding:14px 18px; display:grid; grid-template-columns:auto 1fr auto auto; align-items:start; gap:14px; }
+  .task-icon { font-size:18px; line-height:1; margin-top:1px; filter:grayscale(0.3); }
+  .task-body { min-width:0; }
+  .task-name { font-size:13px; font-weight:600; color:var(--white); margin-bottom:4px; }
+  .task-desc { font-size:12px; color:var(--slate); line-height:1.5; font-weight:300; }
+  .task-meta { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
+  .task-owner { font-size:10px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--slate); white-space:nowrap; }
+
+  .task-checkbox { flex-shrink:0; width:18px; height:18px; border:1.5px solid var(--navy-border); border-radius:4px; display:flex; align-items:center; justify-content:center; transition:border-color .2s,background .2s; cursor:pointer; margin-top:1px; }
+  .task-checkbox:hover { border-color:var(--green); }
+  .task-checkbox.checked { background:var(--green); border-color:var(--green); }
+  .task-checkbox svg { display:none; }
+  .task-checkbox.checked svg { display:block; }
+
+  .task-chevron { flex-shrink:0; width:16px; height:16px; color:var(--slate); margin-top:2px; transition:transform .25s,color .2s; }
+  .task.open .task-chevron { transform:rotate(180deg); color:var(--teal); }
+
+  .task-drawer { max-height:0; overflow:hidden; transition:max-height .35s ease; border-top:0px solid var(--navy-border); }
+  .task.open .task-drawer { max-height:99999px; border-top:1px solid var(--navy-border); }
+  .task-drawer-inner { padding:20px 22px 22px 50px; display:flex; flex-direction:column; gap:20px; }
+
+  .drawer-section { display:flex; flex-direction:column; gap:8px; }
+  .drawer-label { font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--teal-dim); margin-bottom:10px; }
+
+  .guidance-wrap { position:relative; }
+  .guidance-toolbar { display:flex; align-items:center; gap:6px; margin-bottom:6px; opacity:0; pointer-events:none; transition:opacity .2s; }
+  .guidance-wrap:focus-within .guidance-toolbar, .guidance-wrap:hover .guidance-toolbar { opacity:1; pointer-events:all; }
+  .guidance-toolbar-label { font-size:9px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--slate); flex:1; }
+  .guidance-btn { background:none; border:1px solid var(--navy-border); border-radius:3px; color:var(--slate); font-family:var(--fth-display); font-size:10px; font-weight:600; padding:2px 7px; cursor:pointer; line-height:1.4; transition:border-color .15s, color .15s; }
+  .guidance-btn:hover { border-color:var(--teal); color:var(--teal); }
+  .guidance-btn.reset { border-color:transparent; color:var(--slate); font-weight:400; }
+  .guidance-btn.reset:hover { border-color:var(--danger); color:var(--danger); }
+  .guidance-block { background:var(--navy); border:1px solid var(--navy-border); border-radius:5px; padding:14px 16px; outline:none; cursor:text; transition:border-color .2s; }
+  .guidance-block:focus { border-color:var(--teal-dim); }
+  .guidance-block p { font-size:12px; color:var(--slate-light); line-height:1.7; font-weight:300; margin-bottom:12px; }
+  .guidance-block p:last-child { margin-bottom:0; }
+  .guidance-block ul { list-style:none; padding:0; margin:0 0 14px 0; display:flex; flex-direction:column; gap:6px; }
+  .guidance-block li { font-size:12px; color:var(--slate-light); line-height:1.65; font-weight:300; padding-left:14px; position:relative; margin-bottom:3px; }
+  .guidance-block li::before { content:'–'; position:absolute; left:0; color:var(--teal-dim); }
+  .guidance-block strong { color:var(--white); font-weight:600; }
+  .guidance-edited-badge { display:inline-block; font-size:9px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--teal-dim); margin-left:8px; opacity:0.7; }
+
+  .drawer-notes { width:100%; background:var(--navy); border:1px solid var(--navy-border); border-radius:4px; color:var(--slate-light); font-family:var(--fth-display); font-size:12px; font-weight:300; line-height:1.6; padding:10px 12px; resize:vertical; min-height:72px; transition:border-color .2s; outline:none; }
+  .drawer-notes:focus { border-color:var(--teal); }
+  .drawer-notes::placeholder { color:var(--navy-border); }
+
+  .links-list { display:flex; flex-direction:column; gap:6px; }
+  .link-row { display:flex; gap:8px; align-items:center; }
+  .link-input { flex:1; background:var(--navy); border:1px solid var(--navy-border); border-radius:4px; color:var(--slate-light); font-family:var(--fth-display); font-size:12px; padding:7px 10px; outline:none; transition:border-color .2s; }
+  .link-input:focus { border-color:var(--teal); }
+  .link-input::placeholder { color:var(--navy-border); }
+  .link-label-input { width:120px; flex:none; }
+  .btn-add-link, .btn-remove-link { background:none; border:1px solid var(--navy-border); border-radius:4px; color:var(--slate); cursor:pointer; font-size:11px; padding:5px 10px; font-family:var(--fth-display); transition:border-color .2s,color .2s; white-space:nowrap; }
+  .btn-add-link:hover { border-color:var(--teal); color:var(--teal); }
+  .btn-remove-link:hover { border-color:var(--danger); color:var(--danger); }
+  .link-go { font-size:11px; color:var(--teal); text-decoration:none; padding:5px 10px; border:1px solid var(--teal-dim); border-radius:4px; white-space:nowrap; font-weight:500; transition:background .2s; }
+  .link-go:hover { background:var(--teal-glow); }
+
+  .deliverable { margin:8px 0 16px 252px; padding:12px 18px; background:var(--teal-glow); border-left:2px solid var(--teal); border-radius:0 6px 6px 0; font-size:12px; color:var(--slate-light); font-weight:400; }
+  .deliverable strong { font-weight:700; color:var(--teal); margin-right:6px; }
+
+  .phase-divider { height:1px; background:linear-gradient(90deg,transparent,var(--navy-border) 20%,var(--navy-border) 80%,transparent); margin:16px 0; }
+  .footer { opacity:.4; }
+
+  .task-lock { flex-shrink:0; background:none; border:none; cursor:pointer; color:var(--slate); padding:0; line-height:1; margin-top:1px; transition:color .2s; font-size:13px; }
+  .task-lock:hover { color:var(--teal); }
+  .task.unlocked .task-lock { color:var(--teal); }
+  .task:not(.unlocked) .task-name-field, .task:not(.unlocked) .task-desc-field, .task:not(.unlocked) .task-owner-field, .task:not(.unlocked) .task-icon-edit { pointer-events:none; border-bottom-color:transparent !important; cursor:default; }
+  .task:not(.unlocked) .guidance-block { pointer-events:none; cursor:default; }
+  .gloss-link { pointer-events:auto; }
+  .task:not(.unlocked) .guidance-toolbar { display:none !important; }
+  .task:not(.unlocked) .drawer-notes { pointer-events:none; background:transparent; border-color:transparent; resize:none; cursor:default; }
+  .task:not(.unlocked) .btn-add-link, .task:not(.unlocked) .btn-remove-link, .task:not(.unlocked) .link-input { pointer-events:none; opacity:0.5; }
+  .task:not(.unlocked) [data-action="reset"] { display:none; }
+
+  .task-icon-edit { font-size:18px; line-height:1; margin-top:1px; filter:grayscale(0.3); background:none; border:none; outline:none; cursor:text; width:28px; font-family:var(--fth-display); padding:0; text-align:center; }
+  .task-name-field { font-size:13px; font-weight:600; color:var(--white); margin-bottom:4px; background:none; border:none; border-bottom:1px solid transparent; outline:none; width:100%; font-family:var(--fth-display); padding:0; transition:border-color .2s; cursor:text; }
+  .task-name-field:hover, .task-name-field:focus { border-bottom-color:var(--navy-border); }
+  .task-name-field:focus { border-bottom-color:var(--teal); }
+  .task-desc-field { font-size:12px; color:var(--slate); line-height:1.5; font-weight:300; background:none; border:none; border-bottom:1px solid transparent; outline:none; width:100%; font-family:var(--fth-display); padding:0; resize:none; overflow:hidden; transition:border-color .2s; cursor:text; }
+  .task-desc-field:hover, .task-desc-field:focus { border-bottom-color:var(--navy-border); }
+  .task-desc-field:focus { border-bottom-color:var(--teal); color:var(--slate-light); }
+  .task-owner-field { font-size:10px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--slate); background:none; border:none; border-bottom:1px solid transparent; outline:none; width:100%; font-family:var(--fth-display); padding:0; transition:border-color .2s; cursor:text; text-align:right; }
+  .task-owner-field:hover, .task-owner-field:focus { border-bottom-color:var(--navy-border); }
+  .task-owner-field:focus { border-bottom-color:var(--teal); }
+
+  .task-custom::before { background: var(--slate) !important; }
+  .task-custom .task-name-edit { background:none; border:none; border-bottom:1px dashed var(--navy-border); color:var(--white); font-family:var(--fth-display); font-size:13px; font-weight:600; width:100%; outline:none; padding:2px 0; margin-bottom:6px; transition:border-color .2s; }
+  .task-custom .task-name-edit:focus { border-bottom-color:var(--teal); }
+  .task-custom .task-name-edit::placeholder { color:var(--navy-border); font-weight:400; }
+  .task-custom .task-desc-edit { background:none; border:none; border-bottom:1px dashed var(--navy-border); color:var(--slate-light); font-family:var(--fth-display); font-size:12px; font-weight:300; width:100%; outline:none; padding:2px 0; line-height:1.5; transition:border-color .2s; resize:none; height:auto; overflow:hidden; }
+  .task-custom .task-desc-edit:focus { border-bottom-color:var(--teal); }
+  .task-remove { flex-shrink:0; background:none; border:none; color:var(--slate); cursor:pointer; font-size:16px; line-height:1; padding:0 2px; transition:color .2s; }
+  .task-remove:hover { color:var(--danger); }
+  .custom-tag { background:rgba(139,155,180,0.15); color:var(--slate); font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; letter-spacing:.5px; white-space:nowrap; }
+  .add-task-btn { display:flex; align-items:center; gap:8px; background:none; border:1px dashed var(--navy-border); border-radius:5px; color:var(--slate); cursor:pointer; font-family:var(--fth-display); font-size:11px; font-weight:600; letter-spacing:1px; margin:4px 0 0 32px; padding:9px 16px; text-transform:uppercase; transition:border-color .2s,color .2s; width:calc(100% - 32px); }
+  .add-task-btn:hover { border-color:var(--teal); color:var(--teal); }
+
+  /* ---- ROLE SUB-PANEL within drawers ---- */
+  .roles-section { display:flex; flex-direction:column; gap:12px; }
+  .roles-label { font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--teal-dim); margin-bottom:4px; }
+  .roles-strip { display:flex; flex-wrap:wrap; gap:8px; }
+  .role-pill { display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:20px; border:1px solid var(--navy-border); background:var(--navy); cursor:pointer; font-size:11px; font-weight:600; color:var(--slate); letter-spacing:.5px; transition:border-color .2s, color .2s, background .2s; user-select:none; }
+  .role-pill:hover { background:var(--navy-mid); }
+  .role-pill.active { border-color:var(--role-color,var(--teal)); color:var(--white); background:rgba(var(--role-color-rgb,42,191,191),0.1); }
+  .role-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; background:var(--role-color,var(--teal)); }
+  .role-cards { display:flex; flex-direction:column; gap:8px; margin-top:4px; }
+  .role-card { background:var(--navy); border:1px solid var(--navy-border); border-radius:6px; overflow:hidden; border-left:3px solid var(--role-color,var(--teal)); display:none; }
+  .role-card.visible { display:block; }
+  .role-card-header { padding:10px 16px; display:flex; align-items:center; gap:8px; }
+  .role-card-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; background:var(--role-color,var(--teal)); }
+  .role-card-name { font-size:12px; font-weight:600; color:var(--white); }
+  .role-card-body { padding:0 16px 14px 16px; font-size:12px; color:var(--slate-light); line-height:1.7; font-weight:300; }
+  .role-card-body ul { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:5px; }
+  .role-card-body li { padding-left:14px; position:relative; }
+  .role-card-body li::before { content:'–'; position:absolute; left:0; color:var(--teal-dim); }
+  .role-card-body strong { color:var(--white); font-weight:600; }
+
+  @media(max-width:700px){
+    .hero,.timeline-wrapper,.progress-bar-wrap{padding-left:20px;padding-right:20px}
+    .phase{grid-template-columns:1fr}
+    .phase-label{border-right:none;border-bottom:1px solid var(--navy-border);padding-bottom:16px}
+    .phase-label::after{display:none}
+    .phase-tasks{padding-left:0}
+    .deliverable{margin-left:20px}
+    .task-meta{display:none}
+    .task-drawer-inner{padding-left:18px}
+    .roles-strip{gap:6px}
+  }
+
+  .glossary-wrap { max-width:1200px; margin:0 auto; padding:0 48px 60px; }
+  .glossary-toggle { display:flex; align-items:center; gap:14px; width:100%; background:var(--navy-card); border:none; border-top:1px solid var(--navy-border); border-bottom:1px solid var(--navy-border); padding:20px 48px; cursor:pointer; text-align:left; }
+  .glossary-toggle:hover .glossary-toggle-label { color:var(--white); }
+  .glossary-toggle-eyebrow { font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--teal); flex-shrink:0; }
+  .glossary-toggle-label { font-family:var(--fth-display);font-weight:800;font-variation-settings:'wdth' 64;text-transform:uppercase; font-size:28px; letter-spacing:1px; color:var(--slate-light); transition:color .2s; flex:1; }
+  .glossary-chevron { width:18px; height:18px; color:var(--slate); flex-shrink:0; transition:transform .3s; }
+  .glossary-wrap.open .glossary-chevron { transform:rotate(180deg); }
+  .glossary-body { max-height:0; overflow:hidden; transition:max-height .4s ease; }
+  .glossary-wrap.open .glossary-body { max-height:99999px; }
+  .glossary-intro { font-size:13px; color:var(--slate); font-weight:300; line-height:1.7; padding:24px 0 20px; max-width:640px; }
+  .glossary-terms { display:flex; flex-direction:column; }
+  .glossary-term { display:grid; grid-template-columns:240px 1fr 24px; gap:16px; padding:10px 0; border-bottom:1px solid var(--navy-border); align-items:start; }
+  .glossary-term:last-child { border-bottom:none; }
+  .glossary-term-name { font-size:12px; font-weight:600; color:var(--teal-dim); line-height:1.5; background:none; border:none; border-bottom:1px solid transparent; outline:none; font-family:var(--fth-display); width:100%; padding:0; cursor:default; transition:border-color .2s; resize:none; overflow:hidden; }
+  .glossary-term-def { font-size:12px; color:var(--slate-light); font-weight:300; line-height:1.6; background:none; border:none; border-bottom:1px solid transparent; outline:none; font-family:var(--fth-display); width:100%; padding:0; resize:none; overflow:hidden; cursor:default; transition:border-color .2s; }
+  .glossary-term-remove { background:none; border:none; color:transparent; cursor:pointer; font-size:15px; padding:0; line-height:1; transition:color .2s; flex-shrink:0; justify-self:center; }
+  .glossary-lock-strip { display:flex; align-items:center; justify-content:space-between; padding:16px 0 8px; }
+  .glossary-lock-btn { background:none; border:1px solid var(--navy-border); border-radius:4px; color:var(--slate); cursor:pointer; font-family:var(--fth-display); font-size:10px; font-weight:600; letter-spacing:1px; padding:4px 10px; text-transform:uppercase; transition:border-color .2s,color .2s; }
+  .glossary-lock-btn:hover { border-color:var(--teal); color:var(--teal); }
+  .glossary-add-term { background:none; border:1px dashed var(--navy-border); border-radius:4px; color:var(--slate); cursor:pointer; font-family:var(--fth-display); font-size:10px; font-weight:600; letter-spacing:1px; padding:6px 12px; text-transform:uppercase; transition:border-color .2s,color .2s; margin-top:12px; display:block; }
+  .glossary-add-term:hover { border-color:var(--teal); color:var(--teal); }
+  .glossary-unlocked .glossary-term-name, .glossary-unlocked .glossary-term-def { cursor:text; }
+  .glossary-unlocked .glossary-term-name:hover, .glossary-unlocked .glossary-term-def:hover { border-bottom-color:var(--navy-border); }
+  .glossary-unlocked .glossary-term-name:focus, .glossary-unlocked .glossary-term-def:focus { border-bottom-color:var(--teal); outline:none; }
+  .glossary-unlocked .glossary-term-remove { color:var(--slate); }
+  .glossary-unlocked .glossary-term-remove:hover { color:var(--danger); }
+  .glossary-locked .glossary-term-name, .glossary-locked .glossary-term-def { pointer-events:none; }
+  .glossary-locked .glossary-term-remove { pointer-events:none; opacity:0; }
+  .glossary-locked .glossary-add-term { pointer-events:none; opacity:0.3; }
+  .glossary-search-wrap { position:relative; margin-bottom:16px; }
+  .glossary-search-input { width:100%; background:var(--navy-card); border:1px solid var(--navy-border); border-radius:6px; color:var(--white); font-family:var(--fth-display); font-size:13px; font-weight:300; padding:12px 16px 12px 40px; outline:none; transition:border-color .2s; }
+  .glossary-search-input:focus { border-color:var(--teal); }
+  .glossary-search-input::placeholder { color:var(--slate); }
+  .glossary-search-icon { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--slate); font-size:14px; pointer-events:none; }
+  .glossary-search-results { position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--navy-card); border:1px solid var(--navy-border); border-radius:6px; max-height:320px; overflow-y:auto; z-index:100; display:none; box-shadow:0 8px 32px rgba(0,0,0,.4); }
+  .glossary-search-results.visible { display:block; }
+  .glossary-search-result { display:flex; align-items:center; gap:12px; padding:10px 16px; cursor:pointer; border-bottom:1px solid var(--navy-border); transition:background .15s; }
+  .glossary-search-result:last-child { border-bottom:none; }
+  .glossary-search-result:hover { background:var(--navy-mid); }
+  .glossary-result-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .glossary-result-term { font-size:12px; font-weight:600; color:var(--white); flex-shrink:0; min-width:160px; }
+  .glossary-result-def { font-size:11px; color:var(--slate); font-weight:300; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:400px; }
+  .glossary-no-results { padding:14px 16px; font-size:12px; color:var(--slate); font-weight:300; }
+  .gloss-link { color:var(--teal-dim); border-bottom:1px dotted var(--teal-dim); cursor:default; font-weight:500; transition:color .15s,border-color .15s; }
+  .gloss-link:hover { color:var(--teal); border-color:var(--teal); }
+
+  /* ---- Preliminary Research section ---- */
+  .research-section { max-width:1200px; margin:0 auto; padding:0 48px 40px; }
+  .research-toggle {
+    display:flex; align-items:center; gap:14px; width:100%;
+    background:var(--navy-card); border:none;
+    border-top:1px solid var(--navy-border);
+    border-bottom:1px solid var(--navy-border);
+    padding:20px 48px; cursor:pointer; text-align:left;
+  }
+  .research-toggle:hover .research-toggle-label { color:var(--white); }
+  .research-toggle-eyebrow { font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--teal); flex-shrink:0; }
+  .research-toggle-label { font-family:var(--fth-display);font-weight:800;font-variation-settings:'wdth' 64;text-transform:uppercase; font-size:28px; letter-spacing:1px; color:var(--slate-light); transition:color .2s; flex:1; }
+  .research-chevron { width:18px; height:18px; color:var(--slate); flex-shrink:0; transition:transform .3s; }
+  .research-section.open .research-chevron { transform:rotate(180deg); }
+  .research-body { max-height:0; overflow:hidden; transition:max-height .5s ease; }
+  .research-section.open .research-body { max-height:99999px; }
+  .research-intro { font-size:13px; color:var(--slate); font-weight:300; line-height:1.7; padding:24px 0 28px; max-width:640px; }
+  .research-tasks { display:flex; flex-direction:column; gap:10px; padding-bottom:32px; }
+
+/* ═════ Film Tool Hub kit mapping ═════ */
+:root:root:root{--navy:var(--fth-bg);--navy-mid:var(--fth-bg2);--navy-card:var(--fth-surface);--navy-border:var(--fth-line);--teal:var(--fth-accent-ink);--teal-dim:var(--fth-accent-ink);--teal-glow:var(--fth-accent-soft);--slate:var(--fth-muted);--slate-light:var(--fth-text);--white:var(--fth-text);--green:var(--fth-good);--danger:var(--fth-bad);}
+body{font-family:var(--fth-display)}
+.hero{padding-top:40px}
+.hero-eyebrow{font:500 11px/1 var(--fth-mono)!important;letter-spacing:.16em!important}
+.hero-title{font-size:clamp(48px,7.6vw,96px)!important;line-height:.88!important;letter-spacing:0!important}
+</style>
+</head>
+<body>
+
+
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>01 · Film Production Pipelines</span><h1 class="fth-title">Production Pipeline</h1></div>
+  
+  <div class="fth-actions"></div>
+</header>
+<header class="hero">
+  <p class="hero-eyebrow">Resource Guide · Short Film</p>
+  <h1 class="hero-title"><span>Production</span><br>Pipeline</h1>
+  <p class="hero-sub">The day on set. Every department converges, the shot cycle turns, and the story is captured frame by frame.</p>
+</header>
+
+
+<!-- Research & Contextualisation -->
+<div class="research-section" id="researchSection">
+  <button class="research-toggle" onclick="toggleResearch()">
+    <span class="research-toggle-eyebrow">Before the shoot day</span>
+    <span class="research-toggle-label">Research &amp; Contextualisation</span>
+    <svg class="research-chevron" viewBox="0 0 16 16" fill="none">
+      <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="research-body" id="researchBody">
+    <p class="research-intro">The work you do before you arrive on set determines the quality of the work you do when you get there. This section is not a checklist with deadlines: it is the intellectual and practical preparation that should inform everything in the pipeline below. A crew member who has done this research knows not just what to do, but why, and that understanding is what separates a technically competent operator from a genuinely valuable collaborator.</p>
+    <div class="research-tasks" id="researchTasks"></div>
+  </div>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-track"><div class="progress-fill" id="globalProgress"></div></div>
+  <div class="progress-label" id="globalLabel">0 / 0 tasks</div>
+</div>
+
+<main class="timeline-wrapper" id="timeline"></main>
+
+<div class="glossary-wrap glossary-locked" id="glossaryWrap">
+  <button class="glossary-toggle" onclick="toggleGlossary()">
+    <span class="glossary-toggle-eyebrow">Reference</span>
+    <span class="glossary-toggle-label">Production Glossary</span>
+    <svg class="glossary-chevron" viewBox="0 0 16 16" fill="none">
+      <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="glossary-body" id="glossaryBody">
+    <div style="padding:0">
+      <div class="glossary-search-wrap" style="margin-top:24px">
+        <span class="glossary-search-icon">&#x2315;</span>
+        <input class="glossary-search-input" id="glossarySearch" type="text" placeholder="Search production terms…" autocomplete="off">
+        <div class="glossary-search-results" id="glossarySearchResults"></div>
+      </div>
+      <p class="glossary-intro">A reference of on-set terminology covering roles, shot-making, and the language of a working film set.</p>
+      <div id="glossaryContent"></div>
+    </div>
+  </div>
+</div>
+
+<div class="filmstrip footer">
+  <div class="filmstrip-inner">
+    <span class="filmstrip-label">SET · ACTION · CUT · RESET · SET · ACTION · CUT · RESET · SET · ACTION · CUT · RESET · SET · ACTION · CUT · RESET · </span>
+    <span class="filmstrip-label">SET · ACTION · CUT · RESET · SET · ACTION · CUT · RESET · SET · ACTION · CUT · RESET · SET · ACTION · CUT · RESET · </span>
+  </div>
+</div>
+
+<script>
+// ---- Role colour palette ----
+const ROLE_COLORS = {
+  'director':     { hex: '#E8895A', rgb: '232,137,90' },
+  '1st_ad':       { hex: '#E8C45A', rgb: '232,196,90' },
+  'camera_grip':  { hex: '#5AB5E8', rgb: '90,181,232' },
+  'lighting':     { hex: '#E85AB5', rgb: '232,90,181' },
+  'sound':        { hex: '#8BE85A', rgb: '139,232,90' },
+  'art':          { hex: '#B85AE8', rgb: '184,90,232' },
+  'continuity':   { hex: '#5AE8C4', rgb: '90,232,196' },
+  'dit':          { hex: '#E8E85A', rgb: '232,232,90' },
+};
+const ROLE_LIST = [
+  { key:'director',    label:'Director',     color: ROLE_COLORS.director },
+  { key:'1st_ad',      label:'1st AD',       color: ROLE_COLORS['1st_ad'] },
+  { key:'camera_grip', label:'Camera & Grip',color: ROLE_COLORS.camera_grip },
+  { key:'lighting',    label:'Lighting',     color: ROLE_COLORS.lighting },
+  { key:'sound',       label:'Sound',        color: ROLE_COLORS.sound },
+  { key:'art',         label:'Art',          color: ROLE_COLORS.art },
+  { key:'continuity',  label:'Continuity',   color: ROLE_COLORS.continuity },
+  { key:'dit',         label:'DIT',          color: ROLE_COLORS.dit },
+];
+
+// ---- Role guidance data for Phase 2 ----
+const ROLE_GUIDANCE = {
+  'set_reset': {
+    'director': `<ul>
+      <li>Walk the reset with the 1st AD: confirm the previous shot's eyeline, blocking marks, and set dressing are understood and accounted for</li>
+      <li>Use this time to review the previous take on the monitor if available: confirm coverage is clean before moving on</li>
+      <li>Communicate any adjustments to blocking or performance intention to the actors quietly before the next mark call</li>
+      <li>If the shot order is changing, brief the 1st AD and DP now: not after "Picture is up"</li>
+    </ul>`,
+    '1st_ad': `<ul>
+      <li>Call "Reset!" immediately after Cut: this is the signal for all departments to begin their own reset procedures</li>
+      <li>Track time from Cut to the next "Picture is up": this is your efficiency metric for the day</li>
+      <li>Check in with each HOD on reset progress: identify any bottleneck and address it before it becomes a delay</li>
+      <li>Manage background artists: return them to first positions, confirm they understand their movements for the next take</li>
+      <li>Update the shot list: mark the previous shot as covered or flag for additional takes, and confirm the next shot with the Director and DP</li>
+      <li>Keep communication clean on the radio: avoid unnecessary chatter during reset</li>
+    </ul>`,
+    'camera_grip': `<ul>
+      <li>Re-mark the camera position if the lens or angle is changing: lay new tape marks clearly</li>
+      <li>Reset any camera moves: return the head to first position, re-check the slider or dolly start point</li>
+      <li>Check the gate (film camera) or sensor (digital): call "Gate clear" to confirm no debris or obstruction</li>
+      <li>Confirm lens choice and focus marks with the 1st AC for the next setup</li>
+      <li>2nd AC: update the board. If going again, keep the slate number and add one to the take. If the camera position is changing, move to the next slate number and go back to take 1</li>
+      <li>Grip: return any flags, nets, or apple boxes moved during the take; re-check C-stand stability</li>
+    </ul>`,
+    'lighting': `<ul>
+      <li>If the shot is not changing, the lighting reset is usually minimal: stand by and monitor for any knocked or drifted units</li>
+      <li>If a new angle or shot is next, begin repositioning units now: do not wait for the 1st AD to ask</li>
+      <li>Replace any practicals or candles that burned down during the take</li>
+      <li>Check that any lighting adjustments made during the previous take are captured in the gaffer's notes</li>
+      <li>Confirm exposure for the next shot with the DP: this is the time for that conversation</li>
+    </ul>`,
+    'sound': `<ul>
+      <li>Replay the previous take on headphones: confirm dialogue was clean and check for any noise issues</li>
+      <li>Re-position the boom if the shot is changing: rehearse the new position before "Turnover"</li>
+      <li>Check lav microphone placement on any actors: reset if clothing has moved or levels have drifted</li>
+      <li>Clear any background noise sources you can control: mobile phones, ventilation, footsteps outside the set</li>
+      <li>Note any problem takes on the sound report immediately</li>
+    </ul>`,
+    'art': `<ul>
+      <li>Return all set dressing to first positions: use the continuity photos and your own notes</li>
+      <li>Reset any props handled by actors: same position, same orientation, same state</li>
+      <li>Check the frame against your continuity reference: flag anything out of position to the Director before reset is called complete</li>
+      <li>Touch up any make-up, hair, or costume that shifted during the take: liaise with wardrobe and make-up quickly</li>
+    </ul>`,
+    'continuity': `<ul>
+      <li>Immediately after Cut, note the final state of every element in the frame: actors' positions, eyelines, prop positions, costume state</li>
+      <li>Photograph the reset once it is complete: this is your reference for the next take</li>
+      <li>Cross-reference with the script supervisor's notes from the previous scene if continuity must match across shooting days</li>
+      <li>Flag any discrepancy between what has been reset and what was seen on screen: speak now, not in the edit</li>
+    </ul>`,
+    'dit': `<ul>
+      <li>Confirm the previous take is recorded cleanly: check file integrity before the card is cleared or the camera moves on</li>
+      <li>Label the clip correctly in your log: scene, slate, take, camera, lens, stop, ISO, format</li>
+      <li>If offloading between takes (on a long day), this is the window: do not offload during action</li>
+      <li>Report any technical issue from the previous take to the DP and 1st AD immediately</li>
+    </ul>`,
+  },
+  'call_the_shot': {
+    'director': `<ul>
+      <li>Confirm the shot with the DP in clear terms: framing, starting position, any camera move, the focal point</li>
+      <li>Give the actors their final note: one instruction, clearly stated. This is not the time for a long conversation</li>
+      <li>Step to your monitor position and signal to the 1st AD that you are ready</li>
+      <li>If something is not right: a set element, the lighting, the actor's position: say so now. Once "Turnover" is called, stopping costs time</li>
+    </ul>`,
+    '1st_ad': `<ul>
+      <li>Check in with every department: confirm all are ready before calling turnover</li>
+      <li>Call "Quiet on set!" to bring the floor to silence</li>
+      <li>Call "Turnover!": the signal for camera and sound to begin recording</li>
+      <li>Wait for "Speed!" from both Camera and Sound before calling for the mark</li>
+      <li>Call "Mark!": the signal for the 2nd AC to read the board aloud (scene, slate, take) and clap it</li>
+      <li>Once the board is out of frame, call "And… action!" only on the Director's nod</li>
+    </ul>`,
+    'camera_grip': `<ul>
+      <li>On "Turnover!", start the camera rolling: confirm "Speed!" to the 1st AD when recording is confirmed</li>
+      <li>The 2nd AC (clapper loader) steps in on "Mark!", reads the board aloud (scene, slate, take) and claps it: confirm all three numbers are correct before stepping out</li>
+      <li>The slate number only goes up for a new camera position, and the take number goes back to 1 when it does</li>
+      <li>Camera operator: eyes in the eyepiece, frame set, move ready: wait for "Action"</li>
+      <li>Focus puller: confirm focus marks, rehearse the pull if needed: the last chance before action</li>
+    </ul>`,
+    'lighting': `<ul>
+      <li>On "Quiet on set", all lighting adjustments must be complete: no movement, no conversation</li>
+      <li>Electrics: stand by at your units in case of a problem during the take: be ready to adjust on a director cut</li>
+      <li>Confirm all practical lights are operational in frame before turnover is called</li>
+    </ul>`,
+    'sound': `<ul>
+      <li>On "Turnover!", begin recording on the sound recorder: confirm "Speed!" to the 1st AD</li>
+      <li>Boom operator: position is locked: hold still until "Action" is called, then follow the sound</li>
+      <li>Confirm the scene, slate and take on the sound report match the board and the spoken slate. If the spoken slate is unclear, say so before Action so it can be called again</li>
+    </ul>`,
+    'art': `<ul>
+      <li>Step off set: all Art department must be clear of the camera's eyeline before turnover</li>
+      <li>Watch from the edge of set: monitor for any prop or dressing that might shift during the take</li>
+      <li>Have continuity notes ready for the end of the take</li>
+    </ul>`,
+    'continuity': `<ul>
+      <li>Note the slate information (scene, slate, take): this is your anchor for all notes</li>
+      <li>Check the slate number carries on from the last one. It is a running count through the whole shoot, not a count per scene</li>
+      <li>Track starting positions of all actors and key props as they are at the moment of "Action"</li>
+      <li>Watch for any pre-action movements by actors that differ from the rehearsal</li>
+    </ul>`,
+    'dit': `<ul>
+      <li>Monitor the camera feed on your DIT cart or station: watch for exposure issues, false colour, or technical errors</li>
+      <li>Confirm the record indicator is active on your monitor</li>
+      <li>Log the take in real time: scene, slate, take, camera, lens, stop, ISO</li>
+    </ul>`,
+  },
+  'action': {
+    'director': `<ul>
+      <li>Watch the monitor: focus entirely on performance, framing, and the story</li>
+      <li>Do not give notes during the take unless something has gone technically wrong</li>
+      <li>If a take is not working, call "Cut!": never let a bad take run to the end out of politeness</li>
+      <li>If a take is excellent, signal to the 1st AD immediately after Cut: these moments are easy to forget</li>
+    </ul>`,
+    '1st_ad': `<ul>
+      <li>Watch the floor: monitor for crew movement, shadows entering frame, and unexpected noise</li>
+      <li>Be ready to call "Cut!" on behalf of the Director if a safety issue arises</li>
+      <li>Keep background artists on cue: signal quietly if a background timing is off</li>
+      <li>Track the running time of the take: flag to the Director if it is running significantly over expected duration</li>
+    </ul>`,
+    'camera_grip': `<ul>
+      <li>Camera operator: execute the shot: framing, move, focus. The take is live</li>
+      <li>Focus puller: pull to marks, adjust for any actor deviation from blocking</li>
+      <li>Grip: if a dolly or slider move is required, execute smoothly: the operator will cue you</li>
+      <li>No communication unless absolutely necessary: stay silent and steady</li>
+    </ul>`,
+    'lighting': `<ul>
+      <li>Hold position: no adjustments during a take unless the gaffer signals a problem</li>
+      <li>Monitor for any flickering, dropped practicals, or units that move unexpectedly</li>
+      <li>If a light fails during a take, the gaffer will decide whether to call Cut via the 1st AD</li>
+    </ul>`,
+    'sound': `<ul>
+      <li>Boom operator: follow the dialogue: anticipate actor movement, stay out of frame</li>
+      <li>Sound mixer: monitor levels in real time: flag any technical issue but do not interrupt unless critical</li>
+      <li>Record room tone and background ambience during every take: this is captured automatically but stay alert to any noise intrusions</li>
+    </ul>`,
+    'art': `<ul>
+      <li>Stand by, clear of the set: observe from the edge</li>
+      <li>Watch for any prop handling that deviates from rehearsal: note it for continuity</li>
+      <li>Be ready to step in quickly on Cut to reset or address an issue</li>
+    </ul>`,
+    'continuity': `<ul>
+      <li>Watch the entire take: note every detail: actor positions, prop usage, costume state, dialogue changes</li>
+      <li>Mark any deviation from the script in your notes: even if small, record it</li>
+      <li>Note the emotional register and energy of the performance for cross-scene matching</li>
+      <li>Track screen direction and eyelines carefully</li>
+    </ul>`,
+    'dit': `<ul>
+      <li>Monitor exposure in real time: watch the waveform or false colour on the DIT cart</li>
+      <li>Flag any exposure, clipping, or technical issue to the DP immediately if it is correctable</li>
+      <li>Confirm recording is active throughout the take: no drop-outs, no media errors</li>
+    </ul>`,
+  },
+  'cut_assess': {
+    'director': `<ul>
+      <li>Call "Cut!" clearly and at full voice: wait for quiet before speaking</li>
+      <li>Give an immediate instinct reaction to the take: "That's the one", "Once more", "Let's check the gate and move on"</li>
+      <li>Give performance notes to actors privately if possible: protect the performance space</li>
+      <li>Confirm with the DP whether the shot is technically clean before moving on</li>
+      <li>Decide: another take, a different approach, or move to the next shot: be decisive</li>
+    </ul>`,
+    '1st_ad': `<ul>
+      <li>On "Cut!", call "Check the gate!" to the camera department</li>
+      <li>Wait for "Gate's clear" before declaring the shot done: a dirty gate means reshooting</li>
+      <li>Record the Director's assessment: circle take, print take, or no good</li>
+      <li>If moving on: call "Moving on!" clearly, update the shot list, and brief the floor on the next setup</li>
+      <li>If additional takes: call "Same setup, going again" (same slate, next take) and begin the reset process</li>
+      <li>Update your schedule: are you ahead or behind? Flag to the Director if behind</li>
+    </ul>`,
+    'camera_grip': `<ul>
+      <li>On "Cut!", hold the camera position until instructed</li>
+      <li>1st AC: check the gate (or check digital sensor for obstruction): report clearly to the 1st AD</li>
+      <li>If moving on: begin repositioning for the next shot immediately after "Moving on!" is called</li>
+      <li>Report any technical issue: focus miss, camera jitter, framing error: to the DP now</li>
+    </ul>`,
+    'lighting': `<ul>
+      <li>Hold all units until moving on is confirmed: do not begin repositioning on a possible retake</li>
+      <li>On "Moving on!": begin repositioning and adjusting for the next setup</li>
+      <li>Consult the lighting plan and DP for next shot requirements</li>
+    </ul>`,
+    'sound': `<ul>
+      <li>On "Cut!", stop recording: note the take as clean, with issues, or no good on the sound report</li>
+      <li>Play back the take to the Director or 1st AD if requested: confirm dialogue was clean</li>
+      <li>If a wild track or room tone recording is needed before moving on, request 30 seconds before the floor moves</li>
+    </ul>`,
+    'art': `<ul>
+      <li>Step onto set: assess what needs to be reset or changed for the next take or shot</li>
+      <li>Take continuity photographs immediately before anything is moved</li>
+      <li>Brief the Director on any set dressing or prop issue that may have been visible in frame</li>
+    </ul>`,
+    'continuity': `<ul>
+      <li>Complete your notes for the take: circle or cross, deviation log, performance register</li>
+      <li>Report any scripted line changes or significant performance deviations to the Director</li>
+      <li>Photograph the end-of-take state of all key elements before reset begins</li>
+      <li>Update the lined script: mark what coverage has been achieved for this scene</li>
+    </ul>`,
+    'dit': `<ul>
+      <li>Confirm the take file is written to media: no dropped frames, complete duration</li>
+      <li>Add the take to the log with all metadata: scene, slate, take, camera, lens, stop, ISO, director's note (circle/no good)</li>
+      <li>Flag any technical issue to the DP and 1st AD: do not wait until the end of the day</li>
+      <li>If a card is reaching capacity, flag to the camera department before the next take begins</li>
+    </ul>`,
+  },
+};
+
+// ---- Phase 1: Crew Call & Set Up  role guidance ----
+const PHASE1_ROLE_GUIDANCE = {
+  'director': `<ul>
+    <li>Arrive at crew call time: you set the tone for the day by your own punctuality</li>
+    <li>Walk the location with the 1st AD and DP as soon as it is cleared for use: confirm the first setup is achievable and adjust if needed</li>
+    <li>Review the shot list and daily schedule: know which shots are the most critical and which are bonus coverage</li>
+    <li>Speak briefly with each department head: confirm your intentions for the day and invite any last-minute concerns</li>
+    <li>Brief the actors privately before the first setup: your intention for the scene, the emotional territory, any adjustments from rehearsal</li>
+  </ul>`,
+  '1st_ad': `<ul>
+    <li>Arrive first: confirm the location is accessible and that base camp is established before crew arrive</li>
+    <li>Conduct the morning briefing: schedule, health and safety, the day's priorities, any known complications</li>
+    <li>Confirm each department has their call sheet, understands the first setup, and knows what is expected of them in the first hour</li>
+    <li>Walk the location with the Director and DP: flag any scheduling risk arising from the space or conditions</li>
+    <li>Establish radio channels and confirm all HODs are on comms</li>
+    <li>Confirm the catering or craft services arrangement: crew cannot work without food and water</li>
+    <li>Set the first "Crew call to Picture is up" target: this sets the pace for the whole day</li>
+  </ul>`,
+  'camera_grip': `<ul>
+    <li>Unload and organise all camera equipment: camera body, lenses, batteries, media cards, accessories</li>
+    <li>Build and test the camera: confirm the system is operational before the DP arrives on set</li>
+    <li>Set up the monitor and confirm the DP can see the image</li>
+    <li>Grip: unload and organise grip equipment: stands, arms, flags, sandbags</li>
+    <li>Confirm which lenses and formats are being used today: load the correct media and label cards</li>
+    <li>Walk the first setup with the DP and operator: lay camera marks and confirm any dolly or slider requirements</li>
+  </ul>`,
+  'lighting': `<ul>
+    <li>Unload all lighting equipment: distribute to the correct areas of the location</li>
+    <li>Begin rigging the first setup as soon as the location and the DP's lighting plan are confirmed</li>
+    <li>Establish power distribution: confirm generator or mains supply, run extension cables safely, flag any overload risk</li>
+    <li>Identify any practical lights in the location that will be on-camera: assess whether they need modification</li>
+    <li>Walk the first setup with the DP: confirm the lighting intention and begin rough positioning</li>
+    <li>Ensure all cables are taped down or run safely: no tripping hazards</li>
+  </ul>`,
+  'sound': `<ul>
+    <li>Unload and build the sound cart or bag: mixer, recorder, boom, cables, lavs</li>
+    <li>Test all microphones and confirm levels before arriving on set</li>
+    <li>Walk the location for sound: identify noise problems (HVAC, traffic, other rooms), plan boom positions</li>
+    <li>Consult the DP on the first setup: confirm where the camera will be so you can position the boom without entering frame</li>
+    <li>If using radio microphones, fit lavs on cast as early as possible: allow time for placement and level-checking</li>
+    <li>Set up a system to record room tone at the start of each new location</li>
+  </ul>`,
+  'art': `<ul>
+    <li>Dress the set before camera or lighting arrives on it: art department works ahead of the other departments</li>
+    <li>Confirm the set dressing matches the approved look and the continuity references from any previous shoot days</li>
+    <li>Place all props in their established first positions and photograph them for the continuity record</li>
+    <li>Brief any actors on prop handling: confirm they know which props to interact with and how</li>
+    <li>Walk the set with the Director once dressing is complete: allow for adjustments before the camera arrives</li>
+    <li>Confirm make-up and hair are ready with the cast: flag any timing issue to the 1st AD</li>
+  </ul>`,
+  'continuity': `<ul>
+    <li>Review all continuity notes and photographs from previous shoot days for scenes being shot today</li>
+    <li>Confirm with Art department that first positions match the continuity record</li>
+    <li>Brief yourself on the day's shot list and the matching requirements for each scene</li>
+    <li>Set up your workstation: lined script, continuity sheets, camera, notebook</li>
+    <li>Confirm with the 1st AD the order of scenes and shots for the day: know which coverage must match what</li>
+  </ul>`,
+  'dit': `<ul>
+    <li>Set up the DIT cart or station: monitors, drives, software, cables</li>
+    <li>Confirm all media cards are formatted and labelled correctly before being handed to the camera department</li>
+    <li>Establish the offload workflow: confirm destination drives, folder structure, and naming convention</li>
+    <li>Test the camera feed: confirm signal to the DIT station and the Director's monitor</li>
+    <li>Brief the camera department on media management for the day: which cards to use in what order, and where to return used cards</li>
+    <li>Confirm the backup workflow: where is copy two going, and when will it be made?</li>
+  </ul>`,
+};
+
+// ---- Phase 3: Tear Down  role guidance ----
+const PHASE3_ROLE_GUIDANCE = {
+  'director': `<ul>
+    <li>Call a brief company wrap with key HODs: acknowledge the day's work and flag any reshoots or pickups identified</li>
+    <li>Confirm with the 1st AD that all required coverage is in the can: review the shot list together</li>
+    <li>Review the day's footage with the DIT if possible before leaving the location: this is the last opportunity to identify a problem before the location is wrapped</li>
+    <li>Thank the crew: your leadership manner on wrap sets the tone for future shoot days</li>
+  </ul>`,
+  '1st_ad': `<ul>
+    <li>Call "That's a wrap!" clearly when the last take is complete and the Director confirms coverage</li>
+    <li>Direct all departments to begin wrap: confirm priorities (returning hired equipment, restoring the location)</li>
+    <li>Confirm with the location manager that the space is being returned in agreed condition</li>
+    <li>Collect all call sheets and production paperwork from the floor</li>
+    <li>Brief the Director on the day: shots achieved, shots not achieved, anything requiring scheduling attention</li>
+    <li>Confirm the next shoot day schedule with all HODs before they leave</li>
+  </ul>`,
+  'camera_grip': `<ul>
+    <li>Secure all media cards: hand to the DIT with a clear count and confirmation of what has been shot</li>
+    <li>Break down the camera system: protect lenses in their cases, charge all batteries, store media cards safely</li>
+    <li>Grip: break down all stands, flags, and grip equipment; pack methodically and label cases</li>
+    <li>Check the gate one final time before the camera body is packed away</li>
+    <li>Confirm the lens count with the 1st AC: every lens that came in must go out</li>
+  </ul>`,
+  'lighting': `<ul>
+    <li>Strike all units in reverse order of rigging: work safely and methodically</li>
+    <li>Coil and bag all cables: do not leave cables on the floor</li>
+    <li>Return all hired equipment to cases in original condition: log any damage immediately</li>
+    <li>Confirm power is off and all mains connections are safely disconnected before leaving the location</li>
+    <li>Return all practicals modified during the day to their original state</li>
+  </ul>`,
+  'sound': `<ul>
+    <li>Recover all radio microphones and lavs from cast: check count before any actor leaves</li>
+    <li>Finalise the sound report: all takes logged, all notes completed</li>
+    <li>Hand the sound report (and any external media) to the DIT or production office</li>
+    <li>Record a final room tone for each location used today if not already done</li>
+    <li>Break down the sound cart and store all equipment</li>
+  </ul>`,
+  'art': `<ul>
+    <li>Strike all set dressing and return to the correct cases or storage</li>
+    <li>Return the location to its original state: photograph before and after for the location manager</li>
+    <li>Account for every prop: nothing gets left on location</li>
+    <li>Return hired props or costume to their cases, logged and labelled</li>
+    <li>Brief the Director on any props or set dressing needed for the next shoot day</li>
+  </ul>`,
+  'continuity': `<ul>
+    <li>Complete all continuity sheets for the day: every scene, every shot, every take</li>
+    <li>Confirm the lined script is fully updated to reflect the day's coverage</li>
+    <li>Compile and label all continuity photographs: these must be accessible to the edit team</li>
+    <li>Note any unresolved continuity issues for the next shoot day and flag to the Director</li>
+    <li>Hand all continuity documentation to production before leaving</li>
+  </ul>`,
+  'dit': `<ul>
+    <li>Offload all remaining media cards: confirm every take from the day is on at least two drives</li>
+    <li>Run checksums on all offloaded material: do not leave the location until this is verified</li>
+    <li>Label all drives clearly: production name, shoot day, date, contents</li>
+    <li>Hand a copy of the drive to the production office or designated safe storage: do not leave the location with the only copy</li>
+    <li>Confirm with the camera department that all cards are either offloaded or flagged as outstanding</li>
+    <li>Deliver the camera and sound reports to the production office</li>
+  </ul>`,
+};
+
+// ---- GLOSSARY ----
+const GLOSSARY_TERMS = [
+  { term:"1st AC (Focus Puller)", def:"The camera assistant responsible for maintaining sharp focus during the take. Pulls focus by adjusting the lens according to distance marks set during rehearsal." },
+  { term:"1st AD (First Assistant Director)", def:"The Director's right hand on set. Manages the floor, calls turnover and action, tracks the schedule, and ensures the crew is working safely and efficiently." },
+  { term:"2nd AC (Clapper Loader)", def:"Operates the clapperboard, loads and unloads media cards, maintains the camera report, and assists the 1st AC." },
+  { term:"Action", def:"The word called by the Director (via the 1st AD) to signal performers to begin the scene. Only called after the camera and sound have confirmed they are recording at speed." },
+  { term:"Blocking", def:"The planned positions and movements of actors and camera within a scene. Established in rehearsal and marked on the floor. Blocking determines where focus marks are set and how the lighting is arranged." },
+  { term:"Call Sheet", def:"The daily production document sent to all crew the night before the shoot. Contains the day's schedule, scene numbers, cast call times, location addresses, equipment notes, and crew contact details." },
+  { term:"Clapperboard / Slate", def:"The board held in front of the camera at the start of each take, showing the production details and the three numbers that identify the take: scene number, slate number and take number. In the UK system the slate number is a running count of camera setups through the whole shoot, and the take number restarts at 1 on each new slate. The 2nd AC reads the numbers aloud and claps the board, giving post-production a visual and audio sync point." },
+  { term:"Company Move", def:"When the whole production moves from one location to another during a shoot day. Requires careful scheduling and typically costs 30–90 minutes of effective shooting time." },
+  { term:"Continuity", def:"The consistency of all visual and performance elements between takes and across shoot days. Continuity errors: a prop in the wrong position, a costume change: create problems in the edit." },
+  { term:"Coverage", def:"The total range of shots captured for a scene. Adequate coverage gives the editor choices; insufficient coverage forces editorial compromises." },
+  { term:"Craft Services", def:"The on-set catering and snacks available to crew throughout the day. Essential for maintaining crew energy and morale on long shoot days." },
+  { term:"Cut", def:"The word called by the Director to end a take. Nothing on set should stop or move until Cut is called. In post-production, the word also refers to the edit itself and the act of making an editorial transition." },
+  { term:"Dailies", def:"The footage shot each day, reviewed by the Director, DP, and sometimes key department heads. Reviewing dailies ensures technical and creative problems are caught before the location is lost." },
+  { term:"Depth of Field", def:"The range of distance within which objects appear acceptably sharp in the frame. Controlled by aperture, focal length, and subject-to-camera distance. A shallow depth of field isolates the subject; deep depth of field keeps more of the image in focus." },
+  { term:"DIT (Digital Imaging Technician)", def:"Responsible for managing all digital media on set: media cards, offloading, backup, colour management, and monitoring the camera's technical image output in real time." },
+  { term:"Dutch Angle", def:"A camera tilt that places the horizon on a diagonal. Used to create a sense of unease, instability, or psychological tension." },
+  { term:"Exposure", def:"The amount of light captured by the camera sensor. Controlled by aperture, shutter speed, and ISO. Correct exposure ensures the image is neither underexposed (too dark, losing shadow detail) nor overexposed (too bright, clipping highlights)." },
+  { term:"Eyeline", def:"The direction in which an actor appears to be looking within the frame. Consistent eyelines between shots create the illusion of two characters interacting even when filmed separately." },
+  { term:"Frame Rate", def:"The number of frames captured per second. 24fps is the standard for cinematic feel. Higher frame rates (48fps, 60fps) produce a smoother, more video-like image. Slow motion requires a higher frame rate at capture." },
+  { term:"Gaffer", def:"The Head of the Electrical department. Responsible for all lighting on set, working closely with the Director of Photography to realise the lighting plan." },
+  { term:"Gate", def:"On a film camera, the aperture plate through which the film passes. Checking the gate after a shot confirms no debris or hair has entered the frame area. Now used loosely in digital production to mean a final check before moving on." },
+  { term:"Key Light", def:"The primary and usually strongest light source illuminating the subject. Defines the main shadows and establishes the quality and direction of light in the scene." },
+  { term:"Lav Microphone", def:"A small microphone clipped to an actor's clothing, near the throat. Records dialogue directly from the actor. Used in conjunction with the boom or as a backup when the boom cannot reach." },
+  { term:"Locked Off", def:"A camera that is fixed in position with no movement. Used for visual effects work, static establishing shots, or when stability is essential." },
+  { term:"Marks", def:"Tape marks placed on the floor to indicate actor positions and camera positions during a setup. Ensure actors hit the same position on every take and that focus and blocking are reproducible." },
+  { term:"Master Shot", def:"A wide shot that covers the entire scene from beginning to end. Provides editorial insurance and establishes spatial geography before coverage is added." },
+  { term:"Moving On", def:"The call made by the 1st AD when a shot is complete and the production is moving to the next setup. Triggers all departments to begin wrapping the current setup and preparing the next." },
+  { term:"OTS (Over The Shoulder)", def:"A shot framed behind and over the shoulder of one character, looking toward another. A standard coverage shot for dialogue scenes." },
+  { term:"Picture Is Up", def:"The call made when the set is ready, all departments are in position, and the production is ready to shoot. The moment from which turnover can be called." },
+  { term:"Practicals", def:"Light sources that appear within the frame as part of the set: table lamps, overhead lights, candles. Often supplemented or replaced with controlled lighting units to achieve the desired exposure and quality." },
+  { term:"Quiet On Set", def:"The call for all crew to stop talking, moving, and making noise immediately before a take. Strictly observed: even essential communication goes to radio." },
+  { term:"Radio Mic", def:"See Lav Microphone. The term radio mic emphasises the wireless transmission system that carries the audio from the actor's body to the sound recorder." },
+  { term:"Room Tone", def:"A recording of the ambient sound of a location, made with all crew silent. Essential for the sound editor to fill gaps in the dialogue track and smooth audio cuts. At least 60 seconds should be recorded at every location." },
+  { term:"Safety", def:"The culture and practice of keeping all crew and cast physically safe on set. The 1st AD is the primary keeper of set safety. Safety concerns always override creative or scheduling pressure." },
+  { term:"Shooting Ratio", def:"The ratio of footage shot to footage used in the final film. A 10:1 ratio means ten minutes of footage was shot for every minute in the final cut. Higher ratios reflect more coverage or more takes." },
+  { term:"Shot List", def:"The Director and DP's plan of every shot required for each scene, compiled in prep. The 1st AD uses it to schedule the day. It is a plan, not a contract: conditions on set often require adaptation." },
+  { term:"Speed", def:"The confirmation called by camera and sound operators when their equipment is recording at the correct operating speed and is ready for action. The 1st AD waits for both before calling for the mark." },
+  { term:"Turnover", def:"The call made by the 1st AD to signal camera and sound to begin rolling. Precedes 'Mark' and 'Action'. The moment the production is committed to a take." },
+  { term:"Wild Track", def:"An audio recording made without picture: dialogue, sound effects, or room tone. Used by the sound editor to supplement production audio in post." },
+  { term:"Wrap", def:"The end of a shoot day or the end of the entire production. 'That's a wrap' signals that filming is complete." },
+];
+
+// ---- Shot Cycle steps ----
+const CYCLE_STEPS = [
+  {
+    id:'cs1', icon:'🎬', name:'Set / Reset',
+    desc:'Every department resets to first positions and the set is prepared for the next take.',
+    owner:'All Departments',
+    guidance:`<p>Set and Reset is the foundation of an efficient shoot. The faster and more accurately every department can return to first positions, the more takes and setups are achievable in a day.</p>
+      <p style="margin-top:10px">This is a simultaneous, department-by-department process: each HOD owns their own reset. The 1st AD coordinates and identifies bottlenecks. The Director uses this window to review the previous take and brief the actors quietly.</p>
+      <ul>
+        <li>Camera returns to first position: marks re-checked, lens confirmed</li>
+        <li>Sound re-positions boom, checks lav levels, clears any audio issues</li>
+        <li>Art department resets all props and dressing to continuity reference</li>
+        <li>Lighting stands by or adjusts for a new setup</li>
+        <li>DIT confirms the previous take and logs all metadata</li>
+        <li>Continuity photographs the reset state as a reference</li>
+      </ul>`,
+    roleKey: 'set_reset',
+  },
+  {
+    id:'cs2', icon:'🎙️', name:'Call The Shot',
+    desc:"Departments confirm readiness. Turnover is called, the slate is read and clapped, and Action is imminent.",
+    owner:'1st AD · Director',
+    guidance:`<p>Calling the shot is the sequence of commands that takes the floor from a reset set to a live take. Every department has a specific state at each call, and everyone on set knows this sequence instinctively.</p>
+      <ul>
+        <li><strong>Quiet on set</strong>: all noise and movement stops</li>
+        <li><strong>Turnover</strong>: camera and sound begin recording</li>
+        <li><strong>Speed</strong>: camera and sound confirm they are recording ("Camera" > "Rolling" followed by "Sound" > "Speed")</li>
+        <li><strong>Slate</strong>: the clapper loader reads the board aloud (scene number, slate number, take number) and claps it</li>
+        <li><strong>Action</strong>: this is the signal to begin the scene, and should only be called after the clapper loader is out of shot and silent</li>
+      </ul>
+      <p style="margin-top:14px"><strong>The UK slate: three numbers</strong></p>
+      <ul>
+        <li><strong>Scene number</strong>: taken from the script and the call sheet. It is the same for every slate within that scene.</li>
+        <li><strong>Slate number</strong>: one running count through the whole shoot, in the order setups are actually shot, starting at 1 and carrying on from day to day. It follows neither the script nor the shot list. Each new camera position is the next slate number.</li>
+        <li><strong>Take number</strong>: counts attempts at the current slate. It starts at 1, goes up with every re-take, and goes back to 1 on a new slate.</li>
+      </ul>
+      <p style="margin-top:10px">For example, the board might be read as "Scene 14, Slate 7, Take 1". A re-take is "Scene 14, Slate 7, Take 2". Moving the camera makes it "Scene 14, Slate 8, Take 1". If the schedule then jumps to another scene, the slate number still carries on: "Scene 3, Slate 9, Take 1".</p>
+      <p style="margin-top:10px">Camera, sound, continuity and the DIT all log against these same three numbers, so a wrong board causes confusion in the edit and in every report.</p>
+      <p style="margin-top:10px">The 1st AD owns this sequence. The Director or 1st AD may call "Action", but the Director is definitely the one to call "Cut".</p>`,
+    roleKey: 'call_the_shot',
+  },
+  {
+    id:'cs3', icon:'▶️', name:'Action',
+    desc:'The take is live. Camera and sound are rolling. Performers and crew execute the shot.',
+    owner:'All Departments',
+    guidance:`<p>From Action to Cut, the set belongs to the performers and the camera. All communication stops. All crew hold position.</p>
+      <ul>
+        <li>Camera operator executes the framed shot and any planned camera move</li>
+        <li>Focus puller pulls to marks, adapting to any actor deviation</li>
+        <li>Boom operator follows the dialogue without entering frame</li>
+        <li>The Director watches the monitor and the performance: saying nothing</li>
+        <li>1st AD watches the floor for safety or crew issues</li>
+        <li>Art and Continuity observe from the edge of the set</li>
+        <li>DIT monitors exposure and recording in real time</li>
+      </ul>
+      <p style="margin-top:10px">The take ends when the Director calls "Cut". Nobody moves before that: not even if a mistake is obvious. Only the Director or the 1st AD (on a safety issue) calls Cut.</p>`,
+    roleKey: 'action',
+  },
+  {
+    id:'cs4', icon:'✂️', name:'Cut & Assess',
+    desc:'The take ends. Director assesses. The floor decides: go again, adjust, or move on.',
+    owner:'Director · 1st AD',
+    guidance:`<p>The moment after Cut is one of the most important on set. The Director's instinct here shapes the rest of the day: too many unnecessary takes waste time; moving on too quickly risks insufficient coverage.</p>
+      <ul>
+        <li>1st AC calls "Check the gate": camera confirms no debris in the gate before moving on</li>
+        <li>Director gives an immediate take assessment: circle, no good, or going again</li>
+        <li>1st AD notes the assessment and logs it on the call sheet</li>
+        <li>Sound confirms dialogue was clean or flags any issue</li>
+        <li>Continuity updates notes with final take state</li>
+        <li>DIT logs the take and confirms it is safely recorded</li>
+      </ul>
+      <p style="margin-top:10px">If moving on: the 1st AD calls "Moving on!", the cycle returns to Set/Reset for the next setup, and a new camera position means the next slate number, back at take 1. If going again: "Going again, same setup", and the cycle returns to Set/Reset for a fresh take of the same slate, with the take number going up by one.</p>`,
+    roleKey: 'cut_assess',
+  },
+];
+
+// ---- Phase 1 tasks ----
+const PHASE1_TASKS = [
+  {
+    id:'p1t0', icon:'🚗', name:'Arrive on Set',
+    desc:'"If you\'re early, you\'re on time. If you\'re on time, you\'re late. If you\'re late, you\'re fired."',
+    owner:'All Crew',
+    guidance:`<p>Your call time is not a suggestion. On a film set, a single late crew member can hold up every other department: and lost time at the start of a shoot day is almost impossible to recover.</p>
+      <ul>
+        <li>Know your call time from the call sheet: this is the time you are expected to be <strong>ready to work</strong>, not the time you are pulling into the car park</li>
+        <li>Plan your journey the night before: route, parking, access arrangements, any security or location-specific instructions</li>
+        <li>Aim to arrive 15–20 minutes before your call time: this gives you time to find the unit base, sign in, get a coffee, and be composed before the day begins</li>
+        <li>If you are going to be late for any reason, contact the 1st AD immediately: never just arrive late without warning</li>
+        <li>Department heads should arrive earlier than their crew: you cannot brief your team if you haven't had time to find the location yourself</li>
+      </ul>
+      <p style="margin-top:10px">A crew that arrives early is a crew that starts well. The tone of the whole day is set in the first hour.</p>`,
+    roles: PHASE1_ROLE_GUIDANCE,
+  },
+  {
+    id:'p1t1', icon:'📋', name:'Morning Briefing & Safety',
+    desc:'1st AD addresses the full crew: the day\'s schedule, health and safety requirements, and any location-specific considerations.',
+    owner:'1st AD',
+    guidance:`<p>The morning briefing sets the tone, the expectations, and the safety culture for the entire shoot day. It should be brief, clear, and attended by everyone on the floor.</p>
+      <ul>
+        <li>Cover the day's schedule: which scenes, in what order, what the first setup is</li>
+        <li>Address health and safety: emergency exits, first aid location, any physical hazards specific to this location</li>
+        <li>Confirm any special requirements for the day: stunts, practical effects, weather-sensitive work</li>
+        <li>Introduce any new crew members</li>
+        <li>Invite questions: this is the last moment before the day begins</li>
+      </ul>
+      <p style="margin-top:10px">Keep it under five minutes. Crew who are still setting up equipment should have a representative present, or receive a briefing summary immediately after.</p>`,
+    roles: PHASE1_ROLE_GUIDANCE,
+  },
+  {
+    id:'p1t2', icon:'🗺️', name:'Location Recce & First Setup Walk',
+    desc:'Director and DP walk the location to confirm the first shot and identify any adjustments needed before shooting begins.',
+    owner:'Director · DP',
+    guidance:`<p>The location on the day will not be exactly as it was in prep: lighting conditions, furniture positions, and unexpected elements all change. The morning walk resolves this before any department wastes time building the wrong thing.</p>
+      <ul>
+        <li>Walk the space with the 1st AD, DP, Gaffer, and Sound: the key decision-makers for the first setup</li>
+        <li>Confirm the camera position and lens choice for the first shot</li>
+        <li>Identify any lighting problems: windows in shot, practical lights that need modification, ceilings that restrict rigging</li>
+        <li>Identify any sound problems: HVAC, external noise, room reflection</li>
+        <li>Confirm the Art department has dressed the set correctly: flag any adjustments before the camera arrives</li>
+      </ul>
+      <p style="margin-top:10px">The walk should produce a clear brief to each department. Time spent here is time saved on the floor.</p>`,
+    roles: PHASE1_ROLE_GUIDANCE,
+  },
+  {
+    id:'p1t3', icon:'⚙️', name:'Equipment Build & Check',
+    desc:'All departments build, check, and test their equipment before the first shot is called.',
+    owner:'All Departments',
+    guidance:`<p>Equipment problems discovered during a take are far more costly than problems discovered in a build check. Every department runs its own check: and confirms ready to the 1st AD before "Picture is up" can be called.</p>
+      <ul>
+        <li><strong>Camera:</strong> body powered and tested, lenses checked and cleaned, batteries charged, media formatted and loaded</li>
+        <li><strong>Grip:</strong> dolly, slider, or handheld rigging built and tested; marks laid for the first shot</li>
+        <li><strong>Lighting:</strong> all units rigged and tested; power distribution confirmed; no tripping hazards</li>
+        <li><strong>Sound:</strong> boom tested, lavs fitted and levels confirmed, recorder running, no interference</li>
+        <li><strong>DIT:</strong> cart operational, camera feed confirmed, drives formatted and ready</li>
+        <li><strong>Art:</strong> set dressed and photographed, props in first position</li>
+      </ul>`,
+    roles: PHASE1_ROLE_GUIDANCE,
+  },
+  {
+    id:'p1t4', icon:'🎭', name:'Actors: Costumes, Make-Up & Briefing',
+    desc:'Cast are in hair, make-up and costume and receive a final briefing from the Director before the first take.',
+    owner:'Director · 1st AD · Art',
+    guidance:`<p>Actors arrive at their own call time: typically later than crew so the set is ready when they are. The time between actor arrival and first take must be used efficiently.</p>
+      <ul>
+        <li>Confirm actors are through make-up and costume before their floor call time</li>
+        <li>The Director should have a brief, private conversation with each actor before the first setup: this is not the time for long notes, but for grounding and intention</li>
+        <li>Walk actors through the blocking for the first shot: confirm they understand their marks and movements</li>
+        <li>Sound fits lavs if required: allow time for placement and level adjustment before the actor is on set</li>
+        <li>Continuity photographs all actors in their opening costume state</li>
+      </ul>`,
+    roles: PHASE1_ROLE_GUIDANCE,
+  },
+  {
+    id:'p1t5', icon:'🔢', name:'"Picture Is Up": First Shot Ready',
+    desc:'The 1st AD confirms all departments are ready and calls "Picture is up": the set is live and ready to roll.',
+    owner:'1st AD',
+    guidance:`<p>"Picture is up" is the confirmation that the entire set: every department: is in position and ready for the first take. It is the culmination of every set-up task above.</p>
+      <ul>
+        <li>1st AD checks in with every HOD: a radio check or a walk of the set</li>
+        <li>All departments confirm ready: camera, sound, lighting, art, DIT</li>
+        <li>Actors are on their marks</li>
+        <li>Director is at their monitor</li>
+        <li>1st AD calls "Picture is up": the floor goes to work</li>
+      </ul>
+      <p style="margin-top:10px">The time from crew call to "Picture is up" on the first shot is a key metric for the 1st AD: it reflects the efficiency of the entire morning set-up process.</p>`,
+    roles: PHASE1_ROLE_GUIDANCE,
+  },
+];
+
+// ---- Phase 3 tasks ----
+const PHASE3_TASKS = [
+  {
+    id:'p3t1', icon:'✅', name:'Confirm Coverage',
+    desc:'Director and 1st AD review the shot list together and confirm all required coverage is in the can before releasing the location.',
+    owner:'Director · 1st AD',
+    guidance:`<p>The most expensive mistake in production is leaving a location before a required shot is in the can. This check happens before anyone begins wrapping.</p>
+      <ul>
+        <li>Go through the shot list line by line with the Director</li>
+        <li>Confirm each shot: achieved, circle take exists, technically clean</li>
+        <li>Flag any shot that is missing, damaged, or technically uncertain</li>
+        <li>If a shot is missing: assess whether it can be done before wrap or whether a pickup day is required</li>
+        <li>Do not call wrap until the Director has confirmed coverage: this is a non-negotiable step</li>
+      </ul>
+      <p style="margin-top:10px">The DIT can assist by confirming file counts and flagging any technical issues with the day's recordings.</p>`,
+    roles: PHASE3_ROLE_GUIDANCE,
+  },
+  {
+    id:'p3t2', icon:'💾', name:'Media Offload & Verification',
+    desc:'DIT offloads all remaining media cards, runs checksums, and confirms all footage is safely backed up before equipment is packed.',
+    owner:'DIT · Camera',
+    guidance:`<p>Media cards are the most fragile point in the production chain. They leave the set only after verification: and only once the backup is confirmed on a second drive.</p>
+      <ul>
+        <li>Collect all remaining media cards from the camera department</li>
+        <li>Offload every card to the primary drive: confirm complete transfer</li>
+        <li>Run checksums on all material from the day</li>
+        <li>Confirm a second copy exists on a separate physical drive</li>
+        <li>Label all drives clearly: production name, shoot day, date</li>
+        <li>Do not format or clear any card until two verified copies exist</li>
+      </ul>
+      <p style="margin-top:10px">The DIT is the last person responsible for the footage before it enters post-production. This step is the handoff.</p>`,
+    roles: PHASE3_ROLE_GUIDANCE,
+  },
+  {
+    id:'p3t3', icon:'📝', name:'Production Reports & Documentation',
+    desc:'All departments complete and submit their daily reports: camera report, sound report, continuity sheets, DIT log.',
+    owner:'All Departments',
+    guidance:`<p>Production reports are the paper trail of the shoot day. They are the primary communication between the production unit and the edit and post teams.</p>
+      <ul>
+        <li><strong>Camera report:</strong> all takes logged, lens, stop, ISO, format, circle takes marked</li>
+        <li><strong>Sound report:</strong> all takes logged, microphone used, notes on quality, wild tracks recorded</li>
+        <li><strong>Continuity sheets:</strong> complete for every scene shot today, with photographs</li>
+        <li><strong>DIT log:</strong> all cards, all takes, all offloaded files, checksums confirmed</li>
+        <li>All reports submitted to production before crew leaves the location</li>
+      </ul>`,
+    roles: PHASE3_ROLE_GUIDANCE,
+  },
+  {
+    id:'p3t4', icon:'📦', name:'Strike Set & Return Location',
+    desc:'All departments strike their equipment and the location is returned to its pre-shoot condition.',
+    owner:'All Departments',
+    guidance:`<p>How you leave a location affects whether you can return: and whether that location will be available to future productions. Strike is as professional a process as the shoot itself.</p>
+      <ul>
+        <li>All lighting equipment struck and packed: units, cables, stands, frames</li>
+        <li>All camera and grip equipment packed: cases sealed, lens count confirmed</li>
+        <li>All set dressing and props removed: location returned to its original state</li>
+        <li>Sound equipment packed: all lavs and accessories accounted for</li>
+        <li>DIT station broken down: drives secured, hardware packed</li>
+        <li>Location manager walks the space and confirms restoration</li>
+        <li>Rubbish removed: leave the space clean</li>
+      </ul>`,
+    roles: PHASE3_ROLE_GUIDANCE,
+  },
+  {
+    id:'p3t5', icon:'🎬', name:'Company Wrap',
+    desc:'1st AD calls the official wrap. Director addresses the crew. The shoot day is complete.',
+    owner:'1st AD · Director',
+    guidance:`<p>Wrap is a professional moment: not just the end of a day but the culmination of everything that went into it. It deserves to be marked clearly.</p>
+      <ul>
+        <li>1st AD calls "That's a wrap!" once strike is complete and the location is cleared</li>
+        <li>Director addresses the crew briefly: acknowledge the work, note anything exceptional, signal the next shoot day</li>
+        <li>Confirm call times for the next shoot day with all HODs</li>
+        <li>Ensure all crew have transport or are aware of arrangements</li>
+        <li>1st AD confirms production report is submitted and next day's call sheet is ready to distribute</li>
+      </ul>`,
+    roles: PHASE3_ROLE_GUIDANCE,
+  },
+];
+
+// ---- State ----
+const STORE_KEY = 'production_v1';
+const GLOSSARY_KEY = 'production_glossary_v1';
+function loadState() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; } }
+function saveState(s) { try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch {} }
+let state = loadState();
+
+// One-time refresh: when the default guidance for a task has been rewritten, clear any saved
+// edit of it so the new text shows. Runs once per token, and only for the tasks listed.
+// To refresh more tasks later, add their ids and change the token.
+const GUIDANCE_REFRESH = { token: 'slate-v1', ids: ['cs2'] };
+if (state.__guidanceRefresh !== GUIDANCE_REFRESH.token) {
+  GUIDANCE_REFRESH.ids.forEach(function(id) {
+    if (state[id] && state[id].guidanceHtml) state[id].guidanceHtml = null;
+  });
+  state.__guidanceRefresh = GUIDANCE_REFRESH.token;
+  saveState(state);
+}
+
+function loadGlossaryState() { try { return JSON.parse(localStorage.getItem(GLOSSARY_KEY)) || { overrides:{}, added:[] }; } catch { return { overrides:{}, added:[] }; } }
+function saveGlossaryState(s) { try { localStorage.setItem(GLOSSARY_KEY, JSON.stringify(s)); } catch {} }
+let glossaryState = loadGlossaryState();
+
+function getCustomTasks(phaseId) { return (state['__custom__' + phaseId] || []); }
+function setCustomTasks(phaseId, tasks) { state['__custom__' + phaseId] = tasks; saveState(state); }
+function newCustomTaskId() { return 'custom_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
+function getTask(id) { return state[id] || { checked:false, notes:'', links:[] }; }
+function setTask(id, patch) { state[id] = {...getTask(id), ...patch}; saveState(state); }
+
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+
+// ---- Role pill / card UI builder ----
+function buildRolePanelHTML(roleKey) {
+  const rolesStrip = ROLE_LIST.map(r => {
+    return `<button class="role-pill" data-role="${r.key}" style="--role-color:${r.color.hex};--role-color-rgb:${r.color.rgb}">
+      <span class="role-dot" style="background:${r.color.hex}"></span>${r.label}
+    </button>`;
+  }).join('');
+
+  const roleCards = ROLE_LIST.map(r => {
+    const guidance = ROLE_GUIDANCE[roleKey] && ROLE_GUIDANCE[roleKey][r.key] ? ROLE_GUIDANCE[roleKey][r.key] : `<p>No specific guidance defined for this role at this stage.</p>`;
+    return `<div class="role-card" data-role="${r.key}" style="--role-color:${r.color.hex}">
+      <div class="role-card-header">
+        <div class="role-card-dot" style="background:${r.color.hex}"></div>
+        <div class="role-card-name">${r.label}</div>
+      </div>
+      <div class="role-card-body">${guidance}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="roles-section">
+    <div class="roles-label">By Role / Department</div>
+    <div class="roles-strip">${rolesStrip}</div>
+    <div class="role-cards">${roleCards}</div>
+  </div>`;
+}
+
+function buildPhase1RolePanelHTML() {
+  const rolesStrip = ROLE_LIST.map(r => {
+    return `<button class="role-pill" data-role="${r.key}" style="--role-color:${r.color.hex};--role-color-rgb:${r.color.rgb}">
+      <span class="role-dot" style="background:${r.color.hex}"></span>${r.label}
+    </button>`;
+  }).join('');
+
+  const roleCards = ROLE_LIST.map(r => {
+    const guidance = PHASE1_ROLE_GUIDANCE[r.key] || `<p>No specific guidance defined for this role at this stage.</p>`;
+    return `<div class="role-card" data-role="${r.key}" style="--role-color:${r.color.hex}">
+      <div class="role-card-header">
+        <div class="role-card-dot" style="background:${r.color.hex}"></div>
+        <div class="role-card-name">${r.label}</div>
+      </div>
+      <div class="role-card-body">${guidance}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="roles-section">
+    <div class="roles-label">By Role / Department</div>
+    <div class="roles-strip">${rolesStrip}</div>
+    <div class="role-cards">${roleCards}</div>
+  </div>`;
+}
+
+function buildPhase3RolePanelHTML() {
+  const rolesStrip = ROLE_LIST.map(r => {
+    return `<button class="role-pill" data-role="${r.key}" style="--role-color:${r.color.hex};--role-color-rgb:${r.color.rgb}">
+      <span class="role-dot" style="background:${r.color.hex}"></span>${r.label}
+    </button>`;
+  }).join('');
+
+  const roleCards = ROLE_LIST.map(r => {
+    const guidance = PHASE3_ROLE_GUIDANCE[r.key] || `<p>No specific guidance defined for this role at this stage.</p>`;
+    return `<div class="role-card" data-role="${r.key}" style="--role-color:${r.color.hex}">
+      <div class="role-card-header">
+        <div class="role-card-dot" style="background:${r.color.hex}"></div>
+        <div class="role-card-name">${r.label}</div>
+      </div>
+      <div class="role-card-body">${guidance}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="roles-section">
+    <div class="roles-label">By Role / Department</div>
+    <div class="roles-strip">${rolesStrip}</div>
+    <div class="role-cards">${roleCards}</div>
+  </div>`;
+}
+
+function bindRolePillEvents(container) {
+  const pills = container.querySelectorAll('.role-pill');
+  const cards = container.querySelectorAll('.role-card');
+  pills.forEach(pill => {
+    pill.addEventListener('click', e => {
+      e.stopPropagation();
+      const role = pill.dataset.role;
+      const isActive = pill.classList.contains('active');
+      pills.forEach(p => p.classList.remove('active'));
+      cards.forEach(c => c.classList.remove('visible'));
+      if (!isActive) {
+        pill.classList.add('active');
+        const card = container.querySelector(`.role-card[data-role="${role}"]`);
+        if (card) card.classList.add('visible');
+      }
+    });
+  });
+}
+
+// ---- Link row ----
+function linkRowHTML(label, url, i) {
+  const openBtn = url ? `<a class="link-go" href="${escAttr(url)}" target="_blank" rel="noopener">Open ↗</a>` : '';
+  return `<div class="link-row" data-index="${i}">
+    <input class="link-input link-label-input" type="text" placeholder="Label" value="${escAttr(label)}" data-field="label" data-index="${i}">
+    <input class="link-input" type="url" placeholder="https://…" value="${escAttr(url)}" data-field="url" data-index="${i}" style="flex:1">
+    ${openBtn}
+    <button class="btn-remove-link" data-index="${i}">✕</button>
+  </div>`;
+}
+
+function bindLinkEvents(drawer, taskId) {
+  const addBtn = drawer.querySelector('.btn-add-link');
+  const list = drawer.querySelector('.links-list');
+  if (!addBtn || !list) return;
+  addBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    const links = [...(getTask(taskId).links||[]), {label:'',url:''}];
+    setTask(taskId, {links}); list.innerHTML = links.map((l,i) => linkRowHTML(l.label,l.url,i)).join('');
+  });
+  list.addEventListener('click', e => {
+    e.stopPropagation();
+    const rb = e.target.closest('.btn-remove-link');
+    if (rb) { const links = getTask(taskId).links.filter((_,i) => i !== +rb.dataset.index); setTask(taskId, {links}); list.innerHTML = links.map((l,i) => linkRowHTML(l.label,l.url,i)).join(''); }
+  });
+  list.addEventListener('input', e => {
+    e.stopPropagation();
+    const input = e.target.closest('input[data-field]');
+    if (!input) return;
+    const idx = +input.dataset.index;
+    const links = [...(getTask(taskId).links||[])];
+    links[idx] = {...links[idx], [input.dataset.field]: input.value}; setTask(taskId, {links});
+    if (input.dataset.field === 'url') {
+      const row = input.closest('.link-row'); let go = row.querySelector('.link-go');
+      if (input.value) { if (!go) { go = document.createElement('a'); go.className='link-go'; go.target='_blank'; go.rel='noopener'; go.textContent='Open ↗'; row.querySelector('.btn-remove-link').before(go); } go.href = input.value; } else if (go) go.remove();
+    }
+  });
+  list.addEventListener('click', e => e.stopPropagation());
+}
+
+// ---- Build a standard task element (with optional role panel) ----
+function buildTaskEl(task, phaseId, rolePanelFn) {
+  const ts = getTask(task.id);
+  const taskEl = document.createElement('div');
+  taskEl.className = 'task' + (ts.checked ? ' completed' : '');
+  taskEl.dataset.taskId = task.id;
+
+  const guidanceContent = ts.guidanceHtml || injectGlossaryLinks(task.guidance);
+  const isEdited = !!ts.guidanceHtml;
+  const linksHTML = (ts.links||[]).map((l,i) => linkRowHTML(l.label,l.url,i)).join('');
+
+  const rolePanel = rolePanelFn ? rolePanelFn() : '';
+
+  taskEl.innerHTML = `
+    <div class="task-header">
+      <input class="task-icon-edit" type="text" value="${escHtml(ts.iconOverride != null ? ts.iconOverride : (task.icon||''))}" maxlength="2">
+      <div class="task-body">
+        <input class="task-name-field" type="text" value="${escHtml(ts.nameOverride != null ? ts.nameOverride : task.name)}">
+        <textarea class="task-desc-field" rows="1">${escHtml(ts.descOverride != null ? ts.descOverride : task.desc)}</textarea>
+      </div>
+      <div class="task-meta">
+        <input class="task-owner-field" type="text" value="${escHtml(ts.ownerOverride != null ? ts.ownerOverride : (task.owner||''))}">
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0">
+        <div class="task-checkbox${ts.checked ? ' checked' : ''}" title="Mark complete">
+          <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <svg class="task-chevron" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <button class="task-lock" title="Unlock to edit">🔒</button>
+      </div>
+    </div>
+    <div class="task-drawer">
+      <div class="task-drawer-inner">
+        <div class="drawer-section">
+          <div class="drawer-label">What this involves${isEdited ? '<span class="guidance-edited-badge">edited</span>' : ''}</div>
+          <div class="guidance-wrap">
+            <div class="guidance-toolbar">
+              <span class="guidance-toolbar-label">Click text to edit &nbsp;·&nbsp; <b>Ctrl+B</b> bold &nbsp;·&nbsp; <em>Ctrl+I</em> italic</span>
+              <button class="guidance-btn reset" data-action="reset">↺ Reset</button>
+            </div>
+            <div class="guidance-block" contenteditable="true" spellcheck="false">${guidanceContent}</div>
+          </div>
+        </div>
+        ${rolePanel ? `<div class="drawer-section">${rolePanel}</div>` : ''}
+        <div class="drawer-section">
+          <div class="drawer-label">Crew Notes</div>
+          <textarea class="drawer-notes" placeholder="Add notes, decisions, or context for your team…" spellcheck="false">${escHtml(ts.notes||'')}</textarea>
+        </div>
+        <div class="drawer-section">
+          <div class="drawer-label">Links & Resources</div>
+          <div class="links-list">${linksHTML}</div>
+          <button class="btn-add-link" style="margin-top:8px">+ Add link</button>
+        </div>
+      </div>
+    </div>`;
+
+  // Role pills
+  if (rolePanel) {
+    bindRolePillEvents(taskEl.querySelector('.drawer-section:nth-child(2)'));
+  }
+
+  // Desc auto-height
+  const descField = taskEl.querySelector('.task-desc-field');
+  function autoH(el) { el.style.height='auto'; el.style.height=el.scrollHeight+'px'; }
+  setTimeout(() => autoH(descField), 0);
+  descField.addEventListener('input', () => autoH(descField));
+
+  taskEl.querySelector('.task-icon-edit').addEventListener('input', e => { e.stopPropagation(); setTask(task.id, { iconOverride: e.target.value }); });
+  taskEl.querySelector('.task-name-field').addEventListener('input', e => { e.stopPropagation(); setTask(task.id, { nameOverride: e.target.value }); });
+  descField.addEventListener('input', e => { e.stopPropagation(); setTask(task.id, { descOverride: e.target.value }); });
+  taskEl.querySelector('.task-owner-field').addEventListener('input', e => { e.stopPropagation(); setTask(task.id, { ownerOverride: e.target.value }); });
+  ['click','keydown','mousedown'].forEach(ev => {
+    taskEl.querySelectorAll('.task-icon-edit,.task-name-field,.task-desc-field,.task-owner-field').forEach(f => f.addEventListener(ev, e => e.stopPropagation()));
+  });
+
+  const checkbox = taskEl.querySelector('.task-checkbox');
+  checkbox.addEventListener('click', e => {
+    e.stopPropagation();
+    const checked = !getTask(task.id).checked;
+    setTask(task.id, { checked });
+    taskEl.classList.toggle('completed', checked);
+    checkbox.classList.toggle('checked', checked);
+    updateGlobalProgress();
+  });
+
+  const lockBtn = taskEl.querySelector('.task-lock');
+  lockBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    const unlocked = taskEl.classList.toggle('unlocked');
+    lockBtn.textContent = unlocked ? '🔓' : '🔒';
+    lockBtn.title = unlocked ? 'Lock to prevent edits' : 'Unlock to edit';
+  });
+
+  taskEl.addEventListener('click', e => {
+    if (e.target.closest('.task-checkbox') || e.target.closest('.task-lock') || e.target.closest('input') || e.target.closest('textarea') || e.target.closest('.role-pill') || e.target.closest('.role-card')) return;
+    if (!taskEl.classList.contains('unlocked')) {
+      const isOpen = taskEl.classList.contains('open');
+      document.querySelectorAll('.task.open').forEach(t => { if (t !== taskEl) t.classList.remove('open'); });
+      taskEl.classList.toggle('open', !isOpen);
+    }
+  });
+
+  const guidanceEl = taskEl.querySelector('.guidance-block');
+  let guidanceTimer;
+  guidanceEl.addEventListener('input', e => {
+    e.stopPropagation(); clearTimeout(guidanceTimer);
+    guidanceTimer = setTimeout(() => setTask(task.id, { guidanceHtml: guidanceEl.innerHTML }), 600);
+  });
+  guidanceEl.addEventListener('click', e => e.stopPropagation());
+  guidanceEl.addEventListener('mousedown', e => e.stopPropagation());
+  guidanceEl.addEventListener('keydown', e => e.stopPropagation());
+
+  const resetBtn = taskEl.querySelector('[data-action="reset"]');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      if (confirm('Reset guidance to original content?')) {
+        setTask(task.id, { guidanceHtml: null });
+        guidanceEl.innerHTML = task.guidance;
+      }
+    });
+  }
+
+  const notesEl = taskEl.querySelector('.drawer-notes');
+  notesEl.addEventListener('input', () => setTask(task.id, { notes: notesEl.value }));
+  notesEl.addEventListener('click', e => e.stopPropagation());
+
+  bindLinkEvents(taskEl.querySelector('.task-drawer'), task.id);
+  return taskEl;
+}
+
+function buildCustomTaskEl(phaseId, ct) {
+  const el = document.createElement('div');
+  el.className = 'task task-custom unlocked' + (ct.checked ? ' completed' : '');
+  el.dataset.taskId = ct.id;
+  const header = document.createElement('div');
+  header.className = 'task-header';
+  header.style.alignItems = 'flex-start';
+  header.innerHTML = `
+    <div class="task-icon" style="opacity:0.4">✏️</div>
+    <div class="task-body" style="flex:1;min-width:0">
+      <input class="task-name-edit" type="text" placeholder="Task title…" value="${escHtml(ct.title || '')}">
+      <textarea class="task-desc-edit" placeholder="One-sentence summary…" rows="1">${escHtml(ct.desc || '')}</textarea>
+    </div>
+    <div class="task-meta"><span class="custom-tag">Custom</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0">
+      <div class="task-checkbox${ct.checked ? ' checked' : ''}" title="Mark complete">
+        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <svg class="task-chevron" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <button class="task-lock" title="Lock to prevent edits">🔒</button>
+      <button class="task-remove" title="Remove this task">×</button>
+    </div>`;
+  const drawer = document.createElement('div');
+  drawer.className = 'task-drawer';
+  const linksHTML = (ct.links || []).map((l, i) => linkRowHTML(l.label, l.url, i)).join('');
+  drawer.innerHTML = `
+    <div class="task-drawer-inner">
+      <div class="drawer-section">
+        <div class="drawer-label">What this involves</div>
+        <div class="guidance-wrap">
+          <div class="guidance-toolbar"><span class="guidance-toolbar-label">Click to edit &nbsp;·&nbsp; <b>Ctrl+B</b> bold</span></div>
+          <div class="guidance-block" contenteditable="true" spellcheck="false">${ct.guidanceHtml || '<p>Describe what this task involves…</p>'}</div>
+        </div>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-label">Crew Notes</div>
+        <textarea class="drawer-notes" placeholder="Add notes, decisions, or context…" spellcheck="false">${escHtml(ct.notes || '')}</textarea>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-label">Links & Resources</div>
+        <div class="links-list">${linksHTML}</div>
+        <button class="btn-add-link" style="margin-top:8px">+ Add link</button>
+      </div>
+    </div>`;
+  el.appendChild(header);
+  el.appendChild(drawer);
+
+  function saveCustom() {
+    const tasks = getCustomTasks(phaseId);
+    const idx = tasks.findIndex(t => t.id === ct.id);
+    if (idx > -1) { tasks[idx] = { ...tasks[idx], ...ct }; setCustomTasks(phaseId, tasks); }
+  }
+  const titleEl = header.querySelector('.task-name-edit');
+  titleEl.addEventListener('input', e => { e.stopPropagation(); ct.title = titleEl.value; saveCustom(); });
+  titleEl.addEventListener('click', e => e.stopPropagation());
+  titleEl.addEventListener('keydown', e => e.stopPropagation());
+  const descEl = header.querySelector('.task-desc-edit');
+  function autoHeight() { descEl.style.height='auto'; descEl.style.height=descEl.scrollHeight+'px'; }
+  descEl.addEventListener('input', e => { e.stopPropagation(); autoHeight(); ct.desc=descEl.value; saveCustom(); });
+  descEl.addEventListener('click', e => e.stopPropagation());
+  descEl.addEventListener('keydown', e => e.stopPropagation());
+  setTimeout(autoHeight, 0);
+  const checkbox = header.querySelector('.task-checkbox');
+  checkbox.addEventListener('click', e => {
+    e.stopPropagation(); ct.checked = !ct.checked;
+    el.classList.toggle('completed', ct.checked); checkbox.classList.toggle('checked', ct.checked);
+    saveCustom(); updateGlobalProgress();
+  });
+  const lockBtnC = header.querySelector('.task-lock');
+  lockBtnC.addEventListener('click', e => {
+    e.stopPropagation();
+    const unlocked = el.classList.toggle('unlocked');
+    lockBtnC.textContent = unlocked ? '🔓' : '🔒';
+    lockBtnC.title = unlocked ? 'Lock to prevent edits' : 'Unlock to edit';
+  });
+  const removeBtn = header.querySelector('.task-remove');
+  removeBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (!confirm('Remove this task?')) return;
+    let tasks = getCustomTasks(phaseId);
+    tasks = tasks.filter(t => t.id !== ct.id);
+    setCustomTasks(phaseId, tasks);
+    el.remove(); updateGlobalProgress();
+  });
+  header.addEventListener('click', e => {
+    if (e.target.closest('.task-checkbox') || e.target.closest('.task-remove') || e.target.closest('.task-lock') || e.target.closest('input') || e.target.closest('textarea')) return;
+    const isOpen = el.classList.contains('open');
+    document.querySelectorAll('.task.open').forEach(t => { if (t !== el) t.classList.remove('open'); });
+    el.classList.toggle('open', !isOpen);
+  });
+  const guidanceEl = drawer.querySelector('.guidance-block');
+  let guidanceTimer;
+  guidanceEl.addEventListener('input', e => {
+    e.stopPropagation(); clearTimeout(guidanceTimer);
+    guidanceTimer = setTimeout(() => { ct.guidanceHtml = guidanceEl.innerHTML; saveCustom(); }, 600);
+  });
+  guidanceEl.addEventListener('click', e => e.stopPropagation());
+  guidanceEl.addEventListener('mousedown', e => e.stopPropagation());
+  guidanceEl.addEventListener('keydown', e => e.stopPropagation());
+  const notesEl = drawer.querySelector('.drawer-notes');
+  notesEl.addEventListener('input', () => { ct.notes = notesEl.value; saveCustom(); });
+  notesEl.addEventListener('click', e => e.stopPropagation());
+  bindLinkEvents(drawer, ct.id);
+  return el;
+}
+
+function addCustomTask(phaseId) {
+  const tasks = getCustomTasks(phaseId);
+  const newTask = { id: newCustomTaskId(), title: '', desc: '', notes: '', links: [], guidanceHtml: '', checked: false };
+  tasks.push(newTask);
+  setCustomTasks(phaseId, tasks);
+  const tasksEl = document.getElementById('tasks-' + phaseId);
+  const el = buildCustomTaskEl(phaseId, newTask);
+  tasksEl.appendChild(el);
+  el.classList.add('open');
+  const titleInput = el.querySelector('.task-name-edit');
+  if (titleInput) setTimeout(() => titleInput.focus(), 50);
+  updateGlobalProgress();
+}
+
+// ---- All task IDs (for progress counting) ----
+function getAllTaskIds() {
+  const ids = [];
+  PHASE1_TASKS.forEach(t => ids.push(t.id));
+  CYCLE_STEPS.forEach(t => ids.push(t.id));
+  PHASE3_TASKS.forEach(t => ids.push(t.id));
+  return ids;
+}
+
+function updateGlobalProgress() {
+  const allIds = getAllTaskIds();
+  const done = allIds.filter(id => getTask(id).checked).length;
+  const pct = allIds.length ? Math.round(done / allIds.length * 100) : 0;
+  document.getElementById('globalProgress').style.width = pct + '%';
+  document.getElementById('globalLabel').textContent = done + ' / ' + allIds.length + ' tasks';
+  /* keep each phase's "x / y done" count up to date too */
+  [['prog-p1', PHASE1_TASKS], ['prog-p2', CYCLE_STEPS], ['prog-p3', PHASE3_TASKS]].forEach(function (p) {
+    const el = document.getElementById(p[0]);
+    if (el) el.textContent = p[1].filter(t => getTask(t.id).checked).length + ' / ' + p[1].length + ' done';
+  });
+}
+
+// ---- Main render ----
+function render() {
+  const timeline = document.getElementById('timeline');
+  timeline.innerHTML = '';
+
+  // ---- PHASE 1 ----
+  const block1 = document.createElement('div');
+  block1.className = 'phase-block';
+  block1.id = 'block-p1';
+
+  const phase1El = document.createElement('div');
+  phase1El.className = 'phase';
+  phase1El.id = 'phase-p1';
+  phase1El.innerHTML = `
+    <div class="phase-label">
+      <div class="phase-number">PHASE 01</div>
+      <div class="phase-name">Crew Call &amp;<br>Set Up</div>
+      <div class="phase-timing">
+        <div class="phase-timing-label">Day position</div>
+        <div class="phase-timing-track">
+          <div class="phase-timing-fill" style="left:0%;width:18%"></div>
+        </div>
+      </div>
+      <div class="phase-progress-text" id="prog-p1">0 / ${PHASE1_TASKS.length} done</div>
+
+    </div>
+    <div class="phase-tasks" id="tasks-p1"></div>`;
+
+  const tasks1El = phase1El.querySelector('#tasks-p1');
+  PHASE1_TASKS.forEach(task => {
+    const el = buildTaskEl(task, 'p1', () => buildPhase1RolePanelHTML());
+    tasks1El.appendChild(el);
+  });
+  getCustomTasks('p1').forEach(ct => tasks1El.appendChild(buildCustomTaskEl('p1', ct)));
+
+  const addBtn1 = document.createElement('button');
+  addBtn1.className = 'add-task-btn';
+  addBtn1.innerHTML = '<span style="font-size:14px;font-weight:300">+</span> Add custom task';
+  addBtn1.addEventListener('click', () => addCustomTask('p1'));
+
+  block1.appendChild(phase1El);
+  block1.appendChild(addBtn1);
+
+  const div1 = document.createElement('div'); div1.className='phase-divider'; block1.appendChild(div1);
+  timeline.appendChild(block1);
+
+  // ---- PHASE 2: The Shot Cycle ----
+  const block2 = document.createElement('div');
+  block2.className = 'phase-block';
+  block2.id = 'block-p2';
+
+  const phase2El = document.createElement('div');
+  phase2El.className = 'phase';
+  phase2El.id = 'phase-p2';
+  phase2El.innerHTML = `
+    <div class="phase-label">
+      <div class="phase-number">PHASE 02</div>
+      <div class="phase-name">The Shot<br>Cycle</div>
+      <div class="phase-timing">
+        <div class="phase-timing-label">Day position</div>
+        <div class="phase-timing-track">
+          <div class="phase-timing-fill" style="left:18%;width:64%"></div>
+        </div>
+      </div>
+      <div class="cycle-badge">
+        <span class="cycle-badge-icon">🔄</span>
+        <span class="cycle-badge-label">Repeating cycle</span>
+      </div>
+      <div class="phase-progress-text" id="prog-p2">0 / ${CYCLE_STEPS.length} done</div>
+    </div>
+    <div class="phase-tasks" id="tasks-p2"></div>`;
+
+  const tasks2El = phase2El.querySelector('#tasks-p2');
+
+  // Cycle return arrow at the top (indicating return from Cut back to Set)
+  const cycleTopArrow = document.createElement('div');
+  cycleTopArrow.className = 'cycle-return';
+  cycleTopArrow.innerHTML = `
+    <span class="cycle-return-arrow" title="After Cut, the cycle returns here">↑</span>
+    <span class="cycle-return-label">Cycle returns here after each shot</span>
+    <div class="cycle-return-line"></div>`;
+  tasks2El.appendChild(cycleTopArrow);
+
+  CYCLE_STEPS.forEach((step, idx) => {
+    const el = buildTaskEl(step, 'p2', () => buildRolePanelHTML(step.roleKey));
+    tasks2El.appendChild(el);
+
+    // After the last step (Cut & Assess), show the return arrow
+    if (idx === CYCLE_STEPS.length - 1) {
+      const returnArrow = document.createElement('div');
+      returnArrow.className = 'cycle-return';
+      returnArrow.style.opacity = '0.6';
+      returnArrow.innerHTML = `
+        <div class="cycle-return-line"></div>
+        <span class="cycle-return-label">Next shot → Set/Reset</span>
+        <span class="cycle-return-arrow" style="transform:rotate(180deg);display:inline-block" title="Loop back to Set/Reset">↑</span>`;
+      tasks2El.appendChild(returnArrow);
+    }
+  });
+
+  getCustomTasks('p2').forEach(ct => tasks2El.appendChild(buildCustomTaskEl('p2', ct)));
+
+  const addBtn2 = document.createElement('button');
+  addBtn2.className = 'add-task-btn';
+  addBtn2.innerHTML = '<span style="font-size:14px;font-weight:300">+</span> Add custom task';
+  addBtn2.addEventListener('click', () => addCustomTask('p2'));
+
+  block2.appendChild(phase2El);
+  block2.appendChild(addBtn2);
+
+  const div2 = document.createElement('div'); div2.className='phase-divider'; block2.appendChild(div2);
+  timeline.appendChild(block2);
+
+  // ---- PHASE 3 ----
+  const block3 = document.createElement('div');
+  block3.className = 'phase-block';
+  block3.id = 'block-p3';
+
+  const phase3El = document.createElement('div');
+  phase3El.className = 'phase';
+  phase3El.id = 'phase-p3';
+  phase3El.innerHTML = `
+    <div class="phase-label">
+      <div class="phase-number">PHASE 03</div>
+      <div class="phase-name">Tear Down</div>
+      <div class="phase-timing">
+        <div class="phase-timing-label">Day position</div>
+        <div class="phase-timing-track">
+          <div class="phase-timing-fill" style="left:82%;width:18%"></div>
+        </div>
+      </div>
+      <div class="phase-progress-text" id="prog-p3">0 / ${PHASE3_TASKS.length} done</div>
+    </div>
+    <div class="phase-tasks" id="tasks-p3"></div>`;
+
+  const tasks3El = phase3El.querySelector('#tasks-p3');
+  PHASE3_TASKS.forEach(task => {
+    const el = buildTaskEl(task, 'p3', () => buildPhase3RolePanelHTML());
+    tasks3El.appendChild(el);
+  });
+  getCustomTasks('p3').forEach(ct => tasks3El.appendChild(buildCustomTaskEl('p3', ct)));
+
+  const addBtn3 = document.createElement('button');
+  addBtn3.className = 'add-task-btn';
+  addBtn3.innerHTML = '<span style="font-size:14px;font-weight:300">+</span> Add custom task';
+  addBtn3.addEventListener('click', () => addCustomTask('p3'));
+
+  block3.appendChild(phase3El);
+  block3.appendChild(addBtn3);
+  timeline.appendChild(block3);
+
+  updateGlobalProgress();
+}
+
+// ---- Glossary ----
+function toggleGlossary() {
+  const wrap = document.getElementById('glossaryWrap');
+  wrap.classList.toggle('open');
+}
+function toggleGlossaryLock() {
+  var wrap = document.getElementById('glossaryWrap');
+  var isLocked = wrap.classList.contains('glossary-locked');
+  if (isLocked) {
+    // Unlocking: just switch mode
+    wrap.classList.remove('glossary-locked');
+    wrap.classList.add('glossary-unlocked');
+    var btn = document.getElementById('glossaryLockBtn');
+    if (btn) btn.textContent = '🔓 Editing';
+  } else {
+    // Locking: strip out any blank/deleted added entries, then re-render
+    // The sort in renderGlossary already handles alphabetical order for everything,
+    // so we just need to clean up and trigger a re-render
+    var added = glossaryState.added || [];
+    added = added.filter(function(t) { return !t.deleted && t.term && t.term.trim(); });
+    glossaryState.added = added;
+    saveGlossaryState(glossaryState);
+    wrap.classList.remove('glossary-unlocked');
+    wrap.classList.add('glossary-locked');
+    var btn2 = document.getElementById('glossaryLockBtn');
+    if (btn2) btn2.textContent = '🔒 Edit terms';
+    // Re-render so any new terms slot into the correct alphabetical position
+    renderGlossary();
+    // Rebuild hover map so newly added terms get highlighted in the document too
+    buildAndCacheTerms();
+  }
+}
+
+function renderGlossary() {
+  var container = document.getElementById('glossaryContent');
+  container.innerHTML = '';
+  var lockStrip = document.createElement('div');
+  lockStrip.className = 'glossary-lock-strip';
+  lockStrip.innerHTML = '<span style="font-size:11px;color:var(--slate);font-weight:300">On-set terminology. Unlock to edit, add, or remove entries.</span><button class="glossary-lock-btn" id="glossaryLockBtn" onclick="toggleGlossaryLock()">🔒 Edit terms</button>';
+  container.appendChild(lockStrip);
+
+  var overrides = glossaryState.overrides || {};
+  var added = glossaryState.added || [];
+
+  var displayTerms = GLOSSARY_TERMS.map(function(t, i) {
+    var ov = overrides[i] || {};
+    if (ov.deleted) return null;
+    return { term: ov.term !== undefined ? ov.term : t.term, def: ov.def !== undefined ? ov.def : t.def, idx: i };
+  }).filter(Boolean);
+
+  var pendingNew = null;
+  added.forEach(function(t, ai) {
+    if (t.deleted) return;
+    if (t.term === '' && t.def === '') {
+      // Brand-new unsaved blank entry: hold it back from sorting, append last
+      pendingNew = { term: '', def: '', idx: 'a'+ai };
+    } else {
+      displayTerms.push({ term: t.term || '', def: t.def || '', idx: 'a'+ai });
+    }
+  });
+  displayTerms.sort(function(a,b) { return a.term.toLowerCase().localeCompare(b.term.toLowerCase()); });
+  if (pendingNew) displayTerms.push(pendingNew);
+
+  var termsEl = document.createElement('div');
+  termsEl.className = 'glossary-terms';
+  termsEl.id = 'glossary-terms-list';
+
+  displayTerms.forEach(function(t) {
+    var row = document.createElement('div');
+    row.className = 'glossary-term';
+    row.dataset.idx = t.idx;
+
+    var nameEl = document.createElement('textarea');
+    nameEl.className = 'glossary-term-name';
+    nameEl.value = t.term;
+    nameEl.rows = 1;
+    nameEl.style.resize = 'none';
+    nameEl.style.overflow = 'hidden';
+    function autoH(el) { el.style.height='auto'; el.style.height=el.scrollHeight+'px'; }
+    setTimeout(function() { autoH(nameEl); }, 0);
+    nameEl.addEventListener('input', function() { autoH(nameEl); saveGlossaryEdit(t.idx, 'term', nameEl.value); });
+
+    var defEl = document.createElement('textarea');
+    defEl.className = 'glossary-term-def';
+    defEl.value = t.def;
+    defEl.rows = 2;
+    defEl.style.resize = 'none';
+    defEl.style.overflow = 'hidden';
+    setTimeout(function() { autoH(defEl); }, 0);
+    defEl.addEventListener('input', function() { autoH(defEl); saveGlossaryEdit(t.idx, 'def', defEl.value); });
+
+    var removeBtn = document.createElement('button');
+    removeBtn.className = 'glossary-term-remove';
+    removeBtn.textContent = '×';
+    removeBtn.title = 'Remove this term';
+    removeBtn.addEventListener('click', function() {
+      if (!confirm('Remove this term?')) return;
+      deleteGlossaryTerm(t.idx); row.remove();
+    });
+
+    row.appendChild(nameEl);
+    row.appendChild(defEl);
+    row.appendChild(removeBtn);
+    termsEl.appendChild(row);
+  });
+
+  container.appendChild(termsEl);
+
+  var addBtn = document.createElement('button');
+  addBtn.className = 'glossary-add-term';
+  addBtn.textContent = '+ Add term';
+  addBtn.addEventListener('click', function() {
+    var newAdded = glossaryState.added || [];
+    newAdded.push({ term: '', def: '' });
+    glossaryState.added = newAdded;
+    saveGlossaryState(glossaryState);
+    renderGlossary();
+    setTimeout(function() {
+      var rows = document.querySelectorAll('.glossary-term');
+      if (rows.length) { var last = rows[rows.length-1]; last.scrollIntoView({behavior:'smooth',block:'center'}); last.querySelector('.glossary-term-name').focus(); }
+    }, 100);
+  });
+  container.appendChild(addBtn);
+
+  initGlossarySearch();
+}
+
+function saveGlossaryEdit(idx, field, value) {
+  if (typeof idx === 'string' && idx.charAt(0) === 'a') {
+    var ai = parseInt(idx.slice(1));
+    var added = glossaryState.added || [];
+    if (added[ai]) { added[ai][field] = value; glossaryState.added = added; saveGlossaryState(glossaryState); }
+  } else {
+    var overrides = glossaryState.overrides || {};
+    if (!overrides[idx]) overrides[idx] = {};
+    overrides[idx][field] = value;
+    glossaryState.overrides = overrides;
+    saveGlossaryState(glossaryState);
+  }
+}
+
+function deleteGlossaryTerm(idx) {
+  if (typeof idx === 'string' && idx.charAt(0) === 'a') {
+    var ai = parseInt(idx.slice(1));
+    var added = glossaryState.added || [];
+    if (added[ai]) { added[ai].deleted = true; glossaryState.added = added; saveGlossaryState(glossaryState); }
+  } else {
+    var overrides = glossaryState.overrides || {};
+    if (!overrides[idx]) overrides[idx] = {};
+    overrides[idx].deleted = true;
+    glossaryState.overrides = overrides;
+    saveGlossaryState(glossaryState);
+  }
+}
+
+function initGlossarySearch() {
+  var input = document.getElementById('glossarySearch');
+  var results = document.getElementById('glossarySearchResults');
+  if (!input || !results) return;
+  input.addEventListener('input', function() {
+    var q = input.value.trim().toLowerCase();
+    results.innerHTML = '';
+    if (q.length < 2) { results.classList.remove('visible'); return; }
+    var overrides = glossaryState.overrides || {};
+    var added = glossaryState.added || [];
+    var matches = [];
+    GLOSSARY_TERMS.forEach(function(t, i) {
+      var ov = overrides[i] || {};
+      if (ov.deleted) return;
+      var term = ov.term !== undefined ? ov.term : t.term;
+      var def = ov.def !== undefined ? ov.def : t.def;
+      if (term.toLowerCase().indexOf(q) > -1 || def.toLowerCase().indexOf(q) > -1) matches.push({ term: term, def: def });
+    });
+    added.forEach(function(t) {
+      if (t.deleted) return;
+      if ((t.term||'').toLowerCase().indexOf(q) > -1 || (t.def||'').toLowerCase().indexOf(q) > -1) matches.push({ term: t.term, def: t.def });
+    });
+    if (matches.length === 0) {
+      results.innerHTML = '<div class="glossary-no-results">No terms match "' + escHtml(input.value) + '"</div>';
+      results.classList.add('visible'); return;
+    }
+    matches.slice(0, 12).forEach(function(m) {
+      var row = document.createElement('div');
+      row.className = 'glossary-search-result';
+      row.innerHTML = '<div class="glossary-result-dot" style="background:var(--teal)"></div>' +
+        '<div class="glossary-result-term">' + escHtml(m.term) + '</div>' +
+        '<div class="glossary-result-def">' + escHtml((m.def||'').substring(0, 100)) + ((m.def||'').length > 100 ? '...' : '') + '</div>';
+      results.appendChild(row);
+    });
+    results.classList.add('visible');
+  });
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.glossary-search-wrap')) results.classList.remove('visible');
+  });
+}
+
+// ---- Glossary hover: term map and link injection ----
+var GLOSS_DEF_MAP = {};
+
+function buildAndCacheTerms() {
+  var overrides = (glossaryState && glossaryState.overrides) || {};
+  var added = (glossaryState && glossaryState.added) || [];
+  var entries = [];
+  var seen = {};
+  GLOSSARY_TERMS.forEach(function(t, i) {
+    var ov = overrides[i] || {};
+    if (ov.deleted) return;
+    var term = ov.term !== undefined ? ov.term : t.term;
+    var def  = ov.def  !== undefined ? ov.def  : t.def;
+    var match = term.replace(/\s*[\/\(].*$/, '').trim();
+    if (match.length < 3) return;
+    var k = match.toLowerCase();
+    if (seen[k]) return;
+    seen[k] = true;
+    GLOSS_DEF_MAP[k] = { term: term, def: def };
+    entries.push({ match: match, term: term, def: def });
+  });
+  added.forEach(function(t) {
+    if (t.deleted || !t.term) return;
+    var match = t.term.replace(/\s*[\/\(].*$/, '').trim();
+    if (match.length < 3) return;
+    var k = match.toLowerCase();
+    if (seen[k]) return;
+    seen[k] = true;
+    GLOSS_DEF_MAP[k] = { term: t.term, def: t.def || '' };
+    entries.push({ match: match, term: t.term, def: t.def || '' });
+  });
+  // Sort longest-first so multi-word terms match before their component words
+  entries.sort(function(a, b) { return b.match.length - a.match.length; });
+  return entries;
+}
+
+function injectGlossaryLinks(html) {
+  var entries = buildAndCacheTerms();
+  if (!entries.length) return html;
+  var parts = html.split(/(<[^>]*>)/);
+  var used = {};
+  parts = parts.map(function(part) {
+    if (!part || part.charAt(0) === '<') return part;
+    for (var i = 0; i < entries.length; i++) {
+      var e = entries[i];
+      var key = e.match.toLowerCase();
+      if (used[key]) continue;
+      var escaped = e.match.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      var re = new RegExp('(^|[^a-zA-Z0-9])(' + escaped + ')([^a-zA-Z0-9]|$)', 'i');
+      var m = re.exec(part);
+      if (!m) continue;
+      used[key] = true;
+      var replacement = m[1] + '<span class="gloss-link" data-gterm="' + key + '">' + m[2] + '</span>' + m[3];
+      part = part.slice(0, m.index) + replacement + part.slice(m.index + m[0].length);
+    }
+    return part;
+  });
+  return parts.join('');
+}
+
+// Tooltip IIFE
+(function() {
+  var tip = document.createElement('div');
+  tip.id = 'gloss-tip';
+  tip.style.cssText = 'position:fixed;z-index:9999;max-width:300px;pointer-events:none;' +
+    'background:var(--fth-surface2);border:1px solid var(--fth-accent-line);border-radius:8px;' +
+    'padding:12px 16px;box-shadow:var(--fth-shadow);' +
+    'opacity:0;transition:opacity 0.15s;display:none;font-family:var(--fth-display)';
+  document.body.appendChild(tip);
+  var hideTimer = null;
+
+  function showTip(el) {
+    clearTimeout(hideTimer);
+    var key = el.getAttribute('data-gterm');
+    var entry = GLOSS_DEF_MAP[key];
+    if (!entry) return;
+    tip.innerHTML =
+      '<div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--fth-accent-ink);margin-bottom:7px">' +
+        entry.term.replace(/</g, '&lt;') +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--fth-text);line-height:1.65;font-weight:300">' +
+        entry.def.replace(/</g, '&lt;') +
+      '</div>';
+    tip.style.display = 'block';
+    var r = el.getBoundingClientRect();
+    var tw = tip.offsetWidth || 300;
+    var th = tip.offsetHeight || 80;
+    var left = r.left + r.width / 2 - tw / 2;
+    var top  = r.top - th - 10;
+    if (left + tw > window.innerWidth - 12) left = window.innerWidth - tw - 12;
+    if (left < 12) left = 12;
+    if (top < 8) top = r.bottom + 10;
+    tip.style.left = left + 'px';
+    tip.style.top  = top + 'px';
+    tip.style.opacity = '1';
+  }
+
+  function hideTip() {
+    hideTimer = setTimeout(function() {
+      tip.style.opacity = '0';
+      setTimeout(function() { tip.style.display = 'none'; }, 160);
+    }, 100);
+  }
+
+  document.addEventListener('mouseover', function(e) {
+    var t = e.target;
+    while (t && t !== document.body) {
+      if (t.classList && t.classList.contains('gloss-link')) { showTip(t); return; }
+      t = t.parentElement;
+    }
+  });
+  document.addEventListener('mouseout', function(e) {
+    var t = e.target;
+    while (t && t !== document.body) {
+      if (t.classList && t.classList.contains('gloss-link')) { hideTip(); return; }
+      t = t.parentElement;
+    }
+  });
+})();
+
+// ---- Research & Contextualisation ----
+function toggleResearch() {
+  document.getElementById('researchSection').classList.toggle('open');
+}
+
+const RESEARCH_TASKS = [
+  {
+    id:'rt1', icon:'🎬', name:'Director: Understanding the Shot Cycle',
+    owner:'Director',
+    desc:'Research the mechanics and creative logic of how a shot is built, called, and assessed on a working film set.',
+    guidance:`<p>The Director on set is simultaneously the creative authority and a practical operator within a highly structured system. The shot cycle is that system. Understanding it in depth before the shoot day means you will make faster, better-informed decisions when time pressure is at its highest.</p>
+      <ul>
+        <li><strong>The language of the set:</strong> Know the sequence cold: Quiet on set, Turnover, Speed, Mark, Action, Cut. Know that you do not call Action until the 1st AD gives you the nod. Know that you call Cut clearly and at full voice, and that nobody moves until you do.</li>
+        <li><strong>Coverage strategy:</strong> Research the concept of editorial coverage in depth. A director who understands what an editor needs from a scene will plan and shoot more efficiently. Study the master shot and its relationship to closer coverage. Understand why eyelines and screen direction matter in the cut, not just in the frame.</li>
+        <li><strong>Communicating with performers:</strong> Research different approaches to giving notes between takes. The Meisner technique, Stanislavski, and action-based direction each offer different vocabulary. A director who can give one clear, actable note, rather than a five-minute discussion on set, protects the performance and the schedule.</li>
+        <li><strong>The monitor and the floor:</strong> The director's primary tool on set is the monitor. Research the discipline of watching a take on screen rather than stepping in physically. Understand when to trust the frame and when to walk the set. Understand your relationship to the 1st AD: they manage the floor so you can focus on the work.</li>
+        <li><strong>Decision-making under pressure:</strong> Research how experienced directors approach the question of when to move on. The cost of an unnecessary additional take is time; the cost of insufficient coverage is reshoots. Read accounts from directors about how they make this judgment in real time.</li>
+      </ul>`,
+  },
+  {
+    id:'rt2', icon:'🎛️', name:'1st AD: Floor Management & Set Protocol',
+    owner:'1st AD',
+    desc:'Research the role of the 1st AD as the operational engine of a shoot day: scheduling, communication, and keeping the floor safe and moving.',
+    guidance:`<p>The 1st AD is the most important logistical role on a film set. On a short film, especially, the 1st AD is often the difference between a productive day and a chaotic one. This research phase is about understanding the full scope of the role before you take it on.</p>
+      <ul>
+        <li><strong>The call sheet:</strong> Research how a call sheet is constructed and read. Know every section: general call time, scene numbers, cast calls, department notes, location details, and the one-liner schedule. Practice building a call sheet from a script and a location.</li>
+        <li><strong>The shot list and schedule:</strong> Understand how to read a director's shot list and translate it into a realistic schedule. Research how to estimate setup times, factor in company moves, and build contingency into the day without sacrificing ambition.</li>
+        <li><strong>Radio discipline:</strong> Research professional radio etiquette on a film set. Know your channels, know how to relay information cleanly, know when to speak and when to hold. Poor radio discipline costs time and erodes crew trust.</li>
+        <li><strong>Health and safety:</strong> Research the 1st AD's legal and professional responsibility for set safety in the UK. Know the HSE framework. Know what a risk assessment must cover. Know how to conduct a morning safety briefing for different types of location and activity.</li>
+        <li><strong>Working with departments:</strong> The 1st AD is the point of contact between the director and every department. Research how to maintain relationships with HODs under pressure: how to push for pace without undermining a department's ability to do their job properly.</li>
+      </ul>`,
+  },
+  {
+    id:'rt3', icon:'📷', name:'Camera & Grip: On-Set Operation & Technical Preparation',
+    owner:'Camera & Grip',
+    desc:'Research the camera system being used, the grammar of cinematography, and the practical skills required to operate competently under shoot-day conditions.',
+    guidance:`<p>Camera department preparation before a shoot day is not just technical; it is conceptual. A camera operator who understands the story they are trying to tell will make better framing decisions than one who is simply executing instructions. Both are required.</p>
+      <ul>
+        <li><strong>Know your camera:</strong> Read the manual. Not just the quick-start guide: the full manual. Know every menu, every recording format, every monitoring output. A camera issue discovered during a take that could have been resolved in prep is an avoidable failure.</li>
+        <li><strong>Exposure and monitoring:</strong> Research false colour, waveform monitoring, and zebras as exposure tools. Know how to use them in combination with the histogram. Understand the relationship between ISO, aperture, and shutter angle in the context of the specific camera and format being used.</li>
+        <li><strong>Focus pulling:</strong> Research distance measurement, lens charts, and the follow focus system. Practice pulling focus on moving subjects. Understand how depth of field changes across focal lengths and apertures, and what this means for the difficulty of focus work in different setups.</li>
+        <li><strong>The shot list:</strong> Read and internalise the director's shot list before the shoot day. Know every shot: the frame size, the movement, the starting and ending position. Discuss any shots that seem technically difficult and identify solutions in advance, not on the floor with the crew waiting.</li>
+        <li><strong>Grip equipment:</strong> Research the specific grip equipment that will be used. Know how to build a dolly, lay track, rig a slider, balance a gimbal. These are skills that take practice: they should not be learned for the first time on set.</li>
+      </ul>`,
+  },
+  {
+    id:'rt4', icon:'💡', name:'Lighting: Design Principles & On-Set Practice',
+    owner:'Lighting',
+    desc:'Research the creative grammar of light, the specific equipment being used, and the safety and electrical knowledge required on a working set.',
+    guidance:`<p>A gaffer or lighting crew member who understands light as a storytelling tool, not just a technical resource, will produce images that serve the film rather than merely illuminate it. That understanding begins before the shoot day.</p>
+      <ul>
+        <li><strong>The lighting plan:</strong> Before the shoot day, meet with the DP and understand the lighting intention for every setup. Know which units are being used where, what the power requirements are, and what the fallback is if a unit fails or cannot be rigged as planned.</li>
+        <li><strong>Equipment familiarity:</strong> Research every unit that will be on the truck. Know the beam angle, colour temperature, power draw, and mounting options for each fixture. Know how to rig it safely, how to flag it, and how to gel it efficiently.</li>
+        <li><strong>Electrical safety:</strong> Research the electrical safety requirements for film production in the UK. Know the maximum load for different circuit types. Know how to calculate power draw across multiple units on a single circuit. Know when a qualified electrician is required and what that means in practice.</li>
+        <li><strong>Colour and quality:</strong> Research the relationship between hard and soft light and how each is produced. Understand how to use negative fill. Research how colour temperature interacts with the camera's white balance and how gels can correct or create colour relationships between sources.</li>
+        <li><strong>Speed on set:</strong> Lighting is often the bottleneck in a shot cycle. Research how experienced gaffers pre-rig, pre-position, and think one setup ahead. Speed without compromising quality is a learned skill: study how it is achieved.</li>
+      </ul>`,
+  },
+  {
+    id:'rt5', icon:'🎙️', name:'Sound: Production Audio & Set Discipline',
+    owner:'Sound',
+    desc:'Research microphone technique, the signal chain, sync workflow, and the sound discipline required to capture clean, usable production audio.',
+    guidance:`<p>Clean production sound is one of the most valuable assets in post-production, and one of the most commonly undervalued in low-budget filmmaking. A sound department that understands what the editor and sound designer will need from the recordings made on set will approach the shoot day with a fundamentally different level of care.</p>
+      <ul>
+        <li><strong>Microphone technique:</strong> Research boom positioning in depth. The ideal boom position is as close to the sound source as possible without entering the frame. Research how to work with the camera operator to understand the frame line. Research the difference between short and long gun microphones and when each is appropriate.</li>
+        <li><strong>Lav placement and RF:</strong> Research how to hide a lavalier microphone effectively under different costume types. Understand RF frequency coordination: how to assign frequencies to multiple radio mics without interference. Research the specific interference risk from LED dimmers and how to mitigate it in coordination with the lighting department.</li>
+        <li><strong>Sync and timecode:</strong> Research the timecode workflow between sound recorder and camera. Know how to jam sync at the start of the day and how to verify sync is maintained. Understand what a drift in timecode means for the editor and how to prevent it.</li>
+        <li><strong>The sound report:</strong> Research how a professional sound report is structured. Know what information must be recorded for every take: scene, slate, take, microphone used, quality notes. The sound report is the handoff to post-production and must be accurate.</li>
+        <li><strong>What cannot be fixed in post:</strong> Research the practical limits of ADR, noise reduction, and dialogue editing. Know which problems can be addressed in post and which will simply not be in the film. This knowledge should inform how aggressively you advocate for quiet on set and additional takes.</li>
+      </ul>`,
+  },
+  {
+    id:'rt6', icon:'🎨', name:'Art: Set Dressing, Props & Continuity Preparation',
+    owner:'Art',
+    desc:'Research production design as a storytelling discipline, continuity photography methods, and the practical skills of set dressing and prop management on a working shoot day.',
+    guidance:`<p>The art department works ahead of every other department: the set must be dressed before the camera and lighting arrive, and reset between every take. This rhythm requires planning, speed, and a precise understanding of continuity. This research phase prepares you for all three.</p>
+      <ul>
+        <li><strong>The design brief:</strong> Before the shoot day, know the director and DP's visual intention for every location being shot. Know what is in frame and what is not. Know which props are hero props requiring exact continuity and which are background dressing with more flexibility. This knowledge comes from conversations in prep, not assumptions on the day.</li>
+        <li><strong>Continuity photography:</strong> Research how to take effective continuity photographs. Know the angles required: wide establishing, medium on each key prop, close-up on anything that moves. Know how to organise the photos on set so they can be referenced quickly between takes. Practise this workflow before the shoot day.</li>
+        <li><strong>Props tracking:</strong> Research systems for tracking props across a shoot day and across multiple shoot days. Know how hero props that are consumed (food, candles, cigarettes) should be managed: quantities, replicas, continuity documentation. Understand the difference between a prop that must match exactly and one that can be dressed by eye.</li>
+        <li><strong>Reset speed:</strong> Art department reset is often the limiting factor in the shot cycle. Research how experienced art departments pre-set reset positions: photographing first positions before the take begins, staging reset items off set for rapid replacement. Speed comes from preparation, not rushing.</li>
+        <li><strong>Dressing for camera:</strong> Research how colour, texture, and depth in set dressing affect the camera image. Understand how a DP reads the frame for dressing problems: foreground elements that crowd the subject, backgrounds that compete with the action, colours that clash with costume. This knowledge makes art department conversations with the DP more productive.</li>
+      </ul>`,
+  },
+  {
+    id:'rt7', icon:'📋', name:'Continuity: Script Supervision & On-Set Documentation',
+    owner:'Continuity',
+    desc:'Research the full scope of the script supervisor role: the lined script, continuity sheets, circle takes, and the discipline of watching every take with full concentration.',
+    guidance:`<p>The script supervisor is the guardian of the edit. Every decision they make on set (which takes to circle, which continuity details to photograph, which coverage gaps to flag) directly shapes what the editor has to work with. This is a role that requires thorough preparation and an exceptional capacity for concentration.</p>
+      <ul>
+        <li><strong>The lined script:</strong> Research how to create and maintain a lined script. Know what each line represents: a camera setup, the coverage it provides, which lines of dialogue and action it covers, whether the actor is on- or off-screen. Practice lining a script from a shot list before the shoot day.</li>
+        <li><strong>Continuity sheets:</strong> Research the structure of a professional continuity sheet. Know what must be recorded for every setup: scene number, slate number (the running count of setups across the whole shoot), take number, printed takes, running time, director comments, and notes on costume, hair, props, and blocking. Know how to complete a sheet under the time pressure of a working set.</li>
+        <li><strong>Circle takes and the editor:</strong> Research what information an editor needs from the continuity documentation. Know what it means to circle a take: that it is the director's preferred take and the one the editor will primarily work with. Know how to communicate useful performance notes: not subjective judgments, but factual observations about what changed between takes.</li>
+        <li><strong>Watching the frame:</strong> Research the discipline of watching every take in full, from multiple angles of attention simultaneously: performance, props, costume, eyeline, blocking. This is a skill that is trained, not natural. Research techniques for managing split attention on set.</li>
+        <li><strong>Coverage gaps:</strong> Research how to identify, during the shoot day, when a scene lacks sufficient coverage to be edited. Know when and how to raise this with the director and 1st AD without disrupting the rhythm of the day. The script supervisor who flags a coverage problem before wrap saves a reshoot.</li>
+      </ul>`,
+  },
+  {
+    id:'rt8', icon:'💾', name:'DIT: Data Management, Colour & Technical Monitoring',
+    owner:'DIT',
+    desc:'Research the data management workflow, on-set colour science, and the technical monitoring responsibilities of the DIT on a working shoot day.',
+    guidance:`<p>The DIT is responsible for the most irreplaceable asset in production: the footage. A single data management failure can destroy a shoot day or an entire production. This research phase is about ensuring that every process (offload, verification, monitoring, logging) is understood and prepared before the first take rolls.</p>
+      <ul>
+        <li><strong>The 3-2-1 rule:</strong> Research and internalise the 3-2-1 backup rule: three copies, on two different media types, with one copy offsite. On a short film, "offsite" at minimum means two physically separate drives that are never in the same bag. No card should be formatted or cleared until this condition is confirmed. Research tools such as Hedge or SilverStack that automate verification and checksum reporting.</li>
+        <li><strong>Camera media and workflow:</strong> Research the specific recording format, codec, and media type being used on this production. Know the recording rates, the file sizes per hour, the total media budget for the day, and how many cards are available. Brief the camera department on the media management plan before crew call.</li>
+        <li><strong>On-set colour management:</strong> Research how to configure DaVinci Resolve for the camera's colour space and gamma curve. Know how to apply a technical LUT to convert log footage to a viewable signal on the monitoring chain. Understand the difference between a monitoring LUT and a show LUT, and know which the director is seeing on their monitor.</li>
+        <li><strong>The DIT log and camera report:</strong> Research how to maintain a complete and accurate DIT log across the shoot day. Every take must be logged: scene, slate, take, camera, lens, stop, ISO, director's assessment. Know how to cross-reference your log with the camera report and sound report at the end of the day to confirm all material is accounted for.</li>
+        <li><strong>QC and fault identification:</strong> Research common technical faults in the formats being used: sensor artefacts, codec errors, focus problems visible only at full resolution, clipping that is not apparent on a monitoring LUT. Know how to identify these faults quickly and how to communicate them to the DP and 1st AD without disrupting the floor more than necessary.</li>
+      </ul>`,
+  },
+];
+
+function renderResearch() {
+  var container = document.getElementById('researchTasks');
+  if (!container) return;
+  RESEARCH_TASKS.forEach(function(task) {
+    container.appendChild(buildTaskEl(task, 'research', null));
+  });
+}
+
+render();
+renderGlossary();
+renderResearch();
+buildAndCacheTerms();
+</script>
+</body>
+</html>
