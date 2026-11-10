@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--fth-standalone-->
+<!-- Film Tool Hub: this block is only used when this file is opened on its own (for example while working on it).
+     Inside the hub it is removed and the hub supplies the same look from hub/kit.css. Keep it, but don't edit it here. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═════════ Film Tool Hub kit ═════════
+   Shared look for every tool. The hub injects this at the top of each tool's <head>,
+   sets data-theme="light|dark" on the tool's <html>, and sets --fth-cat to the tool's
+   category colour. Tools use the --fth-* tokens and the .fth-* components. */
+:root{
+  --fth-bg:#0b0c0e; --fth-bg2:#101216; --fth-surface:#15181d; --fth-surface2:#1b1f26; --fth-surface3:#232831;
+  --fth-line:#242931; --fth-line2:#333a45; --fth-line3:#46505e;
+  --fth-text:#f0ece5; --fth-muted:#9aa0aa; --fth-faint:#666c77;
+  --fth-good:#5cc98a; --fth-bad:#ff8f7a; --fth-warn:#f2bd5c;
+  /* accent tokens (--fth-cat, --fth-accent, --fth-accent-ink, --fth-accent-soft, --fth-accent-line, --fth-on-accent)
+     are written by the hub for each tool's category, as plain colours for both themes */
+  --fth-cat:#ffb547; --fth-accent:#ffb547; --fth-accent-ink:#ffb547; --fth-accent-soft:rgba(255,181,71,.14); --fth-accent-line:rgba(255,181,71,.45); --fth-on-accent:#14110b;
+  --fth-paper-backdrop:#07080a;
+  --fth-shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --fth-shadow-sm:none;
+  --fth-radius:14px; --fth-radius-sm:9px;
+  --fth-display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --fth-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --fth-script:"Courier Prime","Courier New",Courier,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --fth-bg:#f3f0ea; --fth-bg2:#f9f7f3; --fth-surface:#ffffff; --fth-surface2:#f1ede5; --fth-surface3:#e6e1d6;
+  --fth-line:#e3ded4; --fth-line2:#d2ccc0; --fth-line3:#b4ad9f;
+  --fth-text:#16181c; --fth-muted:#565c66; --fth-faint:#878c95;
+  --fth-good:#22804a; --fth-bad:#c0392b; --fth-warn:#9a6200;
+  --fth-paper-backdrop:#e4dfd5;
+  --fth-shadow:0 14px 30px -16px rgba(70,50,20,.30);
+  --fth-shadow-sm:0 1px 2px rgba(60,45,20,.05),0 4px 14px rgba(60,45,20,.05);
+  color-scheme:light;
+}
+
+/* base */
+html{background:var(--fth-bg)}
+body{background:var(--fth-bg);color:var(--fth-text);font-family:var(--fth-display);-webkit-font-smoothing:antialiased}
+::selection{background:var(--fth-accent-line)}
+:focus-visible{outline:2px solid var(--fth-accent);outline-offset:2px}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--fth-line2);border-radius:6px;border:2px solid var(--fth-bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--fth-line3)}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+
+/* tool header: category eyebrow, tool name, then actions on the right */
+.fth-head{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 20px;
+  background:color-mix(in srgb,var(--fth-bg) 88%,transparent);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  border-bottom:1px solid var(--fth-line)}
+.fth-head::before{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:linear-gradient(90deg,var(--fth-cat),transparent 38%);opacity:.75;pointer-events:none}
+.fth-id{display:flex;flex-direction:column;gap:5px;min-width:0;flex:none}
+.fth-eyebrow{display:flex;align-items:center;gap:8px;font:500 10.5px/1 var(--fth-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fth-accent-ink);white-space:nowrap}
+.fth-eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fth-cat);box-shadow:0 0 0 3px var(--fth-accent-soft);flex:none}
+.fth-title{margin:0;font-weight:800;font-variation-settings:"wdth" 68;font-size:23px;line-height:1;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap}
+.fth-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.fth-vsep{width:1px;height:22px;background:var(--fth-line2);margin:0 3px;flex:none}
+
+/* buttons */
+.fth-btn{height:34px;padding:0 13px;border-radius:var(--fth-radius-sm);border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);
+  font:600 13px/1 var(--fth-display);display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  transition:background-color .15s,border-color .15s,color .15s}
+.fth-btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.fth-btn:disabled{opacity:.45;cursor:default}
+.fth-btn.primary{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.fth-btn.primary:hover{filter:brightness(1.08)}
+.fth-btn.ghost{background:transparent;border-color:transparent;color:var(--fth-muted)}
+.fth-btn.ghost:hover{background:var(--fth-surface2);border-color:var(--fth-line2);color:var(--fth-text)}
+.fth-btn.danger{color:var(--fth-bad)}
+.fth-btn.sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.fth-btn.icon{width:30px;height:30px;padding:0}
+
+/* labels, fields */
+.fth-label{font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.fth-input{width:100%;min-width:0;background:var(--fth-bg2);border:1px solid var(--fth-line2);border-radius:8px;padding:7px 10px;color:var(--fth-text);font:14px/1.35 var(--fth-display);outline:none;transition:border-color .15s,box-shadow .15s}
+.fth-input:hover{border-color:var(--fth-line3)}
+.fth-input:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+select.fth-input{cursor:pointer}
+textarea.fth-input{resize:vertical;line-height:1.45}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-accent)}
+
+/* sections & surfaces */
+.fth-card{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);box-shadow:var(--fth-shadow-sm)}
+.fth-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.fth-sec::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+.fth-sec .fth-num{font:600 11px var(--fth-mono);color:var(--fth-accent-ink);letter-spacing:.08em}
+.fth-muted{color:var(--fth-muted)}
+.fth-mono{font-family:var(--fth-mono)}
+
+/* notes */
+.fth-tip{background:var(--fth-accent-soft);border-left:2px solid var(--fth-accent);color:var(--fth-text);padding:7px 10px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.45}
+.fth-warn{background:color-mix(in srgb,var(--fth-warn) 10%,var(--fth-surface));border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent);color:var(--fth-text);border-radius:10px;padding:10px 12px;font-size:13px}
+.fth-warn b:first-child{color:var(--fth-warn)}
+.fth-info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--fth-line3);color:var(--fth-muted);font:600 10px/1 var(--fth-mono);text-transform:none;letter-spacing:0;cursor:pointer;user-select:none;vertical-align:1px;margin-left:5px;transition:.15s}
+.fth-info:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+
+/* toast */
+.fth-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;z-index:200;background:var(--fth-text);color:var(--fth-bg);padding:10px 16px;border-radius:10px;font:500 13.5px var(--fth-display);box-shadow:var(--fth-shadow);transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.fth-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* paper: a printable page shown on screen stays paper-white in both themes */
+.fth-paper-wrap{background:var(--fth-paper-backdrop)}
+.fth-paper{background:#fff;color:#000;color-scheme:light;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55)}
+
+@media print{
+  html,body{background:#fff!important;color:#000}
+  .fth-head{display:none!important}
+  .fth-paper-wrap{background:#fff!important}
+  .fth-paper{box-shadow:none!important}
+}
+@media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
+@media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
+
+:root{--fth-cat:#8bd16a;--fth-accent:#8bd16a;--fth-accent-ink:#8bd16a;--fth-accent-soft:rgba(139,209,106,0.14);--fth-accent-line:rgba(139,209,106,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#51793d;--fth-accent-ink:#51793d;--fth-accent-soft:rgba(139,209,106,0.16);--fth-accent-line:rgba(139,209,106,0.6);--fth-on-accent:#ffffff}
+</style>
+<script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
+<!--/fth-standalone-->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Short Film Post-Production</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #0D1117; --navy-mid: #161B27; --navy-card: #1C2333; --navy-border: #252E42;
+    --red: #D94040; --red-dim: #B03030; --red-glow: rgba(217,64,64,0.12);
+    --slate: #8B9BB4; --slate-light: #B8C5D6; --white: #EEF2F7;
+    --green: #4CAF7D; --danger: #E05C5C;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--navy); color: var(--white); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+  .filmstrip { width:100%; height:36px; background:#111; display:flex; align-items:center; overflow:hidden; position:relative; }
+  .filmstrip::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(90deg,transparent 0,transparent 14px,var(--navy) 14px,var(--navy) 22px,transparent 22px,transparent 36px); opacity:0.9; }
+  .filmstrip-inner { display:flex; gap:12px; padding:0 12px; animation:scroll-strip 18s linear infinite; white-space:nowrap; }
+  .filmstrip-label { font-family:var(--fth-display);font-weight:800;font-variation-settings:'wdth' 64;text-transform:uppercase; font-size:11px; letter-spacing:4px; color:var(--red); opacity:0.7; user-select:none; }
+  @keyframes scroll-strip { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+  @media(prefers-reduced-motion:reduce){.filmstrip-inner{animation:none}}
+
+  .hero { padding:60px 48px 40px; max-width:1200px; margin:0 auto; }
+  .hero-eyebrow { font-size:11px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--red); margin-bottom:16px; }
+  .hero-title { font-family:var(--fth-display);font-weight:800;font-variation-settings:'wdth' 64;text-transform:uppercase; font-size:clamp(52px,8vw,96px); line-height:0.9; letter-spacing:2px; color:var(--white); margin-bottom:8px; }
+  .hero-title span { color:var(--red); }
+  .hero-sub { font-size:15px; color:var(--slate); font-weight:300; max-width:480px; line-height:1.6; margin-top:20px; }
+
+  .progress-bar-wrap { max-width:1200px; margin:0 auto; padding:0 48px 20px; display:flex; align-items:center; gap:16px; }
+  .progress-track { flex:1; height:4px; background:var(--navy-border); border-radius:2px; overflow:hidden; }
+  .progress-fill { height:100%; width:0%; background:var(--red); border-radius:2px; transition:width .4s ease; }
+  .progress-label { font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--slate); white-space:nowrap; }
+
+  .timeline-wrapper { max-width:1200px; margin:0 auto; padding:0 48px 80px; }
+  .phase-block { margin-bottom:2px; }
+  .phase { display:grid; grid-template-columns:220px 1fr; gap:0; position:relative; transition:opacity .3s; }
+  .phase.completed { opacity:.45; }
+  .phase-block.hidden { display:none; }
+
+  .phase-label { padding:28px 24px 28px 0; display:flex; flex-direction:column; justify-content:flex-start; border-right:1px solid var(--navy-border); position:relative; }
+  .phase-label::after { content:''; position:absolute; right:-5px; top:32px; width:9px; height:9px; border-radius:50%; background:var(--red); box-shadow:0 0 12px var(--red); transition:background .3s,box-shadow .3s; }
+  .phase.completed .phase-label::after { background:var(--green); box-shadow:0 0 12px var(--green); }
+  .phase-number { font-family:var(--fth-display);font-weight:800;font-variation-settings:'wdth' 64;text-transform:uppercase; font-size:11px; letter-spacing:3px; color:var(--red-dim); margin-bottom:6px; }
+  .phase-name { font-family:var(--fth-display);font-weight:800;font-variation-settings:'wdth' 64;text-transform:uppercase; font-size:26px; letter-spacing:1px; color:var(--white); line-height:1.1; margin-bottom:10px; }
+
+  .phase-timing { margin-top:4px; margin-bottom:10px; }
+  .phase-timing-label { font-size:10px; color:var(--slate); letter-spacing:0.5px; margin-bottom:5px; }
+  .phase-timing-track { width:100%; height:3px; background:var(--navy-border); border-radius:2px; overflow:hidden; position:relative; }
+  .phase-timing-fill { height:100%; background:var(--red); border-radius:2px; position:absolute; transition:background .3s; }
+  .phase.completed .phase-timing-fill { background:var(--green); }
+  .phase-progress-text { font-size:10px; color:var(--slate); margin-top:8px; letter-spacing:.5px; }
+
+  .phase-tasks { padding:24px 0 24px 32px; display:flex; flex-direction:column; gap:10px; }
+
+  .task { background:var(--navy-card); border:1px solid var(--navy-border); border-radius:6px; position:relative; overflow:hidden; transition:border-color .2s,background .2s,opacity .3s; cursor:pointer; }
+  .task::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--navy-border); transition:background .2s; }
+  .task:hover { border-color:var(--fth-accent-line); background:var(--navy-mid); }
+  .task:hover::before { background:var(--red); }
+  .task.completed { opacity:.4; }
+  .task.completed::before { background:var(--green) !important; }
+  .task.open { border-color:var(--red); background:var(--navy-mid); }
+  .task.open::before { background:var(--red); }
+  .task.filtered-out { display:none; }
+
+  .task-header { padding:14px 18px; display:grid; grid-template-columns:auto 1fr auto auto; align-items:start; gap:14px; }
+  .task-icon { font-size:18px; line-height:1; margin-top:1px; filter:grayscale(0.3); }
+  .task-body { min-width:0; }
+  .task-name { font-size:13px; font-weight:600; color:var(--white); margin-bottom:4px; }
+  .task-desc { font-size:12px; color:var(--slate); line-height:1.5; font-weight:300; }
+  .task-meta { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
+  .task-owner { font-size:10px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--slate); white-space:nowrap; }
+
+  .task-checkbox { flex-shrink:0; width:18px; height:18px; border:1.5px solid var(--navy-border); border-radius:4px; display:flex; align-items:center; justify-content:center; transition:border-color .2s,background .2s; cursor:pointer; margin-top:1px; }
+  .task-checkbox:hover { border-color:var(--green); }
+  .task-checkbox.checked { background:var(--green); border-color:var(--green); }
+  .task-checkbox svg { display:none; }
+  .task-checkbox.checked svg { display:block; }
+
+  .task-chevron { flex-shrink:0; width:16px; height:16px; color:var(--slate); margin-top:2px; transition:transform .25s,color .2s; }
+  .task.open .task-chevron { transform:rotate(180deg); color:var(--red); }
+
+  .task-drawer { max-height:0; overflow:hidden; transition:max-height .35s ease; border-top:0px solid var(--navy-border); }
+  .task.open .task-drawer { max-height:9999px; border-top:1px solid var(--navy-border); }
+  .task-drawer-inner { padding:20px 22px 22px 50px; display:flex; flex-direction:column; gap:20px; }
+
+  .drawer-label { font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--red-dim); margin-bottom:10px; }
+
+  .guidance-wrap { position:relative; }
+  .guidance-toolbar { display:flex; align-items:center; gap:6px; margin-bottom:6px; opacity:0; pointer-events:none; transition:opacity .2s; }
+  .guidance-wrap:focus-within .guidance-toolbar, .guidance-wrap:hover .guidance-toolbar { opacity:1; pointer-events:all; }
+  .guidance-toolbar-label { font-size:9px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--slate); flex:1; }
+  .guidance-btn { background:none; border:1px solid var(--navy-border); border-radius:3px; color:var(--slate); font-family:var(--fth-display); font-size:10px; font-weight:600; padding:2px 7px; cursor:pointer; line-height:1.4; transition:border-color .15s, color .15s; }
+  .guidance-btn:hover { border-color:var(--red); color:var(--red); }
+  .guidance-btn.reset { border-color:transparent; color:var(--slate); font-weight:400; }
+  .guidance-btn.reset:hover { border-color:var(--danger); color:var(--danger); }
+  .guidance-block { background:var(--navy); border:1px solid var(--navy-border); border-radius:5px; padding:14px 16px; outline:none; cursor:text; transition:border-color .2s; }
+  .guidance-block:focus { border-color:var(--red-dim); }
+  .guidance-block p { font-size:12px; color:var(--slate-light); line-height:1.7; font-weight:300; margin-bottom:12px; }
+  .guidance-block p:last-child { margin-bottom:0; }
+  .guidance-block ul { list-style:none; padding:0; margin:0 0 14px 0; display:flex; flex-direction:column; gap:6px; }
+  .guidance-block li { font-size:12px; color:var(--slate-light); line-height:1.65; font-weight:300; padding-left:14px; position:relative; margin-bottom:3px; }
+  .guidance-block li::before { content:'–'; position:absolute; left:0; color:var(--red-dim); }
+  .guidance-block strong { color:var(--white); font-weight:600; }
+  .guidance-edited-badge { display:inline-block; font-size:9px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--red-dim); margin-left:8px; opacity:0.7; }
+
+  .drawer-notes { width:100%; background:var(--navy); border:1px solid var(--navy-border); border-radius:4px; color:var(--slate-light); font-family:var(--fth-display); font-size:12px; font-weight:300; line-height:1.6; padding:10px 12px; resize:vertical; min-height:72px; transition:border-color .2s; outline:none; }
+  .drawer-notes:focus { border-color:var(--red); }
+  .drawer-notes::placeholder { color:var(--navy-border); }
+
+  .links-list { display:flex; flex-direction:column; gap:6px; }
+  .link-row { display:flex; gap:8px; align-items:center; }
+  .link-input { flex:1; background:var(--navy); border:1px solid var(--navy-border); border-radius:4px; color:var(--slate-light); font-family:var(--fth-display); font-size:12px; padding:7px 10px; outline:none; transition:border-color .2s; }
+  .link-input:focus { border-color:var(--red); }
+  .link-input::placeholder { color:var(--navy-border); }
+  .link-label-input { width:120px; flex:none; }
+  .btn-add-link, .btn-remove-link { background:none; border:1px solid var(--navy-border); border-radius:4px; color:var(--slate); cursor:pointer; font-size:11px; padding:5px 10px; font-family:var(--fth-display); transition:border-color .2s,color .2s; white-space:nowrap; }
+  .btn-add-link:hover { border-color:var(--red); color:var(--red); }
+  .btn-remove-link:hover { border-color:var(--danger); color:var(--danger); }
+  .link-go { font-size:11px; color:var(--red); text-decoration:none; padding:5px 10px; border:1px solid var(--red-dim); border-radius:4px; white-space:nowrap; font-weight:500; transition:background .2s; }
+  .link-go:hover { background:var(--red-glow); }
+
+  .deliverable { margin:8px 0 16px 252px; padding:12px 18px; background:var(--red-glow); border-left:2px solid var(--red); border-radius:0 6px 6px 0; font-size:12px; color:var(--slate-light); font-weight:400; }
+  .deliverable strong { font-weight:700; color:var(--red); margin-right:6px; }
+
+  .phase-divider { height:1px; background:linear-gradient(90deg,transparent,var(--navy-border) 20%,var(--navy-border) 80%,transparent); margin:16px 0; }
+  .footer { opacity:.4; }
+
+  .task-lock { flex-shrink:0; background:none; border:none; cursor:pointer; color:var(--slate); padding:0; line-height:1; margin-top:1px; transition:color .2s; font-size:13px; }
+  .task-lock:hover { color:var(--red); }
+  .task.unlocked .task-lock { color:var(--red); }
+  .task:not(.unlocked) .task-name-field, .task:not(.unlocked) .task-desc-field, .task:not(.unlocked) .task-owner-field, .task:not(.unlocked) .task-icon-edit { pointer-events:none; border-bottom-color:transparent !important; cursor:default; }
+  .task:not(.unlocked) .guidance-block { pointer-events:none; cursor:default; }
+  .gloss-link { pointer-events:auto; }
+  .task:not(.unlocked) .guidance-toolbar { display:none !important; }
+  .task:not(.unlocked) .drawer-notes { pointer-events:none; background:transparent; border-color:transparent; resize:none; cursor:default; }
+  .task:not(.unlocked) .btn-add-link, .task:not(.unlocked) .btn-remove-link, .task:not(.unlocked) .link-input { pointer-events:none; opacity:0.5; }
+  .task:not(.unlocked) [data-action="reset"] { display:none; }
+
+  .task-icon-edit { font-size:18px; line-height:1; margin-top:1px; filter:grayscale(0.3); background:none; border:none; outline:none; cursor:text; width:28px; font-family:var(--fth-display); padding:0; text-align:center; }
+  .task-name-field { font-size:13px; font-weight:600; color:var(--white); margin-bottom:4px; background:none; border:none; border-bottom:1px solid transparent; outline:none; width:100%; font-family:var(--fth-display); padding:0; transition:border-color .2s; cursor:text; }
+  .task-name-field:hover, .task-name-field:focus { border-bottom-color:var(--navy-border); }
+  .task-name-field:focus { border-bottom-color:var(--red); }
+  .task-desc-field { font-size:12px; color:var(--slate); line-height:1.5; font-weight:300; background:none; border:none; border-bottom:1px solid transparent; outline:none; width:100%; font-family:var(--fth-display); padding:0; resize:none; overflow:hidden; transition:border-color .2s; cursor:text; }
+  .task-desc-field:hover, .task-desc-field:focus { border-bottom-color:var(--navy-border); }
+  .task-desc-field:focus { border-bottom-color:var(--red); color:var(--slate-light); }
+  .task-owner-field { font-size:10px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--slate); background:none; border:none; border-bottom:1px solid transparent; outline:none; width:100%; font-family:var(--fth-display); padding:0; transition:border-color .2s; cursor:text; text-align:right; }
+  .task-owner-field:hover, .task-owner-field:focus { border-bottom-color:var(--navy-border); }
+  .task-owner-field:focus { border-bottom-color:var(--red); }
+
+  .task-custom::before { background: var(--slate) !important; }
+  .task-custom .task-name-edit { background:none; border:none; border-bottom:1px dashed var(--navy-border); color:var(--white); font-family:var(--fth-display); font-size:13px; font-weight:600; width:100%; outline:none; padding:2px 0; margin-bottom:6px; transition:border-color .2s; }
+  .task-custom .task-name-edit:focus { border-bottom-color:var(--red); }
+  .task-custom .task-name-edit::placeholder { color:var(--navy-border); font-weight:400; }
+  .task-custom .task-desc-edit { background:none; border:none; border-bottom:1px dashed var(--navy-border); color:var(--slate-light); font-family:var(--fth-display); font-size:12px; font-weight:300; width:100%; outline:none; padding:2px 0; line-height:1.5; transition:border-color .2s; resize:none; height:auto; overflow:hidden; }
+  .task-custom .task-desc-edit:focus { border-bottom-color:var(--red); }
+  .task-custom .task-desc-edit::placeholder { color:var(--navy-border); }
+  .task-remove { flex-shrink:0; background:none; border:none; color:var(--slate); cursor:pointer; font-size:16px; line-height:1; padding:0 2px; transition:color .2s; }
+  .task-remove:hover { color:var(--danger); }
+  .custom-tag { background:rgba(139,155,180,0.15); color:var(--slate); font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; letter-spacing:.5px; white-space:nowrap; }
+  .add-task-btn { display:flex; align-items:center; gap:8px; background:none; border:1px dashed var(--navy-border); border-radius:5px; color:var(--slate); cursor:pointer; font-family:var(--fth-display); font-size:11px; font-weight:600; letter-spacing:1px; margin:4px 0 0 32px; padding:9px 16px; text-transform:uppercase; transition:border-color .2s,color .2s; width:calc(100% - 32px); }
+  .add-task-btn:hover { border-color:var(--red); color:var(--red); }
+
+  @media(max-width:700px){
+    .hero,.timeline-wrapper,.progress-bar-wrap{padding-left:20px;padding-right:20px}
+    .phase{grid-template-columns:1fr}
+    .phase-label{border-right:none;border-bottom:1px solid var(--navy-border);padding-bottom:16px}
+    .phase-label::after{display:none}
+    .phase-tasks{padding-left:0}
+    .deliverable{margin-left:20px}
+    .task-meta{display:none}
+    .task-drawer-inner{padding-left:18px}
+  }
+
+  .glossary-wrap { max-width:1200px; margin:0 auto; padding:0 48px 60px; }
+  .glossary-toggle { display:flex; align-items:center; gap:14px; width:100%; background:var(--navy-card); border:none; border-top:1px solid var(--navy-border); border-bottom:1px solid var(--navy-border); padding:20px 48px; cursor:pointer; text-align:left; }
+  .glossary-toggle:hover .glossary-toggle-label { color:var(--white); }
+  .glossary-toggle-eyebrow { font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--red); flex-shrink:0; }
+  .glossary-toggle-label { font-family:var(--fth-display);font-weight:800;font-variation-settings:'wdth' 64;text-transform:uppercase; font-size:28px; letter-spacing:1px; color:var(--slate-light); transition:color .2s; flex:1; }
+  .glossary-chevron { width:18px; height:18px; color:var(--slate); flex-shrink:0; transition:transform .3s; }
+  .glossary-wrap.open .glossary-chevron { transform:rotate(180deg); }
+  .glossary-body { max-height:0; overflow:hidden; transition:max-height .4s ease; padding:0 0 0 0; }
+  .glossary-wrap.open .glossary-body { max-height:99999px; }
+  .glossary-intro { font-size:13px; color:var(--slate); font-weight:300; line-height:1.7; padding:24px 0 20px; max-width:640px; }
+  .glossary-terms { display:flex; flex-direction:column; }
+  .glossary-term { display:grid; grid-template-columns:240px 1fr 24px; gap:16px; padding:10px 0; border-bottom:1px solid var(--navy-border); align-items:start; }
+  .glossary-term:last-child { border-bottom:none; }
+  .glossary-term-name { font-size:12px; font-weight:600; color:var(--red-dim); line-height:1.5; background:none; border:none; border-bottom:1px solid transparent; outline:none; font-family:var(--fth-display); width:100%; padding:0; cursor:default; transition:border-color .2s; resize:none; overflow:hidden; }
+  .glossary-term-def { font-size:12px; color:var(--slate-light); font-weight:300; line-height:1.6; background:none; border:none; border-bottom:1px solid transparent; outline:none; font-family:var(--fth-display); width:100%; padding:0; resize:none; overflow:hidden; cursor:default; transition:border-color .2s; }
+  .glossary-term-remove { background:none; border:none; color:transparent; cursor:pointer; font-size:15px; padding:0; line-height:1; transition:color .2s; flex-shrink:0; justify-self:center; }
+  .glossary-lock-strip { display:flex; align-items:center; justify-content:space-between; padding:16px 0 8px; }
+  .glossary-lock-btn { background:none; border:1px solid var(--navy-border); border-radius:4px; color:var(--slate); cursor:pointer; font-family:var(--fth-display); font-size:10px; font-weight:600; letter-spacing:1px; padding:4px 10px; text-transform:uppercase; transition:border-color .2s,color .2s; }
+  .glossary-lock-btn:hover { border-color:var(--red); color:var(--red); }
+  .glossary-add-term { background:none; border:1px dashed var(--navy-border); border-radius:4px; color:var(--slate); cursor:pointer; font-family:var(--fth-display); font-size:10px; font-weight:600; letter-spacing:1px; padding:6px 12px; text-transform:uppercase; transition:border-color .2s,color .2s; margin-top:12px; display:block; }
+  .glossary-add-term:hover { border-color:var(--red); color:var(--red); }
+  .glossary-unlocked .glossary-term-name, .glossary-unlocked .glossary-term-def { cursor:text; }
+  .glossary-unlocked .glossary-term-name:hover, .glossary-unlocked .glossary-term-def:hover { border-bottom-color:var(--navy-border); }
+  .glossary-unlocked .glossary-term-name:focus, .glossary-unlocked .glossary-term-def:focus { border-bottom-color:var(--red); outline:none; }
+  .glossary-unlocked .glossary-term-remove { color:var(--slate); }
+  .glossary-unlocked .glossary-term-remove:hover { color:var(--danger); }
+  .glossary-locked .glossary-term-name, .glossary-locked .glossary-term-def { pointer-events:none; }
+  .glossary-locked .glossary-term-remove { pointer-events:none; opacity:0; }
+  .glossary-locked .glossary-add-term { pointer-events:none; opacity:0.3; }
+
+  .glossary-search-wrap { position:relative; margin-bottom:16px; }
+  .glossary-search-input { width:100%; background:var(--navy-card); border:1px solid var(--navy-border); border-radius:6px; color:var(--white); font-family:var(--fth-display); font-size:13px; font-weight:300; padding:12px 16px 12px 40px; outline:none; transition:border-color .2s; }
+  .glossary-search-input:focus { border-color:var(--red); }
+  .glossary-search-input::placeholder { color:var(--slate); }
+  .glossary-search-icon { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--slate); font-size:14px; pointer-events:none; }
+  .glossary-search-results { position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--navy-card); border:1px solid var(--navy-border); border-radius:6px; max-height:320px; overflow-y:auto; z-index:100; display:none; box-shadow:0 8px 32px rgba(0,0,0,.4); }
+  .glossary-search-results.visible { display:block; }
+  .glossary-search-result { display:flex; align-items:center; gap:12px; padding:10px 16px; cursor:pointer; border-bottom:1px solid var(--navy-border); transition:background .15s; }
+  .glossary-search-result:last-child { border-bottom:none; }
+  .glossary-search-result:hover { background:var(--navy-mid); }
+  .glossary-result-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .glossary-result-term { font-size:12px; font-weight:600; color:var(--white); flex-shrink:0; min-width:160px; }
+  .glossary-result-def { font-size:11px; color:var(--slate); font-weight:300; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:400px; }
+  .glossary-no-results { padding:14px 16px; font-size:12px; color:var(--slate); font-weight:300; }
+  .glossary-term-row.highlighted { animation:glossary-highlight 1.8s ease forwards; }
+  @keyframes glossary-highlight { 0%{background:var(--fth-accent-line)} 60%{background:var(--fth-accent-soft)} 100%{background:transparent} }
+  .gloss-link { color:var(--red-dim); border-bottom:1px dotted var(--red-dim); cursor:default; font-weight:500; transition:color .15s,border-color .15s; }
+  .gloss-link:hover { color:var(--red); border-color:var(--red); }
+  /* ── Research & Contextualisation section ─────────────────────────── */
+  .research-section { max-width:1200px; margin:0 auto; padding:0 48px; }
+  .research-toggle {
+    display:flex; align-items:center; gap:14px; width:100%;
+    background:var(--navy-card); border:1px solid var(--navy-border); border-radius:6px;
+    padding:20px 24px; cursor:pointer; text-align:left;
+  }
+  .research-toggle:hover .research-toggle-label { color:var(--white); }
+  .research-toggle-eyebrow { font-size:10px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--red); flex-shrink:0; }
+  .research-toggle-label { font-family:var(--fth-display);font-weight:800;font-variation-settings:'wdth' 64;text-transform:uppercase; font-size:28px; letter-spacing:1px; color:var(--slate-light); transition:color .2s; flex:1; }
+  .research-chevron { width:18px; height:18px; color:var(--slate); flex-shrink:0; transition:transform .3s; }
+  .research-section.open .research-chevron { transform:rotate(180deg); }
+  .research-body { max-height:0; overflow:hidden; transition:max-height .5s ease; }
+  .research-section.open .research-body { max-height:99999px; }
+  .research-intro { font-size:13px; color:var(--slate); font-weight:300; line-height:1.7; padding:24px 0 20px; max-width:680px; }
+  .research-tasks { display:flex; flex-direction:column; gap:10px; padding:0 0 24px; }
+  @media(max-width:768px) {
+    .research-section { padding:0 20px; }
+  }
+  .ref-section { margin-top:10px; }
+  .ref-section .task-checkbox { display:none; }
+
+/* ═════ Film Tool Hub kit mapping ═════ */
+:root:root:root{--navy:var(--fth-bg);--navy-mid:var(--fth-bg2);--navy-card:var(--fth-surface);--navy-border:var(--fth-line);--red:var(--fth-accent-ink);--red-dim:var(--fth-accent-ink);--red-glow:var(--fth-accent-soft);--slate:var(--fth-muted);--slate-light:var(--fth-text);--white:var(--fth-text);--green:var(--fth-good);--danger:var(--fth-bad);}
+body{font-family:var(--fth-display)}
+.hero{padding-top:40px}
+.hero-eyebrow{font:500 11px/1 var(--fth-mono)!important;letter-spacing:.16em!important}
+.hero-title{font-size:clamp(48px,7.6vw,96px)!important;line-height:.88!important;letter-spacing:0!important}
+.research-section{margin-bottom:12px}
+</style>
+</head>
+<body>
+
+
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>01 · Film Production Pipelines</span><h1 class="fth-title">Post-Production Pipeline</h1></div>
+  
+  <div class="fth-actions"></div>
+</header>
+<header class="hero">
+  <p class="hero-eyebrow">Resource Guide · Short Film</p>
+  <h1 class="hero-title"><span>Post</span>-Production<br>Pipeline</h1>
+  <p class="hero-sub">The footage exists. Now the film gets made: shaped, coloured, and sculpted in the edit until the story finally reveals itself.</p>
+</header>
+
+<div class="research-section" id="researchSection">
+  <button class="research-toggle" onclick="toggleResearch()">
+    <span class="research-toggle-eyebrow">Before you begin</span>
+    <span class="research-toggle-label">Research &amp; Contextualisation</span>
+    <svg class="research-chevron" viewBox="0 0 16 16" fill="none">
+      <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="research-body" id="researchBody">
+    <p class="research-intro">Post-production is not purely technical. Every cut, grade, and sound choice carries meaning, and the best practitioners make those choices intentionally, informed by the history and language of the craft. Work through the three areas below before you begin. Return to them as you go.</p>
+    <div class="research-tasks" id="researchTasks"></div>
+  </div>
+</div>
+
+<div class="research-section ref-section" id="resolveSection">
+  <button class="research-toggle" onclick="toggleResolve()">
+    <span class="research-toggle-eyebrow">Quick reference</span>
+    <span class="research-toggle-label">DaVinci Resolve Basics</span>
+    <svg class="research-chevron" viewBox="0 0 16 16" fill="none">
+      <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="research-body" id="resolveBody">
+    <p class="research-intro">A quick orientation to each page of DaVinci Resolve. These cards give you the basics only: enough to find your way around and know what each page is for. Dip in whenever you need a reminder, and use Blackmagic's own manual and training for greater depth.</p>
+    <div class="research-tasks" id="resolveTasks"></div>
+  </div>
+</div>
+
+<div class="progress-bar-wrap">
+  <div class="progress-track"><div class="progress-fill" id="globalProgress"></div></div>
+  <div class="progress-label" id="globalLabel">0 / 0 tasks</div>
+</div>
+
+<main class="timeline-wrapper" id="timeline"></main>
+
+<div class="glossary-wrap glossary-locked" id="glossaryWrap">
+  <button class="glossary-toggle" onclick="toggleGlossary()">
+    <span class="glossary-toggle-eyebrow">Reference</span>
+    <span class="glossary-toggle-label">Post-Production Glossary</span>
+    <svg class="glossary-chevron" viewBox="0 0 16 16" fill="none">
+      <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="glossary-body" id="glossaryBody">
+    <div style="padding:0 0 0 0">
+      <div class="glossary-search-wrap" style="margin-top:24px">
+        <span class="glossary-search-icon">&#x2315;</span>
+        <input class="glossary-search-input" id="glossarySearch" type="text" placeholder="Search post-production terms…" autocomplete="off">
+        <div class="glossary-search-results" id="glossarySearchResults"></div>
+      </div>
+      <p class="glossary-intro">An A–Z reference of post-production terminology covering editing, colour grading, sound design, and delivery. Click any term or definition to edit it when unlocked.</p>
+      <div id="glossaryContent"></div>
+    </div>
+  </div>
+</div>
+
+<div class="filmstrip footer">
+  <div class="filmstrip-inner">
+    <span class="filmstrip-label">CUT · GRADE · MIX · EXPORT · CUT · GRADE · MIX · EXPORT · CUT · GRADE · MIX · EXPORT · CUT · GRADE · MIX · EXPORT · </span>
+    <span class="filmstrip-label">CUT · GRADE · MIX · EXPORT · CUT · GRADE · MIX · EXPORT · CUT · GRADE · MIX · EXPORT · CUT · GRADE · MIX · EXPORT · </span>
+  </div>
+</div>
+
+<script>
+const GLOSSARY_TERMS = [
+  { term: "ADR (Automated Dialogue Replacement)", def: "Re-recording dialogue in a studio in post. The actor watches the original take and matches their performance to picture. Used when production sound is unusable due to noise, technical failure, or a performance issue." },
+  { term: "Alpha Channel", def: "A channel in an image or video file that stores transparency information. Used for overlays, titles, and graphics composited over footage." },
+  { term: "Ambience / Room Tone", def: "A recording of the background sound of a location made during the shoot with all crew silent. Used by the sound editor to fill gaps between dialogue edits and smooth audio cuts. Ideally at least 60 seconds from every location." },
+  { term: "Assembly Cut", def: "The first rough pass of the edit: all selected takes arranged in script order at maximum usable length. Not trimmed for pace or rhythm. Its purpose is to see everything that exists and establish a working structure." },
+  { term: "Atmos (Atmosphere)", def: "Ambient sound recordings used to build the sonic environment of a scene. Distinct from music and sound effects: atmos is the continuous sonic texture of a location." },
+  { term: "Auto Sync Audio", def: "DaVinci Resolve's function that synchronises external audio recordings to camera audio by matching waveforms. Found in the Media page by selecting both footage and audio bins, right-clicking, and choosing Auto Sync Audio > Waveform." },
+  { term: "Bin", def: "A folder within the Media Pool in DaVinci Resolve used to organise clips. A logical, intuitive bin structure organised by scene, character, or type significantly speeds up the editing process." },
+  { term: "Blackmagic RAW (BRAW)", def: "A camera-native RAW recording format from Blackmagic Design. Combines flexibility with manageable file sizes. Decoded natively in DaVinci Resolve. Retains maximum grading information." },
+  { term: "Checksum", def: "A mathematical fingerprint calculated from a file's data. Comparing checksums of the original and the copy confirms that every byte was transferred without corruption. A verified offload is not complete without a matching checksum." },
+  { term: "Colour Space", def: "The range of colours that can be represented in a recording or display. Camera colour spaces (Blackmagic Wide Gamut, ARRI Wide Gamut) are wider than display colour spaces (Rec.709, DCI-P3). Correctly configuring colour space in Resolve is essential before any grading begins." },
+  { term: "Colour Wheels", def: "A grading control in DaVinci Resolve for adjusting Lift (shadows), Gamma (midtones), and Gain (highlights) independently by colour channel. The primary tool for primary colour correction." },
+  { term: "Compound Clip", def: "A group of clips nested into a single clip in DaVinci Resolve. Useful for treating a complex sequence as a single unit for grading or effects work." },
+  { term: "Conforming", def: "The process of relinking a timeline that was cut on proxies back to the original, full-resolution camera files for final grade and export. Resolve does this via the Relink Clips function in the Media Pool." },
+  { term: "Continuity Cut", def: "An edit that maintains the illusion of continuous space and time. The most common mode of narrative editing: action flows seamlessly from one shot to the next without perceptible jumps." },
+  { term: "Cut on Action", def: "An edit made during a physical movement creating a seamless transition between angles. Relies on the action being performed consistently across takes." },
+  { term: "DaVinci Resolve", def: "The primary NLE and colour grading application used throughout this pipeline. Produced by Blackmagic Design. Available in a fully featured free version. All editing, grading, and export work described in this guide is performed in Resolve." },
+  { term: "DCI-P3", def: "The colour space standard for digital cinema projection. Wider than Rec.709 but narrower than most camera colour spaces. Standard for theatrical delivery." },
+  { term: "De-Esser", def: "An audio plugin that reduces sibilance: the harshness on 's' and 'sh' sounds in dialogue. Applied selectively to individual voice tracks in the sound mix." },
+  { term: "Deliver Page", def: "The export module of DaVinci Resolve. Offers render presets for various delivery formats. The location for all final exports." },
+  { term: "DNxHR SQ", def: "An Avid codec recommended for proxy generation in DaVinci Resolve. A high-quality intermediate format well-suited to editing performance. Used in proxy settings at 1/4 or 1/8 resolution." },
+  { term: "Dynamic Range", def: "The range of light levels a camera can capture simultaneously, from deepest shadow to brightest highlight. Log and RAW formats maximise dynamic range, providing the most headroom for colour grading." },
+  { term: "EQ (Equalisation)", def: "A sound processing tool that adjusts the balance of frequency components in an audio signal. Used in dialogue editing to remove unwanted frequencies and improve clarity, and in the mix to balance sound elements." },
+  { term: "Export Naming Convention", def: "The agreed format for naming final deliverable files. The standard convention: [ProjectName]_SDR_[Resolution]_DDMMYY, for example: Pig_SDR_1920x1080_010126. Consistent naming prevents confusion across versions." },
+  { term: "Fine Cut", def: "The editing stage following the rough cut. Trimmed to frame precision: every cut point is chosen deliberately for pace, rhythm, and emotional effect. The fine cut ends at Picture Lock." },
+  { term: "Foley", def: "The recording of everyday sound effects in a studio to replace or supplement what was captured on set. Footsteps, clothing rustle, door handles, chair scrapes. A key component of the sound design stage." },
+  { term: "Fusion", def: "DaVinci Resolve's built-in node-based compositing and visual effects environment. Accessible from the Fusion page. Used for titles, graphics, and any visual effects work." },
+  { term: "Gain Staging", def: "Setting audio levels correctly at every point in the signal chain. In Resolve's Fairlight page, dialogue should peak around -12 to -18 dBFS with enough headroom for louder moments. Correct gain staging prevents clipping and preserves dynamic range." },
+  { term: "Gallery (DaVinci Resolve)", def: "The archive within DaVinci Resolve where colour grades are saved as stills and Power Grades. Used to store looks, reference grades, and apply grades between clips or projects." },
+  { term: "Gamma Curve", def: "The relationship between the light captured by the sensor and the brightness values recorded. Log gamma curves compress highlights and shadows to preserve more information for grading. Must be correctly identified in Resolve's colour management settings before grading begins." },
+  { term: "H.264 / H.265", def: "Compressed video codecs widely used for web delivery and review. Not suitable for editing or grading originals. Standard for delivery files, review links, and preview exports." },
+  { term: "Handles", def: "Extra frames at the start and end of a clip beyond the in and out points. Providing handles on a delivery gives the colourist or sound editor flexibility to adjust edit points without running out of material." },
+  { term: "In and Out Points", def: "Markers set on a clip in the Media Pool (hit I and O while scrubbing) to define the usable portion. Setting these during the Bag and Tag stage, beginning after the clap, ending on 'Cut!': this is one of the most valuable things an editor can do before the assembly begins." },
+  { term: "Jump Cut", def: "A cut between two shots of the same subject from very similar angles, creating a jarring discontinuity. Can be used deliberately for stylistic effect or occurs unintentionally when coverage is insufficient." },
+  { term: "Keyframe", def: "A reference point in a timeline at which a specific value is set. Animations are created by setting keyframes at different values at different points in time, with Resolve interpolating between them." },
+  { term: "Lift / Gamma / Gain", def: "The three tonal regions of an image manipulated in primary colour correction. Lift controls shadows, Gamma controls midtones, Gain controls highlights." },
+  { term: "Log Footage", def: "Video recorded in a logarithmic gamma curve that preserves more shadow and highlight detail than standard recording. Appears flat and desaturated without a LUT or grade applied. All grading work begins from log." },
+  { term: "LUT (Look-Up Table)", def: "A mathematical transformation applied to an image that converts one set of colour values to another. Technical LUTs convert log footage to a viewable colour space; creative show LUTs represent the intended look of the film. Applied in DaVinci Resolve's colour management settings or as a node in the grade." },
+  { term: "Media Pool", def: "The asset management area of DaVinci Resolve's Cut and Edit pages. Where all imported footage, audio, and graphics live. Organising the Media Pool into clear, intuitive bins before editing begins directly affects editing efficiency." },
+  { term: "Metadata", def: "Information embedded in or associated with a media file: scene number, shot number, take number, timecode, camera settings, date. Entering accurate metadata during the Bag and Tag stage allows the editor to search, filter, and sort clips." },
+  { term: "Mix (Sound Mix)", def: "The process of balancing all audio elements: dialogue, music, ambience, sound effects , into a coherent whole. Performed in DaVinci Resolve's Fairlight page." },
+  { term: "Node (DaVinci Resolve)", def: "The basic unit of colour correction in DaVinci Resolve's Colour page. Nodes can be chained and structured in complex trees, each performing a discrete colour operation. Non-destructive: the original footage is never modified." },
+  { term: "Noise Reduction", def: "A processing tool used to reduce grain, digital noise, or audio background noise. In Resolve, temporal and spatial noise reduction are applied as effects on the Colour page. In Fairlight, audio noise reduction tools can remove hiss, hum, and background ambience." },
+  { term: "Offline Edit", def: "An edit performed on proxy or lower-quality files for performance reasons. The final grade and export use the full-resolution originals, relinked via conforming." },
+  { term: "Picture Lock", def: "The point at which the fundamental edit is fixed: no further changes to cuts, structure, or content. Picture Lock is the prerequisite for colour grading and sound design to begin in earnest. Changes after Picture Lock are extremely disruptive and should be avoided." },
+  { term: "Power Grade", def: "A complete grade saved in DaVinci Resolve's Gallery including all nodes and their settings. Can be applied to other clips or shared with other colourists or projects." },
+  { term: "Primary Colour Correction", def: "Global adjustments applied to the whole image: correcting exposure, white balance, and contrast. The first step of any grade. Performed using the Lift/Gamma/Gain wheels or the Primaries Bars in DaVinci Resolve." },
+  { term: "ProRes", def: "Apple's professional codec family. ProRes 422 HQ is a common delivery and intermediate format. ProRes 4444 supports alpha channels. A standard export codec for deliverables." },
+  { term: "Proxy", def: "A lower-resolution, smaller-file version of camera original footage, used to improve editing performance. Generated in DaVinci Resolve and linked to the originals. The edit is performed on proxies; the final grade and export use the originals." },
+  { term: "Rec.709", def: "The standard colour space for high-definition television and most online delivery. The default viewing colour space for most monitors. SDR deliverables are typically output in Rec.709." },
+  { term: "Render", def: "The process of processing and outputting a video file from DaVinci Resolve. Initiated from the Deliver page. Render time depends on codec, resolution, effects complexity, and hardware." },
+  { term: "Revision", def: "A new version of an edit or grade produced in response to feedback. Each revision should be exported to the Playouts folder with an incremented version number, and the corresponding timeline duplicated and renamed before changes are made." },
+  { term: "Rough Cut", def: "The edit stage following the assembly. Each clip is trimmed to its maximum usable length: after action, before 'Cut!'. No further trimming for pace yet. A working structure from which the first cut begins." },
+  { term: "SDR (Standard Dynamic Range)", def: "A standard dynamic range for display, as opposed to HDR (High Dynamic Range). Most short film deliverables are SDR, typically in Rec.709 colour space. Named explicitly in export file names: [ProjectName]_SDR_[Resolution]_DDMMYY." },
+  { term: "Secondary Colour Correction", def: "Selective adjustments targeting specific areas, objects, or colour ranges within the image. Performed using qualifiers, masks, and Power Windows in DaVinci Resolve. Applied after primary correction." },
+  { term: "Serial Node", def: "The default node structure in DaVinci Resolve's Colour page: nodes connected in sequence, each affecting the output of the previous. The most common structure for a straightforward grade." },
+  { term: "Sound Design", def: "The creative and technical process of constructing the entire sonic world of a film in post-production: editing dialogue, recording or sourcing Foley and effects, composing or licensing music, and shaping everything in the mix." },
+  { term: "Sweetening", def: "The final stage of audio post-production: fine-tuning the mix, adding subtle polish, and ensuring all audio elements work together cohesively." },
+  { term: "Sync (Audio-Video Sync)", def: "The alignment of audio recordings with their corresponding picture. Achieved in DaVinci Resolve using Auto Sync Audio (waveform matching) or manually via the clapperboard's visual and audio spike." },
+  { term: "Timeline", def: "The primary editing environment in DaVinci Resolve, where clips are arranged in sequence and edited. Each stage of the edit (assembly, rough cut, first cut, fine cut, final cut) should exist as its own separately named timeline, created by duplicating the previous stage." },
+  { term: "Timecode", def: "A continuous time reference (hours:minutes:seconds:frames) embedded in camera and audio recordings. Used to synchronise picture and sound, identify specific frames, and coordinate between editing and grading." },
+  { term: "Vectorscope", def: "A monitoring tool in DaVinci Resolve that displays the chrominance (colour) values of the image as a circular plot. Used to assess colour saturation and hue, check for illegal colours, and ensure consistency across shots." },
+  { term: "Waveform Monitor", def: "A monitoring tool in DaVinci Resolve that displays the luminance (brightness) distribution of the image. Used to set correct exposure and ensure blacks and whites are within legal broadcast levels." },
+  { term: "Working Folders", def: "The four folder links configured in DaVinci Resolve's Project Settings under Master Settings > Working Folders, pointing to the Proxies, Cache, Gallery, and Captures directories on disk. Linking these to the correct locations in the asset management folder structure keeps all project media organised." },
+];
+
+const RESEARCH_TASKS = [
+  {
+    id:'tr1', icon:'🎞️', name:'Research: Editing',
+    desc:'Build a contextual understanding of editing as a craft: its history, its tools, and the decisions an editor makes, before you begin cutting.',
+    owner:'Editor',
+    guidance:`<p>The best editors are not just technically skilled; they understand the history and language of the craft they are working within. Research before you cut helps you make intentional decisions rather than default ones.</p>
+      <p style="margin-top:10px"><strong>Areas to explore:</strong></p>
+      <ul>
+        <li><strong>History of editing:</strong> trace how editing developed from the Lumière Brothers through D.W. Griffith (cross-cutting, close-up), Soviet Montage (Eisenstein, Kuleshov), the French New Wave (jump cuts, discontinuity), New Hollywood (Walter Murch, Ralph Rosenblum), and digital non-linear editing. Ask: what problems was each development solving?</li>
+        <li><strong>The role of the editor:</strong> editors are storytellers, not technicians. Research the Editor's Cut: the distinction between the editor's vision and the director's, and the editor's relationship to the writer, director, and audience. Read or watch interviews with editors like Walter Murch, Thelma Schoonmaker, and Anne V. Coates.</li>
+        <li><strong>Editing techniques:</strong> understand the rules before you break them. Study continuity editing (the 180° rule, match-on-action, eyeline matches), montage, parallel editing, L-cuts and J-cuts, and the purpose of each. Then study films that deliberately violate them and ask why.</li>
+        <li><strong>What the editor controls:</strong> selection (which take, which angle), timing (duration of each cut), rhythm (relationship between cuts and sound), pacing (overall energy over time), and spatial/temporal relationship between shots. Consider: what is the editor doing that the audience never consciously notices?</li>
+        <li><strong>Performance editing:</strong> how does cutting within a scene affect the perceived quality of a performance? Research how editors protect, enhance, or redirect performances through selection and timing. Compare long takes that rely on a single unbroken performance against coverage-heavy scenes that are constructed in the edit.</li>
+        <li><strong>Genre and editing conventions:</strong> different genres use editing very differently. Study how action films construct spatial clarity (or deliberate chaos) through cutting; how horror uses timing and withheld information; how comedy relies on precise beat placement; how documentary editing constructs argument and emotional arc. What conventions does your film's genre carry, and which do you want to use?</li>
+        <li><strong>Walter Murch's Rule of Six:</strong> research Murch's hierarchy of what makes a good cut: emotion, story, rhythm, eye-trace, two-dimensional plane, three-dimensional space. The first is the most important, the last the least. This is a useful framework for making cutting decisions that go beyond technical correctness.</li>
+        <li><strong>The relationship between editing and music:</strong> research how music affects cutting decisions: how editors cut differently against rhythm, against melody, against silence. Study sequences where editing and music are tightly choreographed versus sequences where music is laid in after the cut is established.</li>
+      </ul>
+      <p style="margin-top:10px">Build a reference list of films that use editing in a way that connects to your project. Watch key sequences closely and note specifically what the editor chose and why it works.</p>`
+  },
+  {
+    id:'tr2', icon:'🎨', name:'Research: Colour Grading',
+    desc:'Develop a visual language for the grade, grounded in colour theory, compositional principles, and an understanding of what the major grading tools actually do.',
+    owner:'Colourist / Editor',
+    guidance:`<p>A grade without a conceptual foundation is just adjusting sliders. Research gives you the vocabulary and the reference points to make intentional visual choices that serve the story.</p>
+      <p style="margin-top:10px"><strong>Areas to explore:</strong></p>
+      <ul>
+        <li><strong>Colour theory:</strong> study how colour relationships create emotional and visual effects. Key frameworks: complementary palettes (opposites on the colour wheel: high contrast, energetic), analogous palettes (adjacent colours: harmonious, coherent), monochromatic palettes (single hue in varying tones: unified, stylised), and triadic schemes. Consider how each might serve your film's tone.</li>
+        <li><strong>The 60-30-10 rule:</strong> a principle borrowed from interior design: 60% of the frame in a dominant colour, 30% in a secondary, 10% in an accent. Study how cinematographers and colourists apply (or consciously subvert) this to create visually balanced images.</li>
+        <li><strong>Contrast ratios and tonal range:</strong> high contrast (stark blacks and whites) reads as dramatic, noir, or harsh. Low contrast (lifted blacks, reduced highlights) reads as soft, dreamlike, or desaturated. Research how different genres conventionally use contrast, and what your choice communicates to the audience.</li>
+        <li><strong>Colour and emotion in film history:</strong> research how colour has been used expressively across film history. Study the palette choices in films like Amelie, Parasite, Mad Max: Fury Road, Moonlight, or any film whose visual identity is distinctive. What is the logic behind those choices?</li>
+        <li><strong>Skin tone and the grade's anchor point:</strong> skin tones are the most perceptually sensitive element in a human-centred image. Research how colourists use skin tones as the anchor point for primary correction, protecting them while shifting everything else around them.</li>
+        <li><strong>Reading scopes:</strong> study how to interpret the Waveform Monitor (luminance distribution) and the Vectorscope (chrominance/colour values). Research how over-exposure, under-exposure, and colour casts appear on scopes, and how to correct for them objectively rather than relying only on your monitor.</li>
+        <li><strong>Major grading tools:</strong> research the function and creative application of colour wheels (Lift/Gamma/Gain), curves (more precise tonal control), Qualifiers (isolating colour ranges), Power Windows (spatial masking), and LUTs (look-up tables for applying colour transforms).</li>
+        <li><strong>The relationship between the grade and the cinematography:</strong> a grade cannot fix a bad exposure, and a heavy-handed grade can undermine a beautifully lit shot. Research how colourists collaborate with cinematographers: how the grade should honour the lighting decisions made on set rather than override them.</li>
+        <li><strong>Colour grading for narrative purpose:</strong> research examples of films that use colour to carry narrative or emotional information: shifts in palette between timelines, between characters' perspectives, between psychological states. Study how colour functions as part of the film's language rather than simply as a finish.</li>
+      </ul>
+      <p style="margin-top:10px">Build a visual mood board of film stills, photography, or paintings whose colour language relates to your project. Make your references specific enough to be useful, not just a vibe, but a clear visual argument for the choices you want to make.</p>`
+  },
+  {
+    id:'tr3', icon:'🔊', name:'Research: Sound Editing & Design',
+    desc:'Develop a conceptual understanding of how sound shapes meaning in film, technically and creatively, before approaching the Fairlight page.',
+    owner:'Sound Designer / Editor',
+    guidance:`<p>Sound is half the image. Research how the best sound designers and editors use sound not just to reinforce the picture but to contradict it, undercut it, or create meaning the picture alone cannot achieve.</p>
+      <p style="margin-top:10px"><strong>Areas to explore:</strong></p>
+      <ul>
+        <li><strong>Sound editing techniques:</strong> study how sound is cut in relationship to picture. Research the L-cut and J-cut as sound-editing tools (audio entering before or after its visual source), the use of sound bridges across edits, and the relationship between sound rhythm and visual rhythm. Study how silence is used as a dramatic tool.</li>
+        <li><strong>Sound design techniques:</strong> study how sound worlds are built from multiple layers. Research how Walter Murch and Ben Burtt approach sound from a conceptual perspective: sound as metaphor, sound as character, sound as world-building. Research the theory of Acousmatic sound (sound whose source is not visible on screen).</li>
+        <li><strong>Creative effect of sound in film:</strong> study specific films for their sound design choices. How does the sound world change when a character enters a different emotional state? How is sound used in horror, in meditative drama, in action? Research examples of films that use sound expressively rather than just literally.</li>
+        <li><strong>Diegetic vs non-diegetic sound:</strong> research the distinction between sound that exists within the world of the film (diegetic: a character's footsteps, a radio playing) and sound that exists only for the audience (non-diegetic: a score, a voiceover). Study how filmmakers deliberately blur this boundary and what effect that creates.</li>
+        <li><strong>The soundtrack as layers:</strong> professional sound for film is typically understood as three layers: dialogue, sound effects, and music. Research how these layers interact: when they support each other, when they compete, and when removing one makes the others more powerful.</li>
+        <li><strong>Creative application of Foley:</strong> Foley is not just recreating sounds not captured on set; it is a creative tool. Research how Foley artists approach performance (they perform sound in real time, like actors), and how Foley can stylise or comment on the image rather than simply support it.</li>
+        <li><strong>Sound and space:</strong> research how sound communicates environment: how reverb, room tone, and ambience define the size, texture, and character of a space. Study how sound designers differentiate interior from exterior, crowded from empty, safe from threatening, using acoustic cues rather than visual ones.</li>
+        <li><strong>Music in film:</strong> research the history and function of film scoring: leitmotif, underscore, source music, and the use of pre-existing recordings. Study how directors like Kubrick, PTA, or Nolan use music as an editorial tool. Consider also when the absence of music is the more powerful choice.</li>
+        <li><strong>Main technical tools:</strong> understand what the following do and when to use them: EQ (shaping frequency content), Compressor (controlling dynamic range), Noise Reduction (removing background hiss or hum), Reverb (adding sense of space), De-Esser (controlling harsh sibilance in dialogue), and Limiter (preventing clipping at the output stage).</li>
+      </ul>
+      <p style="margin-top:10px">Listen analytically to the sound design of films that relate to yours. Separate the layers: what is dialogue doing, what is ambience doing, what is music doing? Then ask: what would change if any one of those layers were removed?</p>`
+  },
+];
+
+const RESOLVE_TASKS = [
+  {
+    id:'rs1', icon:'🖥️', name:'General User Interface',
+    desc:'How Resolve is organised: the page tabs, the common panels, and the settings worth knowing before you start.',
+    owner:'Reference',
+    guidance:`<p>Resolve is organised into pages, each a dedicated workspace for one stage of post-production. They all work on the same project, so anything you do on one page carries across to the others.</p>
+      <ul>
+        <li><strong>Page tabs:</strong> along the bottom of the window. In order: Media, Cut, Edit, Fusion, Color, Fairlight and Deliver, plus the Photo page in Resolve 21.</li>
+        <li><strong>Project Manager:</strong> the first window you see. It lists the projects in your current library. Double-click to open one, and right-click to import or export a project file (.drp), which is why 03_Workspace/01_Projects exists in your folder structure.</li>
+        <li><strong>Project Settings:</strong> the cog icon at the bottom right. Set timeline resolution, frame rate, colour management, working folders and proxy options here before you start editing. The timeline frame rate becomes hard to change once you have started editing, so get it right first.</li>
+        <li><strong>Preferences:</strong> found in the DaVinci Resolve menu. Turn on Live Save and Project Backups so your work is saved automatically, and keep backups in your 10_Backups folder.</li>
+        <li><strong>Workspace menu:</strong> show or hide panels (Media Pool, Effects Library, Inspector, Mixer and so on), change viewer modes, and use Reset UI Layout if the layout gets into a mess.</li>
+        <li><strong>Common panels:</strong> the Media Pool (your clips and bins), the Viewers (source and timeline), the Inspector (properties of the selected clip), the Effects Library (transitions, titles and effects) and the Timeline itself. Their positions shift between pages but their jobs stay the same.</li>
+        <li><strong>Saving:</strong> Resolve stores projects in a database rather than as simple files. Save with Cmd/Ctrl+S, and export a project file (.drp) to keep an independent copy.</li>
+      </ul>`
+  },
+  {
+    id:'rs2', icon:'📁', name:'Media Page',
+    desc:'Where footage comes into Resolve and gets organised, tagged and prepared before any editing begins.',
+    owner:'Reference',
+    guidance:`<p>The Media page is where the Bag and Tag work from Phase 2 happens. Everything you do here makes the edit faster and safer later.</p>
+      <ul>
+        <li><strong>Layout:</strong> Media Storage (browse your drives), the Media Pool (the bins and clips in your project), a Viewer for previewing, and a Metadata panel.</li>
+        <li><strong>Importing:</strong> browse to your footage in Media Storage, then drag clips into the Media Pool or right-click and choose Add Into Media Pool. Import from your 02_Assets folders, not from the camera card.</li>
+        <li><strong>Bins:</strong> right-click in the Media Pool to create a new bin, and organise by scene rather than by card. Smart Bins group clips automatically using metadata rules, and Power Bins are shared across every project.</li>
+        <li><strong>Metadata:</strong> add scene, shot, take, comments, keywords and clip colours in the Metadata panel. Mark In and Out points (I and O) in the Viewer so the editor can find the best material quickly.</li>
+        <li><strong>Auto Sync Audio:</strong> select the video clips and their matching audio, right-click, and choose Auto Sync Audio > Based on Waveform to pair separately recorded sound with picture.</li>
+        <li><strong>Proxies:</strong> set the proxy format in Project Settings, then right-click clips and choose Generate Proxy Media. Resolve plays the lightweight copies while you edit.</li>
+        <li><strong>Clone Tool:</strong> makes verified, checksum-checked copies of drives and folders. See Phase 1 for when to use it.</li>
+        <li><strong>Clip Attributes:</strong> right-click a clip and choose Clip Attributes to check or correct its frame rate, audio channels and timecode.</li>
+      </ul>`
+  },
+  {
+    id:'rs3', icon:'🖼️', name:'Photo Page',
+    desc:'New in DaVinci Resolve 21: import, organise and grade still images without leaving Resolve.',
+    owner:'Reference',
+    guidance:`<p>The Photo page arrived with Resolve 21, so you will only see it on that version or later. It brings Resolve's node-based colour tools to still images.</p>
+      <ul>
+        <li><strong>Importing and organising:</strong> bring in photographs, including RAW files, and group them into Albums. An Album is the Photo page's version of a timeline: a collection of stills you can sort, label and grade together.</li>
+        <li><strong>Grading stills:</strong> the same toolset as the Color page is available, including primary correction, curves, qualifiers, Power Windows, scopes and nodes.</li>
+        <li><strong>Looks and effects:</strong> apply LUTs, Resolve FX, OpenFX and Fusion effects directly to your images, and crop or reframe at the original resolution.</li>
+        <li><strong>Tethered shooting:</strong> Capture Live View lets you shoot straight into Resolve from supported Canon and Sony cameras.</li>
+        <li><strong>Albums on the Color page:</strong> an Album can also be opened from the Color page viewer, in the same way as a timeline.</li>
+        <li><strong>Exporting:</strong> export stills from the Photo page, or send an Album to the Deliver page.</li>
+        <li><strong>Free or Studio:</strong> most Photo page features are in the free version. AI Magic Mask and Film Look Creator need the paid Studio version.</li>
+      </ul>
+      <p style="margin-top:10px">For a film project the Photo page is useful for grading production stills, posters, thumbnails and reference images so that they match the look of the film.</p>`
+  },
+  {
+    id:'rs4', icon:'✂️', name:'Cut Page',
+    desc:'A streamlined editing page built for speed, ideal for reviewing rushes and putting together the assembly cut.',
+    owner:'Reference',
+    guidance:`<p>The Cut page lets you review, select and place clips with very little clicking. It edits the same timeline as the Edit page, so you can move between the two at any time.</p>
+      <ul>
+        <li><strong>Dual timeline:</strong> the upper timeline always shows your whole edit, and the lower timeline shows a zoomed-in section around the playhead. You can navigate and trim at the same time without zooming in and out.</li>
+        <li><strong>Source Tape:</strong> plays every clip in a bin as one continuous strip, so you can scrub through all your footage quickly and mark the takes you want.</li>
+        <li><strong>Fast Review:</strong> lets you skim a clip at speed and then mark the sections you want to keep.</li>
+        <li><strong>Smart Insert, Append and Ripple Overwrite:</strong> the edit buttons beneath the Viewer. Smart Insert snaps to the nearest cut point, Append adds to the end of the timeline, and Ripple Overwrite replaces material and adjusts the timeline length to fit.</li>
+        <li><strong>Sync Bin:</strong> shows clips recorded at the same time (by timecode) as the clip in the timeline, which is useful for multi-camera shoots.</li>
+        <li><strong>Which page to use:</strong> the Cut page is quick and focused, while the Edit page offers more tracks and finer control. Many editors assemble on the Cut page and refine on the Edit page. Pick whichever suits you and stay consistent.</li>
+        <li><strong>Remember:</strong> duplicate your timeline before big changes so earlier versions stay safe (see Phase 3).</li>
+      </ul>`
+  },
+  {
+    id:'rs5', icon:'🎬', name:'Edit Page',
+    desc:'The full-featured, track-based timeline editor: the main workspace for taking a cut from rough to Picture Lock.',
+    owner:'Reference',
+    guidance:`<p>The Edit page is where most of the detailed editing happens, from the first cut through to Picture Lock.</p>
+      <ul>
+        <li><strong>Layout:</strong> the Media Pool and Effects Library, a Source Viewer and Timeline Viewer, the Inspector, and the Timeline along the bottom.</li>
+        <li><strong>Creating a timeline:</strong> select clips in the Media Pool, right-click and choose Create New Timeline Using Selected Clips, or use File > New Timeline. Name it using your versioning convention (for example Cut_01).</li>
+        <li><strong>Tracks:</strong> video tracks (V1, V2 and so on) and audio tracks (A1, A2 and so on). Right-click a track header to add or delete tracks, and use the padlock, eye and speaker icons to lock, hide or mute them.</li>
+        <li><strong>Placing clips:</strong> Insert (F9) pushes everything along, Overwrite (F10) replaces what is underneath, Replace (F11) swaps a clip while keeping its position, and Place on Top (F12) puts the clip on the next track up.</li>
+        <li><strong>Tools:</strong> Selection (A), Trim (T) for ripple and roll trims, and Blade (B) for cutting. Split a clip at the playhead with Cmd/Ctrl+\\.</li>
+        <li><strong>Trimming:</strong> click an edit point to select it, then drag to ripple trim. Use Dynamic Trim (W) to trim while the clip plays.</li>
+        <li><strong>Inspector:</strong> change position, zoom, rotation, crop, opacity and speed for the selected clip, and add keyframes with the diamond icon beside any value.</li>
+        <li><strong>Transitions and titles:</strong> find Video Transitions (such as Cross Dissolve), Titles and Generators in the Effects Library and drag them onto an edit point or track.</li>
+        <li><strong>Audio basics:</strong> drag the fade handles at the top corners of an audio clip to fade it in or out. Detailed audio work belongs on the Fairlight page.</li>
+        <li><strong>Versions and organisation:</strong> right-click the timeline in the Media Pool and choose Duplicate Timeline before major changes. Use markers (M) and clip colours to flag problems.</li>
+      </ul>`
+  },
+  {
+    id:'rs6', icon:'✨', name:'Fusion Page',
+    desc:'A node-based compositing and motion graphics environment inside Resolve, used for titles, clean-up and visual effects.',
+    owner:'Reference',
+    guidance:`<p>For most short films you will use Fusion for titles, clean-up fixes and visual effects rather than everyday editing.</p>
+      <ul>
+        <li><strong>Nodes:</strong> every operation is a node (a box), and nodes are joined by lines that pass the image along. A clip starts as a MediaIn node feeding a MediaOut node, and you add tools in between.</li>
+        <li><strong>Getting a clip into Fusion:</strong> place the clip on the timeline in the Edit page, select it, then switch to the Fusion page. The composition is stored with that clip. To work on several clips as one, right-click them on the timeline and choose New Fusion Clip.</li>
+        <li><strong>Layout:</strong> two Viewers, the Node editor, the Inspector for the selected node's settings, and Spline and Keyframes editors for animation.</li>
+        <li><strong>Common tools:</strong> Merge (places a foreground over a background), Text+ (titles), Transform, Masks (rectangle, ellipse, polygon), Color Correct, Blur, Glow and Trackers.</li>
+        <li><strong>Tracking:</strong> the Tracker and Planar Tracker follow movement so you can attach elements to a moving shot, such as replacing a screen or hiding a blemish.</li>
+        <li><strong>Animating:</strong> right-click a parameter and choose Animate to add keyframes.</li>
+        <li><strong>Studio:</strong> some advanced Fusion tools need the paid Studio version.</li>
+        <li><strong>Tip:</strong> Fusion has its own learning curve. Start with a simple title built from a Text+ node and a Merge node before moving on to heavier compositing, then return to the Edit page to see the result in your timeline.</li>
+      </ul>`
+  },
+  {
+    id:'rs7', icon:'🎨', name:'Colour Page',
+    desc:'Resolve\'s grading workspace, built around nodes, scopes, the colour tools and the Gallery. Labelled "Color" in the interface.',
+    owner:'Reference',
+    guidance:`<p>The Colour page is where Phase 4 happens. It brings together the colour tools covered in the Research section above.</p>
+      <ul>
+        <li><strong>Layout:</strong> a Viewer, the Gallery for saved stills, the Node editor, a thumbnail strip of your timeline clips, and a row of colour tools along the bottom.</li>
+        <li><strong>Nodes:</strong> each node holds a set of corrections, and the image passes through them in order. Add a serial node with Opt/Alt+S, a parallel node with Opt/Alt+P, and a layer node with Opt/Alt+L.</li>
+        <li><strong>Primaries:</strong> the colour wheels (Lift, Gamma, Gain and Offset) plus contrast, saturation and hue controls, used to balance exposure, contrast and white balance. Each wheel has a reset button.</li>
+        <li><strong>Curves:</strong> Custom Curves for precise tonal and colour control, plus Hue vs Hue, Hue vs Sat and Hue vs Lum curves for targeted adjustments.</li>
+        <li><strong>Qualifier and Power Windows:</strong> the Qualifier isolates a range of colours (such as skin tones or sky), and Power Windows isolate a shape in the frame. Use feathering to keep edges soft, and the Tracker to make them follow movement.</li>
+        <li><strong>Scopes:</strong> open them from the Scopes button or the Workspace menu. Use the Waveform and Parade for exposure and balance, and the Vectorscope for colour.</li>
+        <li><strong>Gallery and stills:</strong> right-click the Viewer to grab a still, which saves the grade as well as the frame. Middle-click a still to apply that grade to the selected clip.</li>
+        <li><strong>Versions:</strong> right-click a clip and choose Versions > Create New Version to try an alternative grade without losing the original.</li>
+        <li><strong>Groups:</strong> clips in a group share Pre-Clip and Post-Clip node graphs, and the Timeline graph affects every clip. These are the foundation of the node-based approach described in Phase 4.</li>
+        <li><strong>Colour management:</strong> configured in Project Settings, as described in Phase 4.</li>
+      </ul>`
+  },
+  {
+    id:'rs8', icon:'🎚️', name:'Fairlight Page',
+    desc:'Resolve\'s built-in audio workstation, used for editing, cleaning up and mixing sound once picture is locked.',
+    owner:'Reference',
+    guidance:`<p>The Fairlight page is where Phase 5 happens. It has everything you need to take dialogue, effects and music from raw tracks to a finished mix.</p>
+      <ul>
+        <li><strong>Layout:</strong> audio tracks and clips in the timeline, a Mixer with a fader for each track, level meters, and an Effects Library containing audio effects.</li>
+        <li><strong>Tracks and buses:</strong> tracks can be mono, stereo or multichannel. Route tracks to buses, such as one each for dialogue, music and effects, so you can adjust a whole group with one fader.</li>
+        <li><strong>Mixer:</strong> each channel strip has a fader, pan, mute and solo, an EQ, and dynamics (such as a compressor, expander and limiter). Open the EQ or Dynamics section of a channel strip to adjust it.</li>
+        <li><strong>Cleaning dialogue:</strong> use Noise Reduction, a De-Esser and a De-Hummer from the audio effects in the Effects Library to reduce background noise, harsh S sounds and electrical hum.</li>
+        <li><strong>Reverb:</strong> adds a sense of space, and can help dialogue recorded or replaced in a studio sit naturally in its location.</li>
+        <li><strong>Levels:</strong> keep dialogue peaking roughly between -12 and -18 dBFS so there is headroom for loud moments. Watch the meters and avoid clipping.</li>
+        <li><strong>Loudness:</strong> check the delivery requirements for where the film will be shown (festival, broadcast or online) and use Resolve's loudness metering to match them.</li>
+        <li><strong>ADR and Sound Library:</strong> Fairlight includes tools for recording ADR and a Sound Library for searching and using sound effects.</li>
+        <li><strong>Fades:</strong> drag the fade handles at the ends of a clip to smooth sounds in and out, and use crossfades between clips on the same track to hide edits.</li>
+      </ul>`
+  },
+  {
+    id:'rs9', icon:'📤', name:'Deliver Page',
+    desc:'Where finished timelines are rendered into files, using presets or custom settings and the Render Queue.',
+    owner:'Reference',
+    guidance:`<p>The Deliver page is where Phase 6 happens. It turns your timeline into the files you will share, screen or archive.</p>
+      <ul>
+        <li><strong>Layout:</strong> Render Settings, a timeline and Viewer for choosing what to render, and the Render Queue where jobs are lined up and monitored.</li>
+        <li><strong>Presets:</strong> start from a preset (such as H.264 Master, ProRes or YouTube) and adjust it, or build custom settings.</li>
+        <li><strong>Video settings:</strong> choose the format and codec, the resolution, the frame rate and the quality. Match the resolution and frame rate to your timeline unless you have a reason not to.</li>
+        <li><strong>Audio settings:</strong> make sure Export Audio is ticked, and choose the codec and sample rate your delivery needs. 48 kHz is standard for video.</li>
+        <li><strong>Render range:</strong> choose Entire Timeline or an In/Out Range. Single Clip renders the whole timeline as one file, while Individual Clips renders each clip separately.</li>
+        <li><strong>Location and file name:</strong> click Browse to choose where the file goes (your 08_Playouts folder) and name it using your export naming convention.</li>
+        <li><strong>Render Queue:</strong> click Add to Render Queue, then Render All. You can queue several exports, such as a master and a web version, and run them together.</li>
+        <li><strong>Advanced Settings:</strong> these include whether to use optimised media or the render cache. Check them so your final master is rendered the way you intend.</li>
+        <li><strong>Always check:</strong> watch the exported file from start to finish before you call it finished.</li>
+      </ul>`
+  },
+  {
+    id:'rs10', icon:'⌨️', name:'Common DaVinci Resolve Shortcuts',
+    desc:'The keyboard shortcuts that will speed up almost every stage of post-production.',
+    owner:'Reference',
+    guidance:`<p>Shortcuts are shown for Mac, with the Windows key in brackets where it differs. To see or change any shortcut, open Keyboard Customization from the DaVinci Resolve menu (Opt+Cmd+K, or Alt+Ctrl+K on Windows).</p>
+      <p style="margin-top:10px"><strong>General</strong></p>
+      <ul>
+        <li><strong>Cmd (Ctrl)+S:</strong> save the project</li>
+        <li><strong>Cmd (Ctrl)+Z:</strong> undo. Add Shift to redo.</li>
+        <li><strong>Cmd (Ctrl)+I:</strong> import media</li>
+      </ul>
+      <p style="margin-top:10px"><strong>Playback and navigation</strong></p>
+      <ul>
+        <li><strong>Space:</strong> play and pause</li>
+        <li><strong>J, K, L:</strong> play backwards, pause, and play forwards. Tap J or L repeatedly to play faster.</li>
+        <li><strong>Left and Right arrows:</strong> step one frame at a time</li>
+        <li><strong>Up and Down arrows:</strong> jump to the previous or next edit point</li>
+        <li><strong>Home and End:</strong> go to the start or end of the timeline</li>
+        <li><strong>Cmd (Ctrl)+F:</strong> full screen playback</li>
+        <li><strong>Shift+Z:</strong> zoom the timeline to fit</li>
+      </ul>
+      <p style="margin-top:10px"><strong>Marking and editing</strong></p>
+      <ul>
+        <li><strong>I and O:</strong> set In and Out points. Opt (Alt)+X clears them.</li>
+        <li><strong>M:</strong> add a marker</li>
+        <li><strong>F9, F10, F11, F12:</strong> Insert, Overwrite, Replace and Place on Top</li>
+        <li><strong>A, T, B, W:</strong> Selection, Trim, Blade and Dynamic Trim</li>
+        <li><strong>Cmd (Ctrl)+\\:</strong> split the clip at the playhead</li>
+        <li><strong>Delete:</strong> delete the selection. Shift+Delete deletes and closes the gap (ripple delete).</li>
+        <li><strong>N:</strong> turn snapping on or off</li>
+        <li><strong>Shift+Cmd (Ctrl)+L:</strong> turn linked selection on or off</li>
+      </ul>
+      <p style="margin-top:10px"><strong>Colour page</strong></p>
+      <ul>
+        <li><strong>Opt (Alt)+S:</strong> add a serial node</li>
+        <li><strong>Opt (Alt)+P:</strong> add a parallel node</li>
+        <li><strong>Opt (Alt)+L:</strong> add a layer node</li>
+      </ul>`
+  },
+];
+
+const PHASES = [
+  {
+    id:'p1', number:'PHASE 01', name:'Asset Management<br>Outside Resolve', timing:[0,12],
+    deliverable:'A clean, complete folder structure on disk with all footage, audio, and project files correctly placed before Resolve is opened.',
+    tasks:[
+      {
+        id:'t1', icon:'📁', name:'Create Master Folder Structure',
+        desc:'Build the full project folder hierarchy on your SSD before touching Resolve.',
+        owner:'Editor / DIT',
+        guidance:`<p>Every file created or generated during post-production needs a home before it is created. Setting up the folder structure first prevents files ending up in the wrong place.</p>
+          <p style="margin-top:10px">Inside the root <strong>[Project Name]</strong> folder, create the following 10 folders:</p>
+          <ul style="margin-top:10px">
+            <li><strong>01_Project Documents</strong>: script, treatment, continuity sheets, DIT reports</li>
+            <li><strong>02_Assets</strong>: all media assets:
+              <ul style="margin-top:6px">
+                <li>01_Footage</li>
+                <li>02_Audio</li>
+                <li>03_Stock</li>
+                <li>04_Music</li>
+                <li>05_SoundFX</li>
+                <li>06_Templates</li>
+              </ul>
+            </li>
+            <li><strong>03_Workspace</strong>: Resolve project files:
+              <ul style="margin-top:6px">
+                <li>01_Projects (.drp) → Archived</li>
+                <li>02_Timelines (.drt) → Archived</li>
+                <li>03_Bins (.drb)</li>
+              </ul>
+            </li>
+            <li><strong>04_Proxies</strong></li>
+            <li><strong>05_Graphics</strong></li>
+            <li><strong>06_Stills</strong></li>
+            <li><strong>07_Previews</strong></li>
+            <li><strong>08_Playouts</strong>: final exported deliverables live here</li>
+            <li><strong>09_Cache</strong></li>
+            <li><strong>10_Backups</strong></li>
+          </ul>
+          <p style="margin-top:12px">Folders 04–10 are at the top level of the project folder (not nested inside 03_Workspace). When you link Working Folders in Resolve's Project Settings, you will point to 04_Proxies, 09_Cache, 06_Stills, and 03_Workspace/01_Projects respectively. Set this up before opening Resolve.</p>`
+      },
+      {
+        id:'t2', icon:'🔄', name:'Offload and Verify All Media',
+        desc:'Copy all camera cards and audio recordings to the folder structure, verify every file via checksum, and use the Clone Tool for any initial drive duplication.',
+        owner:'Editor / DIT',
+        guidance:`<p>If the offload is not verified, you do not know you have the footage. A file that looks fine can be silently corrupted. Always verify before clearing any card.</p>
+          <ul>
+            <li>Copy all camera originals into <strong>02_Assets/01_Footage</strong></li>
+            <li>Copy all audio recordings into <strong>02_Assets/02_Audio</strong></li>
+            <li>Use a verified copy tool that performs automatic <strong>checksum</strong> comparison. Hedge is a common choice. Do not use Finder or File Explorer for professional offloads; they do not verify.</li>
+            <li>Cross-reference against camera reports and sound reports to confirm every reel and audio file is present</li>
+            <li>Do not clear or format any media card until at least two verified copies exist in separate physical locations</li>
+          </ul>
+          <p style="margin-top:10px"><strong>Using DaVinci Resolve's Clone Tool for your initial copy:</strong> if you are offloading directly into Resolve's workflow rather than a third-party tool, use the Clone Tool (Media page → Clone Tool → Add Job). Set the source to the camera card and the destination to your 02_Assets/01_Footage folder. Resolve will copy and checksum-verify automatically. See the next task for full Clone Tool instructions.</p>
+          <p style="margin-top:10px">The 3-2-1 rule applies: three copies, two types of media, one off-site or off-drive.</p>`
+      },
+      {
+        id:'t3', icon:'🚀', name:'Safe Drive Transfer via Clone Tool',
+        desc:"When moving the full project from one drive to another: handing off to another editor, or duplicating as part of a 3-2-1 backup. Use DaVinci Resolve's Clone Tool.",
+        owner:'Editor / DIT',
+        guidance:`<p>The Clone Tool performs a verified, checksum-confirmed copy. Unlike dragging folders in Finder or File Explorer, it proves that the destination is an exact, uncorrupted duplicate of the source. Use this whenever:</p>
+          <ul>
+            <li>Handing footage from a DIT to the editor across different drives</li>
+            <li>Passing the full project to another crew member (e.g. colourist, sound designer)</li>
+            <li>Creating an off-site backup copy as part of the 3-2-1 rule</li>
+            <li>Moving a project from one workstation or edit suite to another</li>
+          </ul>
+          <p style="margin-top:10px"><strong>How to run the Clone Tool:</strong></p>
+          <ul>
+            <li>Open Resolve → Media Page → Clone Tool → Add Job</li>
+            <li>Drag the <strong>[Project Name]</strong> root folder into the Source field</li>
+            <li>Drag the destination drive into the Destination field</li>
+            <li>Run the clone and confirm checksums match before disconnecting the source drive</li>
+          </ul>
+          <p style="margin-top:10px">Do not remove or disconnect the source until Resolve confirms checksums match. A failed or interrupted clone is not a copy.</p>`
+      },
+    ]
+  },
+  {
+    id:'p2', number:'PHASE 02', name:'Asset Management<br>Inside Resolve', timing:[10,28],
+    deliverable:'A configured Resolve project with linked working folders, correct project settings, imported and synced media, and a logical bin structure, ready to cut.',
+    tasks:[
+      {
+        id:'t4', icon:'⚙️', name:'Create New Project & Configure Settings',
+        desc:'Open Resolve, create a new project, set the media location to 03_Workspace, and configure frame rate, resolution, and proxy settings.',
+        owner:'Editor',
+        guidance:`<p>Getting the project settings right before importing media avoids problems that are difficult to correct later.</p>
+          <ul>
+            <li>Create a New Project and set the media location to your 03_Workspace folder on the SSD</li>
+            <li>Go to <strong>File > Project Settings</strong></li>
+            <li>Under Master Settings, set <strong>Frame Rate</strong> and <strong>Resolution</strong> to match your camera originals</li>
+            <li>Set <strong>Proxy settings</strong> to DNxHR SQ at 1/4 or 1/8 resolution</li>
+            <li>Scroll to <strong>Working Folders</strong> and link each folder to the corresponding location in 03_Workspace: Proxies → 04_Proxies, Cache → 09_Cache, Gallery Stills → 06_Stills</li>
+          </ul>`
+      },
+      {
+        id:'t5', icon:'📥', name:'Import Media',
+        desc:'Import all footage, audio, music, stock, and graphics into the Resolve Media Pool.',
+        owner:'Editor',
+        guidance:`<p>Import by pointing Resolve at your 02_Assets folder. Resolve imports the files without moving them from their location on disk.</p>
+          <ul>
+            <li>Use Media Storage in the Media page to navigate to 02_Assets and import each subfolder</li>
+            <li>Import all footage, audio, music, stock, sound effects, and any graphics or template files</li>
+          </ul>
+          <p>Do not delete any clips from the Media Pool at any stage. If a clip is unusable, move it to an 'Unusable' bin (deleting it removes it from all timelines.</p>`
+      },
+      {
+        id:'t6', icon:'🗂️', name:'Build Intuitive Bin Structure',
+        desc:'Reorganise the Media Pool into a bin structure based on scenes or characters rather than card numbers or shoot days.',
+        owner:'Editor',
+        guidance:`<p>The bin structure is the editor's map of the footage. A bin structure based on shoot day or card number is only legible to whoever organised the cards on set.</p>
+          <ul>
+            <li>Create bins by scene, by character, or by story beat, whichever is most intuitive for this project</li>
+            <li>Avoid bins named "Card 1", "Day 2", or similar: these tell you when something was shot but not what it contains</li>
+            <li>Consider a dedicated bin for B-roll, cutaways, and inserts</li>
+            <li>Separate bins for Music, SFX, and Graphics</li>
+          </ul>`
+      },
+      {
+        id:'t7', icon:'🏷️', name:'Bag and Tag: Metadata Entry',
+        desc:'Watch all footage, add scene/shot/take metadata, set in and out points, mark good takes, and add written notes to each clip.',
+        owner:'Editor',
+        guidance:`<p>Bag and Tag is one of the most important (and most skipped) steps in post-production. Editors who do it properly almost always cut faster than those who don't, because they actually know their footage.</p>
+          <ul>
+            <li>Watch every clip from the beginning. You are familiarising yourself with what you have before you start cutting.</li>
+            <li>Add <strong>Scene #, Shot #, and Take #</strong> metadata based on the clapperboard. If the clapperboard is incorrect, decide on a consistent alternative and maintain it.</li>
+            <li>Set <strong>In Points</strong> immediately after the clapperboard clap and <strong>Out Points</strong> on or just before "Cut!"; use I and O on the keyboard</li>
+            <li>Check the <strong>Good Take</strong> tick box for director-selected takes, technically clean takes, or your own preference</li>
+            <li>Add <strong>written notes</strong>: "Out of focus", "Performance A", "Weaker delivery", "Continuity issue": anything that will save time in the edit</li>
+            <li>Cross-reference against continuity sheets and sound reports for the director's circle takes</li>
+          </ul>
+          <p>Do not rush this stage. Time spent here is returned many times over in the edit.</p>`
+      },
+      {
+        id:'t8', icon:'🎵', name:'Sync Audio to Video',
+        desc:'Synchronise external production audio recordings to the corresponding camera clips in Resolve.',
+        owner:'Editor',
+        guidance:`<p>If the shoot used dual system recording (picture and audio on separate devices) the audio must be synced before editing begins.</p>
+          <ul>
+            <li>Select the Footage Bin and the Audio Bin simultaneously in the Media Pool</li>
+            <li>Right-click → <strong>Auto Sync Audio</strong></li>
+            <li>Select <strong>Waveform</strong>, change "Use channel number" to <strong>Automatic</strong>, then click Sync</li>
+            <li>If Resolve returns an error on any clips, those clips will require manual syncing in a separate Sync Timeline</li>
+            <li>After syncing, in clip attributes, mute (do not delete) the camera audio and assign the synced production audio in the correct mono or stereo configuration</li>
+          </ul>`
+      },
+      {
+        id:'t9', icon:'⚡', name:'Generate Proxies',
+        desc:'Generate proxy files from all camera original footage to maximise editing performance.',
+        owner:'Editor',
+        guidance:`<p>Large camera files (RAW, BRAW, ProRes 4K) can be slow to edit directly, even on capable hardware. Proxies allow smooth playback while keeping the originals intact for grading.</p>
+          <ul>
+            <li>Select all footage in the Media Pool → Right-click → <strong>Generate Proxy Media</strong></li>
+            <li>Proxies will be created in the 04_Proxies folder linked in Project Settings</li>
+            <li>Recommended settings: DNxHR SQ at 1/4 or 1/8 resolution</li>
+            <li>Once generated, enable proxy playback: Playback → Proxy Mode → Use Proxies</li>
+          </ul>
+          <p>At the Final Cut stage, proxies must be disabled before export so Resolve renders from the original files at full resolution.</p>`
+      },
+    ]
+  },
+  {
+    id:'p4', number:'PHASE 03', name:'Assembly Editing', timing:[32,62],
+    deliverable:'A Picture Lock timeline: the fundamental edit is fixed and approved to move into colour and sound.',
+    tasks:[
+      {
+        id:'t10', icon:'🔨', name:'Assembly Cut',
+        desc:'Arrange all selected takes in script order at maximum usable length. No trimming, no music, no effects.',
+        owner:'Editor',
+        guidance:`<p>The assembly cut is not an edit. It is an inventory. Its purpose is to see everything you have and understand the raw material before decisions are made.</p>
+          <ul>
+            <li>Create a new Timeline in the Timelines bin</li>
+            <li>Bring all selected takes (synced with production audio, marked with in and out points) and arrange in script order</li>
+            <li>No trimming beyond your in and out points. No music. No graphics. No sound mixing. No colour correction.</li>
+            <li>In clip attributes, mute the camera audio and assign the synced production audio</li>
+          </ul>
+          <p>Assembly cuts are typically two to four times longer than the finished film. This is expected and normal.</p>`
+      },
+      {
+        id:'t11', icon:'✂️', name:'Rough Cut',
+        desc:"Duplicate the assembly cut and trim each clip to its maximum usable length, after action, before 'Cut!'.",
+        owner:'Editor',
+        guidance:`<p>The rough cut removes the dead space at the beginning and end of each take without yet making editorial judgements about which takes to use or where to cut.</p>
+          <ul>
+            <li><strong>Duplicate</strong> the Assembly Cut timeline. Rename it: <strong>Rough Cut_01</strong></li>
+            <li>Trim the start of each clip to just after the action begins, and the end to just before "Cut!" is called</li>
+            <li>No further trimming. No music. No graphics. No sound mixing. No colour correction.</li>
+          </ul>
+          <p>Never work directly on the assembly cut. Always duplicate before making changes; this preserves a version you can return to.</p>`
+      },
+      {
+        id:'t12', icon:'🎬', name:'First Cut',
+        desc:'Make your first loose editorial pass: establish pace, approximate cut points, and shot-reverse shot structure.',
+        owner:'Editor',
+        guidance:`<p>The first cut is a creative draft. It is allowed to be wrong. Its job is to get the story moving and establish a rough sense of the film's rhythm and shape.</p>
+          <ul>
+            <li><strong>Duplicate</strong> the latest Rough Cut. Rename it: <strong>First Cut_01</strong></li>
+            <li>Choose your takes, establish approximate cut points, set up shot-reverse shots, make initial decisions about structure</li>
+            <li>No music. No graphics. No sound mixing. No colour correction. Focus on structure and rhythm only.</li>
+            <li>From this point on, <strong>create multiple timelines per stage</strong> (First Cut_01, First Cut_02, etc.). Always duplicate before refining. Every version is a backup you may need.</li>
+          </ul>`
+      },
+      {
+        id:'t13', icon:'🔧', name:'Fine Cut',
+        desc:'Edit to frame precision. Export previews, gather feedback, duplicate and refine, repeat until Picture Lock.',
+        owner:'Editor',
+        guidance:`<p>The fine cut is the extended drafting process: a series of versions getting progressively closer to the final cut. This is where most of the real editorial work happens.</p>
+          <ul>
+            <li><strong>Duplicate</strong> the latest First Cut. Rename it: <strong>Fine Cut_01</strong></li>
+            <li>Edit to frame precision: every cut point is chosen deliberately</li>
+            <li>Export review cuts to the <strong>07_Previews</strong> folder. Share with the director and relevant stakeholders. Gather notes.</li>
+            <li>Duplicate before incorporating notes: <strong>Fine Cut_02</strong>, <strong>Fine Cut_03</strong>, and so on</li>
+            <li>Continue until the director is satisfied. The fine cut ends at Picture Lock.</li>
+            <li>No music. No graphics. No final sound design. No colour correction. These come after Picture Lock.</li>
+          </ul>
+          <p><strong>Picture Lock</strong> is the point at which the edit is fixed. No structural changes after this point: colour and sound work built on an unlocked edit is wasted.</p>`
+      },
+      {
+        id:'t14', icon:'🔒', name:'Final Cut & Picture Lock',
+        desc:'Confirm Picture Lock with the director. Disable proxies. Pass the locked timeline to colour and sound.',
+        owner:'Editor / Director',
+        guidance:`<p>Picture Lock is a formal decision, not a gradual process. Make it explicitly; do not let the edit drift past it.</p>
+          <ul>
+            <li><strong>Duplicate</strong> the final Fine Cut. Rename it: <strong>Final Cut_Picture Lock</strong></li>
+            <li>Confirm Picture Lock formally with the director: no further structural changes after this point</li>
+            <li>Disable proxy media: Playback → Proxy Mode → Don't Use Proxies. All subsequent exports render from originals.</li>
+            <li>Export a high-quality preview for reference</li>
+            <li>Pass the Picture Lock timeline to the colourist and sound designer: this is the starting point for both</li>
+          </ul>`
+      },
+    ]
+  },
+  {
+    id:'p5', number:'PHASE 04', name:'Colour Grading', timing:[60,78],
+    deliverable:'A colour-graded timeline with a consistent, intentional visual look applied across all shots, ready for the final export.',
+    tasks:[
+      {
+        id:'t15', icon:'🎨', name:'Set Up the Colour Grade Timeline',
+        desc:'Duplicate the Picture Lock timeline, rename it for colour grading, and decide on your colour management approach before touching a single clip.',
+        owner:'Editor / Colourist',
+        guidance:`<p>Never grade directly on the Picture Lock timeline. Duplicate it first so the locked edit is preserved intact.</p>
+          <ul>
+            <li>Duplicate the Final Cut_Picture Lock timeline. Rename it: <strong>Final Cut_01_Colour Grade_01</strong></li>
+            <li>Switch to the Colour page</li>
+          </ul>
+          <p style="margin-top:12px">Before grading, choose your approach. There are two main methods: pick one and commit to it for the whole project:</p>
+          <div style="margin-top:12px;padding:12px 16px;background:var(--red-glow);border-left:2px solid var(--red-dim);border-radius:0 5px 5px 0">
+            <p style="font-size:12px;font-weight:600;color:var(--slate-light);margin-bottom:8px">METHOD A: Colour Management (DaVinci YRGB Colour Managed)</p>
+            <p style="font-size:12px;color:var(--slate)">Resolve handles colour space transforms automatically. You tell it your camera's input colour space and your delivery output, and it manages the conversion, letting you focus on the creative grade rather than technical transforms.</p>
+            <ul style="font-size:12px;color:var(--slate);margin-top:8px">
+              <li>Go to <strong>Project Settings → Colour Management</strong></li>
+              <li>Set <strong>Colour science</strong> to DaVinci YRGB Colour Managed</li>
+              <li>Set the <strong>input colour space</strong> to match your camera (e.g. Blackmagic Design Film for BRAW footage)</li>
+              <li>Set the <strong>timeline and output colour space</strong> to Rec.709 for standard SDR delivery</li>
+              <li>Resolve will automatically apply the correct transform per clip; you grade in a normalised, scene-linear view</li>
+            </ul>
+          </div>
+          <div style="margin-top:12px;padding:12px 16px;background:rgba(139,155,180,0.07);border-left:2px solid var(--slate);border-radius:0 5px 5px 0">
+            <p style="font-size:12px;font-weight:600;color:var(--slate-light);margin-bottom:8px">METHOD B: Node-Based with Groups (Manual Colour Space Management)</p>
+            <p style="font-size:12px;color:var(--slate)">You manually control the colour pipeline using nodes. This gives you the most transparency and control, especially useful if you want to see and adjust every stage of the transform.</p>
+            <ul style="font-size:12px;color:var(--slate);margin-top:8px">
+              <li>Keep colour management set to <strong>DaVinci YRGB</strong> (not Colour Managed)</li>
+              <li>Use <strong>Groups</strong> (right-click a clip in the colour page → Add into Group): each clip passes through <strong>Pre-clip</strong>, <strong>Clip</strong>, <strong>Post-clip</strong>, and <strong>Timeline</strong> node stages</li>
+              <li><strong>Pre-clip nodes</strong>: apply your input LUT or log-to-linear transform here (per-camera)</li>
+              <li><strong>Clip nodes</strong>: individual shot corrections go here</li>
+              <li><strong>Post-clip nodes</strong>: scene-wide adjustments (matching all clips in a scene) go here</li>
+              <li><strong>Timeline nodes</strong>: the overall look of the entire film (a grade that affects everything) goes here</li>
+            </ul>
+          </div>
+          <p style="margin-top:12px">If a show LUT was created on set, load it as a reference in the Gallery regardless of which method you use.</p>`
+      },
+      {
+        id:'t16', icon:'📐', name:'Primary Colour Correction',
+        desc:'Correct exposure, white balance, and contrast globally across all shots using Lift, Gamma, and Gain, before any creative look is applied.',
+        owner:'Colourist',
+        guidance:`<p>Primary correction comes before any creative grading. Every shot must be technically correct first: proper exposure, accurate white balance, appropriate contrast. Read the scopes, not just your eyes.</p>
+          <ul>
+            <li>Work shot by shot through the timeline</li>
+            <li>Use the <strong>Waveform Monitor</strong> to assess exposure objectively: blacks should sit just above 0, highlights should not clip</li>
+            <li>Use the <strong>Vectorscope</strong> to assess colour: neutrals should read near the centre</li>
+            <li>Adjust <strong>Lift</strong> (shadows), <strong>Gamma</strong> (midtones), and <strong>Gain</strong> (highlights) to correct each shot</li>
+            <li>Match shots within each scene so cuts are not jarring</li>
+          </ul>
+          <div style="margin-top:12px;padding:12px 16px;background:var(--red-glow);border-left:2px solid var(--red-dim);border-radius:0 5px 5px 0">
+            <p style="font-size:12px;font-weight:600;color:var(--slate-light);margin-bottom:6px">If you used Method A (Colour Management):</p>
+            <p style="font-size:12px;color:var(--slate)">Resolve has already normalised the footage. Your primary corrections go on the <strong>Clip node</strong> in the node editor. You are working in a normalised, balanced image; make exposure and white balance adjustments with the colour wheels or curves, trusting that the colour space conversion is handled for you.</p>
+          </div>
+          <div style="margin-top:10px;padding:12px 16px;background:rgba(139,155,180,0.07);border-left:2px solid var(--slate);border-radius:0 5px 5px 0">
+            <p style="font-size:12px;font-weight:600;color:var(--slate-light);margin-bottom:6px">If you used Method B (Node-Based Groups):</p>
+            <p style="font-size:12px;color:var(--slate)">Your <strong>Pre-clip node</strong> already handled the log-to-linear or LUT transform. Primary corrections go on the <strong>Clip node</strong>. Work in your group's clip stage. For corrections that should apply to all shots in a scene consistently, use the <strong>Post-clip node</strong> rather than repeating the same adjustment on every individual clip.</p>
+          </div>`
+      },
+      {
+        id:'t17', icon:'🎭', name:'Secondary Correction & Creative Look',
+        desc:'Apply selective adjustments to specific image elements, then develop the creative visual look of the film.',
+        owner:'Colourist',
+        guidance:`<p>Secondary correction targets specific elements within the image. Creative grading develops the visual character of the film. Grade with the film's story and emotional logic in mind; colour should serve the narrative, not compete with it.</p>
+          <ul>
+            <li>Use <strong>Qualifiers</strong> to isolate and adjust specific colour ranges (skin tones, skies)</li>
+            <li>Use <strong>Power Windows</strong> with feathering to create localised adjustments (brightening a face, darkening a background)</li>
+            <li>Develop a consistent look that serves the tone of the film</li>
+            <li>Save grades as <strong>Stills</strong> in the Gallery to apply to similar shots</li>
+            <li>Export previews to 07_Previews and share with the director for approval</li>
+          </ul>
+          <div style="margin-top:12px;padding:12px 16px;background:var(--red-glow);border-left:2px solid var(--red-dim);border-radius:0 5px 5px 0">
+            <p style="font-size:12px;font-weight:600;color:var(--slate-light);margin-bottom:6px">If you used Method A (Colour Management):</p>
+            <p style="font-size:12px;color:var(--slate)">Add additional <strong>serial nodes</strong> after your primary correction node for secondary work. Each node is a discrete operation: add one for a Qualifier-based skin tone adjustment, another for a Power Window. Keep your creative look node last in the chain. You can also use a <strong>Layer Mixer node</strong> to blend different adjustments non-destructively.</p>
+          </div>
+          <div style="margin-top:10px;padding:12px 16px;background:rgba(139,155,180,0.07);border-left:2px solid var(--slate);border-radius:0 5px 5px 0">
+            <p style="font-size:12px;font-weight:600;color:var(--slate-light);margin-bottom:6px">If you used Method B (Node-Based Groups):</p>
+            <p style="font-size:12px;color:var(--slate)">Secondary corrections that are shot-specific go on additional serial nodes in the <strong>Clip stage</strong>. Adjustments that apply across a whole scene go on the <strong>Post-clip node</strong>. Your creative look (the overall film-wide aesthetic) goes on the <strong>Timeline node</strong>, so it affects every shot without needing to be applied individually. This is the power of the group structure.</p>
+          </div>`
+      },
+    ]
+  },
+  {
+    id:'p6', number:'PHASE 05', name:'Sound Editing<br>&amp; Design', timing:[60,82],
+    deliverable:'A complete, polished sound mix with dialogue, ambience, Foley, sound effects, and music balanced and ready for export.',
+    tasks:[
+      {
+        id:'t18', icon:'🔊', name:'Set Up the Sound Mix Timeline',
+        desc:'Duplicate the Picture Lock timeline, rename it for sound, and organise the Fairlight page audio tracks.',
+        owner:'Editor / Sound Designer',
+        guidance:`<p>As with colour, the sound timeline should be a duplicate of Picture Lock, not the colour timeline, and not the locked edit itself.</p>
+          <ul>
+            <li>Duplicate the Final Cut_Picture Lock timeline. Rename it: <strong>Final Cut_01_Sound_01</strong></li>
+            <li>Switch to the Fairlight page</li>
+            <li>Organise tracks by type: Dialogue, Ambience, Foley, SFX, Music. Label them clearly.</li>
+            <li>Check that all audio is correctly assigned and audible before beginning any editing</li>
+          </ul>`
+      },
+      {
+        id:'t19', icon:'🎙️', name:'Dialogue Editing',
+        desc:'Clean and edit all dialogue tracks: remove noise, fill gaps with room tone, and ensure every line is intelligible.',
+        owner:'Sound Designer / Editor',
+        guidance:`<p>Clean dialogue is the foundation of the entire mix. Everything else supports it. Nothing else matters if the dialogue is not clear.</p>
+          <ul>
+            <li>Work through every line of dialogue systematically</li>
+            <li>Remove unwanted noise between lines using cuts and fades</li>
+            <li>Fill gaps between dialogue edits with <strong>room tone</strong> from the corresponding location, not silence, which reads as unnatural</li>
+            <li>Apply <strong>EQ</strong> to remove low-end rumble and improve intelligibility</li>
+            <li>Apply a <strong>de-esser</strong> where sibilance is harsh</li>
+            <li>If a line is unusable, consider whether it can be covered by another take, a cutaway, or whether ADR is needed</li>
+          </ul>`
+      },
+      {
+        id:'t20', icon:'🌍', name:'Ambience & Foley',
+        desc:'Build the sonic world of each scene using ambient recordings and Foley.',
+        owner:'Sound Designer',
+        guidance:`<p>The audience does not notice good ambience and Foley. They notice their absence. A scene with no continuous ambient texture feels empty and artificial.</p>
+          <ul>
+            <li>Lay in <strong>room tone and ambience</strong> recordings from each location as continuous beds under each scene</li>
+            <li>Match ambience to the visual: interior/exterior, time of day, proximity to traffic or nature</li>
+            <li>Add <strong>Foley</strong> for footsteps, clothing, props, and any sounds not captured cleanly on set</li>
+            <li>Source or create additional <strong>sound effects</strong> required by the scene</li>
+          </ul>`
+      },
+      {
+        id:'t21', icon:'🎼', name:'Music',
+        desc:'Place and adjust licensed or original music to support the edit.',
+        owner:'Editor / Sound Designer',
+        guidance:`<p>Music should support the emotion of the edit, not explain it. Less is usually more in short film.</p>
+          <ul>
+            <li>Place music on dedicated music tracks in Fairlight</li>
+            <li>Use keyframe automation to ride the music level: lower under dialogue, raise in purely visual passages</li>
+            <li>Fade music in and out gracefully; abrupt starts and stops are rarely effective</li>
+            <li>Ensure all music is properly licensed for the distribution context of the film</li>
+          </ul>`
+      },
+      {
+        id:'t22', icon:'🎚️', name:'Final Mix & Sound Review',
+        desc:'Balance all audio elements: dialogue, ambience, Foley, effects, and music , into a coherent, polished mix.',
+        owner:'Sound Designer',
+        guidance:`<p>The mix is where all individual elements come together. The goal is a coherent sonic experience where dialogue is always intelligible, the world is present, and music supports without dominating.</p>
+          <ul>
+            <li>Set overall levels: dialogue typically peaks around -12 to -6 dBFS; music and ambience significantly lower</li>
+            <li>Use the <strong>Fairlight mixer</strong> to balance track groups</li>
+            <li>Use <strong>automation</strong> to manage level changes dynamically through the timeline</li>
+            <li>Listen on multiple speaker systems: studio monitors, laptop speakers, earphones. The mix should work on all of them.</li>
+            <li>Export a preview to 07_Previews and review with the director before final sign-off</li>
+          </ul>`
+      },
+    ]
+  },
+  {
+    id:'p7', number:'PHASE 06', name:'Export', timing:[80,100],
+    deliverable:'Final export files in the agreed format, correctly named, in the 08_Playouts folder.',
+    tasks:[
+      {
+        id:'t23', icon:'🔗', name:'Combine Colour & Sound into Delivery Timeline',
+        desc:'Bring the graded colour and the final sound mix together into a single delivery timeline.',
+        owner:'Editor',
+        guidance:`<p>Colour and sound are typically worked on in separate timelines. Before export, they must be combined.</p>
+          <ul>
+            <li>The most reliable approach: use the graded colour timeline and replace its audio with the exported final mix (exported as a high-quality stereo WAV or AIFF from Fairlight)</li>
+            <li>Alternatively, use <strong>Remote Grades</strong> (Colour page > Remote Versions) to apply grades from the colour timeline to the sound timeline, avoiding the need to re-export audio</li>
+            <li>Review the combined result carefully: check that audio and video are in sync throughout, and that the grade looks correct in full playback</li>
+          </ul>`
+      },
+      {
+        id:'t24', icon:'📤', name:'Export Final Deliverable',
+        desc:'Render the final file from the Deliver page to the 08_Playouts folder with the correct naming convention.',
+        owner:'Editor',
+        guidance:`<p>Use the Deliver page for all final exports. Do not render from the timeline menu.</p>
+          <ul>
+            <li>Go to the <strong>Deliver page</strong></li>
+            <li>Set the output location to <strong>08_Playouts</strong></li>
+            <li>Name the file: <strong>[ProjectName]_SDR_[Resolution]_DDMMYY</strong> (e.g. Pig_SDR_1920x1080_010126)</li>
+            <li>Select the appropriate export preset:
+              <ul style="margin-top:6px">
+                <li><strong>H.264 / H.265:</strong> for web delivery, streaming, and review links</li>
+                <li><strong>ProRes 422 HQ:</strong> for broadcast or festival submission</li>
+                <li><strong>IMF / DCP:</strong> for theatrical delivery (specialist workflow)</li>
+              </ul>
+            </li>
+            <li>Render and watch the exported file before delivery; do not assume the render is correct</li>
+          </ul>`
+      },
+      {
+        id:'t25', icon:'✅', name:'QC and Final Review',
+        desc:'Watch the exported file from start to finish on a calibrated display before any delivery.',
+        owner:'Editor / Director',
+        guidance:`<p>The render is not the end. Watch the exported file (not the timeline) before declaring it finished. Renders can contain artefacts, sync drift, or errors invisible in the Resolve timeline.</p>
+          <ul>
+            <li>Watch the export in full, on a properly calibrated or well-understood display</li>
+            <li>Check audio sync at the start, middle, and end of the file</li>
+            <li>Confirm the grade looks correct outside the Resolve viewer</li>
+            <li>Confirm the file plays correctly in a standard media player</li>
+            <li>Archive all project files, timelines, and camera originals to a minimum of two drives before considering post-production complete</li>
+          </ul>`
+      },
+    ]
+  },
+];
+
+const STORE_KEY = 'postproduction_v1';
+function loadState() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; } }
+function saveState(s) { try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch {} }
+let state = loadState();
+
+function getCustomTasks(phaseId) { return (state['__custom__' + phaseId] || []); }
+function setCustomTasks(phaseId, tasks) { state['__custom__' + phaseId] = tasks; saveState(state); }
+function newCustomTaskId() { return 'custom_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
+function getTask(id) { return state[id] || { checked:false, notes:'', links:[] }; }
+function setTask(id, patch) { state[id] = {...getTask(id), ...patch}; saveState(state); }
+
+function addCustomTask(phaseId) {
+  const tasks = getCustomTasks(phaseId);
+  const newTask = { id: newCustomTaskId(), title: '', desc: '', notes: '', links: [], guidanceHtml: '', checked: false };
+  tasks.push(newTask);
+  setCustomTasks(phaseId, tasks);
+  const tasksEl = document.getElementById('tasks-' + phaseId);
+  const el = buildCustomTaskEl(phaseId, newTask);
+  tasksEl.appendChild(el);
+  el.classList.add('open');
+  const titleInput = el.querySelector('.task-name-edit');
+  if (titleInput) setTimeout(() => titleInput.focus(), 50);
+  updateGlobalProgress();
+}
+
+function buildCustomTaskEl(phaseId, ct) {
+  const el = document.createElement('div');
+  el.className = 'task task-custom unlocked' + (ct.checked ? ' completed' : '');
+  el.dataset.taskId = ct.id;
+  const header = document.createElement('div');
+  header.className = 'task-header';
+  header.style.alignItems = 'flex-start';
+  header.innerHTML = `
+    <div class="task-icon" style="opacity:0.4">✏️</div>
+    <div class="task-body" style="flex:1;min-width:0">
+      <input class="task-name-edit" type="text" placeholder="Task title…" value="${escHtml(ct.title || '')}">
+      <textarea class="task-desc-edit" placeholder="One-sentence summary…" rows="1">${escHtml(ct.desc || '')}</textarea>
+    </div>
+    <div class="task-meta"><span class="custom-tag">Custom</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0">
+      <div class="task-checkbox${ct.checked ? ' checked' : ''}" title="Mark complete">
+        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <svg class="task-chevron" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <button class="task-lock" title="Lock to prevent edits">🔒</button>
+      <button class="task-remove" title="Remove this task">×</button>
+    </div>`;
+  const drawer = document.createElement('div');
+  drawer.className = 'task-drawer';
+  const linksHTML = (ct.links || []).map((l, i) => linkRowHTML(l.label, l.url, i)).join('');
+  drawer.innerHTML = `
+    <div class="task-drawer-inner">
+      <div class="drawer-section">
+        <div class="drawer-label">What this involves</div>
+        <div class="guidance-wrap">
+          <div class="guidance-toolbar"><span class="guidance-toolbar-label">Click to edit &nbsp;·&nbsp; <b>Ctrl+B</b> bold</span></div>
+          <div class="guidance-block" contenteditable="true" spellcheck="false">${ct.guidanceHtml || '<p>Describe what this task involves…</p>'}</div>
+        </div>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-label">Crew Notes</div>
+        <textarea class="drawer-notes" placeholder="Add notes, decisions, or context…" spellcheck="false">${escHtml(ct.notes || '')}</textarea>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-label">Links & Resources</div>
+        <div class="links-list">${linksHTML}</div>
+        <button class="btn-add-link" style="margin-top:8px">+ Add link</button>
+      </div>
+    </div>`;
+  el.appendChild(header);
+  el.appendChild(drawer);
+
+  function saveCustom() {
+    const tasks = getCustomTasks(phaseId);
+    const idx = tasks.findIndex(t => t.id === ct.id);
+    if (idx > -1) { tasks[idx] = { ...tasks[idx], ...ct }; setCustomTasks(phaseId, tasks); }
+  }
+  const titleEl = header.querySelector('.task-name-edit');
+  titleEl.addEventListener('input', e => { e.stopPropagation(); ct.title = titleEl.value; saveCustom(); });
+  titleEl.addEventListener('click', e => e.stopPropagation());
+  titleEl.addEventListener('keydown', e => e.stopPropagation());
+  const descEl = header.querySelector('.task-desc-edit');
+  function autoHeight() { descEl.style.height='auto'; descEl.style.height=descEl.scrollHeight+'px'; }
+  descEl.addEventListener('input', e => { e.stopPropagation(); autoHeight(); ct.desc=descEl.value; saveCustom(); });
+  descEl.addEventListener('click', e => e.stopPropagation());
+  descEl.addEventListener('keydown', e => e.stopPropagation());
+  setTimeout(autoHeight, 0);
+  const checkbox = header.querySelector('.task-checkbox');
+  checkbox.addEventListener('click', e => {
+    e.stopPropagation(); ct.checked = !ct.checked;
+    el.classList.toggle('completed', ct.checked); checkbox.classList.toggle('checked', ct.checked);
+    saveCustom(); updateGlobalProgress();
+  });
+  const lockBtnC = header.querySelector('.task-lock');
+  lockBtnC.addEventListener('click', e => {
+    e.stopPropagation();
+    const unlocked = el.classList.toggle('unlocked');
+    lockBtnC.textContent = unlocked ? '🔓' : '🔒';
+    lockBtnC.title = unlocked ? 'Lock to prevent edits' : 'Unlock to edit';
+  });
+  const removeBtn = header.querySelector('.task-remove');
+  removeBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (!confirm('Remove this task?')) return;
+    let tasks = getCustomTasks(phaseId);
+    tasks = tasks.filter(t => t.id !== ct.id);
+    setCustomTasks(phaseId, tasks);
+    el.remove(); updateGlobalProgress();
+  });
+  header.addEventListener('click', e => {
+    if (e.target.closest('.task-checkbox') || e.target.closest('.task-remove') || e.target.closest('.task-lock') || e.target.closest('input') || e.target.closest('textarea')) return;
+    const isOpen = el.classList.contains('open');
+    document.querySelectorAll('.task.open').forEach(t => { if (t !== el) t.classList.remove('open'); });
+    el.classList.toggle('open', !isOpen);
+  });
+  const guidanceEl = drawer.querySelector('.guidance-block');
+  let guidanceTimer;
+  guidanceEl.addEventListener('input', e => {
+    e.stopPropagation(); clearTimeout(guidanceTimer);
+    guidanceTimer = setTimeout(() => { ct.guidanceHtml = guidanceEl.innerHTML; saveCustom(); }, 600);
+  });
+  guidanceEl.addEventListener('click', e => e.stopPropagation());
+  guidanceEl.addEventListener('mousedown', e => e.stopPropagation());
+  guidanceEl.addEventListener('keydown', e => e.stopPropagation());
+  const notesEl = drawer.querySelector('.drawer-notes');
+  notesEl.addEventListener('input', () => { ct.notes = notesEl.value; saveCustom(); });
+  notesEl.addEventListener('click', e => e.stopPropagation());
+  bindLinkEvents(drawer, ct.id);
+  const linksList = drawer.querySelector('.links-list');
+  const addLinkBtn = drawer.querySelector('.btn-add-link');
+  addLinkBtn.onclick = e => {
+    e.stopPropagation(); ct.links = [...(ct.links || []), { label: '', url: '' }]; saveCustom();
+    linksList.innerHTML = ct.links.map((l, i) => linkRowHTML(l.label, l.url, i)).join('');
+  };
+  linksList.addEventListener('click', e => {
+    e.stopPropagation();
+    const rb = e.target.closest('.btn-remove-link');
+    if (rb) { ct.links = ct.links.filter((_, i) => i !== +rb.dataset.index); saveCustom(); linksList.innerHTML = ct.links.map((l, i) => linkRowHTML(l.label, l.url, i)).join(''); }
+  });
+  linksList.addEventListener('input', e => {
+    e.stopPropagation();
+    const input = e.target.closest('input[data-field]');
+    if (!input) return;
+    const idx = +input.dataset.index; ct.links = [...(ct.links || [])];
+    ct.links[idx] = { ...ct.links[idx], [input.dataset.field]: input.value }; saveCustom();
+  });
+  return el;
+}
+
+function buildTaskEl(task) {
+    const ts = getTask(task.id);
+    const taskEl = document.createElement('div');
+    taskEl.className = 'task' + (ts.checked ? ' completed' : '');
+    taskEl.dataset.taskId = task.id;
+    const guidanceContent = ts.guidanceHtml || injectGlossaryLinks(task.guidance);
+    const isEdited = !!ts.guidanceHtml;
+    const linksHTML = (ts.links||[]).map((l,i) => linkRowHTML(l.label,l.url,i)).join('');
+    taskEl.innerHTML = `
+      <div class="task-header">
+        <input class="task-icon-edit" type="text" value="${escHtml(ts.iconOverride != null ? ts.iconOverride : (task.icon||''))}" maxlength="2">
+        <div class="task-body">
+          <input class="task-name-field" type="text" value="${escHtml(ts.nameOverride != null ? ts.nameOverride : task.name)}">
+          <textarea class="task-desc-field" rows="1">${escHtml(ts.descOverride != null ? ts.descOverride : task.desc)}</textarea>
+        </div>
+        <div class="task-meta">
+          <input class="task-owner-field" type="text" value="${escHtml(ts.ownerOverride != null ? ts.ownerOverride : (task.owner||''))}">
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0">
+          <div class="task-checkbox${ts.checked ? ' checked' : ''}" title="Mark complete">
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <svg class="task-chevron" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <button class="task-lock" title="Unlock to edit">🔒</button>
+        </div>
+      </div>
+      <div class="task-drawer">
+        <div class="task-drawer-inner">
+          <div class="drawer-section">
+            <div class="drawer-label">What this involves${isEdited ? '<span class="guidance-edited-badge">edited</span>' : ''}</div>
+            <div class="guidance-wrap">
+              <div class="guidance-toolbar">
+                <span class="guidance-toolbar-label">Click text to edit &nbsp;·&nbsp; <b>Ctrl+B</b> bold &nbsp;·&nbsp; <em>Ctrl+I</em> italic</span>
+                <button class="guidance-btn reset" data-action="reset">↺ Reset</button>
+              </div>
+              <div class="guidance-block" contenteditable="true" spellcheck="false">${guidanceContent}</div>
+            </div>
+          </div>
+          <div class="drawer-section">
+            <div class="drawer-label">Crew Notes</div>
+            <textarea class="drawer-notes" placeholder="Add notes, decisions, or context for your team…" spellcheck="false">${escHtml(ts.notes||'')}</textarea>
+          </div>
+          <div class="drawer-section">
+            <div class="drawer-label">Links & Resources</div>
+            <div class="links-list">${linksHTML}</div>
+            <button class="btn-add-link" style="margin-top:8px">+ Add link</button>
+          </div>
+        </div>
+      </div>`;
+
+    const descField = taskEl.querySelector('.task-desc-field');
+    function autoH(el) { el.style.height='auto'; el.style.height=el.scrollHeight+'px'; }
+    setTimeout(() => autoH(descField), 0);
+    descField.addEventListener('input', () => autoH(descField));
+
+    taskEl.querySelector('.task-icon-edit').addEventListener('input', e => { e.stopPropagation(); setTask(task.id, { iconOverride: e.target.value }); });
+    taskEl.querySelector('.task-name-field').addEventListener('input', e => { e.stopPropagation(); setTask(task.id, { nameOverride: e.target.value }); });
+    descField.addEventListener('input', e => { e.stopPropagation(); setTask(task.id, { descOverride: e.target.value }); });
+    taskEl.querySelector('.task-owner-field').addEventListener('input', e => { e.stopPropagation(); setTask(task.id, { ownerOverride: e.target.value }); });
+    ['click','keydown','mousedown'].forEach(ev => {
+      taskEl.querySelectorAll('.task-icon-edit,.task-name-field,.task-desc-field,.task-owner-field').forEach(f => f.addEventListener(ev, e => e.stopPropagation()));
+    });
+
+    const checkbox = taskEl.querySelector('.task-checkbox');
+    checkbox.addEventListener('click', e => {
+      e.stopPropagation();
+      const checked = !getTask(task.id).checked;
+      setTask(task.id, { checked });
+      taskEl.classList.toggle('completed', checked);
+      checkbox.classList.toggle('checked', checked);
+      updatePhaseCompletion(task.id); updateGlobalProgress();
+    });
+
+    const lockBtn = taskEl.querySelector('.task-lock');
+    lockBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const unlocked = taskEl.classList.toggle('unlocked');
+      lockBtn.textContent = unlocked ? '🔓' : '🔒';
+      lockBtn.title = unlocked ? 'Lock to prevent edits' : 'Unlock to edit';
+    });
+
+    taskEl.addEventListener('click', e => {
+      if (e.target.closest('.task-checkbox') || e.target.closest('.task-lock') || e.target.closest('input') || e.target.closest('textarea')) return;
+      if (!taskEl.classList.contains('unlocked')) {
+        const isOpen = taskEl.classList.contains('open');
+        document.querySelectorAll('.task.open').forEach(t => { if (t !== taskEl) t.classList.remove('open'); });
+        taskEl.classList.toggle('open', !isOpen);
+      }
+    });
+
+    const guidanceEl = taskEl.querySelector('.guidance-block');
+    let guidanceTimer;
+    guidanceEl.addEventListener('input', e => {
+      e.stopPropagation(); clearTimeout(guidanceTimer);
+      guidanceTimer = setTimeout(() => setTask(task.id, { guidanceHtml: guidanceEl.innerHTML }), 600);
+    });
+    guidanceEl.addEventListener('click', e => e.stopPropagation());
+    guidanceEl.addEventListener('mousedown', e => e.stopPropagation());
+    guidanceEl.addEventListener('keydown', e => e.stopPropagation());
+
+    const resetBtn = taskEl.querySelector('[data-action="reset"]');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        if (confirm('Reset guidance to original content?')) {
+          setTask(task.id, { guidanceHtml: null });
+          guidanceEl.innerHTML = task.guidance;
+        }
+      });
+    }
+
+    const notesEl = taskEl.querySelector('.drawer-notes');
+    notesEl.addEventListener('input', () => setTask(task.id, { notes: notesEl.value }));
+    notesEl.addEventListener('click', e => e.stopPropagation());
+
+    bindLinkEvents(taskEl.querySelector('.task-drawer'), task.id);
+  return taskEl;
+}
+
+function renderResearch() {
+  var container = document.getElementById('researchTasks');
+  if (!container) return;
+  container.innerHTML = '';
+  RESEARCH_TASKS.forEach(function(task) {
+    container.appendChild(buildTaskEl(task));
+  });
+}
+
+function render() {
+  const timeline = document.getElementById('timeline');
+  timeline.innerHTML = '';
+  PHASES.forEach(phase => {
+    const block = document.createElement('div');
+    block.className = 'phase-block';
+    block.id = 'block-' + phase.id;
+    const phaseEl = document.createElement('div');
+    phaseEl.className = 'phase';
+    phaseEl.id = 'phase-' + phase.id;
+    const doneCnt = phase.tasks.filter(t => getTask(t.id).checked).length;
+    const allDone = doneCnt === phase.tasks.length;
+    if (allDone) phaseEl.classList.add('completed');
+    const fillPct = phase.timing[1] - phase.timing[0];
+    phaseEl.innerHTML = `
+      <div class="phase-label">
+        <div class="phase-number">${phase.number}</div>
+        <div class="phase-name">${phase.name}</div>
+        <div class="phase-timing">
+          <div class="phase-timing-label">Pipeline position</div>
+          <div class="phase-timing-track">
+            <div class="phase-timing-fill" style="left:${phase.timing[0]}%;width:${fillPct}%"></div>
+          </div>
+        </div>
+        <div class="phase-progress-text">${doneCnt} / ${phase.tasks.length} done</div>
+      </div>
+      <div class="phase-tasks" id="tasks-${phase.id}"></div>`;
+    const tasksEl = phaseEl.querySelector('.phase-tasks');
+    phase.tasks.forEach(task => {
+      tasksEl.appendChild(buildTaskEl(task));
+    });
+
+    const customTasks = getCustomTasks(phase.id);
+    customTasks.forEach(ct => { tasksEl.appendChild(buildCustomTaskEl(phase.id, ct)); });
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-task-btn';
+    addBtn.innerHTML = '<span style="font-size:14px;font-weight:300">+</span> Add custom task';
+    addBtn.addEventListener('click', () => addCustomTask(phase.id));
+
+    block.appendChild(phaseEl);
+    block.appendChild(addBtn);
+    if (phase.deliverable) {
+      const d = document.createElement('div');
+      d.className = 'deliverable';
+      d.innerHTML = `<strong>Deliverable</strong>${escHtml(phase.deliverable)}`;
+      block.appendChild(d);
+    }
+    if (phase !== PHASES[PHASES.length-1]) {
+      const div = document.createElement('div'); div.className = 'phase-divider'; block.appendChild(div);
+    }
+    timeline.appendChild(block);
+  });
+  updateGlobalProgress();
+}
+
+function linkRowHTML(label, url, i) {
+  const openBtn = url ? `<a class="link-go" href="${escAttr(url)}" target="_blank" rel="noopener">Open ↗</a>` : '';
+  return `<div class="link-row" data-index="${i}">
+    <input class="link-input link-label-input" type="text" placeholder="Label" value="${escAttr(label)}" data-field="label" data-index="${i}">
+    <input class="link-input" type="url" placeholder="https://…" value="${escAttr(url)}" data-field="url" data-index="${i}" style="flex:1">
+    ${openBtn}
+    <button class="btn-remove-link" data-index="${i}">✕</button>
+  </div>`;
+}
+
+function bindLinkEvents(drawer, taskId) {
+  const addBtn = drawer.querySelector('.btn-add-link');
+  const list = drawer.querySelector('.links-list');
+  addBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    const links = [...(getTask(taskId).links||[]), {label:'',url:''}];
+    setTask(taskId, {links}); list.innerHTML = links.map((l,i) => linkRowHTML(l.label,l.url,i)).join('');
+  });
+  list.addEventListener('click', e => {
+    e.stopPropagation();
+    const rb = e.target.closest('.btn-remove-link');
+    if (rb) { const links = getTask(taskId).links.filter((_,i) => i !== +rb.dataset.index); setTask(taskId, {links}); list.innerHTML = links.map((l,i) => linkRowHTML(l.label,l.url,i)).join(''); }
+  });
+  list.addEventListener('input', e => {
+    e.stopPropagation();
+    const input = e.target.closest('input[data-field]');
+    if (!input) return;
+    const idx = +input.dataset.index;
+    const links = [...(getTask(taskId).links||[])];
+    links[idx] = {...links[idx], [input.dataset.field]: input.value}; setTask(taskId, {links});
+    if (input.dataset.field === 'url') {
+      const row = input.closest('.link-row'); let go = row.querySelector('.link-go');
+      if (input.value) { if (!go) { go = document.createElement('a'); go.className='link-go'; go.target='_blank'; go.rel='noopener'; go.textContent='Open ↗'; row.querySelector('.btn-remove-link').before(go); } go.href = input.value; } else if (go) go.remove();
+    }
+  });
+  list.addEventListener('click', e => e.stopPropagation());
+}
+
+function updatePhaseCompletion(changedId) {
+  PHASES.forEach(phase => {
+    if (!phase.tasks.find(t => t.id === changedId)) return;
+    const allDone = phase.tasks.every(t => getTask(t.id).checked);
+    const doneCnt = phase.tasks.filter(t => getTask(t.id).checked).length;
+    const el = document.getElementById('phase-' + phase.id);
+    if (el) {
+      el.classList.toggle('completed', allDone);
+      const pt = el.querySelector('.phase-progress-text');
+      if (pt) pt.textContent = `${doneCnt} / ${phase.tasks.length} done`;
+    }
+  });
+}
+
+function updateGlobalProgress() {
+  const all = PHASES.flatMap(p => p.tasks);
+  const done = all.filter(t => getTask(t.id).checked).length;
+  document.getElementById('globalProgress').style.width = (all.length ? Math.round(done/all.length*100) : 0)+'%';
+  document.getElementById('globalLabel').textContent = `${done} / ${all.length} tasks complete`;
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s) { return String(s).replace(/"/g,'&quot;'); }
+
+// ── Glossary ──────────────────────────────────────────────────────────────────
+var GLOSSARY_KEY = 'postglossary_v1';
+function loadGlossaryState() { try { return JSON.parse(localStorage.getItem(GLOSSARY_KEY)) || {}; } catch(e) { return {}; } }
+function saveGlossaryState(s) { try { localStorage.setItem(GLOSSARY_KEY, JSON.stringify(s)); } catch(e) {} }
+var glossaryState = loadGlossaryState();
+var glossaryUnlocked = false;
+
+function toggleGlossary() {
+  var wrap = document.getElementById('glossaryWrap');
+  wrap.classList.toggle('open');
+  if (wrap.classList.contains('open')) {
+    if (!document.getElementById('glossaryContent').children.length) renderGlossary();
+    setTimeout(initGlossarySearch, 50);
+  }
+}
+
+function toggleGlossaryLock() {
+  glossaryUnlocked = !glossaryUnlocked;
+  var wrap = document.getElementById('glossaryWrap');
+  wrap.classList.toggle('glossary-locked', !glossaryUnlocked);
+  wrap.classList.toggle('glossary-unlocked', glossaryUnlocked);
+  if (!glossaryUnlocked) {
+    // Locking: strip blank entries, re-render so new terms slot into alphabetical order
+    var added = glossaryState.added || [];
+    added = added.filter(function(t) { return !t.deleted && t.term && t.term.trim(); });
+    glossaryState.added = added;
+    saveGlossaryState(glossaryState);
+    renderGlossary();
+    buildAndCacheTerms();
+    document.getElementById('glossaryLockBtn').textContent = '🔒 Edit terms';
+  } else {
+    document.getElementById('glossaryLockBtn').textContent = '🔓 Editing';
+  }
+}
+
+function renderGlossary() {
+  var container = document.getElementById('glossaryContent');
+  container.innerHTML = '';
+  var lockStrip = document.createElement('div');
+  lockStrip.className = 'glossary-lock-strip';
+  lockStrip.innerHTML = '<span style="font-size:11px;color:var(--slate);font-weight:300">A–Z reference of post-production terms. Unlock to edit, add, or remove entries.</span><button class="glossary-lock-btn" id="glossaryLockBtn" onclick="toggleGlossaryLock()">🔒 Edit terms</button>';
+  container.appendChild(lockStrip);
+
+  var overrides = glossaryState.overrides || {};
+  var added = glossaryState.added || [];
+
+  var displayTerms = GLOSSARY_TERMS.map(function(t, i) {
+    var ov = overrides[i] || {};
+    if (ov.deleted) return null;
+    return { term: ov.term !== undefined ? ov.term : t.term, def: ov.def !== undefined ? ov.def : t.def, idx: i };
+  }).filter(Boolean);
+
+  var pendingNew = null;
+  added.forEach(function(t, ai) {
+    if (t.deleted) return;
+    if (!t.term && !t.def) {
+      pendingNew = { term: '', def: '', idx: 'a'+ai };
+    } else {
+      displayTerms.push({ term: t.term || '', def: t.def || '', idx: 'a'+ai });
+    }
+  });
+
+  displayTerms.sort(function(a,b) { return a.term.toLowerCase().localeCompare(b.term.toLowerCase()); });
+  if (pendingNew) displayTerms.push(pendingNew);
+
+  var termsEl = document.createElement('div');
+  termsEl.className = 'glossary-terms';
+  termsEl.id = 'glossary-terms-list';
+
+  displayTerms.forEach(function(t) {
+    var row = document.createElement('div');
+    row.className = 'glossary-term';
+    row.dataset.idx = t.idx;
+    row.dataset.termKey = t.term.toLowerCase();
+
+    var nameEl = document.createElement('textarea');
+    nameEl.className = 'glossary-term-name';
+    nameEl.value = t.term;
+    nameEl.rows = 1;
+    nameEl.style.resize = 'none';
+    nameEl.style.overflow = 'hidden';
+    function autoH(el) { el.style.height='auto'; el.style.height=el.scrollHeight+'px'; }
+    setTimeout(function() { autoH(nameEl); }, 0);
+    nameEl.addEventListener('input', function() { autoH(nameEl); saveGlossaryEdit(t.idx, 'term', nameEl.value); });
+
+    var defEl = document.createElement('textarea');
+    defEl.className = 'glossary-term-def';
+    defEl.value = t.def;
+    defEl.rows = 2;
+    defEl.style.resize = 'none';
+    defEl.style.overflow = 'hidden';
+    setTimeout(function() { autoH(defEl); }, 0);
+    defEl.addEventListener('input', function() { autoH(defEl); saveGlossaryEdit(t.idx, 'def', defEl.value); });
+
+    var removeBtn = document.createElement('button');
+    removeBtn.className = 'glossary-term-remove';
+    removeBtn.textContent = '×';
+    removeBtn.title = 'Remove this term';
+    removeBtn.addEventListener('click', function() {
+      if (!confirm('Remove this term?')) return;
+      deleteGlossaryTerm(t.idx); row.remove();
+    });
+
+    row.appendChild(nameEl);
+    row.appendChild(defEl);
+    row.appendChild(removeBtn);
+    termsEl.appendChild(row);
+  });
+
+  container.appendChild(termsEl);
+
+  var addBtn = document.createElement('button');
+  addBtn.className = 'glossary-add-term';
+  addBtn.textContent = '+ Add term';
+  addBtn.addEventListener('click', function() {
+    var newAdded = glossaryState.added || [];
+    newAdded.push({ term: '', def: '' });
+    glossaryState.added = newAdded;
+    saveGlossaryState(glossaryState);
+    renderGlossary();
+    setTimeout(function() {
+      var rows = document.querySelectorAll('.glossary-term');
+      if (rows.length) { var last = rows[rows.length-1]; last.scrollIntoView({behavior:'smooth',block:'center'}); last.querySelector('.glossary-term-name').focus(); }
+    }, 100);
+  });
+  container.appendChild(addBtn);
+}
+
+function saveGlossaryEdit(idx, field, value) {
+  if (typeof idx === 'string' && idx.charAt(0) === 'a') {
+    var ai = parseInt(idx.slice(1));
+    var added = glossaryState.added || [];
+    if (added[ai]) { added[ai][field] = value; glossaryState.added = added; saveGlossaryState(glossaryState); }
+  } else {
+    var overrides = glossaryState.overrides || {};
+    if (!overrides[idx]) overrides[idx] = {};
+    overrides[idx][field] = value;
+    glossaryState.overrides = overrides;
+    saveGlossaryState(glossaryState);
+  }
+}
+
+function deleteGlossaryTerm(idx) {
+  if (typeof idx === 'string' && idx.charAt(0) === 'a') {
+    var ai = parseInt(idx.slice(1));
+    var added = glossaryState.added || [];
+    if (added[ai]) { added[ai].deleted = true; glossaryState.added = added; saveGlossaryState(glossaryState); }
+  } else {
+    var overrides = glossaryState.overrides || {};
+    if (!overrides[idx]) overrides[idx] = {};
+    overrides[idx].deleted = true;
+    glossaryState.overrides = overrides;
+    saveGlossaryState(glossaryState);
+  }
+}
+
+function initGlossarySearch() {
+  var input = document.getElementById('glossarySearch');
+  var results = document.getElementById('glossarySearchResults');
+  if (!input || !results) return;
+  input.addEventListener('input', function() {
+    var q = input.value.trim().toLowerCase();
+    results.innerHTML = '';
+    if (q.length < 2) { results.classList.remove('visible'); return; }
+    var overrides = glossaryState.overrides || {};
+    var added = glossaryState.added || [];
+    var matches = [];
+    GLOSSARY_TERMS.forEach(function(t, i) {
+      var ov = overrides[i] || {};
+      if (ov.deleted) return;
+      var term = ov.term !== undefined ? ov.term : t.term;
+      var def = ov.def !== undefined ? ov.def : t.def;
+      if (term.toLowerCase().indexOf(q) > -1 || def.toLowerCase().indexOf(q) > -1) matches.push({ term: term, def: def });
+    });
+    added.forEach(function(t) {
+      if (t.deleted) return;
+      if ((t.term||'').toLowerCase().indexOf(q) > -1 || (t.def||'').toLowerCase().indexOf(q) > -1) matches.push({ term: t.term, def: t.def });
+    });
+    if (matches.length === 0) {
+      results.innerHTML = '<div class="glossary-no-results">No terms match "' + escHtml(input.value) + '"</div>';
+      results.classList.add('visible'); return;
+    }
+    matches.slice(0, 12).forEach(function(m) {
+      var row = document.createElement('div');
+      row.className = 'glossary-search-result';
+      row.innerHTML = '<div class="glossary-result-dot" style="background:var(--red)"></div>' +
+        '<div class="glossary-result-term">' + escHtml(m.term) + '</div>' +
+        '<div class="glossary-result-def">' + escHtml((m.def||'').substring(0, 100)) + ((m.def||'').length > 100 ? '...' : '') + '</div>';
+      results.appendChild(row);
+    });
+    results.classList.add('visible');
+  });
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.glossary-search-wrap')) results.classList.remove('visible');
+  });
+}
+
+var GLOSS_DEF_MAP = {};
+
+function buildAndCacheTerms() {
+  var overrides = (glossaryState && glossaryState.overrides) || {};
+  var added = (glossaryState && glossaryState.added) || [];
+  var entries = [];
+  var seen = {};
+  GLOSSARY_TERMS.forEach(function(t, i) {
+    var ov = overrides[i] || {};
+    if (ov.deleted) return;
+    var term = ov.term !== undefined ? ov.term : t.term;
+    var def  = ov.def  !== undefined ? ov.def  : t.def;
+    // Match key: text before first ( or /
+    var match = term.replace(/\s*[\/\(].*$/, '').trim();
+    if (match.length < 3) return;
+    var k = match.toLowerCase();
+    if (seen[k]) return;
+    seen[k] = true;
+    GLOSS_DEF_MAP[match.toLowerCase()] = { term: term, def: def };
+    entries.push({ match: match, term: term, def: def });
+  });
+  added.forEach(function(t) {
+    if (t.deleted || !t.term) return;
+    var match = t.term.replace(/\s*[\/\(].*$/, '').trim();
+    if (match.length < 3) return;
+    var k = match.toLowerCase();
+    if (seen[k]) return;
+    seen[k] = true;
+    GLOSS_DEF_MAP[k] = { term: t.term, def: t.def || '' };
+    entries.push({ match: match, term: t.term, def: t.def || '' });
+  });
+  entries.sort(function(a,b){ return b.match.length - a.match.length; });
+  return entries;
+}
+
+function injectGlossaryLinks(html) {
+  var entries = buildAndCacheTerms();
+  if (!entries.length) return html;
+  var parts = html.split(/(<[^>]*>)/);
+  var used = {};
+  parts = parts.map(function(part) {
+    if (!part || part.charAt(0) === '<') return part;
+    for (var i = 0; i < entries.length; i++) {
+      var e = entries[i];
+      var key = e.match.toLowerCase();
+      if (used[key]) continue;
+      var escaped = e.match.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      var re = new RegExp('(^|[^a-zA-Z0-9])(' + escaped + ')([^a-zA-Z0-9]|$)', 'i');
+      var m = re.exec(part);
+      if (!m) continue;
+      used[key] = true;
+      // Only store the term key in the span; def is looked up from GLOSS_DEF_MAP at hover time
+      var replacement = m[1] + '<span class="gloss-link" data-gterm="' + key + '">' + m[2] + '</span>' + m[3];
+      part = part.slice(0, m.index) + replacement + part.slice(m.index + m[0].length);
+    }
+    return part;
+  });
+  return parts.join('');
+}
+
+// Glossary hover tooltip - reads def from GLOSS_DEF_MAP, not from DOM attribute
+(function() {
+  var tip = document.createElement('div');
+  tip.id = 'gloss-tip';
+  tip.style.cssText = 'position:fixed;z-index:9999;max-width:300px;pointer-events:none;' +
+    'background:var(--fth-surface2);border:1px solid var(--fth-accent-line);border-radius:8px;' +
+    'padding:12px 16px;box-shadow:var(--fth-shadow);' +
+    'opacity:0;transition:opacity 0.15s;display:none;font-family:var(--fth-display)';
+  document.body.appendChild(tip);
+
+  var hideTimer = null;
+
+  function showTip(el) {
+    clearTimeout(hideTimer);
+    var key = el.getAttribute('data-gterm');
+    var entry = GLOSS_DEF_MAP[key];
+    if (!entry) return;
+    tip.innerHTML =
+      '<div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--fth-accent-ink);margin-bottom:7px">' +
+        entry.term.replace(/</g,'&lt;') +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--fth-text);line-height:1.65;font-weight:300">' +
+        entry.def.replace(/</g,'&lt;') +
+      '</div>';
+    tip.style.display = 'block';
+    // Position above the word
+    var r = el.getBoundingClientRect();
+    var tw = tip.offsetWidth || 300;
+    var th = tip.offsetHeight || 80;
+    var left = r.left + r.width/2 - tw/2;
+    var top  = r.top - th - 10;
+    if (left + tw > window.innerWidth - 12) left = window.innerWidth - tw - 12;
+    if (left < 12) left = 12;
+    if (top < 8) top = r.bottom + 10;
+    tip.style.left = left + 'px';
+    tip.style.top  = top  + 'px';
+    tip.style.opacity = '1';
+  }
+
+  function hideTip() {
+    hideTimer = setTimeout(function() {
+      tip.style.opacity = '0';
+      setTimeout(function() { tip.style.display = 'none'; }, 160);
+    }, 100);
+  }
+
+  document.addEventListener('mouseover', function(e) {
+    var t = e.target;
+    while (t && t !== document.body) {
+      if (t.classList && t.classList.contains('gloss-link')) { showTip(t); return; }
+      t = t.parentElement;
+    }
+  });
+  document.addEventListener('mouseout', function(e) {
+    var t = e.target;
+    while (t && t !== document.body) {
+      if (t.classList && t.classList.contains('gloss-link')) { hideTip(); return; }
+      t = t.parentElement;
+    }
+  });
+})();
+function renderResolve() {
+  var container = document.getElementById('resolveTasks');
+  if (!container) return;
+  container.innerHTML = '';
+  RESOLVE_TASKS.forEach(function(task) {
+    container.appendChild(buildTaskEl(task));
+  });
+}
+
+function toggleResolve() {
+  var section = document.getElementById('resolveSection');
+  if (section) section.classList.toggle('open');
+}
+
+function toggleResearch() {
+  var section = document.getElementById('researchSection');
+  if (section) section.classList.toggle('open');
+}
+
+render();
+renderResearch();
+renderResolve();
+</script>
+</body>
+</html>

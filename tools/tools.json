@@ -69,6 +69,25 @@
       "file": "tools/preprod.html"
     },
     {
+      "id": "postprod",
+      "name": "Post-Production Pipeline",
+      "desc": "A phase-by-phase roadmap from offload to final export in DaVinci Resolve, with trackable tasks, research, Resolve basics and an editable glossary.",
+      "category": "pipelines",
+      "tags": [
+        "Editor",
+        "Colour",
+        "Sound"
+      ],
+      "icon": "post",
+      "fileName": "Post-Production Pipeline.html",
+      "origTitle": "Short Film Post-Production",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611101430,
+      "file": "tools/postprod.html"
+    },
+    {
       "id": "pattern-lab",
       "name": "Lighting Pattern Lab",
       "desc": "Learn classic portrait lighting on a 3D head: Rembrandt, loop, butterfly, split, broad and short. Move the key light and see real soft-shadow falloff.",
