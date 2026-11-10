@@ -107,6 +107,25 @@
       "file": "tools/exposure.html"
     },
     {
+      "id": "dof",
+      "name": "Depth of Field Lab",
+      "desc": "Move a camera through a 3D set and see exactly what's sharp: focal length, aperture, focus distance and sensor size.",
+      "category": "technical",
+      "tags": [
+        "DP",
+        "1st AC",
+        "Lenses"
+      ],
+      "icon": "dof",
+      "fileName": "Depth of Field Lab.html",
+      "origTitle": "Depth of Field Lab",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611101410,
+      "file": "tools/dof.html"
+    },
+    {
       "id": "script-dev",
       "name": "Script Development Tool",
       "desc": "Scaffolded scriptwriting: build characters, settings and structure, then write in screenplay format with saved drafts.",

@@ -40,6 +40,7 @@ const ICONS = {
   palette:  P('<path d="M12 3.2a8.8 8.8 0 1 0 0 17.6c1.3 0 2-1 1.6-2.1-.5-1.2.3-2.4 1.6-2.4h1.9a3.7 3.7 0 0 0 3.7-3.7c0-5.2-4-9.4-8.8-9.4z"/><circle cx="7.6" cy="11.2" r="1.3"/><circle cx="10.2" cy="7.3" r="1.3"/><circle cx="14.8" cy="7.6" r="1.3"/>'),
   breakdown:P('<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><rect x="8.6" y="10.2" width="5" height="2.4" rx=".6" fill="currentColor" stroke="none" opacity=".5"/><path d="M14.8 11.4h1.8M8.6 15h2.6"/><rect x="12" y="13.8" width="4.6" height="2.4" rx=".6" fill="currentColor" stroke="none" opacity=".5"/>'),
   exposure: P('<circle cx="12" cy="12" r="8.8"/><path d="M12 3.2l2.6 6.4M20.4 9.3l-6.8.9M17.4 18.9l-4.2-5.4M6.6 18.9l4.2-5.4M3.6 9.3l6.8.9"/><circle cx="12" cy="12" r="2.6"/>'),
+  dof:      P('<circle cx="12" cy="12" r="8.8"/><path d="M3.2 12h17.6"/><path d="M8 7.4v9.2M16 7.4v9.2"/><path d="M12 9.6v4.8" stroke-width="2.4"/>'),
   falsecolour: P('<rect x="3" y="5" width="18" height="14" rx="1.8"/><path d="M3 15l4.5-4.5 3.5 3.5 4-5 6 6"/><path d="M7 5v14M11 5v14M15 5v14" opacity=".35"/>'),
   generic:  P('<rect x="3" y="9" width="18" height="11.5" rx="1.6"/><path d="M3.4 5.6L20 3l.6 3.6L4 9.2z"/><path d="M8 4.8l2 3.4M13 4l2 3.4"/>')
 };
@@ -1014,6 +1015,7 @@ const TOOL_THEME = {
   'script-lining': {kit: true},
   lighting:      {kit: true},
   falsecolour:   {kit: true, after: 'drawHist'},
+  dof:           {kit: true},
 };
 
 /* Shared kit (fonts, colours, buttons, fields, tool header). Tools marked kit:true in TOOL_THEME
