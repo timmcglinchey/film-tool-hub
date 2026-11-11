@@ -1,0 +1,2061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--fth-standalone-->
+<!-- Film Tool Hub: this block is only used when this file is opened on its own (for example while working on it).
+     Inside the hub it is removed and the hub supplies the same look from hub/kit.css. Keep it, but don't edit it here. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═════════ Film Tool Hub kit ═════════
+   Shared look for every tool. The hub injects this at the top of each tool's <head>,
+   sets data-theme="light|dark" on the tool's <html>, and sets --fth-cat to the tool's
+   category colour. Tools use the --fth-* tokens and the .fth-* components. */
+:root{
+  --fth-bg:#0b0c0e; --fth-bg2:#101216; --fth-surface:#15181d; --fth-surface2:#1b1f26; --fth-surface3:#232831;
+  --fth-line:#242931; --fth-line2:#333a45; --fth-line3:#46505e;
+  --fth-text:#f0ece5; --fth-muted:#9aa0aa; --fth-faint:#666c77;
+  --fth-good:#5cc98a; --fth-bad:#ff8f7a; --fth-warn:#f2bd5c;
+  /* accent tokens (--fth-cat, --fth-accent, --fth-accent-ink, --fth-accent-soft, --fth-accent-line, --fth-on-accent)
+     are written by the hub for each tool's category, as plain colours for both themes */
+  --fth-cat:#ffb547; --fth-accent:#ffb547; --fth-accent-ink:#ffb547; --fth-accent-soft:rgba(255,181,71,.14); --fth-accent-line:rgba(255,181,71,.45); --fth-on-accent:#14110b;
+  --fth-paper-backdrop:#07080a;
+  --fth-shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --fth-shadow-sm:none;
+  --fth-radius:14px; --fth-radius-sm:9px;
+  --fth-display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --fth-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --fth-script:"Courier Prime","Courier New",Courier,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --fth-bg:#f3f0ea; --fth-bg2:#f9f7f3; --fth-surface:#ffffff; --fth-surface2:#f1ede5; --fth-surface3:#e6e1d6;
+  --fth-line:#e3ded4; --fth-line2:#d2ccc0; --fth-line3:#b4ad9f;
+  --fth-text:#16181c; --fth-muted:#565c66; --fth-faint:#878c95;
+  --fth-good:#22804a; --fth-bad:#c0392b; --fth-warn:#9a6200;
+  --fth-paper-backdrop:#e4dfd5;
+  --fth-shadow:0 14px 30px -16px rgba(70,50,20,.30);
+  --fth-shadow-sm:0 1px 2px rgba(60,45,20,.05),0 4px 14px rgba(60,45,20,.05);
+  color-scheme:light;
+}
+
+/* base */
+html{background:var(--fth-bg)}
+body{background:var(--fth-bg);color:var(--fth-text);font-family:var(--fth-display);-webkit-font-smoothing:antialiased}
+::selection{background:var(--fth-accent-line)}
+:focus-visible{outline:2px solid var(--fth-accent);outline-offset:2px}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--fth-line2);border-radius:6px;border:2px solid var(--fth-bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--fth-line3)}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+
+/* tool header: category eyebrow, tool name, then actions on the right */
+.fth-head{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 20px;
+  background:color-mix(in srgb,var(--fth-bg) 88%,transparent);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  border-bottom:1px solid var(--fth-line)}
+.fth-head::before{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:linear-gradient(90deg,var(--fth-cat),transparent 38%);opacity:.75;pointer-events:none}
+.fth-id{display:flex;flex-direction:column;gap:5px;min-width:0;flex:none}
+.fth-eyebrow{display:flex;align-items:center;gap:8px;font:500 10.5px/1 var(--fth-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fth-accent-ink);white-space:nowrap}
+.fth-eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fth-cat);box-shadow:0 0 0 3px var(--fth-accent-soft);flex:none}
+.fth-title{margin:0;font-weight:800;font-variation-settings:"wdth" 68;font-size:23px;line-height:1;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap}
+.fth-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.fth-vsep{width:1px;height:22px;background:var(--fth-line2);margin:0 3px;flex:none}
+
+/* buttons */
+.fth-btn{height:34px;padding:0 13px;border-radius:var(--fth-radius-sm);border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);
+  font:600 13px/1 var(--fth-display);display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  transition:background-color .15s,border-color .15s,color .15s}
+.fth-btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.fth-btn:disabled{opacity:.45;cursor:default}
+.fth-btn.primary{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.fth-btn.primary:hover{filter:brightness(1.08)}
+.fth-btn.ghost{background:transparent;border-color:transparent;color:var(--fth-muted)}
+.fth-btn.ghost:hover{background:var(--fth-surface2);border-color:var(--fth-line2);color:var(--fth-text)}
+.fth-btn.danger{color:var(--fth-bad)}
+.fth-btn.sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.fth-btn.icon{width:30px;height:30px;padding:0}
+
+/* labels, fields */
+.fth-label{font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.fth-input{width:100%;min-width:0;background:var(--fth-bg2);border:1px solid var(--fth-line2);border-radius:8px;padding:7px 10px;color:var(--fth-text);font:14px/1.35 var(--fth-display);outline:none;transition:border-color .15s,box-shadow .15s}
+.fth-input:hover{border-color:var(--fth-line3)}
+.fth-input:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+select.fth-input{cursor:pointer}
+textarea.fth-input{resize:vertical;line-height:1.45}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-accent)}
+
+/* sections & surfaces */
+.fth-card{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);box-shadow:var(--fth-shadow-sm)}
+.fth-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.fth-sec::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+.fth-sec .fth-num{font:600 11px var(--fth-mono);color:var(--fth-accent-ink);letter-spacing:.08em}
+.fth-muted{color:var(--fth-muted)}
+.fth-mono{font-family:var(--fth-mono)}
+
+/* notes */
+.fth-tip{background:var(--fth-accent-soft);border-left:2px solid var(--fth-accent);color:var(--fth-text);padding:7px 10px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.45}
+.fth-warn{background:color-mix(in srgb,var(--fth-warn) 10%,var(--fth-surface));border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent);color:var(--fth-text);border-radius:10px;padding:10px 12px;font-size:13px}
+.fth-warn b:first-child{color:var(--fth-warn)}
+.fth-info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--fth-line3);color:var(--fth-muted);font:600 10px/1 var(--fth-mono);text-transform:none;letter-spacing:0;cursor:pointer;user-select:none;vertical-align:1px;margin-left:5px;transition:.15s}
+.fth-info:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+
+/* toast */
+.fth-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;z-index:200;background:var(--fth-text);color:var(--fth-bg);padding:10px 16px;border-radius:10px;font:500 13.5px var(--fth-display);box-shadow:var(--fth-shadow);transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.fth-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* paper: a printable page shown on screen stays paper-white in both themes */
+.fth-paper-wrap{background:var(--fth-paper-backdrop)}
+.fth-paper{background:#fff;color:#000;color-scheme:light;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55)}
+
+@media print{
+  html,body{background:#fff!important;color:#000}
+  .fth-head{display:none!important}
+  .fth-paper-wrap{background:#fff!important}
+  .fth-paper{box-shadow:none!important}
+}
+@media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
+@media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
+
+:root{--fth-cat:#f5b14c;--fth-accent:#f5b14c;--fth-accent-ink:#f5b14c;--fth-accent-soft:rgba(245,177,76,0.14);--fth-accent-line:rgba(245,177,76,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#8e672c;--fth-accent-ink:#8e672c;--fth-accent-soft:rgba(245,177,76,0.16);--fth-accent-line:rgba(245,177,76,0.6);--fth-on-accent:#ffffff}
+</style>
+<script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
+<!--/fth-standalone-->
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Script Coverage &amp; Feedback</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{display:flex;flex-direction:column;overflow:hidden;font:14px/1.45 var(--fth-display)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+:root{
+  --b-cs:#4fb8a3;--b-pr:#e6a24c;--b-ch:#e9785b;--b-a2:#7d9ee0;--b-mid:#ad86e0;--b-th:#e2b04a;
+  --k-note:var(--fth-accent);--k-strength:var(--fth-good);--k-issue:var(--fth-bad);--k-question:#7fb0ff;
+  --lab:118px;
+}
+:root[data-theme="light"]{--b-cs:#2c8a78;--b-pr:#c27a1c;--b-ch:#c4502f;--b-a2:#4a6fb5;--b-mid:#8a5cc2;--b-th:#a87508;--k-question:#2f6fc0}
+
+/* header */
+.fth-head{flex:none}
+.seg{display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:var(--fth-surface);border:1px solid var(--fth-line2)}
+.seg button{border:0;background:none;height:28px;padding:0 12px;border-radius:7px;color:var(--fth-muted);font:600 12.5px/1 var(--fth-display);white-space:nowrap}
+.seg button:hover{color:var(--fth-text)}
+.seg button.on{background:var(--fth-accent);color:var(--fth-on-accent)}
+.seg.sub button.on{background:var(--fth-surface3);color:var(--fth-text)}
+.seg.sm button{height:24px;padding:0 9px;font-size:12px}
+.views{display:flex;gap:2px}
+.views button{border:0;background:none;height:32px;padding:0 12px;border-radius:8px;color:var(--fth-muted);font:600 13px var(--fth-display);position:relative}
+.views button:hover{background:var(--fth-surface2);color:var(--fth-text)}
+.views button.on{color:var(--fth-text);background:var(--fth-surface2)}
+.views button.on::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;border-radius:2px;background:var(--fth-accent)}
+.docname{font:500 11.5px var(--fth-mono);color:var(--fth-faint);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+#app{flex:1;min-height:0;position:relative}
+.view{position:absolute;inset:0;display:none}
+.view.on{display:flex}
+
+/* ───────── workspace ───────── */
+#v-script{flex-direction:column}
+.strip{flex:none;border-bottom:1px solid var(--fth-line);background:var(--fth-bg2);padding:8px 14px 10px;position:relative;z-index:5}
+.strip-bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:7px}
+.strip-bar .fth-label{margin-right:4px}
+.strip.collapsed .tl{display:none}
+.strip.collapsed .strip-bar{margin-bottom:0}
+.chip{height:24px;padding:0 9px;border-radius:999px;border:1px solid var(--fth-line2);background:transparent;color:var(--fth-muted);font:600 11.5px/1 var(--fth-display);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.chip:hover{border-color:var(--fth-line3);color:var(--fth-text)}
+.chip .sw{width:8px;height:8px;border-radius:2px;background:var(--c,var(--fth-line3));opacity:.35}
+.chip.on{background:var(--fth-surface2);border-color:var(--fth-line3);color:var(--fth-text)}
+.chip.on .sw{opacity:1}
+.grow{flex:1}
+
+.ws{flex:1;min-height:0;display:flex}
+.panel{width:330px;flex:none;overflow:auto;background:var(--fth-bg);border-right:1px solid var(--fth-line);display:flex;flex-direction:column}
+.panel.right{border-right:0;border-left:1px solid var(--fth-line);width:320px}
+.panel.closed{display:none}
+.phead{position:sticky;top:0;z-index:3;background:color-mix(in srgb,var(--fth-bg) 92%,transparent);backdrop-filter:blur(8px);padding:12px 14px 10px;border-bottom:1px solid var(--fth-line);display:flex;flex-direction:column;gap:9px}
+.phead-row{display:flex;align-items:center;gap:8px}
+.phead h2{margin:0;font:700 13px/1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.04em}
+.pbody{padding:12px 14px 40px;display:flex;flex-direction:column;gap:10px}
+.empty-note{color:var(--fth-faint);font-size:13px;padding:18px 4px;text-align:center;line-height:1.5}
+
+.scroller{flex:1;min-width:0;overflow:auto;position:relative}
+#pages{display:flex;flex-direction:column;align-items:safe center;gap:18px;padding:24px 56px 140px 56px;min-width:max-content}
+#pages.with-gut{padding-left:212px}
+.pg{position:relative;width:var(--pw,780px);flex:none;user-select:none;-webkit-user-select:none}
+.pg canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.pg .ov{position:absolute;inset:0}
+.pg .pgno{position:absolute;left:calc(100% + 8px);top:0;font:500 10.5px var(--fth-mono);color:var(--fth-faint);white-space:nowrap;text-align:left}
+.pg .pgno b{display:block;color:var(--fth-muted);font-weight:600}
+body.mode-feedback .pg .ov{cursor:crosshair}
+body.placing .pg .ov{cursor:crosshair}
+.zoombar{position:sticky;bottom:14px;margin:0 auto;width:max-content;display:flex;align-items:center;gap:2px;padding:4px;border-radius:10px;background:var(--fth-surface2);border:1px solid var(--fth-line2);box-shadow:var(--fth-shadow);z-index:6;float:none}
+.zoombar button{border:0;background:none;height:26px;min-width:26px;border-radius:6px;color:var(--fth-muted);font:600 13px var(--fth-display)}
+.zoombar button:hover{background:var(--fth-surface3);color:var(--fth-text)}
+.zoombar span{font:500 11px var(--fth-mono);color:var(--fth-muted);min-width:48px;text-align:center}
+.zoomdock{position:absolute;left:0;right:0;bottom:0;pointer-events:none;display:flex;justify-content:center;padding-bottom:14px;z-index:6}
+.zoomdock .zoombar{pointer-events:auto;position:static}
+.pagepill{font:500 11px var(--fth-mono);color:var(--fth-muted);padding:0 8px;border-left:1px solid var(--fth-line2);margin-left:4px}
+
+/* drop zone */
+.drop{margin:8vh auto;max-width:520px;padding:40px 30px;border:1.5px dashed var(--fth-line3);border-radius:18px;text-align:center;background:var(--fth-surface);color:var(--fth-muted)}
+.drop h3{margin:0 0 8px;color:var(--fth-text);font:800 20px/1.1 var(--fth-display);font-variation-settings:"wdth" 72;text-transform:uppercase}
+.drop p{margin:0 0 18px;font-size:13.5px}
+.drop.over{border-color:var(--fth-accent);background:var(--fth-accent-soft)}
+.loading{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:7;background:var(--fth-surface2);border:1px solid var(--fth-line2);padding:6px 12px;border-radius:999px;font:500 12px var(--fth-mono);color:var(--fth-muted)}
+
+/* placing banner */
+.banner{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:8;display:flex;align-items:center;gap:10px;padding:7px 8px 7px 14px;border-radius:12px;background:var(--fth-surface2);border:1px solid var(--c);box-shadow:var(--fth-shadow);font-size:13px;max-width:calc(100% - 40px)}
+.banner b{color:var(--c)}
+.banner .dotc{width:9px;height:9px;border-radius:50%;background:var(--c);flex:none}
+
+/* overlays on the page */
+.mk-line{position:absolute;left:3%;right:3%;border-top:1.5px dashed var(--c);pointer-events:none}
+.mk-bar{position:absolute;left:3.6%;width:5px;margin-left:-2.5px;background:var(--c);border-radius:3px;pointer-events:none}
+.mk-pill{position:absolute;left:2%;max-width:15%;overflow:hidden;text-overflow:ellipsis;height:20px;line-height:12px;background:var(--c);color:#fff;font:700 10px/1 var(--fth-display);padding:4px 7px 4px 6px;border-radius:999px;white-space:nowrap;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.25);z-index:2;letter-spacing:.01em}
+:root[data-theme="dark"] .mk-pill{color:#101216}
+.mk-pill.end{opacity:.75;font-weight:600}
+.cm-rect{position:absolute;border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 16%,transparent);border-radius:3px;cursor:pointer}
+.cm-pin{position:absolute;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50% 50% 50% 2px;background:var(--c);color:#fff;font:700 10.5px/20px var(--fth-display);text-align:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3);z-index:2}
+:root[data-theme="dark"] .cm-pin{color:#101216}
+.cm-rect .cm-pin{left:100%;top:0}
+.cm-rect.hot,.cm-pin.hot{box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 45%,transparent)}
+.cm-rect.hot{background:color-mix(in srgb,var(--c) 26%,transparent)}
+.flash{animation:flash 1s ease 2}
+@keyframes flash{50%{box-shadow:0 0 0 5px var(--fth-accent-line)}}
+.preview{position:absolute;border:1.5px dashed var(--c);background:color-mix(in srgb,var(--c) 12%,transparent);pointer-events:none;border-radius:3px}
+
+/* ───────── beats panel ───────── */
+.structs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sbtn{border:1px solid var(--fth-line2);background:var(--fth-surface);border-radius:10px;padding:8px 8px 7px;text-align:left;display:flex;flex-direction:column;gap:3px;min-width:0}
+.sbtn:hover{border-color:var(--fth-line3)}
+.sbtn b{font:700 12px/1.15 var(--fth-display)}
+.sbtn small{font:500 10px var(--fth-mono);color:var(--fth-faint)}
+.sbtn.on{border-color:var(--fth-accent);background:var(--fth-accent-soft)}
+.sbtn.on small{color:var(--fth-accent-ink)}
+.beat{border:1px solid var(--fth-line);border-radius:11px;background:var(--fth-surface);padding:9px 10px 10px;display:flex;flex-direction:column;gap:7px;border-left:3px solid var(--c)}
+.beat.placed{background:linear-gradient(90deg,color-mix(in srgb,var(--c) 7%,var(--fth-surface)),var(--fth-surface) 60%)}
+.beat.arming{box-shadow:0 0 0 2px var(--c)}
+.beat-top{display:flex;align-items:flex-start;gap:8px}
+.beat-name{flex:1;min-width:0}
+.beat-name b{font:700 13px/1.2 var(--fth-display);display:block}
+.beat-name small{font:500 10.5px var(--fth-mono);color:var(--fth-faint);display:block;margin-top:2px}
+.beat-status{font:500 10.5px var(--fth-mono);color:var(--fth-muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.beat-status a{color:var(--c);cursor:pointer;text-decoration:none;font-weight:600}
+.beat-status a:hover{text-decoration:underline}
+.diff{padding:1px 6px;border-radius:999px;background:var(--fth-surface3);color:var(--fth-muted)}
+.diff.late{color:var(--fth-warn)}.diff.early{color:var(--k-question)}.diff.on{color:var(--fth-good)}
+.beat textarea{min-height:34px;font-size:13px;padding:6px 9px}
+.beat .fth-btn.sm{height:24px;padding:0 9px;font-size:11.5px}
+.placebtn{border-color:color-mix(in srgb,var(--c) 55%,transparent)!important;color:var(--c)!important;background:transparent!important}
+.placebtn:hover{background:color-mix(in srgb,var(--c) 12%,transparent)!important}
+.placebtn.armed{background:var(--c)!important;color:var(--fth-bg)!important}
+.toggle{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--fth-muted);cursor:pointer;user-select:none}
+.toggle input{margin:0}
+
+/* summaries */
+.sum{border:1px solid var(--fth-line);border-radius:11px;background:var(--fth-surface);padding:8px 10px 10px;display:flex;flex-direction:column;gap:6px;transition:border-color .15s,box-shadow .15s}
+.sum.cur{border-color:var(--fth-accent-line);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+.sum-top{display:flex;align-items:center;gap:8px}
+.sum-top button{border:0;background:none;padding:0;font:700 11px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.sum-top button:hover{color:var(--fth-accent-ink)}
+.sum.cur .sum-top button{color:var(--fth-accent-ink)}
+.sum-top .ph{font-size:11px;color:var(--fth-faint);font-family:var(--fth-mono)}
+.scenes{font:500 10px/1.35 var(--fth-mono);color:var(--fth-faint);text-transform:uppercase;letter-spacing:.02em}
+.sum textarea{min-height:34px;font-size:13px;padding:6px 9px}
+.wc{font:500 10px var(--fth-mono);color:var(--fth-faint);text-align:right}
+.wc.warn{color:var(--fth-warn)}
+
+/* comments */
+.kinds{display:flex;gap:5px;flex-wrap:wrap}
+.kchip{height:22px;padding:0 8px;border-radius:999px;border:1px solid var(--fth-line2);background:none;font:600 11px/1 var(--fth-display);color:var(--fth-muted);display:inline-flex;align-items:center;gap:5px}
+.kchip i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.kchip.on{border-color:var(--c);color:var(--fth-text);background:color-mix(in srgb,var(--c) 12%,transparent)}
+.cm{border:1px solid var(--fth-line);border-radius:11px;background:var(--fth-surface);padding:8px 10px 10px;display:flex;flex-direction:column;gap:7px;border-left:3px solid var(--c)}
+.cm.hot{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent)}
+.cm-top{display:flex;align-items:center;gap:7px}
+.cm-num{width:20px;height:20px;border-radius:50% 50% 50% 2px;background:var(--c);color:#fff;font:700 10.5px/20px var(--fth-display);text-align:center;flex:none}
+:root[data-theme="dark"] .cm-num{color:#101216}
+.cm-loc{font:500 10.5px var(--fth-mono);color:var(--fth-muted);cursor:pointer}
+.cm-loc:hover{color:var(--fth-accent-ink)}
+.cm select{height:22px;border-radius:6px;border:1px solid var(--fth-line2);background:var(--fth-bg2);font-size:11.5px;padding:0 4px;margin-left:auto}
+.cm textarea{min-height:52px;font-size:13px;padding:6px 9px}
+.xbtn{border:0;background:none;width:22px;height:22px;border-radius:6px;color:var(--fth-faint);display:grid;place-items:center;font-size:15px;line-height:1;flex:none}
+.xbtn:hover{background:var(--fth-surface3);color:var(--fth-bad)}
+
+/* ───────── timeline ───────── */
+.tl{position:relative;--lab:118px}
+.tl-row{display:flex;align-items:stretch;min-height:16px}
+.tl-row+.tl-row{margin-top:4px}
+.tl-lab{width:var(--lab);flex:none;font:600 10px/1.1 var(--fth-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--fth-muted);display:flex;align-items:center;padding-right:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-lab small{color:var(--fth-faint);font-weight:500;margin-left:4px}
+.tl-track{flex:1;position:relative;min-width:0;border-radius:4px;background:color-mix(in srgb,var(--fth-surface) 70%,transparent);cursor:pointer}
+.tl-it{position:absolute;cursor:pointer}
+.tl-page{top:2px;bottom:2px;background:var(--fth-surface3);border-radius:2px;font:500 8.5px/1 var(--fth-mono);color:var(--fth-muted);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:inset -1px 0 0 var(--fth-bg2)}
+.tl-page.cur{background:var(--fth-accent-line);color:var(--fth-text)}
+.tl-page.part{background:repeating-linear-gradient(135deg,var(--fth-surface3) 0 3px,var(--fth-surface2) 3px 6px)}
+.tl-sum{top:2px;bottom:2px;border-radius:3px;background:var(--fth-surface2);border:1px solid var(--fth-line);font:500 9.5px/1.25 var(--fth-display);color:var(--fth-text);padding:2px 4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
+.tl-sum.empty{color:var(--fth-faint);background:transparent;border-style:dashed}
+.tl-sum.cur{border-color:var(--fth-accent)}
+.tl-bar{height:12px;border-radius:3px;background:color-mix(in srgb,var(--c) 30%,transparent);border:1px solid color-mix(in srgb,var(--c) 70%,transparent);font:600 8.5px/10px var(--fth-display);color:var(--fth-text);padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-bar.act{background:var(--c);color:#fff}
+:root[data-theme="dark"] .tl-bar.act{color:#101216}
+.tl-pt{width:11px;height:11px;margin-left:-5.5px;background:var(--c);border-radius:2px;transform:rotate(45deg) scale(.82)}
+.tl-pt.act{border-radius:50%;transform:none;box-shadow:0 0 0 2px var(--fth-bg2)}
+.tl-pt.ghost{background:transparent;border:1.5px solid var(--c)}
+.tl-dot{width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--c);top:3px;box-shadow:0 0 0 2px var(--fth-bg2)}
+.tl-cx{position:absolute;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:var(--c)}
+.tl-ptlab{position:absolute;font:600 9.5px/11px var(--fth-display);color:var(--c);white-space:nowrap;pointer-events:none}
+.tl-win{position:absolute;top:0;bottom:0;border:1.5px solid var(--fth-accent);border-radius:4px;background:var(--fth-accent-soft);pointer-events:none;min-width:3px}
+.tl-guides,.tl-conn,.tl-winlayer{position:absolute;top:0;bottom:0;left:var(--lab);right:0;pointer-events:none}
+.tl-guide{position:absolute;top:0;bottom:0;border-left:1px dashed var(--fth-line3);opacity:.7}
+.tl-guide span{position:absolute;top:-15px;left:3px;font:500 9px var(--fth-mono);color:var(--fth-faint)}
+.tl-conn{overflow:visible;left:0;width:100%;height:100%;z-index:1}
+.tl-empty{font-size:12px;color:var(--fth-faint);padding:4px 0}
+.tl-axis{position:relative;height:18px;margin-left:var(--lab);font:500 9.5px var(--fth-mono);color:var(--fth-faint)}
+.tl-axis span{position:absolute;transform:translateX(-50%);top:2px;white-space:nowrap}
+.tl-axis span::before{content:"";position:absolute;left:50%;top:13px;height:5px;border-left:1px solid var(--fth-line3)}
+.tl.big{--lab:150px}
+.tl.big .tl-row+.tl-row{margin-top:8px}
+.tl.big .tl-lab{font-size:10.5px}
+.tl.big .tl-bar{height:20px;font-size:10.5px;line-height:18px;padding:0 6px}
+.tl.big .tl-pt{width:14px;height:14px;margin-left:-7px}
+.tl.big .tl-dot{width:12px;height:12px;margin-left:-6px}
+.tl.big .tl-sum{font-size:10.5px;padding:4px 6px;-webkit-line-clamp:4}
+.tl.big .tl-page{font-size:10px}
+.tl.big .tl-ptlab{font-size:10.5px}
+
+/* tooltip */
+.tip{position:fixed;z-index:300;max-width:320px;padding:9px 11px;border-radius:10px;background:var(--fth-surface3);border:1px solid var(--fth-line3);color:var(--fth-text);font-size:12.5px;line-height:1.45;box-shadow:var(--fth-shadow);pointer-events:none;opacity:0;transition:opacity .12s}
+.tip.show{opacity:1}
+.tip b{display:block;font-size:13px;margin-bottom:2px}
+.tip .m{font:500 10.5px var(--fth-mono);color:var(--fth-muted);display:block;margin-bottom:5px}
+.tip .n{display:block;margin-top:6px;padding-top:6px;border-top:1px solid var(--fth-line2)}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;z-index:250;display:flex;align-items:center;gap:12px;background:var(--fth-text);color:var(--fth-bg);padding:9px 10px 9px 16px;border-radius:10px;font:500 13px var(--fth-display);box-shadow:var(--fth-shadow);transition:.22s;pointer-events:none}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast button{border:0;background:var(--fth-bg);color:var(--fth-text);border-radius:7px;padding:4px 10px;font-weight:600;font-size:12.5px}
+.toast button:empty{display:none}
+
+/* menu */
+.menu{position:fixed;z-index:120;width:300px;padding:14px;border-radius:12px;background:var(--fth-surface2);border:1px solid var(--fth-line2);box-shadow:var(--fth-shadow);display:flex;flex-direction:column;gap:12px;font-size:13px}
+.menu h4{margin:0;font:700 12px var(--fth-display);text-transform:uppercase;letter-spacing:.05em}
+.menu .row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.menu p{margin:0;color:var(--fth-muted);font-size:12px}
+.menu input[type=range]{flex:1}
+
+/* ───────── timeline page ───────── */
+#v-timeline{flex-direction:column}
+.tbar{flex:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 20px;border-bottom:1px solid var(--fth-line);background:var(--fth-bg2)}
+.tbody{flex:1;min-height:0;display:flex}
+.tmain{flex:1;min-width:0;overflow:auto;padding:30px 28px 80px}
+.tnotes{width:300px;flex:none;border-left:1px solid var(--fth-line);padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--fth-bg)}
+.tnotes textarea{flex:1;min-height:200px}
+.tsec{margin:34px 0 10px;font:700 13px var(--fth-display);text-transform:uppercase;letter-spacing:.04em;display:flex;gap:10px;align-items:center}
+.tsec::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+table.cmp{width:100%;border-collapse:collapse;font-size:13px}
+table.cmp th{text-align:left;font:500 10px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted);padding:6px 8px;border-bottom:1px solid var(--fth-line2)}
+table.cmp td{padding:7px 8px;border-bottom:1px solid var(--fth-line);vertical-align:top}
+table.cmp td .sw{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);margin-right:7px}
+table.cmp td.n{font-family:var(--fth-mono);font-size:12px;white-space:nowrap}
+
+/* vertical */
+.vt{display:flex;gap:0;position:relative;min-width:max-content}
+.vcol{position:relative;flex:none;border-left:1px solid var(--fth-line)}
+.vcol:first-child{border-left:0}
+.vhead{position:sticky;top:-30px;z-index:4;height:34px;display:flex;align-items:center;padding:0 10px;background:var(--fth-bg);border-bottom:1px solid var(--fth-line2);font:600 10px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted);white-space:nowrap}
+.vbody{position:relative}
+.vband{position:absolute;left:0;right:0;border-top:1px solid var(--fth-line)}
+.vband.alt{background:color-mix(in srgb,var(--fth-surface) 55%,transparent)}
+.vband.cur{background:var(--fth-accent-soft)}
+.vpg{position:absolute;left:8px;right:8px;font:600 11px var(--fth-mono);color:var(--fth-muted);padding-top:4px;cursor:pointer}
+.vpg:hover{color:var(--fth-accent-ink)}
+.vpart{position:absolute;left:8px;width:5px;background:var(--fth-surface3);border-radius:3px}
+.vcard{position:absolute;left:10px;right:10px;padding:5px 8px;border-radius:8px;background:var(--fth-surface);border:1px solid var(--fth-line);font-size:12.5px;line-height:1.4;cursor:pointer;border-left:3px solid var(--c,var(--fth-line3))}
+.vcard:hover{border-color:var(--c,var(--fth-line3))}
+.vcard b{font-size:12px}
+.vcard small{font:500 10px var(--fth-mono);color:var(--fth-faint);display:block}
+.vcard.empty{color:var(--fth-faint);background:transparent;border-style:dashed}
+.vlead{position:absolute;left:2px;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--c,var(--fth-line3))}
+.vbar{position:absolute;left:10px;width:6px;border-radius:3px;background:color-mix(in srgb,var(--c) 45%,transparent)}
+.vlabel{position:absolute;left:22px;right:8px;font:600 11.5px/1.25 var(--fth-display);color:var(--c)}
+.vlabel small{display:block;font:500 9.5px var(--fth-mono);color:var(--fth-faint)}
+.vtick{position:absolute;left:6px;width:14px;height:2px;margin-top:-1px;background:var(--c)}
+
+/* ───────── report ───────── */
+#v-report{overflow:hidden}
+.rnav{width:230px;flex:none;border-right:1px solid var(--fth-line);padding:20px 12px;overflow:auto;display:flex;flex-direction:column;gap:2px}
+.rnav a{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:8px;color:var(--fth-muted);text-decoration:none;font-size:13px;cursor:pointer}
+.rnav a:hover{background:var(--fth-surface);color:var(--fth-text)}
+.rnav a.on{background:var(--fth-surface2);color:var(--fth-text)}
+.rnav a .n{font:600 10.5px var(--fth-mono);color:var(--fth-faint);width:18px}
+.rnav a .st{width:7px;height:7px;border-radius:50%;margin-left:auto;border:1.5px solid var(--fth-line3)}
+.rnav a .st.done{background:var(--fth-good);border-color:var(--fth-good)}
+.rnav a .st.part{background:var(--fth-warn);border-color:var(--fth-warn)}
+.rmain{flex:1;min-width:0;overflow:auto;padding:10px 40px 120px;scroll-behavior:smooth}
+.rinner{max-width:900px;margin:0 auto}
+.rsec{padding-top:18px}
+.rsec>.fth-sec{margin-top:18px}
+.guide{font-style:italic;color:var(--fth-faint);font-size:13px;margin:-4px 0 12px;line-height:1.5}
+.rcard{padding:16px 18px;margin-bottom:12px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld .meta{display:flex;justify-content:space-between;gap:8px}
+.auto{font:500 9.5px var(--fth-mono);color:var(--fth-accent-ink);text-transform:uppercase;letter-spacing:.06em}
+.rate{width:100%;border-collapse:separate;border-spacing:0}
+.rate th{font:500 10px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted);text-align:center;padding:0 4px 8px;font-weight:500}
+.rate th:first-child{text-align:left}
+.rate td{padding:4px;border-top:1px solid var(--fth-line)}
+.rate td:first-child{font-weight:600;font-size:13.5px;padding-left:0}
+.rbtn{width:100%;height:30px;border-radius:8px;border:1px solid var(--fth-line2);background:var(--fth-bg2);color:var(--fth-faint);font:600 12px var(--fth-display)}
+.rbtn:hover{border-color:var(--fth-line3);color:var(--fth-text)}
+.rbtn.on{color:var(--fth-on-accent);border-color:transparent}
+.rbtn.on.r0{background:var(--fth-good)}.rbtn.on.r1{background:color-mix(in srgb,var(--fth-good) 55%,var(--fth-warn))}.rbtn.on.r2{background:var(--fth-warn)}.rbtn.on.r3{background:var(--fth-bad)}
+.rtag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:999px;font:600 10.5px var(--fth-display);text-transform:none;letter-spacing:0;color:var(--fth-on-accent)}
+.rtag.r0{background:var(--fth-good)}.rtag.r1{background:color-mix(in srgb,var(--fth-good) 55%,var(--fth-warn))}.rtag.r2{background:var(--fth-warn)}.rtag.r3{background:var(--fth-bad)}
+.rtag.none{background:none;border:1px dashed var(--fth-line3);color:var(--fth-faint)}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:9px;border:1px solid var(--fth-line2);background:var(--fth-bg2);font-size:13px;text-align:left}
+.opt:hover{border-color:var(--fth-line3)}
+.opt i{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--fth-line3);flex:none}
+.opt.on{border-color:var(--fth-accent);background:var(--fth-accent-soft)}
+.opt.on i{border-color:var(--fth-accent);background:radial-gradient(circle,var(--fth-accent) 45%,transparent 50%)}
+.colh{font:500 10.5px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted);margin-bottom:8px}
+.el{margin-bottom:14px}
+.el-h{display:flex;align-items:center;gap:10px;margin:0 0 3px;font:700 15px var(--fth-display)}
+.ww{display:grid;grid-template-columns:96px 1fr 1fr;gap:8px;align-items:start}
+.ww .h{font:500 10px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted);padding-top:2px}
+.ww .h.good{color:var(--fth-good)}.ww .h.bad{color:var(--fth-bad)}
+.ww .rl{font:500 10px var(--fth-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--fth-faint);padding-top:9px}
+.ww textarea{min-height:58px;font-size:13.5px}
+.pref{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--fth-muted);margin-top:4px;cursor:pointer}
+.smap{margin:6px 0 14px;padding:14px 16px;border-radius:12px;border:1px solid var(--fth-line);background:var(--fth-bg2)}
+.smap-h{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.smap-h b{font:700 12px var(--fth-display);text-transform:uppercase;letter-spacing:.04em}
+.smap svg{width:100%;height:auto}
+.notes-t{width:100%;border-collapse:collapse}
+.notes-t th{font:500 10px var(--fth-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--fth-muted);text-align:left;padding:0 6px 7px;font-weight:500}
+.notes-t td{padding:5px 4px;vertical-align:top;border-top:1px solid var(--fth-line)}
+.notes-t textarea{min-height:64px;font-size:13px}
+.notes-t td.num{font:700 13px var(--fth-mono);color:var(--fth-muted);padding-top:12px;width:26px;text-align:center}
+.pri{height:30px;border-radius:8px;font-weight:700;font-size:12px;padding:0 4px}
+.pri.H{color:var(--fth-bad)}.pri.M{color:var(--fth-warn)}.pri.L{color:var(--fth-good)}
+.mini{display:flex;flex-direction:column;gap:2px}
+.mini button{border:0;background:none;width:22px;height:20px;border-radius:5px;color:var(--fth-faint);font-size:11px}
+.mini button:hover{background:var(--fth-surface3);color:var(--fth-text)}
+.addrow{margin-top:8px}
+.flags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.check{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--fth-line);cursor:pointer}
+.check input{margin-top:3px}
+.check .hint{display:block;font:500 10.5px var(--fth-mono);color:var(--fth-faint);margin-top:3px}
+.check .hint.ok{color:var(--fth-good)}.check .hint.no{color:var(--fth-warn)}
+.revtag{font:500 10.5px var(--fth-mono);color:var(--fth-faint);margin-left:auto}
+
+/* print */
+#print{display:none}
+@media print{
+  @page{margin:14mm}
+  body{display:block;overflow:visible;height:auto;background:#fff!important}
+  body>*:not(#print){display:none!important}
+  #print{display:block;color:#000;font:11pt/1.4 var(--fth-display)}
+}
+.pr h1{font:800 24pt/1 var(--fth-display);font-variation-settings:"wdth" 72;text-transform:uppercase;margin:0 0 4pt}
+.pr .sub{color:#555;margin:0 0 14pt;font-size:10pt}
+.pr h2{font:700 12.5pt var(--fth-display);text-transform:uppercase;letter-spacing:.03em;border-bottom:1.5pt solid #000;padding-bottom:3pt;margin:18pt 0 8pt;break-after:avoid}
+.pr h3{font:700 11pt var(--fth-display);margin:12pt 0 5pt;break-after:avoid}
+.pr table{width:100%;border-collapse:collapse;margin:4pt 0 8pt;break-inside:auto}
+.pr th,.pr td{border:0.75pt solid #999;padding:4pt 6pt;text-align:left;vertical-align:top;font-size:9.5pt}
+.pr th{background:#eee;font-weight:700}
+.pr tr{break-inside:avoid}
+.pr .box{border:0.75pt solid #999;padding:6pt 8pt;min-height:18pt;white-space:pre-wrap;font-size:10pt}
+.pr .tick{font-weight:700}
+.pr .muted{color:#666}
+.pr .svgwrap{border:0.75pt solid #ccc;padding:6pt;break-inside:avoid}
+.pr .svgwrap svg{width:100%;height:auto}
+.pr .kind{display:inline-block;padding:0 5pt;border-radius:6pt;font-size:8.5pt;font-weight:700;color:#fff}
+.pr p{margin:3pt 0;white-space:pre-wrap}
+
+@media (max-width:1180px){.panel{width:280px}.panel.right{width:280px}.rnav{width:190px}}
+@media (max-width:900px){.rnav{display:none}.rmain{padding:10px 18px 100px}.g3,.g4{grid-template-columns:1fr 1fr}.tnotes{display:none}}
+.stage{flex:1;min-width:0;position:relative;display:flex}
+.edgebtn{position:absolute;top:14px;z-index:7;height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--fth-line2);background:var(--fth-surface2);color:var(--fth-muted);font:600 12px var(--fth-display);box-shadow:var(--fth-shadow)}
+.edgebtn:hover{color:var(--fth-text);border-color:var(--fth-line3)}
+.edgebtn.l{left:12px}.edgebtn.r{right:12px}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);display:grid;place-items:center;padding:20px;animation:fadein .15s}
+@keyframes fadein{from{opacity:0}}
+.modal{width:min(520px,100%);background:var(--fth-surface2);border:1px solid var(--fth-line2);border-radius:16px;box-shadow:var(--fth-shadow);padding:22px 22px 18px}
+.modal h3{margin:0 0 10px;font:800 19px/1.15 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase}
+.modal-body p{margin:0 0 10px;color:var(--fth-muted);font-size:14px;line-height:1.5}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}
+
+/* textbook guide gutter (left of each page) */
+.pg .gut{position:absolute;top:0;bottom:0;right:100%;width:176px;pointer-events:none}
+.gbar{position:absolute;width:4px;border-radius:0;background:var(--c);opacity:.55;pointer-events:auto;cursor:help}
+.gbar.s{border-top-left-radius:3px;border-top-right-radius:3px}
+.gbar.e{border-bottom-left-radius:3px;border-bottom-right-radius:3px}
+.gtick{position:absolute;right:-1px;width:24px;height:2px;margin-top:-1px;background:var(--c)}
+.gdia{position:absolute;width:8px;height:8px;margin:-4px -4px 0 0;background:var(--c);transform:rotate(45deg);border-radius:1px}
+.glab{position:absolute;max-width:140px;height:16px;font:650 11px/16px var(--fth-display);color:var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;pointer-events:auto;cursor:pointer}
+.glab.cont{height:14px;font:500 9.5px/14px var(--fth-mono);opacity:.6;letter-spacing:.02em}
+.glab:hover{text-decoration:underline}
+.glead{position:absolute;width:6px;border:1px solid var(--c);border-left:0;opacity:.5}
+.mk-line.end{opacity:.6}
+.mk-lead{position:absolute;left:2.4%;border-left:1.5px solid var(--c);pointer-events:none}
+
+</style>
+</head>
+<body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>03 · Writing &amp; Script Prep</span><h1 class="fth-title">Script Coverage</h1></div>
+  <div class="seg" id="modeSeg" role="tablist" aria-label="Mode"><button data-mode="coverage">Coverage</button><button data-mode="feedback">Feedback</button></div>
+  <nav class="views" id="viewTabs"></nav>
+  <div class="fth-actions">
+    <span id="docName" class="docname"></span>
+    <button class="fth-btn" id="uploadBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/></svg>Upload script PDF</button>
+    <button class="fth-btn icon ghost" id="settingsBtn" title="Script settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
+    <span class="fth-vsep"></span>
+    <button class="fth-btn" id="printBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v7H7z"/></svg>Print / PDF</button>
+  </div>
+</header>
+<input type="file" id="fileIn" accept="application/pdf,.pdf" hidden>
+<input type="file" id="projIn" accept="application/json,.json" hidden>
+<main id="app">
+  <section id="v-script" class="view">
+    <div id="strip" class="strip"></div>
+    <div class="ws">
+      <aside id="left" class="panel left"></aside>
+      <div class="stage">
+        <div id="scroller" class="scroller fth-paper-wrap">
+          <div id="drop" class="drop">
+            <h3>Upload a script</h3>
+            <p>Drop a screenplay PDF here. In Coverage mode you'll map its structure and write the report; in Feedback mode you can comment, summarise pages and outline as you read.</p>
+            <button class="fth-btn primary" id="dropBtn">Choose PDF</button>
+          </div>
+          <div id="pages"></div>
+        </div>
+        <div id="banner" class="banner" hidden></div>
+        <div id="loading" class="loading" hidden></div>
+        <button id="openLeft" class="edgebtn l" title="Show panel" hidden>›</button>
+        <button id="openRight" class="edgebtn r" title="Show comments" hidden>‹ Comments</button>
+        <div id="zoomDock" class="zoomdock" hidden><div class="zoombar"><button id="zOut" title="Zoom out">−</button><span id="zoomVal">100%</span><button id="zIn" title="Zoom in">+</button><button id="zFit" title="Fit width">Fit</button><span id="pagePill" class="pagepill">p. 1</span></div></div>
+      </div>
+      <aside id="right" class="panel right closed"></aside>
+    </div>
+  </section>
+  <section id="v-report" class="view"></section>
+  <section id="v-timeline" class="view"></section>
+</main>
+<div id="tip" class="tip"></div>
+<div id="toast" class="toast"><span></span><button></button></div>
+<div id="print"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   SCRIPT COVERAGE & FEEDBACK — Film Tool Hub
+   ===================================================================== */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const words = s => (String(s || '').trim().match(/\S+/g) || []).length;
+const median = a => { if (!a.length) return null; const b = [...a].sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
+function h(tag, a, ...kids){
+  const el = document.createElement(tag);
+  if (a) for (const k in a){
+    const v = a[k]; if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'html') el.innerHTML = v;
+    else if (k === 'style' && typeof v === 'object'){ for (const sk in v){ if (v[sk] == null) continue; if (sk.startsWith('--')) el.style.setProperty(sk, v[sk]); else el.style[sk] = v[sk]; } }
+    else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+    else if (k === 'value') el.value = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  const add = c => { if (c == null || c === false) return; if (Array.isArray(c)) c.forEach(add); else el.append(c.nodeType ? c : document.createTextNode(String(c))); };
+  kids.forEach(add);
+  return el;
+}
+
+/* =====================================================================
+   STORY STRUCTURES (percent of script length)
+   ===================================================================== */
+const STRUCTS = {
+  own: {name:'Scaffolded Structure', short:'Scaffolded', beats:[
+    {id:'cs1', name:'Character & Setting', sub:'Opening', fam:'cs', s:0, e:12.5,
+      desc:'Establish the norm: who your character is and the world they live in. Show the flaw in action, and let us see how this setting has allowed the Lie to fester. This is the "before" picture that the closing Character & Setting will mirror.'},
+    {id:'p1', name:'1st Problem', fam:'pr', s:12.5, e:12.5,
+      desc:'Something disrupts the norm: a problem or an opportunity (the inciting incident). It is the first real challenge to the Lie, an invitation to adopt the Truth instead, and it should matter to this character specifically because of their flaw.'},
+    {id:'c1', name:'1st Choice', fam:'ch', s:25, e:25,
+      desc:'The problem forces a decision. At the end of Act 1 your character makes a defining choice that commits them and crosses a path of no return, usually in line with the Lie. The conflict of the story begins with this choice: all layers of conflict (philosophical, emotional and external) are activated.'},
+    {id:'a2a', name:'1st Half of Act 2', fam:'a2', s:25, e:50,
+      desc:'Living with the consequences of the first choice. The character pursues their goal, still operating by what they believe. Complications build, and the Lie may even seem to be working, but its cost is quietly mounting.'},
+    {id:'mid', name:'Midpoint', fam:'mid', s:50, e:50,
+      desc:'The hinge of the whole story: a False Victory, Turning Point or Realisation. Something shifts the character\'s understanding: they glimpse the Truth, or seem to win by the Lie. Everything before this is setup; everything after is payoff.'},
+    {id:'a2b', name:'2nd Half of Act 2', fam:'a2', s:50, e:75,
+      desc:'The fallout of the midpoint. Pressure mounts and the gap between Lie and Truth becomes impossible to ignore. Events here often mirror the first half of Act 2, now seen in a new light.'},
+    {id:'p2', name:'2nd Problem', fam:'pr', s:75, e:75,
+      desc:'A second, greater problem that mirrors the first, often the moment where everything falls apart. The character is tested again, but this time the true cost of the Lie is unavoidable.'},
+    {id:'c2', name:'2nd Choice', fam:'ch', s:87.5, e:87.5,
+      desc:'The decisive choice, mirroring the first, and the moment the conflict of the story ends. This is where theme is proven through character decision: does the character finally embrace the Truth, or cling to the Lie?'},
+    {id:'cs2', name:'Character & Setting', sub:'Closing', fam:'cs', s:87.5, e:100,
+      desc:'The new norm. Return to the character and their world, mirroring the opening, so the audience can measure the change (or the lack of it). The final image expresses the philosophy your story communicates.'}
+  ]},
+  three: {name:'3-Act Structure', short:'3-Act', beats:[
+    {id:'hook', name:'Hook', fam:'cs', s:0, e:5,
+      desc:'The opening grabs attention and sets the tone, genre and world. It poses a question the audience wants answered and shows us who we are following before anything changes.'},
+    {id:'inc', name:'Inciting Incident', fam:'pr', s:12, e:12,
+      desc:'The event that knocks the protagonist\'s ordinary world off balance and sets the story in motion. It creates the problem or opportunity the rest of the story responds to.'},
+    {id:'pp1', name:'Plot Point 1', fam:'ch', s:25, e:25,
+      desc:'The protagonist commits. A decision or event pushes them through a door they can\'t go back through, turning the setup into the main action of Act 2.'},
+    {id:'a2a', name:'1st Half of Act 2', fam:'a2', s:25, e:50,
+      desc:'Rising action. The protagonist pursues the goal using their existing approach. Obstacles and complications escalate while subplots and relationships develop.'},
+    {id:'mid', name:'Midpoint', fam:'mid', s:50, e:50,
+      desc:'A major shift at the centre of the story: a reversal, revelation, or false victory or defeat that raises the stakes and changes how the protagonist pursues the goal.'},
+    {id:'a2b', name:'2nd Half of Act 2', fam:'a2', s:50, e:75,
+      desc:'Pressure intensifies. The consequences of the midpoint close in, the opposition grows stronger, and the protagonist\'s flaws or old approach start to cost them.'},
+    {id:'pp2', name:'Plot Point 2', fam:'ch', s:75, e:75,
+      desc:'A second major turn, often the lowest point, that spins the story into Act 3. The protagonist finds the final piece of information or resolve they need for the confrontation.'},
+    {id:'climax', name:'Climax', fam:'pr', s:90, e:90,
+      desc:'The final confrontation, where the central conflict comes to a head. The protagonist faces the main obstacle directly and the dramatic question is answered.'},
+    {id:'res', name:'Resolution', fam:'cs', s:95, e:100,
+      desc:'The aftermath. Loose ends are tied up and we see the new normal, showing how the protagonist and their world have changed (or haven\'t).'}
+  ]},
+  stc: {name:'Save the Cat', full:'Blake Snyder\'s Save the Cat Beat Sheet', short:'Save the Cat', beats:[
+    {id:'open', name:'Opening Image', fam:'cs', s:0, e:1,
+      desc:'A single image or scene that captures the hero\'s world and problem before the story begins: the "before" snapshot that the Final Image will answer.'},
+    {id:'theme', name:'Theme Stated', fam:'th', s:5, e:5,
+      desc:'Someone, usually not the hero, states or hints at what the story is really about. The hero doesn\'t understand it yet.'},
+    {id:'setup', name:'Set-Up', fam:'cs', s:1, e:10,
+      desc:'Introduce the hero, their world, what they want and what they\'re missing. Plant the people, problems and flaws that will pay off later.'},
+    {id:'cat', name:'Catalyst', fam:'pr', s:10, e:10,
+      desc:'The life-changing event: news, a meeting, a loss or an opportunity that knocks the hero out of their status quo.'},
+    {id:'debate', name:'Debate', fam:'pr', s:10, e:20,
+      desc:'The hero hesitates. Should they go? Can they? Doubt, fear or resistance before they commit to the journey.'},
+    {id:'b2', name:'Break into Two', fam:'ch', s:20, e:20,
+      desc:'The hero makes a proactive choice and steps into the upside-down world of Act 2, leaving the old world behind.'},
+    {id:'bstory', name:'B Story', fam:'th', s:22, e:22,
+      desc:'A new character or relationship (often a love interest, mentor or friend) that carries the theme and will help the hero learn the lesson.'},
+    {id:'fun', name:'Fun and Games', fam:'a2', s:20, e:50,
+      desc:'The promise of the premise: the scenes the poster sells. The hero explores the new world, with successes and setbacks.'},
+    {id:'mid', name:'Midpoint', fam:'mid', s:50, e:50,
+      desc:'A false victory or a false defeat. The stakes are raised, time may tighten, and the A and B stories often cross.'},
+    {id:'bad', name:'Bad Guys Close In', fam:'a2', s:50, e:75,
+      desc:'External forces regroup and internal doubts grow. Things get steadily harder as the hero\'s team or plan starts to fall apart.'},
+    {id:'lost', name:'All Is Lost', fam:'ch', s:75, e:75,
+      desc:'The lowest point, and the opposite of the Midpoint. Often carries a "whiff of death": something or someone is lost.'},
+    {id:'dark', name:'Dark Night of the Soul', fam:'ch', s:75, e:80,
+      desc:'The hero wallows in hopelessness and reflects on everything that has happened, before the realisation that leads to the solution.'},
+    {id:'b3', name:'Break into Three', fam:'pr', s:80, e:80,
+      desc:'Thanks to a fresh idea, often from the B Story, the hero finds the solution and chooses to fight back.'},
+    {id:'finale', name:'Finale', fam:'pr', s:80, e:99,
+      desc:'The hero applies the lesson learned, confronts the opposition and transforms their world. The old world is defeated and a new one is made.'},
+    {id:'final', name:'Final Image', fam:'cs', s:99, e:100,
+      desc:'A mirror of the Opening Image, showing how much the hero and their world have changed.'}
+  ]}
+};
+const SORDER = ['own', 'three', 'stc'];
+for (const id of SORDER) STRUCTS[id].beats.forEach(b => { b.pt = b.s === b.e; b.anchor = b.cx != null ? b.cx : b.s; b.c = `var(--b-${b.fam})`; });
+const beatOf = (st, id) => STRUCTS[st].beats.find(b => b.id === id);
+const beatTitle = b => b.sub ? `${b.name} (${b.sub.toLowerCase()})` : b.name;
+
+const KINDS = {note:'Note', strength:'Strength', issue:'Issue', question:'Question'};
+const kc = k => `var(--k-${k || 'note'})`;
+
+const ELEMENTS = [
+  ['premise', 'Premise / concept', 'Premise & concept', 'Is the central idea clear, original and suited to the format? Does it deliver on its promise?'],
+  ['structure', 'Structure & pacing', 'Structure & pacing', 'Where does the first real turn happen? Do setups pay off? Does anything slow the story down? Does the ending land?'],
+  ['character', 'Character', 'Character', 'Does each character want something? Can you tell them apart by what they say and do? Who is the protagonist and do they change (or test their belief)?'],
+  ['dialogue', 'Dialogue', 'Dialogue', 'Is each voice distinct? Does dialogue carry subtext or only information? Does anything sound unnatural or repeat itself?'],
+  ['theme', 'Theme', 'Theme', 'What is the script about beneath the plot? Is it consciously built into character, structure and image, or does it appear by accident?'],
+  ['tone', 'Tone & genre execution', 'Tone & genre execution', 'Does it deliver what the genre promises? Is the tone consistent? Where does tension build or leak?'],
+  ['visual', 'Visual storytelling', 'Visual storytelling & format', 'Are action lines filmable (what the camera sees)? Is the script correctly formatted and the right length for its runtime?'],
+  ['production', 'Production feasibility', null, null]
+];
+const RATINGS = ['Excellent', 'Good', 'Fair', 'Poor'];
+const FLAGS = ['Large cast', 'Many locations', 'Night shoots', 'Exteriors / weather', 'Vehicles', 'Children', 'Animals', 'Stunts', 'Weapons', 'SFX / VFX', 'Period / costume', 'Crowd scenes', 'Water', 'Music rights'];
+const CHECKS = [
+  ['cite', 'Every note cites a page, scene or quote'],
+  ['strengths', 'Strengths are included, not just problems'],
+  ['pref', 'Observation and personal preference are labelled separately'],
+  ['aims', 'Notes are measured against the writer\'s stated aims'],
+  ['options', 'Each major problem has two or three possible options'],
+  ['neutral', 'Logline and synopsis are neutral, present tense and spoiler-complete'],
+  ['proof', 'Spelling and grammar checked; tone is professional and constructive']
+];
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+function blankCov(){
+  return {
+    details:{title:'', writer:'', draft:'', genre:'', format:'Short', length:'', pages:'', reader:'', date:new Date().toISOString().slice(0, 10), read:'first'},
+    grid:{}, rec:{project:'', writer:'', next:''}, verdict:'', logline:'', synopsis:'',
+    els:Object.fromEntries(ELEMENTS.filter(e => e[2]).map(e => [e[0], {wObs:'', wEv:'', nObs:'', nEv:'', pref:false}])),
+    notes:[{id:uid(), pri:'H', page:'', diag:'', why:'', opts:''}],
+    revision:[{id:uid(), note:'', addr:'', ev:'', worked:''}],
+    production:'', flags:[], cost:'', reflection:'', checks:{}
+  };
+}
+function blankState(){
+  return {
+    v:1, mode:'coverage', view:{coverage:'script', feedback:'script'},
+    struct:'own', place:{own:{}, three:{}, stc:{}}, notes:{own:{}, three:{}, stc:{}},
+    comments:[], summaries:{}, kindFilter:null,
+    rows:{
+      coverage:{pages:true, textbook:true, outline:true, summaries:false},
+      feedback:{comments:true, pages:true, summaries:true, own:false, three:false, stc:false, outline:true}
+    },
+    ui:{left:'summaries', leftOpen:true, rightOpen:true, strip:true, guides:true, zoom:1, orient:'h', connect:true},
+    titlePage:null, lastFill:null, tlNotes:'',
+    cov:blankCov()
+  };
+}
+function merge(d, t){
+  if (Array.isArray(d)) return Array.isArray(t) ? t : d;
+  if (d && typeof d === 'object'){ const o = {...d}; if (t && typeof t === 'object' && !Array.isArray(t)) for (const k in t) o[k] = k in d ? merge(d[k], t[k]) : t[k]; return o; }
+  return t === undefined ? d : t;
+}
+let S = blankState();
+
+/* storage: the hub provides fthStore; standalone falls back to its own IndexedDB */
+const store = window.fthStore || (() => {
+  let p = null;
+  const db = () => p || (p = new Promise((res, rej) => { const r = indexedDB.open('fth-coverage-standalone', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }));
+  const tx = (m, fn) => db().then(d => new Promise((res, rej) => { const t = d.transaction('kv', m), q = fn(t.objectStore('kv')); t.oncomplete = () => res(q && q.result); t.onerror = t.onabort = () => rej(t.error); }));
+  return {get:k => tx('readonly', s => s.get(k)).catch(() => undefined), set:(k, v) => tx('readwrite', s => s.put(v, k)).catch(() => {}), del:k => tx('readwrite', s => s.delete(k)).catch(() => {})};
+})();
+let saveT, ready = false;
+function save(){ if (!ready) return; clearTimeout(saveT); saveT = setTimeout(() => store.set('state', JSON.parse(JSON.stringify(S))), 500); }
+window.addEventListener('pagehide', () => { if (ready){ clearTimeout(saveT); store.set('state', JSON.parse(JSON.stringify(S))); } });
+
+/* =====================================================================
+   PDF + PAGE GEOMETRY
+   ===================================================================== */
+let pdfDoc = null, pdfName = '';
+const M = {n:0, pages:[], top:.09, bot:.91, autoTitle:false, autoFill:1, analysed:false};
+const titleOn = () => S.titlePage == null ? M.autoTitle : S.titlePage;
+const startPg = () => titleOn() && M.n > 1 ? 2 : 1;
+const NP = () => Math.max(1, M.n - (startPg() - 1));
+const lastFill = () => S.lastFill == null ? M.autoFill : S.lastFill;
+const LEN = () => (NP() - 1) + lastFill();
+const hasPdf = () => !!pdfDoc;
+function posOf(pg, y){
+  const i = pg - startPg(); if (i < 0) return 0;
+  const f = clamp((y - M.top) / (M.bot - M.top), 0, 1);
+  return Math.min(LEN(), i + f);
+}
+function ptOf(pos){
+  const i = clamp(Math.floor(pos), 0, NP() - 1), f = clamp(pos - i, 0, 1);
+  return {pg:i + startPg(), y:M.top + f * (M.bot - M.top)};
+}
+const pageNo = pos => clamp(Math.floor(pos - 1e-6) + 1, 1, NP());
+const pLabel = pos => 'p. ' + pageNo(pos);
+const pctOf = pos => pos / LEN() * 100;
+const posPct = pct => pct / 100 * LEN();
+function expLabel(b){
+  if (!hasPdf()) return b.pt ? `${b.s}%` : `${b.s}–${b.e}%`;
+  if (b.pt) return `p. ${pageNo(Math.max(posPct(b.s), 0.01))} · ${b.s}%`;
+  const a = pageNo(Math.max(posPct(b.s), 0.01)), z = pageNo(posPct(b.e));
+  return (a === z ? `p. ${a}` : `pp. ${a}–${z}`) + ` · ${b.s}–${b.e}%`;
+}
+function placedPos(pl){ return pl ? posOf(pl.p, pl.y) : null; }
+function placedEnd(pl){ return pl && pl.p2 != null ? posOf(pl.p2, pl.y2) : null; }
+function diffInfo(st, b){
+  const pl = S.place[st][b.id]; if (!pl || !hasPdf()) return null;
+  const d = placedPos(pl) - posPct(b.anchor), tol = Math.max(0.5, LEN() * 0.02);
+  const n = Math.abs(d);
+  const nn = n < 10 ? +n.toFixed(1) : Math.round(n);
+  const txt = n < tol ? 'on target' : `${nn} page${nn === 1 ? '' : 's'} ${d > 0 ? 'late' : 'early'}`;
+  return {d, txt, cls:n < tol ? 'on' : d > 0 ? 'late' : 'early'};
+}
+function rangeEnd(pl){ if (!pl || pl.p2 == null) return ''; const a = pageNo(placedPos(pl)), z = pageNo(placedEnd(pl)); return z !== a ? '–' + z : ''; }
+const placedCount = st => STRUCTS[st].beats.filter(b => S.place[st][b.id]).length;
+
+async function analyse(){
+  const pages = [];
+  for (let i = 1; i <= pdfDoc.numPages; i++){
+    const pg = await pdfDoc.getPage(i), vp = pg.getViewport({scale:1});
+    let tc; try { tc = await pg.getTextContent(); } catch (e) { tc = {items:[]}; }
+    const lines = new Map();
+    for (const it of tc.items){
+      if (!it.str || !it.str.trim()) continue;
+      const [x, y] = vp.convertToViewportPoint(it.transform[4], it.transform[5]);
+      const key = Math.round(y / vp.height * 300);
+      if (!lines.has(key)) lines.set(key, []);
+      lines.get(key).push({x, s:it.str});
+    }
+    let minY = 1, maxY = 0, count = 0; const scenes = [];
+    [...lines.keys()].sort((a, b) => a - b).forEach(k => {
+      const t = lines.get(k).sort((a, b) => a.x - b.x).map(o => o.s).join(' ').replace(/\s+/g, ' ').trim();
+      if (/^\(?\s*\d+[A-Z]?\s*\.?\s*\)?$/.test(t)) return;                // page number
+      if (/^\(?\s*(CONTINUED|MORE|CONT['’]D)\s*\)?:?$/i.test(t)) return;
+      const yf = k / 300; count++;
+      if (yf < minY) minY = yf; if (yf > maxY) maxY = yf;
+      const sc = t.replace(/^\s*\d+[A-Z]?\s+/, '').replace(/\s+\d+[A-Z]?\s*$/, '');
+      if (/^(INT|EXT|INT\.?\s*\/\s*EXT|EXT\.?\s*\/\s*INT|I\/E)[.\s]/i.test(sc) && scenes.length < 4) scenes.push(sc.slice(0, 60));
+    });
+    pages.push({w:vp.width, h:vp.height, minY, maxY, count, scenes});
+  }
+  M.pages = pages;
+  const counts = pages.slice(1).map(p => p.count);
+  M.autoTitle = pages.length > 1 && pages[0].scenes.length === 0 && pages[0].count < 0.45 * (median(counts) || 0);
+  measure();
+  M.analysed = true;
+}
+function measure(){
+  const P = M.pages; if (!P.length) return;
+  const sp = P.slice(startPg() - 1);
+  const body = (sp.length > 1 ? sp.slice(0, -1) : sp).filter(p => p.count > 3);
+  const top = median(body.map(p => p.minY)), bot = median(body.map(p => p.maxY));
+  if (top != null && bot != null && bot - top > 0.3){ M.top = Math.max(0, top - 0.012); M.bot = Math.min(1, bot + 0.006); }
+  else { M.top = .09; M.bot = .91; }
+  const last = sp[sp.length - 1];
+  M.autoFill = sp.length > 1 && last && last.count ? clamp((last.maxY + 0.006 - M.top) / (M.bot - M.top), 0.05, 1) : 1;
+  M.autoFill = Math.round(M.autoFill * 20) / 20 || 0.05;
+}
+
+const fileIn = $('#fileIn');
+async function loadPdf(bytes, name, fresh){
+  if (!window.pdfjsLib){ toast('The PDF reader couldn\'t load. Check your internet connection and reload.'); return; }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  showLoading('Opening script…');
+  try { pdfDoc = await pdfjsLib.getDocument({data:bytes.slice(0)}).promise; }
+  catch (e) { hideLoading(); toast('That PDF couldn\'t be opened.'); return; }
+  pdfName = name || 'script.pdf'; M.n = pdfDoc.numPages; M.analysed = false;
+  const sizes = [];
+  for (let i = 1; i <= M.n; i++){ const vp = (await pdfDoc.getPage(i)).getViewport({scale:1}); sizes.push({w:vp.width, h:vp.height}); }
+  M.pages = sizes.map(s => ({...s, minY:.1, maxY:.9, count:0, scenes:[]}));
+  buildPages();
+  showLoading('Reading pages…');
+  await analyse();
+  hideLoading();
+  if (fresh){
+    const d = S.cov.details;
+    if (!d.title) d.title = pdfName.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').trim();
+    d.pages = String(+(LEN().toFixed(2)) % 1 ? LEN().toFixed(1) : LEN());
+    d.format = LEN() >= 60 ? 'Feature' : 'Short';
+    if (!d.length) d.length = d.format === 'Feature' ? `${Math.round(LEN())} pages / approx. ${Math.round(LEN())} min` : `${Math.round(LEN())} pages / approx. ${Math.round(LEN())} min`;
+    save();
+  }
+  renderAll();
+}
+fileIn.addEventListener('change', async e => {
+  const f = e.target.files[0]; if (!f) return; e.target.value = '';
+  await openFile(f);
+});
+const HUB = (() => { try { const H = window.parent !== window && window.parent.__fthHub; return H && typeof H.save === 'function' ? H : null; } catch (e) { return null; } })();
+const hasWork = () => S.comments.length || SORDER.some(placedCount) || Object.values(S.summaries).some(v => (v || '').trim())
+  || SORDER.some(st => Object.values(S.notes[st]).some(v => (v || '').trim())) || (S.tlNotes || '').trim() || covWork();
+function covWork(){
+  const c = S.cov, f = v => !!String(v || '').trim(), d = c.details;
+  return f(c.verdict) || f(c.logline) || f(c.synopsis) || f(c.production) || f(c.reflection) || c.flags.length || f(c.cost)
+    || Object.values(c.grid).some(v => v !== '' && v != null) || Object.values(c.rec).some(f) || Object.values(c.checks).some(Boolean)
+    || Object.values(c.els).some(e => f(e.wObs) || f(e.wEv) || f(e.nObs) || f(e.nEv))
+    || c.notes.some(n => f(n.diag) || f(n.why) || f(n.opts) || f(n.page)) || c.revision.some(r => f(r.note) || f(r.ev) || f(r.worked))
+    || f(d.writer) || f(d.reader) || f(d.draft) || f(d.genre);
+}
+async function openFile(f){
+  if (!/pdf$/i.test(f.type) && !/\.pdf$/i.test(f.name)){ toast('Please choose a PDF.'); return; }
+  if (hasPdf() || hasWork()){
+    const proj = HUB && HUB.projectInfo ? HUB.projectInfo() : null;
+    const ans = await modal({
+      title:'Start fresh with a new script?',
+      body:[h('p', null, `Loading “${f.name}” clears everything in this tool: comments, page summaries, placed beats, beat notes and the coverage report.`),
+        HUB ? h('p', null, `Save ${proj ? `“${proj.name}”` : 'this project'} first so you can come back to this script any time. You could also start a new project for the new script from the project menu at the top.`)
+            : h('p', null, 'Export this work as a project file (.json) first. You can open it again later from Script settings → Import project.')],
+      buttons:[['cancel', 'Cancel', 'ghost'], ['discard', 'Clear without saving', 'danger'], ['save', HUB ? 'Save project, then load' : 'Export .json, then load', 'primary']]
+    });
+    if (ans === 'cancel' || !ans) return;
+    if (ans === 'save'){
+      if (HUB){ clearTimeout(saveT); await store.set('state', JSON.parse(JSON.stringify(S))); try { await HUB.save(); } catch (e) { toast('The project couldn\'t be saved, so nothing was cleared.'); return; } }
+      else if (!(await exportProject())) return;
+    }
+  }
+  const ab = await f.arrayBuffer();
+  const keep = {mode:S.mode, view:S.view, struct:S.struct, rows:S.rows, ui:S.ui};
+  S = merge(blankState(), JSON.parse(JSON.stringify(keep)));
+  if (placing) cancelPlacing();
+  await store.set('pdf', {name:f.name, bytes:ab.slice(0)});
+  save();
+  await loadPdf(ab, f.name, true);
+}
+
+/* ───── project file (.json) ───── */
+function b64(buf){ const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
+function unb64(str){ const s = atob(str), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u.buffer; }
+async function exportProject(){
+  const pdf = await store.get('pdf');
+  const data = {type:'fth-script-coverage', version:1, savedAt:new Date().toISOString(), state:JSON.parse(JSON.stringify(S)), pdf:pdf && pdf.bytes ? {name:pdf.name, data:b64(pdf.bytes)} : null};
+  const base = (S.cov.details.title || pdfName.replace(/\.pdf$/i, '') || 'script').replace(/[\\/:*?"<>|]+/g, '').trim() || 'script';
+  const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+  const a = h('a', {href:URL.createObjectURL(blob), download:`${base} - ${S.mode === 'coverage' ? 'coverage' : 'feedback'}.json`});
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('Project exported');
+  return true;
+}
+async function importProject(file){
+  let data; try { data = JSON.parse(await file.text()); } catch (e) { toast('That file isn\'t a project file.'); return; }
+  if (!data || data.type !== 'fth-script-coverage' || !data.state){ toast('That file isn\'t a Script Coverage project.'); return; }
+  if ((hasPdf() || hasWork()) && await modal({title:'Open this project?', body:[h('p', null, 'It replaces the script and all the work currently in this tool.')], buttons:[['cancel', 'Cancel', 'ghost'], ['ok', 'Open project', 'primary']]}) !== 'ok') return;
+  if (placing) cancelPlacing();
+  S = merge(blankState(), data.state); save();
+  pdfDoc = null; pdfName = ''; M.n = 0; pageEls = []; pagesEl.innerHTML = '';
+  if (data.pdf && data.pdf.data){ const bytes = unb64(data.pdf.data); await store.set('pdf', {name:data.pdf.name, bytes:bytes.slice(0)}); await loadPdf(bytes, data.pdf.name, false); }
+  else { await store.del('pdf'); $('#drop').hidden = false; $('#zoomDock').hidden = true; renderAll(); }
+  toast('Project opened');
+}
+
+/* ───── modal ───── */
+function modal({title, body, buttons}){
+  return new Promise(res => {
+    const close = v => { bg.remove(); document.removeEventListener('keydown', key, true); res(v); };
+    const key = e => { if (e.key === 'Escape'){ e.stopPropagation(); close('cancel'); } };
+    const bg = h('div', {class:'modal-bg', onclick:e => { if (e.target === bg) close('cancel'); }},
+      h('div', {class:'modal', role:'dialog', 'aria-modal':'true'}, h('h3', null, title), h('div', {class:'modal-body'}, body),
+        h('div', {class:'modal-actions'}, buttons.map(([v, l, c]) => h('button', {class:'fth-btn ' + (c || ''), onclick:() => close(v)}, l)))));
+    document.body.append(bg); document.addEventListener('keydown', key, true);
+    const p = bg.querySelector('.fth-btn.primary'); p && p.focus();
+  });
+}
+
+/* ───── page DOM, lazy rendering ───── */
+const scroller = $('#scroller'), pagesEl = $('#pages');
+let pageEls = [], io = null, renderGen = 0;
+const GUT = 176;                       /* width of the textbook-guide gutter left of each page */
+const guidesOn = () => !!pdfDoc && S.ui.guides && (S.mode === 'coverage' || S.ui.left === 'beats');
+function baseWidth(){ return clamp(scroller.clientWidth - (guidesOn() ? GUT + 110 : 110), 320, 860); }
+function applyZoom(){
+  pagesEl.style.setProperty('--pw', Math.round(baseWidth() * S.ui.zoom) + 'px');
+  $('#zoomVal').textContent = Math.round(S.ui.zoom * 100) + '%';
+  renderGen++; pageEls.forEach(p => { p._r = 0; });
+  if (io){ io.disconnect(); pageEls.forEach(p => io.observe(p)); }
+  renderOverlays();
+}
+function buildPages(){
+  pagesEl.innerHTML = ''; pageEls = [];
+  if (io) io.disconnect();
+  io = new IntersectionObserver(ents => ents.forEach(en => { if (en.isIntersecting) renderPage(en.target); }), {root:scroller, rootMargin:'900px 0px'});
+  for (let i = 1; i <= M.n; i++){
+    const P = M.pages[i - 1];
+    const el = h('div', {class:'pg fth-paper', 'data-pg':i, style:{aspectRatio:`${P.w} / ${P.h}`}},
+      h('canvas'), h('div', {class:'ov'}), h('div', {class:'gut'}), h('div', {class:'pgno'}));
+    el._pg = i; pageEls.push(el); pagesEl.append(el);
+  }
+  $('#drop').hidden = true; $('#zoomDock').hidden = false;
+  applyZoom();
+  renderOverlays();
+}
+async function renderPage(el){
+  const gen = renderGen; if (el._r === gen) return; el._r = gen;
+  const page = await pdfDoc.getPage(el._pg);
+  const cssW = el.clientWidth || baseWidth(), dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  const vp1 = page.getViewport({scale:1}), vp = page.getViewport({scale:cssW * dpr / vp1.width});
+  const c = document.createElement('canvas'); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+  try { await page.render({canvasContext:c.getContext('2d'), viewport:vp}).promise; } catch (e) { return; }
+  if (gen !== renderGen) return;
+  el.querySelector('canvas').replaceWith(c);
+}
+new ResizeObserver(() => { if (pdfDoc){ clearTimeout(scroller._rz); scroller._rz = setTimeout(applyZoom, 150); } }).observe(scroller);
+
+/* ───── overlays ───── */
+function addRange(byPage, a, b, make){
+  /* a,b: {pg,y}; calls make(pg, y0, y1, isStart, isEnd) for each page touched */
+  for (let p = a.pg; p <= b.pg; p++){
+    const y0 = p === a.pg ? a.y : M.top - 0.02, y1 = p === b.pg ? b.y : M.bot + 0.02;
+    (byPage[p] = byPage[p] || []).push(make(p, Math.max(0, y0), Math.min(1, y1), p === a.pg, p === b.pg));
+  }
+}
+function stackPx(items, gap, maxY){
+  /* items: {y (px), h (px)} sorted top to bottom; pushes each below the previous so nothing overlaps */
+  let bottom = -1e9;
+  items.sort((p, q) => p.y - q.y || (p.pri || 0) - (q.pri || 0)).forEach(it => { it.top = Math.max(it.y - it.h / 2, bottom + gap); bottom = it.top + it.h; });
+  /* if the stack runs off the bottom, slide it back up */
+  if (maxY != null && items.length){ let over = bottom - maxY; for (let i = items.length - 1; i >= 0 && over > 0; i--){ const it = items[i], room = i ? it.top - (items[i - 1].top + items[i - 1].h + gap) : it.top; const mv = Math.min(over, Math.max(0, room)); for (let j = i; j < items.length; j++) items[j].top -= mv; over -= mv; } }
+  return items;
+}
+let gutterWas = null;
+function renderOverlays(){
+  if (!pdfDoc) return;
+  const g = guidesOn();
+  if (g !== gutterWas){ gutterWas = g; pagesEl.classList.toggle('with-gut', g); applyZoom(); return; }
+  const byPage = {}, put = (p, el) => (byPage[p] = byPage[p] || []).push(el);
+  const st = S.struct, showStruct = S.mode === 'coverage' || S.ui.left === 'beats';
+  const ph = p => (pageEls[p - 1] && pageEls[p - 1].offsetHeight) || 1000;
+
+  /* ── textbook guides: in the gutter beside the page, never on it ── */
+  const gut = {}, G = p => gut[p] = gut[p] || {bars:[], ticks:[], labels:[]};
+  let nl = 1;
+  if (g){
+    const beats = STRUCTS[st].beats;
+    const rItems = beats.filter(b => !b.pt).map(b => ({b, x0:b.s, x1:b.e}));
+    nl = lanes(rItems, 0); const laneOf = new Map(rItems.map(i => [i.b, i.lane]));
+    beats.forEach(b => {
+      if (b.pt){ const q = ptOf(posPct(b.s)); G(q.pg).ticks.push({y:q.y, b}); G(q.pg).labels.push({y:q.y, b, kind:'pt', pri:0}); return; }
+      const a = ptOf(posPct(b.s) + 1e-4), z = ptOf(Math.max(posPct(b.e) - 1e-4, 0));
+      for (let p = a.pg; p <= z.pg; p++){
+        const y0 = p === a.pg ? a.y : 0, y1 = p === z.pg ? z.y : 1;
+        G(p).bars.push({y0, y1, b, lane:laneOf.get(b), start:p === a.pg, end:p === z.pg});
+        if (p === a.pg) G(p).labels.push({y:a.y, b, kind:'start', pri:1});
+        else G(p).labels.push({y:M.top, b, kind:'cont', pri:2});
+      }
+    });
+  }
+  const barX = lane => 12 + lane * 7;                     /* px from the page edge */
+  const labRight = () => barX(nl - 1) + 16;
+
+  /* ── this script's placed beats: on the page ── */
+  const pills = {};
+  if (showStruct) STRUCTS[st].beats.forEach(b => {
+    const pl = S.place[st][b.id]; if (!pl) return;
+    (pills[pl.p] = pills[pl.p] || []).push({b, y:pl.y, end:false});
+    if (pl.p2 == null){ put(pl.p, h('div', {class:'mk-line', style:{top:(pl.y * 100) + '%', '--c':b.c}})); }
+    else {
+      addRange(byPage, {pg:pl.p, y:pl.y}, {pg:pl.p2, y:pl.y2}, (p, y0, y1) => h('div', {class:'mk-bar', style:{top:(y0 * 100) + '%', height:((y1 - y0) * 100) + '%', '--c':b.c}}));
+      put(pl.p, h('div', {class:'mk-line', style:{top:(pl.y * 100) + '%', '--c':b.c}}));
+      put(pl.p2, h('div', {class:'mk-line end', style:{top:(pl.y2 * 100) + '%', '--c':b.c}}));
+      (pills[pl.p2] = pills[pl.p2] || []).push({b, y:pl.y2, end:true});
+    }
+  });
+  for (const p in pills){
+    const H = ph(+p);
+    stackPx(pills[p].map(it => Object.assign(it, {y:it.y * H, h:20})), 3, H).forEach(it => {
+      const b = it.b, shifted = Math.abs(it.top + 10 - it.y) > 2;
+      if (shifted) put(+p, h('div', {class:'mk-lead', style:{top:Math.min(it.y, it.top + 10) + 'px', height:Math.abs(it.top + 10 - it.y) + 'px', '--c':b.c}}));
+      put(+p, setTip(h('div', {class:'mk-pill' + (it.end ? ' end' : ''), style:{top:it.top + 'px', '--c':b.c}, onpointerdown:e => e.stopPropagation(), onclick:() => focusBeat(b.id)},
+        (it.end ? 'end · ' : '') + beatTitle(b).replace(' (opening)', '').replace(' (closing)', '')), beatTip(st, b)));
+    });
+  }
+  /* comments */
+  if (S.mode === 'feedback') sortedComments().forEach((c, i) => {
+    const n = i + 1, col = kc(c.kind);
+    const pin = h('div', {class:'cm-pin', 'data-cid':c.id, onpointerdown:e => e.stopPropagation(), onclick:e => { e.stopPropagation(); focusComment(c.id, true); }, onmouseenter:() => hotComment(c.id, true), onmouseleave:() => hotComment(c.id, false)}, n);
+    setTip(pin, () => `<span class="m">${esc(KINDS[c.kind])} · ${pLabel(posOf(c.p, c.y0))}</span>${c.text ? esc(c.text) : '<i>Empty comment</i>'}`);
+    if (c.x1 == null){ pin.style.left = (c.x0 * 100) + '%'; pin.style.top = (c.y0 * 100) + '%'; pin.style.setProperty('--c', col); put(c.p, pin); }
+    else put(c.p, h('div', {class:'cm-rect', 'data-cid':c.id, style:{left:(c.x0 * 100) + '%', top:(c.y0 * 100) + '%', width:((c.x1 - c.x0) * 100) + '%', height:((c.y1 - c.y0) * 100) + '%', '--c':col},
+      onpointerdown:e => e.stopPropagation(), onclick:() => focusComment(c.id, true), onmouseenter:() => hotComment(c.id, true), onmouseleave:() => hotComment(c.id, false)}, pin));
+  });
+  pageEls.forEach(el => {
+    const p = el._pg, ov = el.querySelector('.ov');
+    ov.replaceChildren(...(byPage[p] || []));
+    const gEl = el.querySelector('.gut'), gd = gut[p];
+    if (!g || !gd){ gEl.replaceChildren(); }
+    else {
+      const H = ph(p), kids = [], lr = labRight();
+      gd.bars.forEach(r => kids.push(setTip(h('div', {class:'gbar' + (r.start ? ' s' : '') + (r.end ? ' e' : ''), style:{right:barX(r.lane) + 'px', top:(r.y0 * 100) + '%', height:((r.y1 - r.y0) * 100) + '%', '--c':r.b.c}}), beatTip(st, r.b, true))));
+      gd.ticks.forEach(t => kids.push(h('div', {class:'gtick', style:{top:(t.y * 100) + '%', '--c':t.b.c}}), h('div', {class:'gdia', style:{top:(t.y * 100) + '%', right:(barX(nl - 1) + 5) + 'px', '--c':t.b.c}})));
+      stackPx(gd.labels.map(l => Object.assign(l, {y:l.y * H, h:l.kind === 'cont' ? 14 : 16})), 2, H).forEach(l => {
+        const shifted = Math.abs(l.top + l.h / 2 - l.y) > 2;
+        if (shifted) kids.push(h('div', {class:'glead', style:{right:(lr - 10) + 'px', top:Math.min(l.y, l.top + l.h / 2) + 'px', height:Math.abs(l.top + l.h / 2 - l.y) + 'px', '--c':l.b.c}}));
+        const txt = l.kind === 'cont' ? beatTitle(l.b).replace(/ \((opening|closing)\)/, '') + ' cont.' : beatTitle(l.b).replace(/ \((opening|closing)\)/, '');
+        kids.push(setTip(h('div', {class:'glab ' + l.kind, style:{top:l.top + 'px', right:lr + 'px', '--c':l.b.c}, onclick:() => focusBeat(l.b.id)}, txt), beatTip(st, l.b, true)));
+      });
+      gEl.replaceChildren(...kids);
+    }
+    const no = el.querySelector('.pgno');
+    if (p < startPg()) no.innerHTML = '<b>Title</b>';
+    else { const i = p - startPg(); no.innerHTML = `<b>${i + 1}</b>${M.analysed ? Math.round(i / LEN() * 100) + '%' : ''}`; }
+  });
+}
+
+/* ───── pointer: place beats / draw comments ───── */
+let placing = null, drag = null;
+function locate(clientY, clientX, lockPg){
+  let el = lockPg ? pageEls[lockPg - 1] : null;
+  if (!el){
+    el = pageEls[0];
+    for (const p of pageEls){ const r = p.getBoundingClientRect(); if (clientY >= r.top - 9) el = p; else break; }
+  }
+  const r = el.getBoundingClientRect();
+  return {pg:el._pg, x:clamp((clientX - r.left) / r.width, 0, 1), y:clamp((clientY - r.top) / r.height, 0, 1), el};
+}
+pagesEl.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || !e.target.closest('.ov')) return;
+  if (!placing && S.mode !== 'feedback'){ hintOnce('cov-place', 'Choose a beat on the left and press Place, then click where it happens in the script.'); return; }
+  e.preventDefault();
+  const a = locate(e.clientY, e.clientX);
+  drag = {a, b:a, sx:e.clientX, sy:e.clientY, kind:placing ? 'beat' : 'comment', prev:[]};
+  pagesEl.setPointerCapture(e.pointerId);
+});
+pagesEl.addEventListener('pointermove', e => {
+  if (!drag) return;
+  drag.b = locate(e.clientY, e.clientX, drag.kind === 'comment' ? drag.a.pg : null);
+  drag.moved = drag.moved || Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 6;
+  drag.prev.forEach(x => x.remove()); drag.prev = [];
+  if (!drag.moved) return;
+  if (drag.kind === 'comment'){
+    const {a, b} = drag, el = h('div', {class:'preview', style:{left:Math.min(a.x, b.x) * 100 + '%', top:Math.min(a.y, b.y) * 100 + '%', width:Math.abs(b.x - a.x) * 100 + '%', height:Math.abs(b.y - a.y) * 100 + '%', '--c':kc(S.kindFilter || 'note')}});
+    a.el.querySelector('.ov').append(el); drag.prev.push(el);
+  } else {
+    let [a, b] = [drag.a, drag.b]; if (b.pg < a.pg || (b.pg === a.pg && b.y < a.y)) [a, b] = [b, a];
+    const col = beatOf(placing.st, placing.id).c, tmp = {};
+    addRange(tmp, a, b, (p, y0, y1) => h('div', {class:'preview', style:{left:'2%', right:'2%', top:y0 * 100 + '%', height:(y1 - y0) * 100 + '%', '--c':col}}));
+    for (const p in tmp) tmp[p].forEach(el => { pageEls[p - 1].querySelector('.ov').append(el); drag.prev.push(el); });
+  }
+  /* auto-scroll near edges */
+  const r = scroller.getBoundingClientRect();
+  if (e.clientY > r.bottom - 40) scroller.scrollTop += 18; else if (e.clientY < r.top + 40) scroller.scrollTop -= 18;
+});
+pagesEl.addEventListener('pointerup', e => {
+  if (!drag) return;
+  const d = drag; drag = null; d.prev.forEach(x => x.remove());
+  if (d.kind === 'beat'){
+    let [a, b] = [d.a, d.b]; if (b.pg < a.pg || (b.pg === a.pg && b.y < a.y)) [a, b] = [b, a];
+    const pl = {p:a.pg, y:a.y};
+    if (d.moved && (b.pg !== a.pg || Math.abs(b.y - a.y) > 0.01)){ pl.p2 = b.pg; pl.y2 = b.y; }
+    const {st, id} = placing;
+    S.place[st][id] = pl; placing = null; document.body.classList.remove('placing'); $('#banner').hidden = true;
+    save(); renderBeatsPanel(); renderOverlays(); renderStrip();
+    if (S.mode === 'coverage') refreshReportMap();
+    const b2 = beatOf(st, id), di = diffInfo(st, b2);
+    toast(`${b2.name} placed at ${pLabel(placedPos(pl))}${di ? ' · ' + di.txt : ''}`);
+  } else {
+    const {a, b} = d, c = {id:uid(), p:a.pg, x0:a.x, y0:a.y, text:'', kind:S.kindFilter || 'note', t:Date.now()};
+    if (d.moved && Math.abs(b.x - a.x) > 0.01 && Math.abs(b.y - a.y) > 0.005){ c.x0 = Math.min(a.x, b.x); c.x1 = Math.max(a.x, b.x); c.y0 = Math.min(a.y, b.y); c.y1 = Math.max(a.y, b.y); }
+    S.comments.push(c); S.ui.rightOpen = true; save();
+    renderOverlays(); renderComments(); renderStrip();
+    focusComment(c.id, false, true);
+  }
+});
+function startPlacing(st, id){
+  if (!hasPdf()){ toast('Upload a script PDF first.'); return; }
+  if (placing && placing.st === st && placing.id === id){ cancelPlacing(); return; }
+  placing = {st, id}; const b = beatOf(st, id);
+  document.body.classList.add('placing');
+  const bn = $('#banner'); bn.hidden = false; bn.style.setProperty('--c', b.c);
+  bn.replaceChildren(h('span', {class:'dotc'}), h('span', null, 'Placing ', h('b', null, beatTitle(b)), ': click where it happens, or drag to mark a stretch.'), h('button', {class:'fth-btn sm ghost', onclick:cancelPlacing}, 'Cancel (Esc)'));
+  renderBeatsPanel();
+}
+function cancelPlacing(){ placing = null; document.body.classList.remove('placing'); $('#banner').hidden = true; renderBeatsPanel(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape'){ if (placing) cancelPlacing(); closeMenu(); } });
+
+/* ───── scrolling helpers ───── */
+function scrollToPt(pg, y, smooth = true){
+  const el = pageEls[pg - 1]; if (!el) return;
+  const top = el.offsetTop + y * el.offsetHeight - scroller.clientHeight * 0.32;
+  scroller.scrollTo({top:Math.max(0, top), behavior:smooth ? 'smooth' : 'auto'});
+}
+function scrollToPos(pos, smooth){ const q = ptOf(pos); scrollToPt(q.pg, q.y, smooth); }
+function visibleRange(){
+  if (!pageEls.length) return null;
+  const r = scroller.getBoundingClientRect();
+  const a = locate(r.top + 1, 0), b = locate(r.bottom - 1, 0);
+  const mid = locate(r.top + r.height * 0.4, 0);
+  return {a:posOf(a.pg, a.y), b:posOf(b.pg, b.y), mid:posOf(mid.pg, mid.y), midPg:mid.pg};
+}
+let curPage = 0;
+scroller.addEventListener('scroll', () => {
+  cancelAnimationFrame(scroller._sf);
+  scroller._sf = requestAnimationFrame(() => {
+    const v = visibleRange(); if (!v) return;
+    updateWin(v);
+    const cp = pageNo(v.mid) - 1;
+    $('#pagePill').textContent = `p. ${cp + 1} / ${NP()}`;
+    if (cp !== curPage){ curPage = cp; markCurrentPage(); }
+  });
+}, {passive:true});
+
+/* =====================================================================
+   TOOLTIP / TOAST / HINTS
+   ===================================================================== */
+const TIP = new WeakMap(), tipEl = $('#tip');
+function setTip(el, html){ TIP.set(el, html); return el; }
+document.addEventListener('mouseover', e => {
+  let el = e.target;
+  while (el && el !== document && !TIP.has(el)) el = el.parentNode;
+  if (!el || el === document){ tipEl.classList.remove('show'); return; }
+  const v = TIP.get(el); tipEl.innerHTML = typeof v === 'function' ? v() : v;
+  tipEl.classList.add('show'); placeTip(e);
+});
+document.addEventListener('mousemove', e => { if (tipEl.classList.contains('show')) placeTip(e); });
+function placeTip(e){
+  const w = tipEl.offsetWidth, hgt = tipEl.offsetHeight;
+  let x = e.clientX + 14, y = e.clientY + 16;
+  if (x + w > innerWidth - 8) x = e.clientX - w - 12;
+  if (y + hgt > innerHeight - 8) y = e.clientY - hgt - 12;
+  tipEl.style.left = Math.max(8, x) + 'px'; tipEl.style.top = Math.max(8, y) + 'px';
+}
+document.addEventListener('pointerdown', () => tipEl.classList.remove('show'), true);
+let toastT;
+function toast(msg, btn, fn){
+  const t = $('#toast'); t.firstChild.textContent = msg;
+  const b = t.querySelector('button'); b.textContent = btn || ''; b.onclick = () => { t.classList.remove('show'); fn && fn(); };
+  t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), btn ? 5000 : 2600);
+}
+const hinted = new Set();
+function hintOnce(k, msg){ if (hinted.has(k)) return; hinted.add(k); toast(msg); }
+const loadEl = $('#loading');
+function showLoading(t){ loadEl.textContent = t; loadEl.hidden = false; }
+function hideLoading(){ loadEl.hidden = true; }
+
+function beatTip(st, b, expectedOnly){
+  return () => {
+    const pl = S.place[st][b.id], di = diffInfo(st, b), note = (S.notes[st][b.id] || '').trim();
+    let m = `${esc(STRUCTS[st].short)} · expected ${esc(expLabel(b))}`;
+    let html = `<b>${esc(beatTitle(b))}</b><span class="m">${m}</span>${esc(b.desc)}`;
+    if (!expectedOnly && pl) html += `<span class="n"><span class="m">In this script: ${pLabel(placedPos(pl))}${pl.p2 != null ? '–' + pageNo(placedEnd(pl)) : ''}${di ? ' · ' + di.txt : ''}</span>${note ? esc(note) : ''}</span>`;
+    else if (!expectedOnly && note) html += `<span class="n">${esc(note)}</span>`;
+    return html;
+  };
+}
+
+/* =====================================================================
+   LEFT PANEL
+   ===================================================================== */
+const leftEl = $('#left'), rightEl = $('#right');
+function renderLeft(){
+  leftEl.classList.toggle('closed', !S.ui.leftOpen);
+  leftEl.innerHTML = '';
+  if (S.mode === 'feedback'){
+    leftEl.append(h('div', {class:'phead'},
+      h('div', {class:'phead-row'},
+        h('div', {class:'seg sub'}, [['summaries', 'Page summaries'], ['beats', 'Plot beats']].map(([k, l]) => h('button', {class:S.ui.left === k ? 'on' : '', onclick:() => { S.ui.left = k; save(); renderLeft(); renderOverlays(); }}, l))),
+        h('span', {class:'grow'}),
+        h('button', {class:'xbtn', title:'Hide panel', onclick:() => togglePanel('left')}, '‹'))));
+    if (S.ui.left === 'summaries') return renderSummaries();
+  }
+  renderBeatsPanel();
+}
+function togglePanel(side){ const k = side + 'Open'; S.ui[k] = !S.ui[k]; save(); renderLeft(); renderRight(); renderPanelBtns(); setTimeout(applyZoomSoft, 0); }
+function applyZoomSoft(){ if (pdfDoc) applyZoom(); }
+
+/* ───── plot beats ───── */
+let beatBody = null;
+function renderBeatsPanel(){
+  if (S.mode === 'feedback' && S.ui.left !== 'beats') return;
+  if (!S.ui.leftOpen) return;
+  let wrap = leftEl.querySelector('.beats-wrap');
+  const keepScroll = leftEl.scrollTop;
+  if (!wrap){ wrap = h('div', {class:'beats-wrap'}); leftEl.append(wrap); }
+  wrap.innerHTML = '';
+  const st = S.struct, S0 = STRUCTS[st];
+  const head = h('div', {class:'phead', style:S.mode === 'feedback' ? {position:'static', borderBottom:'0', paddingBottom:'0'} : null},
+    S.mode === 'coverage' ? h('div', {class:'phead-row'}, h('h2', null, 'Structure'), h('span', {class:'grow'}), h('button', {class:'xbtn', title:'Hide panel', onclick:() => togglePanel('left')}, '‹')) : null,
+    h('div', {class:'structs'}, SORDER.map(id => h('button', {class:'sbtn' + (id === st ? ' on' : ''), onclick:() => { S.struct = id; if (placing) cancelPlacing(); save(); renderBeatsPanel(); renderOverlays(); renderStrip(); if (S.mode === 'coverage') refreshReportMap(); }},
+      h('b', null, STRUCTS[id].short), h('small', null, `${placedCount(id)}/${STRUCTS[id].beats.length} placed`)))),
+    h('div', {class:'phead-row'},
+      h('label', {class:'toggle'}, h('input', {type:'checkbox', checked:S.ui.guides ? 'checked' : null, onchange:e => { S.ui.guides = e.target.checked; save(); renderOverlays(); }}), 'Show textbook guides beside the script'),
+      h('span', {class:'grow'}),
+      placedCount(st) ? h('button', {class:'fth-btn sm ghost', onclick:() => { if (confirm(`Clear all placed ${S0.short} beats? Your notes are kept.`)){ S.place[st] = {}; save(); renderBeatsPanel(); renderOverlays(); renderStrip(); refreshReportMap(); } }}, 'Clear all') : null));
+  const body = h('div', {class:'pbody'});
+  if (S0.full) body.append(h('div', {class:'fth-muted', style:{fontSize:'12px', marginTop:'-2px'}}, S0.full));
+  if (!hasPdf()) body.append(h('div', {class:'fth-tip'}, 'Upload a script PDF to place beats. You can still write notes against each beat now.'));
+  S0.beats.forEach(b => {
+    const pl = S.place[st][b.id], di = diffInfo(st, b), armed = placing && placing.st === st && placing.id === b.id;
+    const ta = h('textarea', {class:'fth-input', rows:1, placeholder:'What happens here in this script?', value:S.notes[st][b.id] || '',
+      oninput:e => { S.notes[st][b.id] = e.target.value; autoGrow(e.target); save(); renderStripSoon(); }});
+    const card = h('div', {class:'beat' + (pl ? ' placed' : '') + (armed ? ' arming' : ''), 'data-beat':b.id, style:{'--c':b.c}},
+      h('div', {class:'beat-top'},
+        setTip(h('div', {class:'beat-name'}, h('b', null, beatTitle(b), h('span', {class:'fth-info'}, 'i')), h('small', null, 'Expected ' + expLabel(b))), () => `<b>${esc(beatTitle(b))}</b>${esc(b.desc)}`),
+        h('button', {class:'fth-btn sm placebtn' + (armed ? ' armed' : ''), onclick:() => startPlacing(st, b.id)}, armed ? 'Click script…' : pl ? 'Re-place' : 'Place')),
+      pl ? h('div', {class:'beat-status'},
+        h('a', {onclick:() => scrollToPt(pl.p, pl.y)}, 'At ' + pLabel(placedPos(pl)) + rangeEnd(pl)),
+        di ? setTip(h('span', {class:'diff ' + di.cls}, di.txt), `Compared with where ${esc(STRUCTS[st].short)} expects it (${esc(expLabel(b))}).`) : null,
+        h('span', {class:'grow'}),
+        h('a', {style:{color:'var(--fth-faint)'}, onclick:() => { delete S.place[st][b.id]; save(); renderBeatsPanel(); renderOverlays(); renderStrip(); refreshReportMap(); }}, 'Remove')) : null,
+      ta);
+    body.append(card); requestAnimationFrame(() => autoGrow(ta));
+  });
+  wrap.append(head, body);
+  leftEl.scrollTop = keepScroll;
+}
+function focusBeat(id){
+  if (S.mode === 'feedback' && S.ui.left !== 'beats'){ S.ui.left = 'beats'; renderLeft(); }
+  if (!S.ui.leftOpen){ S.ui.leftOpen = true; renderLeft(); renderPanelBtns(); }
+  const c = leftEl.querySelector(`[data-beat="${id}"]`); if (!c) return;
+  c.scrollIntoView({block:'center', behavior:'smooth'}); c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+}
+function autoGrow(t){ t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight + 2, 320) + 'px'; }
+
+/* ───── page summaries ───── */
+function renderSummaries(){
+  const body = h('div', {class:'pbody sums'});
+  if (!hasPdf()){ body.append(h('div', {class:'empty-note'}, 'Upload a script and a card appears here for every page. Write a one-sentence summary as you read.')); leftEl.append(body); return; }
+  const cnt = h('span'), updCnt = () => { cnt.textContent = `${Array.from({length:NP()}, (_, i) => (S.summaries[i] || '').trim()).filter(Boolean).length} of ${NP()} pages summarised`; };
+  updCnt();
+  body.append(h('div', {class:'phead-row', style:{fontSize:'12px', color:'var(--fth-muted)'}}, cnt, h('span', {class:'grow'}),
+    h('button', {class:'fth-btn sm ghost', onclick:() => { for (let i = 0; i < NP(); i++) if (!(S.summaries[i] || '').trim()){ scrollToPt(i + startPg(), M.top); focusSummary(i); return; } toast('Every page has a summary.'); }}, 'Next empty')));
+  for (let i = 0; i < NP(); i++){
+    const P = M.pages[i + startPg() - 1] || {scenes:[]};
+    const wc = h('div', {class:'wc'});
+    const upd = v => { const n = words(v); wc.textContent = n ? n + (n > 30 ? ' words · try one sentence' : ' words') : ''; wc.classList.toggle('warn', n > 30); };
+    const ta = h('textarea', {class:'fth-input', rows:1, placeholder:'One sentence: what happens on this page?', value:S.summaries[i] || '',
+      oninput:e => { S.summaries[i] = e.target.value; autoGrow(e.target); upd(e.target.value); updCnt(); save(); renderStripSoon(); },
+      onfocus:() => { summaryFocus = i; }, onblur:() => { summaryFocus = null; }});
+    upd(ta.value);
+    const isLast = i === NP() - 1, part = isLast && lastFill() < 0.95;
+    body.append(h('div', {class:'sum' + (i === curPage ? ' cur' : ''), 'data-sum':i},
+      h('div', {class:'sum-top'}, h('button', {onclick:() => scrollToPt(i + startPg(), M.top)}, `Page ${i + 1}`), part ? h('span', {class:'ph'}, `${Math.round(lastFill() * 100)}% page`) : null, h('span', {class:'grow'}), h('span', {class:'ph'}, Math.round(i / LEN() * 100) + '%')),
+      P.scenes.length ? h('div', {class:'scenes'}, P.scenes.join(' · ')) : null,
+      ta, wc));
+    requestAnimationFrame(() => autoGrow(ta));
+  }
+  leftEl.append(body);
+}
+let summaryFocus = null;
+function focusSummary(i){ const c = leftEl.querySelector(`[data-sum="${i}"]`); if (!c) return; c.scrollIntoView({block:'center', behavior:'smooth'}); c.querySelector('textarea').focus({preventScroll:true}); }
+function markCurrentPage(){
+  $$('.sum.cur', leftEl).forEach(x => x.classList.remove('cur'));
+  const c = leftEl.querySelector(`[data-sum="${curPage}"]`);
+  if (c){ c.classList.add('cur'); if (summaryFocus == null && !leftEl.matches(':hover')) c.scrollIntoView({block:'nearest'}); }
+  $$('.tl-page.cur,.tl-sum.cur').forEach(x => x.classList.remove('cur'));
+  $$(`.strip [data-pi="${curPage}"]`).forEach(x => x.classList.add('cur'));
+}
+
+/* =====================================================================
+   RIGHT PANEL: COMMENTS
+   ===================================================================== */
+const cPos = c => posOf(c.p, c.y0);
+const sortedComments = () => [...S.comments].sort((a, b) => cPos(a) - cPos(b) || a.x0 - b.x0);
+function renderRight(){
+  rightEl.classList.toggle('closed', S.mode !== 'feedback' || !S.ui.rightOpen);
+  if (S.mode === 'feedback') renderComments();
+}
+function renderComments(){
+  if (S.mode !== 'feedback') return;
+  const keep = rightEl.scrollTop;
+  rightEl.innerHTML = '';
+  const all = sortedComments(), list = S.kindFilter ? all.filter(c => c.kind === S.kindFilter) : all;
+  rightEl.append(h('div', {class:'phead'},
+    h('div', {class:'phead-row'}, h('h2', null, 'Comments'), h('span', {class:'fth-mono', style:{fontSize:'11px', color:'var(--fth-faint)'}}, all.length || ''), h('span', {class:'grow'}), h('button', {class:'xbtn', title:'Hide panel', onclick:() => togglePanel('right')}, '›')),
+    h('div', {class:'kinds'}, Object.entries(KINDS).map(([k, l]) => h('button', {class:'kchip' + (S.kindFilter === k ? ' on' : ''), style:{'--c':kc(k)}, title:'Show only ' + l + ' comments; new comments use this type',
+      onclick:() => { S.kindFilter = S.kindFilter === k ? null : k; save(); renderComments(); }}, h('i'), l, h('span', {style:{opacity:.6}}, all.filter(c => c.kind === k).length || ''))))));
+  const body = h('div', {class:'pbody'});
+  if (!all.length) body.append(h('div', {class:'empty-note'}, hasPdf() ? 'Click anywhere on the script to leave a comment, or click and drag to highlight a passage.' : 'Upload a script, then click on a page to comment.'));
+  list.forEach(c => {
+    const n = all.indexOf(c) + 1;
+    const ta = h('textarea', {class:'fth-input', placeholder:'Write your comment…', value:c.text,
+      oninput:e => { c.text = e.target.value; autoGrow(e.target); save(); renderStripSoon(); },
+      onblur:() => { if (!c.text.trim() && Date.now() - c.t < 120000){ removeComment(c.id, true); } }});
+    const card = h('div', {class:'cm', 'data-cid':c.id, style:{'--c':kc(c.kind)}, onmouseenter:() => hotComment(c.id, true), onmouseleave:() => hotComment(c.id, false)},
+      h('div', {class:'cm-top'},
+        h('span', {class:'cm-num'}, n),
+        h('span', {class:'cm-loc', onclick:() => focusComment(c.id, true)}, pLabel(cPos(c)) + (c.x1 != null ? ' · highlight' : '')),
+        h('select', {onchange:e => { c.kind = e.target.value; save(); renderComments(); renderOverlays(); renderStrip(); }}, Object.entries(KINDS).map(([k, l]) => h('option', {value:k, selected:c.kind === k ? 'selected' : null}, l))),
+        h('button', {class:'xbtn', title:'Delete comment', onclick:() => removeComment(c.id)}, '×')),
+      ta);
+    body.append(card); requestAnimationFrame(() => autoGrow(ta));
+  });
+  rightEl.append(body);
+  rightEl.scrollTop = keep;
+}
+function removeComment(id, silent){
+  const i = S.comments.findIndex(c => c.id === id); if (i < 0) return;
+  const [c] = S.comments.splice(i, 1); save();
+  renderComments(); renderOverlays(); renderStrip();
+  if (!silent) toast('Comment deleted', 'Undo', () => { S.comments.push(c); save(); renderComments(); renderOverlays(); renderStrip(); });
+}
+function focusComment(id, scrollScript, edit){
+  const c = S.comments.find(x => x.id === id); if (!c) return;
+  if (S.kindFilter && S.kindFilter !== c.kind){ S.kindFilter = null; renderComments(); }
+  if (!S.ui.rightOpen){ S.ui.rightOpen = true; renderRight(); renderPanelBtns(); }
+  if (scrollScript) scrollToPt(c.p, c.y0);
+  const card = rightEl.querySelector(`.cm[data-cid="${id}"]`);
+  if (card){ card.scrollIntoView({block:'center', behavior:'smooth'}); if (edit) card.querySelector('textarea').focus({preventScroll:true}); card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash'); }
+  $$(`.pg [data-cid="${id}"]`).forEach(x => { x.classList.remove('flash'); void x.offsetWidth; x.classList.add('flash'); });
+}
+function hotComment(id, on){ $$(`[data-cid="${id}"]`).forEach(x => x.classList.toggle('hot', on)); }
+
+/* =====================================================================
+   TIMELINE (shared by the strip and the full timeline page)
+   ===================================================================== */
+const ROWDEF = {
+  comments:{label:'Comments'}, pages:{label:'Pages'}, summaries:{label:'Page summaries'},
+  own:{label:'Scaffolded', st:'own'}, three:{label:'3-Act', st:'three'}, stc:{label:'Save the Cat', st:'stc'}, outline:{label:'Outline'},
+  textbook:{label:'Textbook'}
+};
+function rowsFor(mode){
+  const R = S.rows[mode], out = [];
+  if (mode === 'coverage'){
+    if (R.pages) out.push({type:'pages'});
+    if (R.summaries) out.push({type:'summaries'});
+    if (R.textbook) out.push({type:'struct', st:S.struct, label:STRUCTS[S.struct].short});
+    if (R.outline) out.push({type:'outline', st:S.struct, label:'This script'});
+    return out;
+  }
+  if (R.comments) out.push({type:'comments'});
+  if (R.pages) out.push({type:'pages'});
+  if (R.summaries) out.push({type:'summaries'});
+  for (const st of SORDER){
+    if (R[st]) out.push({type:'struct', st, label:STRUCTS[st].short});
+    if (R.outline && placedCount(st)) out.push({type:'outline', st, label:'Outline', sub:STRUCTS[st].short});
+  }
+  return out;
+}
+function lanes(items, gap){
+  const ends = [];
+  items.sort((a, b) => a.x0 - b.x0).forEach(it => {
+    let l = ends.findIndex(e => e <= it.x0 - gap);
+    if (l < 0){ l = ends.length; ends.push(0); }
+    ends[l] = it.x1; it.lane = l;
+  });
+  return Math.max(1, ends.length);
+}
+function renderTL(host, rows, opt = {}){
+  const big = !!opt.big;
+  host.innerHTML = '';
+  if (!hasPdf()){ host.append(h('div', {class:'tl-empty'}, 'Upload a script PDF to build the timeline.')); return; }
+  if (!rows.length){ host.append(h('div', {class:'tl-empty'}, 'Turn on a row above to see it here.')); return; }
+  const wrap = h('div', {class:'tl' + (big ? ' big' : '')});
+  const L = LEN(), N = NP(), pct = p => clamp(p / L * 100, 0, 100);
+  const trackW = Math.max(200, (host.clientWidth || 900) - (big ? 150 : 118));
+  const pxPct = px => px / trackW * 100;
+  const refs = {tb:{}, ac:{}};
+  const go = opt.onGo || ((pos) => scrollToPos(pos));
+  if (big){
+    const ax = h('div', {class:'tl-axis'});
+    const step = N <= 12 ? 1 : N <= 30 ? 5 : N <= 70 ? 10 : 20;
+    for (let i = 0; i < N; i += step) ax.append(h('span', {style:{left:pct(i) + '%'}}, 'p.' + (i + 1)));
+    wrap.append(ax);
+  }
+  rows.forEach((r, ri) => {
+    const lab = r.label || ROWDEF[r.type].label;
+    const track = h('div', {class:'tl-track'});
+    const row = h('div', {class:'tl-row t-' + r.type, 'data-ri':ri}, h('div', {class:'tl-lab', title:lab + (r.sub ? ' · ' + r.sub : '')}, lab, r.sub ? h('small', null, r.sub) : null), track);
+    track.addEventListener('click', e => { if (e.target !== track) return; const rc = track.getBoundingClientRect(); go((e.clientX - rc.left) / rc.width * L); });
+    if (r.type === 'pages' || r.type === 'summaries'){
+      track.style.height = r.type === 'pages' ? (big ? '22px' : '14px') : (big ? '64px' : '30px');
+      const pw = trackW / L;
+      for (let i = 0; i < N; i++){
+        const w = i === N - 1 ? lastFill() : 1;
+        const st = {left:pct(i) + '%', width:`calc(${pct(w)}% - 1px)`};
+        if (r.type === 'pages'){
+          const lbl = pw >= 16 || (i + 1) % 5 === 0 || i === 0 ? (pw >= 12 ? String(i + 1) : '') : '';
+          track.append(setTip(h('div', {class:'tl-it tl-page' + (w < 1 ? ' part' : '') + (i === curPage ? ' cur' : ''), 'data-pi':i, style:st, onclick:() => go(i + 0.001)}, lbl),
+            `<b>Page ${i + 1}</b><span class="m">${Math.round(i / L * 100)}% through${w < 1 ? ` · ${Math.round(w * 100)}% of a page` : ''}</span>${esc(S.summaries[i] || '')}`));
+        } else {
+          const t = (S.summaries[i] || '').trim();
+          track.append(setTip(h('div', {class:'tl-it tl-sum' + (t ? '' : ' empty') + (i === curPage ? ' cur' : ''), 'data-pi':i, style:st, onclick:() => { go(i + 0.001); if (opt.strip && S.mode === 'feedback') focusSummary(i); }}, pw > 26 ? (t || '·') : ''),
+            `<b>Page ${i + 1}</b>${t ? esc(t) : '<span class="m">No summary yet</span>'}`));
+        }
+      }
+    } else if (r.type === 'comments'){
+      const cs = sortedComments(), items = cs.map((c, i) => ({c, n:i + 1, x0:pct(cPos(c)), x1:pct(cPos(c)) + pxPct(big ? 14 : 11)}));
+      const nl = Math.min(lanes(items, 0), big ? 6 : 3), lh = big ? 16 : 12;
+      track.style.height = (nl * lh + 4) + 'px';
+      items.forEach(it => track.append(setTip(h('div', {class:'tl-it tl-dot', style:{left:it.x0 + '%', top:(2 + Math.min(it.lane, nl - 1) * lh) + 'px', '--c':kc(it.c.kind)}, onclick:() => opt.onComment ? opt.onComment(it.c.id) : focusComment(it.c.id, true)}),
+        () => `<b>Comment ${it.n}</b><span class="m">${esc(KINDS[it.c.kind])} · ${pLabel(cPos(it.c))}</span>${it.c.text ? esc(it.c.text) : '<i>Empty</i>'}`)));
+      if (!cs.length) track.append(h('div', {class:'tl-empty', style:{position:'absolute', left:'6px', top:0, padding:0, fontSize:'10.5px', lineHeight:(nl * lh + 4) + 'px'}}, 'No comments yet'));
+    } else if (r.type === 'struct' || r.type === 'outline'){
+      const st = r.st, act = r.type === 'outline';
+      const items = [];
+      STRUCTS[st].beats.forEach(b => {
+        let a, z, pt;
+        if (act){ const pl = S.place[st][b.id]; if (!pl) return; a = pct(placedPos(pl)); pt = pl.p2 == null; z = pt ? a : pct(placedEnd(pl)); }
+        else { a = b.s; z = b.e; pt = b.pt; }
+        const lw = big && pt ? pxPct(b.name.length * 6 + 20) : pxPct(big ? 14 : 11);
+        items.push({b, a, z, pt, x0:pt ? a - pxPct(big ? 7 : 6) : a, x1:pt ? a + lw : Math.max(z, a + pxPct(6))});
+      });
+      const nl = lanes(items, big ? 0.3 : 0.15), lh = big ? 26 : 15;
+      track.style.height = (nl * lh + (big ? 6 : 3)) + 'px';
+      items.forEach(it => {
+        const b = it.b, top = (big ? 3 : 1.5) + it.lane * lh, tip = beatTip(st, b, !act);
+        let el;
+        if (it.pt){
+          el = h('div', {class:'tl-it tl-pt' + (act ? ' act' : ''), style:{left:it.a + '%', top:(top + (big ? 3 : 2)) + 'px', '--c':b.c}});
+          if (big) track.append(h('div', {class:'tl-ptlab', style:{left:`calc(${it.a}% + 10px)`, top:(top + 4) + 'px', '--c':b.c, color:b.c}}, b.name));
+        } else {
+          el = h('div', {class:'tl-it tl-bar' + (act ? ' act' : ''), style:{left:it.a + '%', width:Math.max(it.z - it.a, 0.4) + '%', top:top + 'px', '--c':b.c}}, beatTitle(b).replace(' (opening)', '').replace(' (closing)', ''));
+          if (!act && b.cx != null) el.append(h('span', {class:'tl-cx', style:{left:((b.cx - b.s) / (b.e - b.s) * 100) + '%'}}));
+        }
+        setTip(el, tip);
+        el.addEventListener('click', () => {
+          if (act){ const pl = S.place[st][b.id]; (opt.onGo ? go(placedPos(pl)) : scrollToPt(pl.p, pl.y)); if (!opt.onGo && st === S.struct) focusBeat(b.id); }
+          else go(posPct(b.anchor));
+        });
+        track.append(el);
+        (act ? refs.ac : refs.tb)[st + ':' + b.id] = {el, row:ri, pct:act ? it.a : b.anchor, c:b.c};
+      });
+      if (!items.length) track.append(h('div', {class:'tl-empty', style:{position:'absolute', left:'6px', top:0, padding:0, fontSize:'10.5px', lineHeight:(nl * lh + 3) + 'px'}}, act ? 'Place beats from the left panel' : ''));
+    }
+    wrap.append(row);
+  });
+  if (big){
+    const g = h('div', {class:'tl-guides'});
+    [25, 50, 75].forEach(p => g.append(h('div', {class:'tl-guide', style:{left:p + '%'}}, h('span', null, p + '%'))));
+    wrap.prepend(g);
+  }
+  const conn = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); conn.setAttribute('class', 'tl-conn');
+  wrap.append(conn);
+  if (opt.strip){ const wl = h('div', {class:'tl-winlayer'}, h('div', {class:'tl-win', id:'tlWin'})); wrap.append(wl); }
+  host.append(wrap);
+  const draw = () => drawConnectors(wrap, conn, rows, refs, opt.connect !== false);
+  requestAnimationFrame(draw);
+  if (host._ro) host._ro.disconnect();
+  host._ro = new ResizeObserver(() => draw()); host._ro.observe(wrap);
+}
+function drawConnectors(wrap, svg, rows, refs, on){
+  svg.innerHTML = '';
+  if (!on) return;
+  const wr = wrap.getBoundingClientRect(), tk = wrap.querySelector('.tl-track'); if (!wr.width || !tk) return;
+  const tr0 = tk.getBoundingClientRect(), ox = tr0.left - wr.left, tw = tr0.width;
+  svg.setAttribute('viewBox', `0 0 ${wr.width} ${wr.height}`);
+  rows.forEach((r, i) => {
+    if (r.type !== 'outline' || i === 0) return;
+    const prev = rows[i - 1]; if (prev.type !== 'struct' || prev.st !== r.st) return;
+    STRUCTS[r.st].beats.forEach(b => {
+      const t = refs.tb[r.st + ':' + b.id], a = refs.ac[r.st + ':' + b.id]; if (!t || !a) return;
+      const tr = t.el.getBoundingClientRect(), ar = a.el.getBoundingClientRect();
+      const x1 = ox + t.pct / 100 * tw, y1 = tr.bottom - wr.top - (t.el.classList.contains('tl-bar') ? 0 : 1);
+      const x2 = ox + a.pct / 100 * tw, y2 = ar.top - wr.top + 1;
+      const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      Object.entries({x1, y1, x2, y2, 'stroke-width':1.5, 'stroke-dasharray':'3 3'}).forEach(([k, v]) => ln.setAttribute(k, v));
+      ln.style.stroke = b.c;
+      svg.append(ln);
+    });
+  });
+}
+
+/* ───── strip above the script ───── */
+const stripEl = $('#strip');
+function renderStrip(){
+  const mode = S.mode, R = S.rows[mode];
+  stripEl.classList.toggle('collapsed', !S.ui.strip);
+  stripEl.innerHTML = '';
+  const chip = (k, label, c) => h('button', {class:'chip' + (R[k] ? ' on' : ''), style:c ? {'--c':c} : null, onclick:() => { R[k] = !R[k]; save(); renderStrip(); }}, h('i', {class:'sw'}), label);
+  const bar = h('div', {class:'strip-bar'}, h('span', {class:'fth-label'}, 'Timeline'));
+  if (mode === 'coverage'){
+    bar.append(chip('pages', 'Pages', 'var(--fth-line3)'), chip('textbook', 'Textbook ' + STRUCTS[S.struct].short, 'var(--b-mid)'), chip('outline', 'This script', 'var(--fth-accent)'));
+  } else {
+    bar.append(chip('comments', 'Comments', 'var(--fth-accent)'), chip('pages', 'Pages', 'var(--fth-line3)'), chip('summaries', 'Page summaries', 'var(--fth-text)'),
+      h('span', {class:'fth-vsep'}), chip('own', 'Scaffolded Structure', 'var(--b-cs)'), chip('three', '3-Act', 'var(--b-pr)'), chip('stc', 'Save the Cat', 'var(--b-ch)'), chip('outline', 'Outline', 'var(--b-mid)'));
+  }
+  bar.append(h('span', {class:'grow'}),
+    h('button', {class:'fth-btn sm ghost', onclick:() => setView('timeline')}, 'Open timeline ↗'),
+    h('button', {class:'fth-btn sm ghost icon', title:S.ui.strip ? 'Collapse timeline' : 'Expand timeline', onclick:() => { S.ui.strip = !S.ui.strip; save(); renderStrip(); }}, S.ui.strip ? '▴' : '▾'));
+  const host = h('div');
+  stripEl.append(bar, host);
+  if (S.ui.strip) renderTL(host, rowsFor(mode), {strip:true});
+  const v = visibleRange(); if (v) updateWin(v);
+}
+let stripT;
+function renderStripSoon(){ clearTimeout(stripT); stripT = setTimeout(renderStrip, 400); }
+function updateWin(v){
+  const w = $('#tlWin'); if (!w || !hasPdf()) return;
+  w.style.left = pctOf(v.a) + '%'; w.style.width = Math.max(0.3, pctOf(v.b) - pctOf(v.a)) + '%';
+}
+
+/* =====================================================================
+   FULL TIMELINE PAGE
+   ===================================================================== */
+const tlView = $('#v-timeline');
+function goScript(pos){ setView('script'); requestAnimationFrame(() => scrollToPos(pos, false)); }
+function renderTimelinePage(){
+  const mode = S.mode, R = S.rows[mode];
+  tlView.innerHTML = '';
+  const chip = (k, label, c) => h('button', {class:'chip' + (R[k] ? ' on' : ''), style:c ? {'--c':c} : null, onclick:() => { R[k] = !R[k]; save(); renderTimelinePage(); }}, h('i', {class:'sw'}), label);
+  const bar = h('div', {class:'tbar'}, h('button', {class:'fth-btn sm', onclick:() => setView('script')}, '← Back to script'), h('span', {class:'fth-vsep'}));
+  if (mode === 'coverage'){
+    bar.append(h('div', {class:'seg sm sub'}, SORDER.map(id => h('button', {class:S.struct === id ? 'on' : '', onclick:() => { S.struct = id; save(); renderTimelinePage(); }}, STRUCTS[id].short))), h('span', {class:'fth-vsep'}),
+      chip('pages', 'Pages', 'var(--fth-line3)'), chip('summaries', 'Page summaries', 'var(--fth-text)'), chip('textbook', 'Textbook', 'var(--b-mid)'), chip('outline', 'This script', 'var(--fth-accent)'));
+  } else {
+    bar.append(chip('comments', 'Comments', 'var(--fth-accent)'), chip('pages', 'Pages', 'var(--fth-line3)'), chip('summaries', 'Page summaries', 'var(--fth-text)'),
+      h('span', {class:'fth-vsep'}), chip('own', 'Scaffolded Structure', 'var(--b-cs)'), chip('three', '3-Act', 'var(--b-pr)'), chip('stc', 'Save the Cat', 'var(--b-ch)'), chip('outline', 'Outline', 'var(--b-mid)'));
+  }
+  bar.append(h('span', {class:'grow'}));
+  if (S.ui.orient === 'h') bar.append(h('label', {class:'toggle'}, h('input', {type:'checkbox', checked:S.ui.connect ? 'checked' : null, onchange:e => { S.ui.connect = e.target.checked; save(); renderTimelinePage(); }}), 'Connect textbook ↔ script'));
+  bar.append(
+    h('div', {class:'seg sm'}, [['h', 'Horizontal'], ['v', 'Vertical']].map(([k, l]) => h('button', {class:S.ui.orient === k ? 'on' : '', onclick:() => { S.ui.orient = k; save(); renderTimelinePage(); }}, l))),
+    h('button', {class:'fth-btn sm', onclick:() => doPrint('timeline')}, 'Print'));
+  const main = h('div', {class:'tmain'});
+  const notes = h('aside', {class:'tnotes'}, h('div', {class:'fth-label'}, 'Timeline notes'),
+    h('textarea', {class:'fth-input', placeholder:'Jot down patterns you notice: pacing, gaps, where beats land early or late…', value:S.tlNotes, oninput:e => { S.tlNotes = e.target.value; save(); }}));
+  tlView.append(bar, h('div', {class:'tbody'}, main, notes));
+  const rows = rowsFor(mode);
+  if (!hasPdf()){ main.append(h('div', {class:'empty-note'}, 'Upload a script PDF to build the timeline.')); return; }
+  if (S.ui.orient === 'h'){
+    const host = h('div', {style:{paddingTop:'14px'}}); main.append(host);
+    renderTL(host, rows, {big:true, connect:S.ui.connect, onGo:goScript, onComment:id => { setView('script'); requestAnimationFrame(() => focusComment(id, true)); }});
+    const sts = mode === 'coverage' ? [S.struct] : SORDER.filter(st => placedCount(st) && (R[st] || R.outline));
+    sts.forEach(st => { main.append(h('div', {class:'tsec'}, `${STRUCTS[st].short}: textbook vs this script`)); main.append(compareTable(st, true)); });
+  } else renderVertical(main, rows);
+}
+function compareTable(st, live){
+  const t = h('table', {class:'cmp'}, h('thead', null, h('tr', null, ['Beat', 'Expected', 'In this script', 'Difference', 'Notes'].map(x => h('th', null, x)))));
+  const tb = h('tbody');
+  STRUCTS[st].beats.forEach(b => {
+    const pl = S.place[st][b.id], di = diffInfo(st, b);
+    tb.append(h('tr', {style:{'--c':b.c}},
+      h('td', null, h('span', {class:'sw'}), beatTitle(b)),
+      h('td', {class:'n'}, hasPdf() ? expLabel(b).split(' · ')[0] : `${b.s}%`),
+      h('td', {class:'n'}, pl ? (live ? h('a', {style:{cursor:'pointer', color:'var(--fth-accent-ink)'}, onclick:() => goScript(placedPos(pl))}, pLabel(placedPos(pl)) + rangeEnd(pl)) : pLabel(placedPos(pl))) : '—'),
+      h('td', {class:'n'}, di ? h('span', {class:'diff ' + di.cls}, di.txt) : ''),
+      h('td', null, S.notes[st][b.id] || '')));
+  });
+  t.append(tb); return t;
+}
+function renderVertical(main, rows){
+  const L = LEN(), N = NP(), PH = N > 60 ? 44 : N > 25 ? 60 : 80, H = Math.ceil(L * PH) + 20;
+  const y = pos => pos * PH;
+  const vt = h('div', {class:'vt'});
+  const col = (label, w) => { const body = h('div', {class:'vbody', style:{height:H + 'px'}}); const c = h('div', {class:'vcol', style:{width:w + 'px'}}, h('div', {class:'vhead'}, label), body); vt.append(c); return body; };
+  const bands = body => { for (let i = 0; i < N; i++) body.append(h('div', {class:'vband' + (i % 2 ? ' alt' : ''), style:{top:y(i) + 'px', height:(i === N - 1 ? lastFill() : 1) * PH + 'px'}})); };
+  const ax = col('Page', 64); bands(ax);
+  for (let i = 0; i < N; i++){
+    ax.append(h('div', {class:'vpg', style:{top:y(i) + 'px'}, onclick:() => goScript(i + 0.001)}, String(i + 1), h('div', {style:{fontWeight:500, fontSize:'9.5px', color:'var(--fth-faint)'}}, Math.round(i / L * 100) + '%')));
+    if (i === N - 1 && lastFill() < 1) ax.append(h('div', {class:'vpart', style:{top:y(i) + 'px', height:lastFill() * PH + 'px', left:'52px'}}));
+  }
+  const pending = [];
+  const stack = (body, items) => pending.push({body, items});
+  rows.forEach(r => {
+    if (r.type === 'pages') return;
+    if (r.type === 'summaries'){
+      const b = col('Page summaries', 300); bands(b);
+      stack(b, Array.from({length:N}, (_, i) => ({y:y(i) + 3, el:h('div', {class:'vcard' + ((S.summaries[i] || '').trim() ? '' : ' empty'), onclick:() => goScript(i + 0.001)}, h('small', null, 'Page ' + (i + 1)), (S.summaries[i] || '').trim() || 'No summary')})));
+    } else if (r.type === 'comments'){
+      const b = col('Comments', 300); bands(b);
+      stack(b, sortedComments().map((c, i) => ({y:y(cPos(c)), c:kc(c.kind), el:h('div', {class:'vcard', style:{'--c':kc(c.kind)}, onclick:() => { setView('script'); requestAnimationFrame(() => focusComment(c.id, true)); }},
+        h('small', null, `${i + 1} · ${KINDS[c.kind]} · ${pLabel(cPos(c))}`), c.text || 'Empty comment')})));
+    } else if (r.type === 'struct'){
+      const b = col(STRUCTS[r.st].short, 210); bands(b);
+      const items = STRUCTS[r.st].beats.map(bt => ({bt, x0:y(posPct(bt.s)), x1:bt.pt ? y(posPct(bt.s)) + 30 : y(posPct(bt.e))}));
+      const nl = Math.min(lanes(items, 2), 3);
+      stack(b, items.map(it => {
+        const bt = it.bt, top = y(posPct(bt.s));
+        if (!bt.pt) b.append(setTip(h('div', {class:'vbar', style:{top:top + 'px', height:Math.max(4, y(posPct(bt.e)) - top) + 'px', left:(10 + Math.min(it.lane, nl - 1) * 8) + 'px', '--c':bt.c}}), beatTip(r.st, bt, true)));
+        else b.append(h('div', {class:'vtick', style:{top:top + 'px', '--c':bt.c}}));
+        return {y:top, plain:true, el:setTip(h('div', {class:'vlabel', style:{'--c':bt.c, color:bt.c, left:(14 + nl * 8) + 'px'}, onclick:() => goScript(posPct(bt.anchor))}, beatTitle(bt), h('small', null, expLabel(bt))), beatTip(r.st, bt, true))};
+      }));
+    } else if (r.type === 'outline'){
+      const b = col('Outline · ' + STRUCTS[r.st].short, 290); bands(b);
+      stack(b, STRUCTS[r.st].beats.filter(bt => S.place[r.st][bt.id]).map(bt => {
+        const pl = S.place[r.st][bt.id], p0 = placedPos(pl), di = diffInfo(r.st, bt);
+        if (pl.p2 != null) b.append(h('div', {class:'vbar', style:{top:y(p0) + 'px', height:Math.max(4, y(placedEnd(pl)) - y(p0)) + 'px', left:'3px', width:'4px', '--c':bt.c}}));
+        return {y:y(p0), c:bt.c, el:h('div', {class:'vcard', style:{'--c':bt.c}, onclick:() => goScript(p0)}, h('b', null, beatTitle(bt)), h('small', null, pLabel(p0) + rangeEnd(pl) + (di ? ' · ' + di.txt : '')), S.notes[r.st][bt.id] || '')};
+      }));
+    }
+  });
+  main.append(vt);
+  requestAnimationFrame(() => pending.forEach(({body, items}) => {
+    let bottom = -1e9, maxB = 0;
+    items.sort((a, b) => a.y - b.y).forEach(it => {
+      it.el.style.top = it.y + 'px'; body.append(it.el);
+      if (!it.plain && it.c) body.append(h('div', {class:'vlead', style:{top:it.y + 'px', '--c':it.c}}));
+    });
+    items.forEach(it => {
+      const hgt = it.el.offsetHeight, top = Math.max(it.y, bottom + 4);
+      it.el.style.top = top + 'px'; bottom = top + hgt; maxB = Math.max(maxB, bottom);
+    });
+    if (maxB + 20 > H) body.style.height = (maxB + 20) + 'px';
+  }));
+}
+
+/* =====================================================================
+   COMPARISON MAP (SVG: used in the report and in print)
+   ===================================================================== */
+function compareSVG(st, forPrint){
+  const W = 1000, padL = 92, padR = 16, tw = W - padL - padR;
+  const L = hasPdf() ? LEN() : 100, x = pct => padL + clamp(pct, 0, 100) / 100 * tw;
+  const ink = forPrint ? '#000' : 'var(--fth-text)', mute = forPrint ? '#666' : 'var(--fth-muted)', line = forPrint ? '#bbb' : 'var(--fth-line2)';
+  const col = b => forPrint ? ({cs:'#2c8a78', pr:'#c27a1c', ch:'#c4502f', a2:'#4a6fb5', mid:'#8a5cc2', th:'#a87508'}[b.fam]) : b.c;
+  const beats = STRUCTS[st].beats;
+  const tbItems = beats.map(b => ({b, x0:b.s, x1:b.pt ? b.s + 1.6 : b.e}));
+  const nl = lanes(tbItems, 0.1), lh = 15, tbTop = 30, tbH = nl * lh + 6;
+  const acTop = tbTop + tbH + 46;
+  const acItems = beats.filter(b => S.place[st][b.id]).map(b => { const pl = S.place[st][b.id], a = pctOf(placedPos(pl)); return {b, pl, a, z:pl.p2 != null ? pctOf(placedEnd(pl)) : a, x0:a, x1:pl.p2 != null ? pctOf(placedEnd(pl)) : a + 1.6}; });
+  const nl2 = lanes(acItems, 0.1), acH = nl2 * lh + 6, Ht = acTop + acH + 30;
+  let s = `<svg viewBox="0 0 ${W} ${Ht}" xmlns="http://www.w3.org/2000/svg" font-family="Archivo, system-ui, sans-serif">`;
+  [0, 25, 50, 75, 100].forEach(p => { s += `<line x1="${x(p)}" x2="${x(p)}" y1="18" y2="${Ht - 18}" stroke="${line}" stroke-dasharray="${p % 50 ? '2 4' : '0'}" stroke-width="1"/><text x="${x(p)}" y="12" font-size="10" text-anchor="${p === 0 ? 'start' : p === 100 ? 'end' : 'middle'}" fill="${mute}">${p}%${hasPdf() ? ' · p.' + (p === 100 ? NP() : pageNo(Math.max(posPct(p), .01))) : ''}</text>`; });
+  s += `<text x="0" y="${tbTop + 11}" font-size="10.5" font-weight="700" fill="${mute}" letter-spacing=".06em">TEXTBOOK</text>`;
+  s += `<text x="0" y="${acTop + 11}" font-size="10.5" font-weight="700" fill="${mute}" letter-spacing=".06em">THIS SCRIPT</text>`;
+  const ty = it => tbTop + 2 + it.lane * lh, ay = it => acTop + 2 + it.lane * lh;
+  acItems.forEach(it => {
+    const t = tbItems.find(q => q.b === it.b);
+    s += `<line x1="${x(it.b.anchor)}" y1="${ty(t) + 10}" x2="${x(it.a)}" y2="${ay(it)}" stroke="${col(it.b)}" stroke-width="1.3" stroke-dasharray="3 3"/>`;
+  });
+  tbItems.forEach(it => {
+    const b = it.b, c = col(b), y0 = ty(it);
+    if (b.pt) s += `<rect x="${x(b.s) - 4.5}" y="${y0 + 1}" width="9" height="9" transform="rotate(45 ${x(b.s)} ${y0 + 5.5})" fill="${c}"/><text x="${x(b.s) + 9}" y="${y0 + 9.5}" font-size="9.5" fill="${c}" font-weight="600">${esc(b.name)}</text>`;
+    else { s += `<rect x="${x(b.s)}" y="${y0}" width="${Math.max(2, x(b.e) - x(b.s) - 1)}" height="11" rx="2.5" fill="${c}" fill-opacity=".28" stroke="${c}" stroke-opacity=".8"/>`;
+      if (x(b.e) - x(b.s) > 50) s += `<text x="${x(b.s) + 4}" y="${y0 + 8.6}" font-size="8.5" font-weight="600" fill="${ink}">${esc(beatTitle(b).replace(/ \((opening|closing)\)/, ''))}</text>`; }
+  });
+  acItems.forEach(it => {
+    const b = it.b, c = col(b), y0 = ay(it);
+    if (it.pl.p2 == null) s += `<circle cx="${x(it.a)}" cy="${y0 + 5.5}" r="5" fill="${c}"/><text x="${x(it.a) + 9}" y="${y0 + 9.5}" font-size="9.5" fill="${c}" font-weight="600">${esc(b.name)}</text>`;
+    else { s += `<rect x="${x(it.a)}" y="${y0}" width="${Math.max(3, x(it.z) - x(it.a))}" height="11" rx="2.5" fill="${c}"/>`;
+      if (x(it.z) - x(it.a) > 50) s += `<text x="${x(it.a) + 4}" y="${y0 + 8.6}" font-size="8.5" font-weight="700" fill="#fff">${esc(beatTitle(b).replace(/ \((opening|closing)\)/, ''))}</text>`;
+      else s += `<text x="${x(it.z) + 6}" y="${y0 + 9.5}" font-size="9.5" fill="${c}" font-weight="600">${esc(b.name)}</text>`; }
+  });
+  if (!acItems.length) s += `<text x="${padL + 6}" y="${acTop + 11}" font-size="11" fill="${mute}" font-style="italic">No beats placed yet</text>`;
+  return s + '</svg>';
+}
+
+/* =====================================================================
+   COVERAGE REPORT
+   ===================================================================== */
+const repView = $('#v-report');
+const SECTIONS = [['details', 'Script Details'], ['overview', 'Overview'], ['logline', 'Logline'], ['synopsis', 'Synopsis'], ['comments', 'Comments'], ['notes', 'Key Notes'], ['revision', 'Revision Read'], ['production', 'Production'], ['reflection', 'Reader\'s Reflection'], ['checklist', 'Reader\'s Checklist']];
+let repDerived = [];
+const C = () => S.cov;
+function fld(label, obj, key, o = {}){
+  const tag = o.multi ? 'textarea' : 'input';
+  const inp = h(tag, {class:'fth-input', type:o.multi ? null : (o.type || 'text'), rows:o.rows, placeholder:o.ph || '', value:obj[key] ?? ''});
+  inp.addEventListener('input', () => { obj[key] = inp.value; save(); if (o.multi) autoGrow(inp); runDerived(); });
+  if (o.multi) requestAnimationFrame(() => autoGrow(inp));
+  const meta = o.meta ? h('span', {class:'fth-mono', style:{fontSize:'10.5px', color:'var(--fth-faint)'}}) : null;
+  if (o.meta) repDerived.push(() => { const r = o.meta(); meta.textContent = r.t; meta.style.color = r.warn ? 'var(--fth-warn)' : r.ok ? 'var(--fth-good)' : 'var(--fth-faint)'; });
+  return h('label', {class:'fld'}, label ? h('div', {class:'meta'}, h('span', {class:'fth-label'}, label), o.auto ? h('span', {class:'auto'}, o.auto) : null, meta) : null, inp);
+}
+function choice(opts, obj, key, cls){
+  const wrap = h('div', {class:cls || 'opts'});
+  const draw = () => { wrap.innerHTML = ''; opts.forEach(([v, l]) => wrap.append(h('button', {class:'opt' + (obj[key] === v ? ' on' : ''), onclick:() => { obj[key] = obj[key] === v ? '' : v; save(); draw(); runDerived(); }}, h('i'), l))); };
+  draw(); return wrap;
+}
+function sec(id, n, title, guide, ...kids){
+  return h('section', {class:'rsec', id:'r-' + id}, h('h2', {class:'fth-sec'}, h('span', {class:'fth-num'}, String(n).padStart(2, '0')), title), guide ? h('p', {class:'guide'}, guide) : null, ...kids);
+}
+function ratingTag(k){ const r = C().grid[k]; return r == null || r === '' ? h('span', {class:'rtag none'}, 'Not rated') : h('span', {class:'rtag r' + r}, RATINGS[r]); }
+function runDerived(){ repDerived.forEach(f => { try { f(); } catch (e) {} }); }
+function renderReport(){
+  repDerived = [];
+  const c = C(), d = c.details;
+  repView.innerHTML = '';
+  const nav = h('nav', {class:'rnav'}, h('div', {class:'fth-label', style:{padding:'0 10px 10px'}}, 'Coverage'));
+  const main = h('div', {class:'rmain'}), inner = h('div', {class:'rinner'});
+  main.append(inner);
+  repView.append(nav, main);
+  SECTIONS.forEach(([id, t], i) => {
+    const st = h('span', {class:'st'});
+    const a = h('a', {'data-sec':id, onclick:() => $('#r-' + id).scrollIntoView({behavior:'smooth', block:'start'})}, h('span', {class:'n'}, String(i + 1).padStart(2, '0')), t, st);
+    repDerived.push(() => { const v = secStatus(id); st.className = 'st ' + v; a.hidden = id === 'revision' && d.read !== 'revision'; });
+    nav.append(a);
+  });
+  nav.append(h('div', {style:{marginTop:'16px', padding:'0 4px', display:'flex', flexDirection:'column', gap:'6px'}},
+    h('button', {class:'fth-btn primary', onclick:() => doPrint('coverage')}, 'Print / save as PDF'),
+    h('button', {class:'fth-btn ghost', onclick:() => { if (confirm('Clear the whole coverage report? Placed beats, comments and summaries are kept.')){ S.cov = blankCov(); if (hasPdf()){ S.cov.details.pages = String(+LEN().toFixed(1)); S.cov.details.title = pdfName.replace(/\.pdf$/i, ''); } save(); renderReport(); } }}, 'Clear report')));
+
+  /* 1 details */
+  const readSeg = h('div', {class:'seg sub'});
+  const drawRead = () => { readSeg.innerHTML = ''; [['first', 'First read'], ['revision', 'Revision read']].forEach(([v, l]) => readSeg.append(h('button', {class:d.read === v ? 'on' : '', onclick:() => { d.read = v; save(); drawRead(); runDerived(); }}, l))); };
+  drawRead();
+  inner.append(sec('details', 1, 'Script Details', 'Aim to be specific: cite a page number or quote for every point you make.',
+    h('div', {class:'fth-card rcard grid g2'},
+      fld('Title', d, 'title', {auto:hasPdf() ? 'from PDF' : null}), fld('Writer', d, 'writer'),
+      fld('Draft / version', d, 'draft', {ph:'e.g. Second draft, 3 Nov'}), fld('Genre', d, 'genre', {ph:'e.g. Psychological thriller'}),
+      h('label', {class:'fld'}, h('span', {class:'fth-label'}, 'Format & length'), h('div', {style:{display:'flex', gap:'6px'}},
+        h('select', {class:'fth-input', style:{width:'130px', flex:'none'}, onchange:e => { d.format = e.target.value; save(); runDerived(); }}, ['Short', 'Feature', 'TV pilot', 'TV episode', 'Other'].map(f => h('option', {selected:d.format === f ? 'selected' : null}, f))),
+        h('input', {class:'fth-input', value:d.length, placeholder:'e.g. 12 pages / 12 min', oninput:e => { d.length = e.target.value; save(); }}))),
+      fld('Page count', d, 'pages', {auto:hasPdf() ? 'from PDF' : null}),
+      fld('Reader', d, 'reader'), fld('Date of reading', d, 'date', {type:'date'}),
+      h('div', {class:'fld'}, h('span', {class:'fth-label'}, 'Type of read'), h('div', null, readSeg), h('span', {class:'fth-muted', style:{fontSize:'12px'}}, 'A revision read adds section 7 to compare against the earlier draft.')))));
+
+  /* 2 overview */
+  const grid = h('table', {class:'rate'}, h('colgroup', null, h('col', {style:{width:'36%'}}), RATINGS.map(() => h('col', {style:{width:'16%'}}))), h('thead', null, h('tr', null, h('th', null, 'Element'), h('th', {colspan:4}))));
+  const gb = h('tbody'); grid.append(gb);
+  ELEMENTS.forEach(([k, label]) => {
+    const tr = h('tr', null, h('td', null, label));
+    const cells = RATINGS.map((r, i) => { const b = h('button', {class:'rbtn r' + i, onclick:() => { c.grid[k] = c.grid[k] === i ? '' : i; save(); draw(); runDerived(); }}, r); tr.append(h('td', null, b)); return b; });
+    const draw = () => cells.forEach((b, i) => b.classList.toggle('on', c.grid[k] === i));
+    draw(); gb.append(tr);
+  });
+  inner.append(sec('overview', 2, 'Overview', null,
+    h('div', {class:'fth-card rcard'}, h('div', {class:'colh'}, 'Grid'), h('p', {class:'guide'}, 'One rating per element. Be ready to justify every rating in the comments below.'), grid),
+    h('div', {class:'fth-card rcard'}, h('div', {class:'colh'}, 'Recommendation'), h('p', {class:'guide'}, 'Choose one in each column. A script can be a Pass while the writer is still worth Recommending.'),
+      h('div', {class:'grid g3'},
+        h('div', null, h('div', {class:'fth-label', style:{marginBottom:'7px'}}, 'Project'), choice([['recommend', 'Recommend'], ['consider', 'Consider'], ['pass', 'Pass']], c.rec, 'project')),
+        h('div', null, h('div', {class:'fth-label', style:{marginBottom:'7px'}}, 'Writer'), choice([['recommend', 'Recommend'], ['consider', 'Consider'], ['pass', 'Pass']], c.rec, 'writer')),
+        h('div', null, h('div', {class:'fth-label', style:{marginBottom:'7px'}}, 'Next step'), choice([['draft', 'Another draft before further development'], ['ready', 'Ready to move to production planning'], ['unsuitable', 'Not suitable for this format']], c.rec, 'next')))),
+    h('div', {class:'fth-card rcard'}, fld('Summary verdict', c, 'verdict', {multi:true, rows:3, ph:'Two or three sentences: what is the script at its best, and what is the single biggest thing holding it back?', meta:() => { const n = words(c.verdict); return {t:n ? n + ' words' : ''}; }}))));
+
+  /* 3 logline, 4 synopsis */
+  inner.append(sec('logline', 3, 'Logline', 'One or two sentences: protagonist + goal + obstacle/stakes, present tense, no spoilers.',
+    h('div', {class:'fth-card rcard'}, fld(null, c, 'logline', {multi:true, rows:2, ph:'When…, a… must… or else…'}),
+      (() => { const m = h('div', {class:'wc', style:{marginTop:'6px'}}); repDerived.push(() => { const n = words(c.logline), s = (c.logline.match(/[.!?](\s|$)/g) || []).length; m.textContent = n ? `${n} words · ${s || 1} sentence${s > 1 ? 's' : ''}` : ''; m.classList.toggle('warn', n > 55 || s > 2); }); return m; })())));
+  inner.append(sec('synopsis', 4, 'Synopsis', null,
+    (() => { const g = h('p', {class:'guide'}); repDerived.push(() => { g.textContent = `A neutral, present-tense summary of what happens, start to finish, including the ending. ${d.format === 'Feature' ? 'For a feature, usually one to two pages.' : 'For a short, roughly 150–300 words.'} No opinions here; this proves you understood the story.`; }); return g; })(),
+    h('div', {class:'fth-card rcard'}, fld(null, c, 'synopsis', {multi:true, rows:8, ph:'Present tense, beginning to end…', meta:() => {
+      const n = words(c.synopsis), [lo, hi] = d.format === 'Feature' ? [400, 1100] : [150, 300];
+      return {t:n ? `${n} words · aim ${lo}–${hi}` : `aim ${lo}–${hi} words`, warn:n && (n < lo || n > hi), ok:n >= lo && n <= hi};
+    }}),
+    hasPdf() && Object.values(S.summaries).some(v => (v || '').trim()) ? h('button', {class:'fth-btn sm ghost', style:{marginTop:'8px'}, onclick:() => {
+      const t = Array.from({length:NP()}, (_, i) => (S.summaries[i] || '').trim()).filter(Boolean).join(' ');
+      if (c.synopsis.trim() && !confirm('Replace the synopsis with your page summaries joined together?')) return;
+      c.synopsis = t; save(); renderReport(); $('#r-synopsis').scrollIntoView();
+    }}, 'Start from my page summaries') : null)));
+
+  /* 5 comments */
+  const cm = sec('comments', 5, 'Comments', 'State what works before what doesn\'t. Separate observation ("the rules for the monsters are unclear") from preference ("I\'d like a darker ending") and label which is which.');
+  ELEMENTS.filter(e => e[2]).forEach(([k, , title, prompt]) => {
+    const e = c.els[k]; const tagHost = h('span');
+    repDerived.push(() => tagHost.replaceChildren(ratingTag(k)));
+    const card = h('div', {class:'fth-card rcard el'},
+      h('div', {class:'el-h'}, title, tagHost), h('p', {class:'guide', style:{marginBottom:'10px'}}, prompt),
+      k === 'structure' ? structMap() : null,
+      h('div', {class:'ww'},
+        h('div'), h('div', {class:'h good'}, 'What works'), h('div', {class:'h bad'}, 'What needs work'),
+        h('div', {class:'rl'}, 'Observation'), fld(null, e, 'wObs', {multi:true, rows:2}),
+        h('div', null, fld(null, e, 'nObs', {multi:true, rows:2}), h('label', {class:'pref'}, h('input', {type:'checkbox', checked:e.pref ? 'checked' : null, onchange:ev => { e.pref = ev.target.checked; save(); runDerived(); }}), 'This is a preference, not an observation')),
+        h('div', {class:'rl'}, 'Evidence', h('br'), '(page / quote)'), fld(null, e, 'wEv', {multi:true, rows:1, ph:'p. 4: “…”'}), fld(null, e, 'nEv', {multi:true, rows:1, ph:'p. 9: “…”'})));
+    cm.append(card);
+  });
+  inner.append(cm);
+
+  /* 6 key notes */
+  const tb = h('tbody');
+  const drawNotes = () => {
+    tb.innerHTML = '';
+    c.notes.forEach((n, i) => {
+      const pri = h('select', {class:'fth-input pri ' + n.pri, onchange:ev => { n.pri = ev.target.value; pri.className = 'fth-input pri ' + n.pri; save(); runDerived(); }}, ['H', 'M', 'L'].map(p => h('option', {value:p, selected:n.pri === p ? 'selected' : null}, {H:'High', M:'Medium', L:'Low'}[p])));
+      const ta = (k, ph) => { const t = h('textarea', {class:'fth-input', rows:2, placeholder:ph, value:n[k], oninput:ev => { n[k] = ev.target.value; autoGrow(t); save(); runDerived(); }}); requestAnimationFrame(() => autoGrow(t)); return t; };
+      tb.append(h('tr', null, h('td', {class:'num'}, i + 1), h('td', {style:{width:'92px'}}, pri),
+        h('td', {style:{width:'84px'}}, h('input', {class:'fth-input', value:n.page, placeholder:'p. 12', oninput:ev => { n.page = ev.target.value; save(); runDerived(); }})),
+        h('td', null, ta('diag', 'What is the problem?')), h('td', null, ta('why', 'If the aim is X, this isn\'t working because Y')), h('td', null, ta('opts', '1. …\n2. …\n3. …')),
+        h('td', {style:{width:'28px'}}, h('div', {class:'mini'},
+          h('button', {title:'Move up', onclick:() => { if (i){ [c.notes[i - 1], c.notes[i]] = [c.notes[i], c.notes[i - 1]]; save(); drawNotes(); } }}, '▲'),
+          h('button', {title:'Move down', onclick:() => { if (i < c.notes.length - 1){ [c.notes[i + 1], c.notes[i]] = [c.notes[i], c.notes[i + 1]]; save(); drawNotes(); } }}, '▼'),
+          h('button', {title:'Delete', onclick:() => { c.notes.splice(i, 1); save(); drawNotes(); runDerived(); }}, '✕')))));
+    });
+  };
+  drawNotes();
+  inner.append(sec('notes', 6, 'Key Notes, Ranked by Priority', 'List the most important issues first: structure and story before character, character before line-level.',
+    h('div', {class:'fth-tip', style:{marginBottom:'12px'}}, h('b', null, 'Diagnose before you prescribe'), ': say what the problem is, then why it matters. Justify against what the writer is trying to achieve. Offer two or three options and leave the choice to the writer; don\'t rewrite the script for them.'),
+    h('div', {class:'fth-card rcard', style:{overflowX:'auto'}},
+      h('table', {class:'notes-t'}, h('thead', null, h('tr', null, ['#', 'Priority', 'Page / scene', 'Diagnosis', 'Why it matters (against the writer\'s aims)', 'Options (2–3)', ''].map(x => h('th', null, x)))), tb),
+      h('div', {class:'addrow', style:{display:'flex', gap:'6px'}},
+        h('button', {class:'fth-btn sm', onclick:() => { c.notes.push({id:uid(), pri:'M', page:'', diag:'', why:'', opts:''}); save(); drawNotes(); }}, '+ Add note'),
+        h('button', {class:'fth-btn sm ghost', onclick:() => { const o = {H:0, M:1, L:2}; c.notes.sort((a, b) => o[a.pri] - o[b.pri]); save(); drawNotes(); }}, 'Sort by priority')))));
+
+  /* 7 revision */
+  const rb = h('div');
+  const drawRev = () => {
+    rb.innerHTML = '';
+    c.revision.forEach((r, i) => {
+      const seg = h('div', {class:'seg sub sm'});
+      const ds = () => { seg.innerHTML = ''; [['yes', 'Yes'], ['partly', 'Partly'], ['no', 'No']].forEach(([v, l]) => seg.append(h('button', {class:r.addr === v ? 'on' : '', onclick:() => { r.addr = r.addr === v ? '' : v; save(); ds(); }}, l))); };
+      ds();
+      rb.append(h('div', {class:'fth-card rcard grid', style:{gridTemplateColumns:'1.2fr auto 1fr 1fr 24px', alignItems:'start'}},
+        fld('Earlier note', r, 'note', {multi:true, rows:2}), h('div', {class:'fld'}, h('span', {class:'fth-label'}, 'Addressed?'), seg),
+        fld('Evidence in new draft (page)', r, 'ev', {multi:true, rows:2}), fld('Did it work? Any new issue?', r, 'worked', {multi:true, rows:2}),
+        h('button', {class:'xbtn', style:{marginTop:'18px'}, onclick:() => { c.revision.splice(i, 1); save(); drawRev(); }}, '×')));
+    });
+  };
+  drawRev();
+  const revSec = sec('revision', 7, 'Revision Read', 'List the main notes the writer received on the earlier draft and judge how they were handled.', rb,
+    h('button', {class:'fth-btn sm', onclick:() => { c.revision.push({id:uid(), note:'', addr:'', ev:'', worked:''}); save(); drawRev(); }}, '+ Add earlier note'));
+  repDerived.push(() => { revSec.hidden = d.read !== 'revision'; });
+  inner.append(revSec);
+
+  /* 8 production */
+  const flags = h('div', {class:'flags'});
+  const drawFlags = () => { flags.innerHTML = ''; FLAGS.forEach(f => flags.append(h('button', {class:'chip' + (c.flags.includes(f) ? ' on' : ''), style:{'--c':'var(--fth-accent)'}, onclick:() => { const i = c.flags.indexOf(f); i < 0 ? c.flags.push(f) : c.flags.splice(i, 1); save(); drawFlags(); }}, h('i', {class:'sw'}), f))); };
+  drawFlags();
+  const costSeg = h('div', {class:'seg sub sm'});
+  const dc = () => { costSeg.innerHTML = ''; ['Low', 'Medium', 'High'].forEach(v => costSeg.append(h('button', {class:c.cost === v ? 'on' : '', onclick:() => { c.cost = c.cost === v ? '' : v; save(); dc(); }}, v))); };
+  dc();
+  inner.append(sec('production', 8, 'Production Considerations', 'Cast size, locations, night shoots, vehicles, effects, doubles, stunts, tricky sequences, estimated cost level. What would be hardest to shoot well on a short-film budget, and how might it be simplified?',
+    h('div', {class:'fth-card rcard'}, h('div', {class:'fth-label', style:{marginBottom:'8px'}}, 'Flags'), flags,
+      h('div', {style:{display:'flex', alignItems:'center', gap:'10px', margin:'4px 0 12px'}}, h('span', {class:'fth-label'}, 'Estimated cost level'), costSeg),
+      fld(null, c, 'production', {multi:true, rows:4, ph:'Hardest thing to shoot well, and how it might be simplified…'}))));
+  inner.append(sec('reflection', 9, 'Reader\'s Reflection', 'What did you learn about how stories work from reading this script? What was the hardest note to write, and why?',
+    h('div', {class:'fth-card rcard'}, fld(null, c, 'reflection', {multi:true, rows:4}))));
+
+  /* 10 checklist */
+  const cl = h('div', {class:'fth-card rcard'});
+  CHECKS.forEach(([k, label]) => {
+    const hint = h('span', {class:'hint'});
+    repDerived.push(() => { const r = checkHint(k); hint.textContent = r ? r.t : ''; hint.className = 'hint' + (r ? (r.ok ? ' ok' : ' no') : ''); });
+    cl.append(h('label', {class:'check'}, h('input', {type:'checkbox', checked:c.checks[k] ? 'checked' : null, onchange:e => { c.checks[k] = e.target.checked; save(); runDerived(); }}), h('span', null, label, hint)));
+  });
+  inner.append(sec('checklist', 10, 'Reader\'s Checklist', null, cl));
+
+  /* nav highlight */
+  main.addEventListener('scroll', () => {
+    let cur = SECTIONS[0][0];
+    for (const [id] of SECTIONS){ const el = $('#r-' + id); if (el && !el.hidden && el.getBoundingClientRect().top < main.getBoundingClientRect().top + 120) cur = id; }
+    $$('.rnav a').forEach(a => a.classList.toggle('on', a.dataset.sec === cur));
+  }, {passive:true});
+  runDerived();
+}
+function structMap(){
+  const box = h('div', {class:'smap', id:'smap'});
+  fillStructMap(box); return box;
+}
+function fillStructMap(box){
+  box.innerHTML = '';
+  const st = S.struct, n = placedCount(st);
+  box.append(h('div', {class:'smap-h'}, h('b', null, 'Structure map'),
+    h('div', {class:'seg sm sub'}, SORDER.map(id => h('button', {class:id === st ? 'on' : '', onclick:() => { S.struct = id; save(); fillStructMap(box); }}, STRUCTS[id].short))),
+    h('span', {class:'fth-mono', style:{fontSize:'11px', color:'var(--fth-faint)'}}, `${n}/${STRUCTS[st].beats.length} beats placed`),
+    h('span', {class:'grow'}),
+    h('button', {class:'fth-btn sm', onclick:() => setView('script')}, n ? 'Adjust in script' : 'Place beats in the script →')));
+  const svgHost = h('div', {html:compareSVG(st)});
+  box.append(svgHost);
+  if (n){
+    const late = STRUCTS[st].beats.map(b => [b, diffInfo(st, b)]).filter(([, d]) => d && d.cls !== 'on');
+    box.append(h('div', {class:'fth-muted', style:{fontSize:'12.5px', marginTop:'8px'}},
+      late.length ? 'Furthest from textbook: ' + late.sort((a, b) => Math.abs(b[1].d) - Math.abs(a[1].d)).slice(0, 3).map(([b, d]) => `${b.name} (${d.txt})`).join(', ') + '. Use this as evidence in the boxes below.' : 'Every placed beat lands close to where this structure expects it.'));
+  }
+}
+function refreshReportMap(){ const b = $('#smap'); if (b) fillStructMap(b); }
+function secStatus(id){
+  const c = C(), d = c.details, f = v => !!String(v || '').trim();
+  const frac = arr => { const n = arr.filter(Boolean).length; return n === 0 ? '' : n === arr.length ? 'done' : 'part'; };
+  switch (id){
+    case 'details': return frac([f(d.title), f(d.writer), f(d.draft), f(d.genre), f(d.pages), f(d.reader)]);
+    case 'overview': return frac([...ELEMENTS.map(e => c.grid[e[0]] !== '' && c.grid[e[0]] != null), f(c.rec.project), f(c.rec.writer), f(c.rec.next), f(c.verdict)]);
+    case 'logline': return f(c.logline) ? 'done' : '';
+    case 'synopsis': return f(c.synopsis) ? (words(c.synopsis) >= 100 ? 'done' : 'part') : '';
+    case 'comments': return frac(Object.values(c.els).map(e => f(e.wObs) || f(e.nObs)));
+    case 'notes': return frac(c.notes.length ? c.notes.map(n => f(n.diag) && f(n.opts)) : [false]);
+    case 'revision': return frac(c.revision.map(r => f(r.note) && !!r.addr));
+    case 'production': return f(c.production) ? 'done' : (c.flags.length || c.cost ? 'part' : '');
+    case 'reflection': return f(c.reflection) ? 'done' : '';
+    case 'checklist': return frac(CHECKS.map(([k]) => !!c.checks[k]));
+  }
+  return '';
+}
+function checkHint(k){
+  const c = C(), f = v => !!String(v || '').trim();
+  const notes = c.notes.filter(n => f(n.diag));
+  if (k === 'cite'){ const els = Object.values(c.els).filter(e => f(e.wObs) || f(e.nObs)); const a = notes.filter(n => f(n.page)).length, b = els.filter(e => f(e.wEv) || f(e.nEv)).length; if (!notes.length && !els.length) return null; return {t:`${a}/${notes.length} key notes have a page · ${b}/${els.length} comment boxes have evidence`, ok:a === notes.length && b === els.length}; }
+  if (k === 'strengths'){ const n = Object.values(c.els).filter(e => f(e.wObs)).length; return {t:`${n} of ${Object.keys(c.els).length} elements have a "What works" note`, ok:n >= 3}; }
+  if (k === 'pref'){ const n = Object.values(c.els).filter(e => e.pref).length; return {t:n ? `${n} note${n > 1 ? 's' : ''} marked as preference` : 'Nothing marked as a preference yet', ok:true}; }
+  if (k === 'options'){ if (!notes.length) return null; const n = notes.filter(x => (x.opts.match(/(^|\n)\s*(\d+[.)]|[-•])\s*\S/g) || []).length >= 2).length; return {t:`${n}/${notes.length} key notes list 2+ options`, ok:n === notes.length}; }
+  if (k === 'neutral'){ const a = f(c.logline), b = f(c.synopsis); return {t:`Logline ${a ? '✓' : 'missing'} · Synopsis ${b ? '✓' : 'missing'}`, ok:a && b}; }
+  return null;
+}
+
+/* =====================================================================
+   PRINT
+   ===================================================================== */
+const printEl = $('#print');
+const P = s => esc(s || '').replace(/\n/g, '<br>');
+function doPrint(kind){
+  const d = C().details, title = d.title || pdfName.replace(/\.pdf$/i, '') || 'Untitled script';
+  let o = '<div class="pr">';
+  if (kind === 'coverage'){
+    const c = C();
+    o += `<h1>Script Coverage</h1><p class="sub">${esc(title)}${d.writer ? ' · by ' + esc(d.writer) : ''}</p>`;
+    o += `<h2>1. Script Details</h2><table><tr><th>Title</th><td>${esc(d.title)}</td><th>Writer</th><td>${esc(d.writer)}</td></tr><tr><th>Draft / version</th><td>${esc(d.draft)}</td><th>Genre</th><td>${esc(d.genre)}</td></tr><tr><th>Format & length</th><td>${esc(d.format)}${d.length ? ' · ' + esc(d.length) : ''}</td><th>Page count</th><td>${esc(d.pages)}</td></tr><tr><th>Reader</th><td>${esc(d.reader)}</td><th>Date of reading</th><td>${esc(d.date)}</td></tr><tr><th>Type of read</th><td colspan="3">${d.read === 'revision' ? 'Revision read (compared to earlier draft)' : 'First read'}</td></tr></table>`;
+    o += `<h2>2. Overview</h2><h3>Grid</h3><table><tr><th>Element</th>${RATINGS.map(r => `<th style="text-align:center">${r}</th>`).join('')}</tr>${ELEMENTS.map(([k, l]) => `<tr><td>${l}</td>${RATINGS.map((r, i) => `<td style="text-align:center" class="tick">${c.grid[k] === i ? '✔' : ''}</td>`).join('')}</tr>`).join('')}</table>`;
+    const rl = {recommend:'Recommend', consider:'Consider', pass:'Pass', draft:'Another draft before further development', ready:'Ready to move to production planning', unsuitable:'Not suitable for this format'};
+    o += `<h3>Recommendation</h3><table><tr><th>Project</th><th>Writer</th><th>Next step</th></tr><tr><td>${rl[c.rec.project] || '—'}</td><td>${rl[c.rec.writer] || '—'}</td><td>${rl[c.rec.next] || '—'}</td></tr></table>`;
+    o += `<h3>Summary verdict</h3><div class="box">${P(c.verdict)}</div>`;
+    o += `<h2>3. Logline</h2><div class="box">${P(c.logline)}</div><h2>4. Synopsis</h2><div class="box">${P(c.synopsis)}</div>`;
+    o += '<h2>5. Comments</h2>';
+    ELEMENTS.filter(e => e[2]).forEach(([k, , t]) => {
+      const e = c.els[k], r = c.grid[k];
+      o += `<h3>${t}${r !== '' && r != null ? ` <span class="muted" style="font-weight:500">· ${RATINGS[r]}</span>` : ''}</h3>`;
+      if (k === 'structure' && placedCount(S.struct)) o += `<div class="svgwrap"><div class="muted" style="font-size:9pt;margin-bottom:3pt">Structure map: ${esc(STRUCTS[S.struct].full || STRUCTS[S.struct].name)}</div>${compareSVG(S.struct, true)}</div>`;
+      o += `<table><tr><th style="width:18%"></th><th>What works</th><th>What needs work${e.pref ? ' <span class="muted">(preference)</span>' : ''}</th></tr><tr><th>Observation</th><td>${P(e.wObs)}</td><td>${P(e.nObs)}</td></tr><tr><th>Evidence (page / quote)</th><td>${P(e.wEv)}</td><td>${P(e.nEv)}</td></tr></table>`;
+    });
+    o += `<h2>6. Key Notes, Ranked by Priority</h2><table><tr><th>#</th><th>Priority</th><th>Page / scene</th><th>Diagnosis</th><th>Why it matters</th><th>Options</th></tr>${c.notes.map((n, i) => `<tr><td>${i + 1}</td><td>${{H:'High', M:'Medium', L:'Low'}[n.pri]}</td><td>${esc(n.page)}</td><td>${P(n.diag)}</td><td>${P(n.why)}</td><td>${P(n.opts)}</td></tr>`).join('')}</table>`;
+    if (d.read === 'revision') o += `<h2>7. Revision Read</h2><table><tr><th>Earlier note</th><th>Addressed?</th><th>Evidence in new draft</th><th>Did it work? Any new issue?</th></tr>${c.revision.map(r => `<tr><td>${P(r.note)}</td><td>${{yes:'Yes', partly:'Partly', no:'No'}[r.addr] || ''}</td><td>${P(r.ev)}</td><td>${P(r.worked)}</td></tr>`).join('')}</table>`;
+    const n0 = 8;
+    o += `<h2>${n0}. Production Considerations</h2>${c.flags.length || c.cost ? `<p class="muted">${c.flags.length ? 'Flags: ' + esc(c.flags.join(', ')) : ''}${c.flags.length && c.cost ? ' · ' : ''}${c.cost ? 'Estimated cost level: ' + esc(c.cost) : ''}</p>` : ''}<div class="box">${P(c.production)}</div>`;
+    o += `<h2>${n0 + 1}. Reader's Reflection</h2><div class="box">${P(c.reflection)}</div>`;
+    o += `<h2>${n0 + 2}. Reader's Checklist</h2><table>${CHECKS.map(([k, l]) => `<tr><td style="width:24pt;text-align:center" class="tick">${c.checks[k] ? '☑' : '☐'}</td><td>${esc(l)}</td></tr>`).join('')}</table>`;
+  } else {
+    o += `<h1>${kind === 'timeline' ? 'Script Timeline' : 'Script Feedback'}</h1><p class="sub">${esc(title)}${hasPdf() ? ` · ${NP()} pages` : ''}${d.reader ? ' · notes by ' + esc(d.reader) : ''}</p>`;
+    const sts = SORDER.filter(placedCount);
+    sts.forEach(st => {
+      o += `<h2>Outline · ${esc(STRUCTS[st].full || STRUCTS[st].name)}</h2><div class="svgwrap">${compareSVG(st, true)}</div>`;
+      o += `<table><tr><th>Beat</th><th>Expected</th><th>In this script</th><th>Difference</th><th>Notes</th></tr>${STRUCTS[st].beats.map(b => { const pl = S.place[st][b.id], di = diffInfo(st, b); return `<tr><td>${esc(beatTitle(b))}</td><td>${esc(expLabel(b).split(' · ')[0])}</td><td>${pl ? pLabel(placedPos(pl)) + rangeEnd(pl) : '—'}</td><td>${di ? di.txt : ''}</td><td>${P(S.notes[st][b.id])}</td></tr>`; }).join('')}</table>`;
+    });
+    if (hasPdf() && Object.values(S.summaries).some(v => (v || '').trim())) o += `<h2>Page Summaries</h2><table><tr><th style="width:44pt">Page</th><th>Summary</th></tr>${Array.from({length:NP()}, (_, i) => `<tr><td>${i + 1}</td><td>${P(S.summaries[i])}</td></tr>`).join('')}</table>`;
+    const cs = sortedComments();
+    const kcol = {note:'#b07a10', strength:'#22804a', issue:'#c0392b', question:'#2f6fc0'};
+    if (cs.length) o += `<h2>Comments</h2><table><tr><th>#</th><th>Page</th><th>Type</th><th>Comment</th></tr>${cs.map((c, i) => `<tr><td>${i + 1}</td><td>${pLabel(cPos(c))}</td><td><span class="kind" style="background:${kcol[c.kind]}">${KINDS[c.kind]}</span></td><td>${P(c.text)}</td></tr>`).join('')}</table>`;
+    if (S.tlNotes.trim()) o += `<h2>Timeline notes</h2><div class="box">${P(S.tlNotes)}</div>`;
+    if (!sts.length && !cs.length) o += '<p class="muted">Nothing to print yet: add comments, page summaries or plot beats first.</p>';
+  }
+  printEl.innerHTML = o + '</div>';
+  setTimeout(() => window.print(), 60);
+}
+
+/* =====================================================================
+   MODE / VIEW / SETTINGS / INIT
+   ===================================================================== */
+const VIEWS = {coverage:[['script', 'Script & Structure'], ['report', 'Coverage Report'], ['timeline', 'Timeline']], feedback:[['script', 'Script'], ['timeline', 'Timeline']]};
+function curView(){ return S.view[S.mode]; }
+function setMode(m){ if (placing) cancelPlacing(); S.mode = m; save(); renderAll(); }
+function setView(v){ S.view[S.mode] = v; save(); renderViews(); }
+function renderHeader(){
+  $$('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
+  $('.fth-title').textContent = S.mode === 'coverage' ? 'Script Coverage' : 'Script Feedback';
+  $('#docName').textContent = pdfName; $('#docName').title = pdfName;
+}
+function renderViews(){
+  const v = curView();
+  const tabs = $('#viewTabs'); tabs.innerHTML = '';
+  VIEWS[S.mode].forEach(([k, l]) => tabs.append(h('button', {class:k === v ? 'on' : '', onclick:() => setView(k)}, l)));
+  ['script', 'report', 'timeline'].forEach(k => $('#v-' + k).classList.toggle('on', k === v));
+  if (v === 'report') renderReport();
+  if (v === 'timeline') renderTimelinePage();
+  if (v === 'script'){ renderStrip(); if (pdfDoc) requestAnimationFrame(() => { applyZoom(); const r = visibleRange(); if (r) updateWin(r); }); }
+}
+function renderPanelBtns(){
+  const l = $('#openLeft'), r = $('#openRight');
+  l.hidden = S.ui.leftOpen; r.hidden = S.mode !== 'feedback' || S.ui.rightOpen;
+}
+function renderAll(){
+  document.body.classList.toggle('mode-feedback', S.mode === 'feedback');
+  document.body.classList.toggle('mode-coverage', S.mode === 'coverage');
+  if (!VIEWS[S.mode].some(([k]) => k === curView())) S.view[S.mode] = 'script';
+  renderHeader(); renderLeft(); renderRight(); renderPanelBtns(); renderOverlays(); renderViews();
+}
+$$('#modeSeg button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+$('#uploadBtn').addEventListener('click', () => fileIn.click());
+$('#projIn').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) importProject(f); });
+$('#dropBtn').addEventListener('click', () => fileIn.click());
+$('#printBtn').addEventListener('click', () => doPrint(S.mode === 'coverage' ? 'coverage' : 'feedback'));
+$('#openLeft').addEventListener('click', () => togglePanel('left'));
+$('#openRight').addEventListener('click', () => togglePanel('right'));
+$('#zIn').addEventListener('click', () => { S.ui.zoom = clamp(+(S.ui.zoom + 0.1).toFixed(2), 0.5, 2.5); save(); applyZoom(); });
+$('#zOut').addEventListener('click', () => { S.ui.zoom = clamp(+(S.ui.zoom - 0.1).toFixed(2), 0.5, 2.5); save(); applyZoom(); });
+$('#zFit').addEventListener('click', () => { S.ui.zoom = 1; save(); applyZoom(); });
+const dropEl = $('#drop');
+['dragenter', 'dragover'].forEach(ev => scroller.addEventListener(ev, e => { e.preventDefault(); dropEl.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => scroller.addEventListener(ev, e => { e.preventDefault(); dropEl.classList.remove('over'); }));
+scroller.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) openFile(f); });
+
+let menuEl = null;
+function closeMenu(){ if (menuEl){ menuEl.remove(); menuEl = null; } }
+$('#settingsBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  if (menuEl){ closeMenu(); return; }
+  const r = e.currentTarget.getBoundingClientRect();
+  const fillOut = h('span', {class:'fth-mono', style:{fontSize:'11px', width:'40px', textAlign:'right'}}, Math.round(lastFill() * 100) + '%');
+  menuEl = h('div', {class:'menu', style:{top:(r.bottom + 6) + 'px', right:Math.max(8, innerWidth - r.right) + 'px'}, onclick:e => e.stopPropagation()},
+    h('h4', null, 'Script settings'),
+    hasPdf() ? [
+      h('label', {class:'row toggle', style:{color:'var(--fth-text)'}}, h('span', null, 'First page is a title page', h('br'), h('small', {class:'fth-muted'}, M.autoTitle ? 'Detected automatically' : 'Not detected')), h('input', {type:'checkbox', checked:titleOn() ? 'checked' : null, onchange:e => { S.titlePage = e.target.checked; measure(); save(); afterGeometry(); }})),
+      h('div', null, h('div', {class:'row'}, h('span', null, 'Length of the last page'), fillOut),
+        h('div', {class:'row'}, h('input', {type:'range', min:5, max:100, step:5, value:Math.round(lastFill() * 100), oninput:e => { S.lastFill = +e.target.value / 100; fillOut.textContent = e.target.value + '%'; save(); afterGeometry(); }}),
+          h('button', {class:'fth-btn sm ghost', onclick:() => { S.lastFill = null; save(); afterGeometry(); closeMenu(); }}, 'Auto')),
+        h('p', null, `Measured from the text: ${Math.round(M.autoFill * 100)}%. The script runs ${(+LEN().toFixed(2))} pages, which sets where every textbook beat should fall.`))
+    ] : h('p', null, 'Upload a script to adjust page settings.'),
+    h('div', {style:{borderTop:'1px solid var(--fth-line2)', paddingTop:'10px', display:'flex', flexDirection:'column', gap:'8px'}},
+      h('h4', null, 'Project file'),
+      h('p', null, HUB ? 'Your work saves with the current Hub project. You can also export it as a file to share or back up.' : 'Export everything (script, notes, beats and report) as a .json file, and open it again later.'),
+      h('div', {class:'row', style:{justifyContent:'flex-start', gap:'6px'}},
+        h('button', {class:'fth-btn sm', onclick:() => { closeMenu(); exportProject(); }}, 'Export project (.json)'),
+        h('button', {class:'fth-btn sm ghost', onclick:() => { closeMenu(); $('#projIn').click(); }}, 'Import project'))),
+    h('div', {class:'row', style:{borderTop:'1px solid var(--fth-line2)', paddingTop:'10px'}}, h('span', null, 'Remove the script PDF'),
+      h('button', {class:'fth-btn sm danger', disabled:!hasPdf() || null, onclick:() => { if (!confirm('Remove the script PDF? Your notes stay.')) return; store.del('pdf'); pdfDoc = null; pdfName = ''; M.n = 0; pageEls = []; pagesEl.innerHTML = ''; dropEl.hidden = false; $('#zoomDock').hidden = true; closeMenu(); renderAll(); }}, 'Remove')));
+  document.body.append(menuEl);
+});
+document.addEventListener('click', closeMenu);
+function afterGeometry(){ renderOverlays(); renderStrip(); renderLeft(); renderRight(); if (curView() !== 'script') renderViews(); }
+
+(async function init(){
+  const saved = await store.get('state');
+  if (saved && typeof saved === 'object') S = merge(blankState(), saved);
+  if (!window.fthStore && !saved){ S.mode = 'coverage'; }
+  ready = true;
+  renderAll();
+  const pdf = await store.get('pdf');
+  if (pdf && pdf.bytes) await loadPdf(pdf.bytes, pdf.name, false);
+})();
+
+
+</script>
+</body>
+</html>

@@ -183,6 +183,25 @@
       "file": "tools/script-dev.html"
     },
     {
+      "id": "coverage",
+      "name": "Script Coverage & Feedback",
+      "desc": "Read a script PDF: map its structure against Save the Cat, 3-Act or Scaffolded, leave comments and page summaries, and write a full coverage report.",
+      "category": "write",
+      "tags": [
+        "Writer",
+        "Script editor",
+        "Director"
+      ],
+      "icon": "coverage",
+      "fileName": "Script Coverage & Feedback.html",
+      "origTitle": "Script Coverage & Feedback",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611111110,
+      "file": "tools/coverage.html"
+    },
+    {
       "id": "script-lining",
       "name": "Script Lining Tool",
       "desc": "Upload a script PDF and draw tramlines to map shot coverage, with zig-zags for off-screen lines and notes per shot.",

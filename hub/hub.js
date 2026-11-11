@@ -32,6 +32,7 @@ const ICONS = {
   timeline: P('<path d="M3 12h18"/><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/><path d="M6 5.5v4.2M12 14.3v4.2M18 5.5v4.2"/>'),
   production: P('<path d="M3.5 10h17v9.5a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M3.2 10 2.6 6.6l16.2-2.9.6 3.4z"/><path d="M7.2 5.8l2.3 3.1M11.6 5l2.3 3.1"/>'),
   post:     P('<rect x="2.8" y="5" width="18.4" height="14" rx="1.6"/><path d="M2.8 9h18.4"/><path d="M6.5 13h5.5M6.5 16h3"/><path d="M14.5 12.4v4.2M17.5 11.2v6.6"/>'),
+  coverage: P('<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 12.5h6M9 16h3.5"/><path d="M15.2 15.6l1.4 1.4 2.6-2.8"/>'),
   casting:  P('<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M17.5 4.2l1 2 2.2.3-1.6 1.6.4 2.2-2-1-2 1 .4-2.2-1.6-1.6 2.2-.3z"/>'),
   recce:    P('<path d="M12 21s-6.5-5.6-6.5-10.4a6.5 6.5 0 0 1 13 0C18.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.4" r="2.4"/>'),
   schedule: P('<rect x="3" y="4" width="18" height="16" rx="1.6"/><path d="M3 9.3h18M3 14.6h18M8.5 4v16"/>'),
@@ -42,6 +43,7 @@ const ICONS = {
   risk:     P('<path d="M12 3.2l9.3 16.6H2.7z"/><path d="M12 10v4.6"/><circle cx="12" cy="17.2" r=".5" fill="currentColor"/>'),
   portrait: P('<circle cx="10" cy="12" r="6.2"/><path d="M10 5.8a6.2 6.2 0 0 1 0 12.4z" fill="currentColor" stroke="none" opacity=".35"/><path d="M18 6.5l2.6-1.8M18.8 12h2.8M18 17.5l2.6 1.8"/>'),
   palette:  P('<path d="M12 3.2a8.8 8.8 0 1 0 0 17.6c1.3 0 2-1 1.6-2.1-.5-1.2.3-2.4 1.6-2.4h1.9a3.7 3.7 0 0 0 3.7-3.7c0-5.2-4-9.4-8.8-9.4z"/><circle cx="7.6" cy="11.2" r="1.3"/><circle cx="10.2" cy="7.3" r="1.3"/><circle cx="14.8" cy="7.6" r="1.3"/>'),
+  coverage: P('<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12.6l1.6 1.6 3.2-3.4"/><path d="M9 17.4h6"/>'),
   breakdown:P('<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><rect x="8.6" y="10.2" width="5" height="2.4" rx=".6" fill="currentColor" stroke="none" opacity=".5"/><path d="M14.8 11.4h1.8M8.6 15h2.6"/><rect x="12" y="13.8" width="4.6" height="2.4" rx=".6" fill="currentColor" stroke="none" opacity=".5"/>'),
   exposure: P('<circle cx="12" cy="12" r="8.8"/><path d="M12 3.2l2.6 6.4M20.4 9.3l-6.8.9M17.4 18.9l-4.2-5.4M6.6 18.9l4.2-5.4M3.6 9.3l6.8.9"/><circle cx="12" cy="12" r="2.6"/>'),
   dof:      P('<circle cx="12" cy="12" r="8.8"/><path d="M3.2 12h17.6"/><path d="M8 7.4v9.2M16 7.4v9.2"/><path d="M12 9.6v4.8" stroke-width="2.4"/>'),
@@ -264,7 +266,7 @@ async function saveProject(quiet) {
     p.savedAt = snap.at;
     await putProject(p);
     renderProjUI();
-  } catch (e) { toast('Couldn’t save in this browser: ' + (e.message || e)); return; }
+  } catch (e) { toast('Couldn’t save in this browser: ' + (e.message || e)); return false; }
   if (!tp) { if (!quiet) toast(driveOn() ? `Saved “${p.name}” in this browser. Sign in to save it to Google Drive.` : `Saved “${p.name}”`); return; }
   if (!(await tp)) { renderAccount(); toast(`Saved “${p.name}” in this browser only. Reconnect Google Drive to save it there too.`); return; }
   try { toast('Saving to Google Drive…'); await driveSave(p, snap); await putProject(p); renderAccount(); renderProjUI(); if (!quiet) toast(`Saved “${p.name}” to Google Drive`); }
@@ -351,7 +353,11 @@ window.__fthHub = {
     const now = Date.now(); p.changedAt = now; p.tools = p.tools || {}; p.tools[tool] = now;
     persistProjectSoon(p); if (pid === curId) renderProjUI();
   },
-  save() { saveProject(); }
+  /* tools can wait on this: it resolves once the project is saved, and rejects if it couldn't be */
+  save() { return saveProject().then(ok => { if (ok === false) throw new Error('not saved'); }); },
+  /* save, and also keep a dated backup (used before a tool replaces a lot of work at once) */
+  async saveWithBackup(why) { await this.save(); await backupProject(cur(), why || 'before a big change'); },
+  projectInfo() { const p = cur(); return p ? {id: p.id, name: p.name} : null; }
 };
 
 
@@ -1011,6 +1017,7 @@ const TOOL_THEME = {
   schedule:  {kit: true},
   recce:     {kit: true},
   casting:   {kit: true},
+  coverage:  {kit: true},
   preprod:       {kit: true},
   production:    {kit: true},
   postprod:      {kit: true},
@@ -1020,6 +1027,7 @@ const TOOL_THEME = {
   blocking:      {kit: true},
   'script-dev':  {kit: true},
   breakdown:     {kit: true},
+  coverage:      {kit: true},
   'script-lining': {kit: true},
   lighting:      {kit: true},
   falsecolour:   {kit: true, after: 'drawHist'},
