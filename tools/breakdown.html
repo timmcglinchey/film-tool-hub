@@ -308,6 +308,89 @@ select.fi{padding:0 6px}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:90;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--shadow);transition:all .25s;pointer-events:none;max-width:90vw}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* ═════ advanced mode ═════ */
+.srw{display:flex;align-items:stretch;gap:2px;position:relative;border-radius:9px}
+.srw .scene{flex:1;min-width:0}
+.srw .grip{display:grid;place-items:center;width:18px;color:var(--faint);cursor:grab;font-size:14px;user-select:none}
+.srw:hover .grip{color:var(--fg)}
+.srw .arr{display:flex;flex-direction:column;justify-content:center;opacity:0;transition:opacity .12s}
+.srw:hover .arr,.srw:focus-within .arr{opacity:1}
+.srw.dragging{opacity:.35}
+.srw.drop-before::before,.srw.drop-after::after{content:"";position:absolute;left:0;right:0;height:3px;border-radius:2px;background:var(--accent);z-index:2}
+.srw.drop-before::before{top:-2px}.srw.drop-after::after{bottom:-2px}
+.dayhead.drop-in{background:var(--accent-soft);border-radius:8px 8px 0 0}
+.dayhead .dni{flex:1;min-width:0;border:1px solid transparent;background:none;font:650 13px var(--sans,inherit);color:var(--fg);padding:2px 6px;border-radius:6px}
+.dayhead .dni:hover{border-color:var(--line2)}
+.dayhead .dni:focus{border-color:var(--accent);background:var(--field);outline:0}
+.dayhead .dni::placeholder{color:var(--faint);font-weight:500}
+.tgl.fill{font:inherit;font-size:11.5px;color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0;display:flex;gap:6px;align-items:center}
+.tgl.adv{padding:3px 9px 3px 7px;border-radius:8px;border:1px solid var(--line2)}
+.tgl.adv:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.sbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden;background:var(--field)}
+.seg button{border:0;background:none;padding:5px 10px;font-size:12px;font-weight:650;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button.on{background:var(--panel2);color:var(--fg);box-shadow:inset 0 -2px 0 var(--accent)}
+.scene .l2{display:flex;flex-wrap:wrap;gap:3px 10px;margin:4px 0 0 39px;font:500 10.5px var(--mono);color:var(--muted)}
+.scene .l2 .inh{opacity:.55}
+.scene .l2 .dy{color:var(--fg);font-weight:600}
+.scene .l2 .ck{color:var(--fth-warn)}
+.scene .l2 .rec,.btn.rec{color:var(--fth-bad)}
+.scene.open{background:var(--panel2);border-bottom-color:transparent;border-radius:9px 9px 0 0}
+.sedit{padding:4px 8px 12px;background:var(--panel2);border-bottom:1px solid var(--line);border-radius:0 0 9px 9px;display:grid;gap:10px;margin-bottom:4px}
+.sedit label,.cedit label{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:grid;gap:4px;min-width:0}
+.sedit label small,.cedit label small{text-transform:none;letter-spacing:0;font-weight:400}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sbox{border:1px solid var(--line2);border-radius:9px;padding:9px;display:grid;gap:8px;background:var(--panel)}
+.sbox h4{margin:0;font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px}
+.sbox h4 .r{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:500}
+.rt{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rt .big{font:700 22px/1 var(--mono);min-width:64px}
+.rt .sub{font:500 11px var(--mono);color:var(--muted);flex:1;min-width:120px}
+.btn.rec{border-color:var(--fth-bad);background:color-mix(in srgb,var(--fth-bad) 14%,var(--panel))}
+.runs{list-style:none;margin:0;padding:0;display:grid;gap:1px;font:500 11.5px var(--mono);color:var(--muted)}
+.runs li{display:flex;align-items:center;gap:10px;padding:1px 2px}
+.runs li b{color:var(--fg);font-weight:600;min-width:52px}
+.runs li .d{color:var(--faint);flex:1}
+.runs li.latest span:first-child::after{content:" · latest";color:var(--accent)}
+.x{border:0;background:none;color:var(--faint);width:24px;height:24px;border-radius:6px;display:grid;place-items:center;font-size:13px;flex:none}
+.x:hover:not(:disabled){background:var(--field);color:var(--fg)}
+.x:disabled{opacity:.3;cursor:default}
+.days{margin:0 0 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
+.dtog{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:9px 10px;text-align:left}
+.dtog b{font-size:13px}.dtog span{font:500 11px var(--mono);color:var(--muted);margin-left:auto}.dtog i{font-style:normal;color:var(--muted)}
+.dbody{padding:0 10px 10px;display:grid;gap:5px}
+.drow{display:grid;grid-template-columns:50px 1fr auto auto auto auto;gap:4px;align-items:center}
+.drow .dn{font:700 11.5px var(--mono);color:var(--accent)}
+.drow .dc{font:500 10.5px var(--mono);color:var(--muted);min-width:34px;text-align:right}
+.drow .fi{height:28px}
+.dayhead{display:flex;align-items:baseline;gap:8px;margin:14px 2px 2px;padding:0 4px 5px;border-bottom:2px solid var(--accent)}
+.dayhead b{font:700 12px var(--mono);color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+.dayhead span{font-weight:650;font-size:13px}
+.dayhead em{margin-left:auto;font:500 10.5px var(--mono);color:var(--muted);font-style:normal}
+.chk{display:grid;gap:5px;padding:7px 0;border-top:1px solid var(--line)}
+.chk:first-of-type{border-top:0}
+.cht b{display:block;font-size:12.5px}.cht small{font:500 10.5px var(--mono);color:var(--muted)}
+.chs{border:0;background:none;text-align:left;padding:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chs b{font:700 11.5px var(--mono);color:var(--accent);margin-right:4px}.chs i{font:500 10.5px var(--mono);color:var(--muted);font-style:normal;margin-left:4px}
+.chs:hover{color:var(--accent)}
+.st3{display:flex;gap:4px}
+.st3 button{flex:1;height:26px;border-radius:7px;border:1px solid var(--line2);background:var(--field);font-size:11.5px;font-weight:600;color:var(--muted)}
+.st3 button:hover{color:var(--fg);border-color:var(--line3,var(--line2))}
+.st3 button.on.yes{background:color-mix(in srgb,var(--fth-good) 18%,var(--panel));border-color:var(--fth-good);color:var(--fg)}
+.st3 button.on.clean{background:var(--accent-soft);border-color:var(--accent);color:var(--fg)}
+.st3 button.on.na{background:var(--panel2);border-color:var(--line3,var(--line2));color:var(--fg)}
+.cstate{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;background:var(--panel)}
+.cstate.open{border-color:var(--accent)}
+.cshead{display:grid;grid-template-columns:1fr auto;gap:2px 8px;width:100%;border:0;background:none;text-align:left;padding:9px 10px;border-radius:10px}
+.cshead:hover{background:var(--panel2)}
+.cshead b{font-size:13.5px}.cshead .cc{font:600 11px var(--mono);color:var(--muted);grid-row:1/3;grid-column:2;align-self:center}
+.cshead .cc.open{color:var(--fth-warn)}
+.cshead .cm{font:500 10.5px var(--mono);color:var(--muted);grid-column:1}
+.chks{padding:0 10px 6px}
+.cedit{display:grid;gap:9px;padding:10px;margin:0 8px 8px;border-radius:9px;background:var(--panel2);border:1px solid var(--line2)}
+.cedit .ra{display:flex;justify-content:space-between;gap:8px}
+
 /* ═════ Film Tool Hub kit mapping ═════ */
 :root:root:root{--bg:var(--fth-bg);--bg2:var(--fth-bg2);--panel:var(--fth-surface);--panel2:var(--fth-surface2);--field:var(--fth-bg2);--line:var(--fth-line);--line2:var(--fth-line2);--fg:var(--fth-text);--muted:var(--fth-muted);--faint:var(--fth-faint);--accent:var(--fth-accent);--accent-ink:var(--fth-on-accent);--accent-soft:var(--fth-accent-soft);--shadow:var(--fth-shadow);--display:var(--fth-display);--mono:var(--fth-mono);}
 .fth-head .proj{flex:1;min-width:180px;max-width:380px;height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--fth-line2);background:var(--fth-bg2);font-size:14px;color:var(--fth-text);outline:none}
@@ -339,6 +422,8 @@ select.fi{padding:0 6px}
   <div class="vsep"></div>
   <label class="tgl"><input type="checkbox" id="lblT" checked>Margin labels</label>
   <div class="vsep"></div>
+  <label class="tgl adv" title="Story days, time of day, scene run times and continuity checks"><input type="checkbox" id="advT">Advanced</label>
+  <div class="vsep"></div>
   <div class="grp">
     <button class="btn sm" id="undoB" title="Undo (Ctrl/⌘+Z)" disabled>Undo</button>
     <button class="btn sm" id="redoB" title="Redo (Ctrl/⌘+Shift+Z)" disabled>Redo</button>
@@ -355,6 +440,7 @@ select.fi{padding:0 6px}
       <button data-tab="tag" class="on">Tag</button>
       <button data-tab="items">Lists<span class="n" id="nItems"></span></button>
       <button data-tab="scenes">Scenes<span class="n" id="nScenes"></span></button>
+      <button data-tab="cont" id="contTab" hidden>Continuity<span class="n" id="nCont"></span></button>
     </div>
     <div class="pbody" id="pbody"></div>
   </aside>
@@ -394,8 +480,11 @@ const S = {
   fileName: '', bytes: null, pdf: null,
   pages: [], words: [], lines: [], scenes: [], lineScene: null,
   cats: DEFAULT_CATS.map(c => ({ ...c })), tags: [], notes: {},
-  active: null, zoom: 1, fit: 1, labels: true, tab: 'tag', editCat: null, openItem: null, q: ''
+  active: null, zoom: 1, fit: 1, labels: true, tab: 'tag', editCat: null, openItem: null, q: '',
+  // advanced mode
+  adv: false, dnames: {}, sorder: [], sm: {}, cont: [], sview: 'script', openScene: null, openCont: null, fillFwd: true, openOnly: false, focus: null
 };
+try { S.adv = localStorage.getItem('sb-advanced') === '1'; } catch (e) {}
 const undoS = [], redoS = [];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -504,6 +593,9 @@ function detectScenes() {
     }
     sc.eighths = Math.max(1, Math.round(e));
   });
+  // stable key for per-scene notes: number + heading survives a re-exported draft better than position
+  const seenKey = {};
+  scenes.forEach(sc => { const b = sc.n + '|' + sc.heading; seenKey[b] = (seenKey[b] || 0) + 1; sc.key = seenKey[b] > 1 ? b + '#' + seenKey[b] : b; });
   S.scenes = scenes; S.lineScene = ls;
 }
 const fmtEighths = e => { const w = Math.floor(e / 8), r = e % 8; return (w ? w + (r ? ' ' : '') : '') + (r ? r + '/8' : '') || '0'; };
@@ -511,9 +603,9 @@ const sceneOfWord = i => S.scenes[S.lineScene[S.words[i].l]] || null;
 const pageLabel = sc => sc.p === sc.p1 ? `p. ${sc.p + 1}` : `pp. ${sc.p + 1}–${sc.p1 + 1}`;
 
 /* ═════════════ undo / persistence ═════════════ */
-const snap = () => JSON.stringify({ cats: S.cats, tags: S.tags, notes: S.notes });
+const snap = () => JSON.stringify({ cats: S.cats, tags: S.tags, notes: S.notes, dnames: S.dnames, sorder: S.sorder, sm: S.sm, cont: S.cont });
 function commit() { undoS.push(snap()); if (undoS.length > 150) undoS.shift(); redoS.length = 0; }
-function restore(js) { const o = JSON.parse(js); S.cats = o.cats; S.tags = o.tags; S.notes = o.notes; if (S.active && !catById(S.active)) S.active = null; changed(); }
+function restore(js) { const o = JSON.parse(js); S.cats = o.cats; S.tags = o.tags; S.notes = o.notes; S.dnames = o.dnames || {}; S.sorder = o.sorder || []; S.sm = o.sm || {}; S.cont = o.cont || []; if (S.active && !catById(S.active)) S.active = null; changed(); }
 function undo() { if (!undoS.length) return; redoS.push(snap()); restore(undoS.pop()); toast('Undone'); }
 function redo() { if (!redoS.length) return; undoS.push(snap()); restore(redoS.pop()); toast('Redone'); }
 
@@ -524,7 +616,7 @@ const DB = { open() { return new Promise((res, rej) => { try { const r = indexed
 let saveT;
 function autosave() {
   clearTimeout(saveT);
-  saveT = setTimeout(() => { if (!S.bytes) return; DB.put('last', { bytes: S.bytes, fileName: S.fileName, title: $('#proj').value, cats: S.cats, tags: S.tags, notes: S.notes, labels: S.labels, saved: Date.now() }).catch(() => {}); }, 700);
+  saveT = setTimeout(() => { if (!S.bytes) return; DB.put('last', { bytes: S.bytes, fileName: S.fileName, title: $('#proj').value, cats: S.cats, tags: S.tags, notes: S.notes, dnames: S.dnames, sorder: S.sorder, sm: S.sm, cont: S.cont, labels: S.labels, saved: Date.now() }).catch(() => {}); }, 700);
 }
 
 /* ═════════════ loading ═════════════ */
@@ -542,13 +634,16 @@ async function openPdf(bytes, fileName, saved) {
   detectScenes();
   if (saved) {
     S.cats = saved.cats || S.cats; S.tags = (saved.tags || []).filter(t => t.a >= 0 && t.b < S.words.length); S.notes = saved.notes || {};
+    S.dnames = saved.dnames || {}; S.sorder = saved.sorder || []; S.sm = saved.sm || {}; S.cont = saved.cont || [];
+    migrateOldDays(saved.days);
     S.labels = saved.labels !== false; $('#proj').value = saved.title || '';
   } else {
     S.cats = DEFAULT_CATS.map(c => ({ ...c })); S.tags = []; S.notes = {};
+    S.dnames = {}; S.sorder = []; S.sm = {}; S.cont = [];
     let t = ''; try { const md = await pdf.getMetadata(); t = md?.info?.Title || ''; } catch (e) {}
     $('#proj').value = (t && !/untitled|\.fdx|microsoft/i.test(t) ? t : fileName.replace(/\.pdf$/i, '')).trim();
   }
-  undoS.length = 0; redoS.length = 0; S.active = S.active && catById(S.active) ? S.active : null;
+  undoS.length = 0; redoS.length = 0; S.openScene = null; S.openCont = null; if (RUN) { RUN = null; clearInterval(runIv); } S.active = S.active && catById(S.active) ? S.active : null;
   buildPages();
   ['#saveBtn', '#csvBtn', '#pdfBtn'].forEach(s => $(s).disabled = false);
   changed(true);
@@ -759,13 +854,18 @@ function openPop(id, cx, cy) {
     <label>Category<select class="fi" id="pCat">${S.cats.map(k => `<option value="${k.id}"${k.id === t.cat ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}</select></label>
     <label>Item name<input class="fi" id="pItem" list="pList" value="${esc(t.item)}"><datalist id="pList">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist></label>
     <label>Note for this item <span style="text-transform:none;letter-spacing:0;font-weight:400">(shared by every mention)</span><textarea class="fi" id="pNote" rows="2" placeholder="e.g. x2, one breakaway">${esc(S.notes[itemKey(t.cat, t.item)] || '')}</textarea></label>
+    ${S.adv ? `<button class="btn sm" id="pCont" style="width:100%;justify-content:center;margin:0 0 8px">+ Continuity from here</button>` : ''}
     <div class="row"><button class="btn sm danger" id="pDel">Remove tag</button><button class="btn sm primary" id="pDone">Done</button></div>`;
   pop.hidden = false;
   const w = 300, h = pop.offsetHeight;
   pop.style.left = Math.max(8, Math.min(window.innerWidth - w - 8, cx + 12)) + 'px';
   pop.style.top = Math.max(8, Math.min(window.innerHeight - h - 8, cy + 12)) + 'px';
-  $('#pCat').onchange = e => { commit(); t.cat = e.target.value; changed(); openPop(id, cx, cy); };
-  $('#pItem').onchange = e => { const v = e.target.value.trim(); if (!v || v === t.item) return; commit(); const oldK = itemKey(t.cat, t.item), nk = itemKey(t.cat, v); if (S.notes[oldK] && !S.notes[nk] && !S.tags.some(x => x !== t && itemKey(x.cat, x.item) === oldK)) { S.notes[nk] = S.notes[oldK]; delete S.notes[oldK]; } t.item = v; changed(); };
+  $('#pCat').onchange = e => { commit(); const oldK = itemKey(t.cat, t.item); t.cat = e.target.value; migrateKey(oldK, itemKey(t.cat, t.item)); changed(); openPop(id, cx, cy); };
+  $('#pItem').onchange = e => { const v = e.target.value.trim(); if (!v || v === t.item) return; commit(); const oldK = itemKey(t.cat, t.item), nk = itemKey(t.cat, v); if (S.notes[oldK] && !S.notes[nk] && !S.tags.some(x => x !== t && itemKey(x.cat, x.item) === oldK)) { S.notes[nk] = S.notes[oldK]; delete S.notes[oldK]; } t.item = v; migrateKey(oldK, nk); changed(); };
+  if ($('#pCont')) $('#pCont').onclick = () => {
+    if (!sc) { toast('This mention is before the first scene heading, so it can’t start a continuity note.'); return; }
+    closePop(); newCont(sc.key, { type: 'item', key: itemKey(t.cat, t.item) });
+  };
   $('#pNote').onchange = e => { commit(); const k = itemKey(t.cat, t.item); if (e.target.value.trim()) S.notes[k] = e.target.value.trim(); else delete S.notes[k]; changed(); };
   $('#pDel').onclick = () => { commit(); S.tags = S.tags.filter(x => x.id !== id); closePop(); changed(); toast('Tag removed — Ctrl+Z to undo'); };
   $('#pDone').onclick = () => { document.activeElement?.blur(); closePop(); };
@@ -799,12 +899,16 @@ function byCat() {
 /* ═════════════ panel ═════════════ */
 const PENCIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
 function renderPanel() {
+  if (!S.adv && S.tab === 'cont') S.tab = 'tag';
+  $('#contTab').hidden = !S.adv; $('#advT').checked = S.adv;
   document.querySelectorAll('.ptabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === S.tab));
   const nG = groups().length;
   $('#nItems').textContent = nG || ''; $('#nScenes').textContent = S.scenes.length || '';
+  if (S.adv) { const n = S.pdf ? openChecks() : 0; $('#nCont').textContent = n || ''; }
   const pb = $('#pbody'), st = pb.scrollTop;
-  pb.innerHTML = S.tab === 'tag' ? panelTag() : S.tab === 'items' ? panelItems() : panelScenes();
+  pb.innerHTML = S.tab === 'tag' ? panelTag() : S.tab === 'items' ? panelItems() : S.tab === 'scenes' ? panelScenes() : panelCont();
   pb.scrollTop = st;
+  if (S.focus) { const f = document.querySelector(S.focus); S.focus = null; if (f) { f.focus(); f.select && f.select(); f.scrollIntoView({ block: 'nearest' }); } }
   const q = $('#iq'); if (q) { q.oninput = e => { S.q = e.target.value; const p = q.selectionStart; renderPanel(); const n = $('#iq'); n.focus(); n.setSelectionRange(p, p); }; }
 }
 function panelTag() {
@@ -853,6 +957,7 @@ function panelItems() {
 function panelScenes() {
   if (!S.pdf) return `<div class="none">Open a script to see its scenes.</div>`;
   if (!S.scenes.length) return `<div class="none">No scene headings found.<br>Headings need to start with INT. or EXT. (or I/E, EST.) in capitals.</div>`;
+  if (S.adv) return panelScenesAdv();
   const per = S.scenes.map(() => new Map());
   for (const t of S.tags) { const k = S.lineScene[S.words[t.a].l]; if (k >= 0) per[k].set(t.cat, (per[k].get(t.cat) || 0) + 1); }
   const total = S.scenes.reduce((s, x) => s + x.eighths, 0);
@@ -862,6 +967,7 @@ function panelScenes() {
 }
 
 $('#pbody').addEventListener('click', e => {
+  if (advClick(e)) return;
   const ed = e.target.closest('[data-edit]');
   if (ed) { e.stopPropagation(); S.editCat = S.editCat === ed.dataset.edit ? null : ed.dataset.edit; renderPanel(); return; }
   const cb = e.target.closest('[data-cat]'); if (cb) { setActive(S.active === cb.dataset.cat ? null : cb.dataset.cat); return; }
@@ -875,9 +981,10 @@ $('#pbody').addEventListener('click', e => {
   const sc = e.target.closest('[data-scene]'); if (sc) { gotoLine(S.scenes[+sc.dataset.scene].line); return; }
 });
 $('#pbody').addEventListener('change', e => {
+  if (advChange(e)) return;
   const ce = e.target.closest('[data-ce]');
   if (ce && e.target.dataset.f) { const c = catById(ce.dataset.ce); commit(); let v = e.target.value; if (e.target.dataset.f === 'code') v = v.toUpperCase().trim() || c.code; if (e.target.dataset.f === 'name') { v = v.trim() || c.name; if (c.code === 'NEW') c.code = v.replace(/[^A-Za-z]/g, '').slice(0, 5).toUpperCase() || 'NEW'; } c[e.target.dataset.f] = v; changed(); return; }
-  if (e.target.dataset.rename) { const k = e.target.dataset.rename, v = e.target.value.trim(); if (!v) return; commit(); let cat; S.tags.forEach(t => { if (itemKey(t.cat, t.item) === k) { t.item = v; cat = t.cat; } }); const nk = itemKey(cat, v); if (nk !== k) { if (S.notes[k] && !S.notes[nk]) S.notes[nk] = S.notes[k]; delete S.notes[k]; S.openItem = nk; } changed(); return; }
+  if (e.target.dataset.rename) { const k = e.target.dataset.rename, v = e.target.value.trim(); if (!v) return; commit(); let cat; S.tags.forEach(t => { if (itemKey(t.cat, t.item) === k) { t.item = v; cat = t.cat; } }); const nk = itemKey(cat, v); if (nk !== k) { if (S.notes[k] && !S.notes[nk]) S.notes[nk] = S.notes[k]; delete S.notes[k]; S.openItem = nk; migrateKey(k, nk); } changed(); return; }
   if (e.target.dataset.note) { commit(); const k = e.target.dataset.note; if (e.target.value.trim()) S.notes[k] = e.target.value.trim(); else delete S.notes[k]; changed(); }
 });
 $('#pbody').addEventListener('input', e => { const ce = e.target.closest('[data-ce]'); if (ce && e.target.dataset.f === 'color') { catById(ce.dataset.ce).color = e.target.value; redrawAll(); } });
@@ -935,6 +1042,363 @@ function autoCast() {
   toast(`Tagged ${names.size} character${names.size > 1 ? 's' : ''} across ${new Set(add.map(t => S.lineScene[S.words[t.a].l])).size} scenes. Ctrl+Z to undo.`, 4500);
 }
 
+/* ═════════════ advanced mode: story days · time of day · run times · continuity ═════════════ */
+// [id, label, minutes-into-the-day used to order scenes within a story day]
+const TODS = [['dawn', 'Dawn', 360], ['morning', 'Morning', 540], ['day', 'Day', 720], ['midday', 'Midday', 750], ['afternoon', 'Afternoon', 900], ['golden', 'Golden hour', 1110], ['dusk', 'Dusk', 1170], ['night', 'Night', 1320]];
+const todBy = id => TODS.find(t => t[0] === id);
+function headTod(t) {
+  t = (t || '').toUpperCase();
+  if (!t) return {};
+  if (/CONT|LATER|SAME|MOMENTS|SECONDS|MINUTES/.test(t)) return { inherit: 1 };
+  if (/DAWN|SUNRISE|FIRST LIGHT|DAYBREAK/.test(t)) return { b: 'dawn' };
+  if (/MORNING/.test(t)) return { b: 'morning' };
+  if (/AFTERNOON/.test(t)) return { b: 'afternoon' };
+  if (/NOON|MIDDAY|MID-DAY|LUNCH/.test(t)) return { b: 'midday' };
+  if (/MAGIC|GOLDEN/.test(t)) return { b: 'golden' };
+  if (/DUSK|SUNSET|EVENING|TWILIGHT/.test(t)) return { b: 'dusk' };
+  if (/NIGHT/.test(t)) return { b: 'night' };
+  if (/DAY/.test(t)) return { b: 'day' };
+  return { inherit: 1 };
+}
+// "~16:30", "4pm", "4.30 pm" → minutes; 00:00–04:59 count as after midnight so a late night stays at the end of its story day
+function parseTime(s) {
+  const m = String(s || '').match(/(\d{1,2})(?:[:.h](\d{2}))?\s*(am|pm)?/i); if (!m) return null;
+  let h = +m[1]; const mi = +(m[2] || 0), ap = (m[3] || '').toLowerCase();
+  if (ap === 'pm' && h < 12) h += 12; if (ap === 'am' && h === 12) h = 0;
+  if (h > 24 || mi > 59) return null;
+  const v = h * 60 + mi; return v < 300 ? v + 1440 : v;
+}
+// "1:23", "1:02:03", "83", "1m 20s" → ms
+function parseDur(s) {
+  s = String(s || '').trim().toLowerCase(); if (!s) return null;
+  let m = s.match(/^(?:(\d+):)?(\d{1,3}):(\d{1,2})$/); if (m) return ((+(m[1] || 0)) * 3600 + +m[2] * 60 + +m[3]) * 1000;
+  m = s.match(/^(?:(\d+)\s*m(?:in)?)?\s*(?:(\d+)\s*s(?:ec)?)?$/); if (m && (m[1] || m[2])) return ((+(m[1] || 0)) * 60 + +(m[2] || 0)) * 1000;
+  if (/^\d+(\.\d+)?$/.test(s)) return Math.round(parseFloat(s) * 1000);
+  return null;
+}
+const fmtDur = ms => { if (ms == null) return '—'; const t = Math.round(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60; return h ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${m}:${String(s).padStart(2, '0')}`; };
+const avgOf = runs => runs.length ? runs.reduce((s, r) => s + r.ms, 0) / runs.length : null;
+const smw = key => S.sm[key] || (S.sm[key] = {});           // writable scene meta
+const dayLabel = n => (S.dnames[n] || '').trim();
+const dayName = n => n ? `Day ${n}${dayLabel(n) ? ' · ' + dayLabel(n) : ''}` : '';
+// files saved by the previous build stored days as a list with carried-forward ids; turn them into plain numbers per scene
+function migrateOldDays(days) {
+  if (!Array.isArray(days) || !days.length) return;
+  const num = new Map(days.map((d, i) => [d.id, i + 1])); let cur = 0;
+  days.forEach((d, i) => { if (d.label) S.dnames[i + 1] = d.label; });
+  S.scenes.forEach(sc => { const m = S.sm[sc.key]; if (m && typeof m.day === 'string') cur = num.get(m.day) || cur; if (cur) (S.sm[sc.key] = S.sm[sc.key] || {}).day = cur; });
+  Object.values(S.sm).forEach(m => { if (typeof m.day === 'string') delete m.day; });
+}
+const sceneByKey = k => S.scenes.find(s => s.key === k);
+const todText = r => (r.tod ? todBy(r.tod)[1] : '') + (r.time ? (r.tod ? ' ' : '') + r.time : '');
+
+/* everything derived per scene: story day, time of day, runs, estimates, story order */
+function TL() {
+  const rows = []; let prev = null;
+  S.scenes.forEach((sc, k) => {
+    const m = S.sm[sc.key] || {};
+    const hb = headTod(sc.tod);
+    let tod = '', todSrc = '';
+    if (m.tod) { tod = m.tod; todSrc = 'set'; }
+    else if (hb.b) { tod = hb.b; todSrc = 'head'; }
+    else if (hb.inherit && prev && prev.tod) { tod = prev.tod; todSrc = 'prev'; }
+    let time = '', timeSrc = '';
+    if (m.time) { time = m.time; timeSrc = 'set'; }
+    else if (todSrc === 'prev' && prev.time) { time = prev.time; timeSrc = 'prev'; }
+    const runs = m.runs || [];
+    const r = { k, sc, dayN: +m.day > 0 ? +m.day : 0, tod, todSrc, time, timeSrc, runs, avg: avgOf(runs), latest: runs.length ? runs[runs.length - 1].ms : null };
+    rows.push(r); prev = r;
+  });
+  let ms = 0, e = 0; rows.forEach(r => { if (r.avg != null) { ms += r.avg; e += r.sc.eighths; } });
+  const pace = e ? ms / e : null; // ms per eighth, from the scenes you've timed
+  rows.forEach(r => { r.est = r.avg == null && pace ? pace * r.sc.eighths : null; });
+  // story order: by story day, then the order you've dragged them into (script order until you do)
+  const man = new Map(S.sorder.map((k, i) => [k, i]));
+  rows.forEach(r => { r.si = man.has(r.sc.key) ? man.get(r.sc.key) : 1e6 + r.k; });
+  const order = rows.slice().sort((a, b) => (a.dayN || 1e9) - (b.dayN || 1e9) || a.si - b.si || a.k - b.k);
+  const pos = new Map(order.map((r, i) => [r.k, i]));
+  return { rows, order, pos, pace, byKey: new Map(rows.map(r => [r.sc.key, r])) };
+}
+// put `key` before/after `ref` in story order, on story day `dayN` (0 = none)
+function moveScene(key, ref, where, dayN) {
+  const tl = TL(), list = tl.order.map(r => r.sc.key).filter(k => k !== key);
+  let i = ref ? list.indexOf(ref) : list.length; if (i < 0) i = list.length; if (where === 'after') i++;
+  list.splice(i, 0, key);
+  commit(); S.sorder = list;
+  const m = smw(key); if (dayN) m.day = dayN; else delete m.day;
+  changed();
+}
+
+/* continuity: which later scenes (in story order) a note carries into */
+function contScenes(st, tl) {
+  tl = tl || TL();
+  const s0 = tl.byKey.get(st.start); if (!s0) return [];
+  const p0 = tl.pos.get(s0.k); let pEnd = Infinity;
+  const u = st.until || {};
+  if (u.type === 'scene') { const e = tl.byKey.get(u.scene); if (e && tl.pos.get(e.k) > p0) pEnd = tl.pos.get(e.k); }
+  let has; const t = st.target || {};
+  if (t.type === 'item' && t.key) { const set = new Set(S.tags.filter(x => itemKey(x.cat, x.item) === t.key).map(x => S.lineScene[S.words[x.a].l]).filter(k => k >= 0)); has = r => set.has(r.k); }
+  else if (t.type === 'loc' && (t.loc || '').trim()) { const L = t.loc.trim().toUpperCase(); has = r => r.sc.loc.toUpperCase().startsWith(L); }
+  else return [];
+  return tl.order.filter((r, i) => i > p0 && i <= pEnd && (u.type !== 'day' || r.dayN === s0.dayN) && has(r)).map(r => ({ r, status: (st.checks || {})[r.sc.key] || '' }));
+}
+function openChecks(tl) { tl = tl || TL(); return S.cont.reduce((s, st) => s + contScenes(st, tl).filter(c => !c.status).length, 0); }
+function targetLabel(st) {
+  const t = st.target || {};
+  if (t.type === 'loc') return t.loc ? 'Location: ' + t.loc : 'No location chosen';
+  if (!t.key) return 'Not attached yet';
+  const tg = S.tags.find(x => itemKey(x.cat, x.item) === t.key);
+  return tg ? (catById(tg.cat)?.name || '') + ': ' + tg.item : 'Item no longer tagged';
+}
+function untilLabel(st) { const u = st.until || {}; if (u.type === 'forever') return 'rest of the story'; if (u.type === 'scene') { const s = sceneByKey(u.scene); return s ? 'through Sc. ' + s.n : 'through ?'; } return 'end of its story day'; }
+const STATUS = [['yes', 'Yes', 'It should be there'], ['clean', 'Cleaned up', 'Changed or removed by this scene'], ['na', 'N/A', 'Not visible / doesn’t apply']];
+// keep continuity notes attached when an item is renamed, merged or moved category
+function migrateKey(oldK, newK) {
+  if (oldK === newK || S.tags.some(t => itemKey(t.cat, t.item) === oldK)) return;
+  S.cont.forEach(c => { if (c.target && c.target.type === 'item' && c.target.key === oldK) c.target.key = newK; });
+}
+function newCont(startKey, target) {
+  commit();
+  const st = { id: uid(), text: '', target: target || { type: 'item', key: '' }, start: startKey || (S.scenes[0] && S.scenes[0].key), until: { type: 'day' }, checks: {} };
+  S.cont.push(st); S.tab = 'cont'; S.openCont = st.id;
+  S.focus = `[data-cid="${st.id}"] [data-cf=text]`;
+  changed();
+}
+
+/* stopwatch */
+let RUN = null, runIv = null;
+function toggleRun(key) {
+  if (RUN && RUN.key === key) {
+    const ms = Date.now() - RUN.t0; RUN = null; clearInterval(runIv);
+    if (ms < 1000) { toast('Run too short — not saved'); renderPanel(); return; }
+    commit(); const m = smw(key); (m.runs = m.runs || []).push({ ms: Math.round(ms), at: Date.now() });
+    changed(); toast(`Run saved: ${fmtDur(ms)}`); return;
+  }
+  if (RUN) toggleRun(RUN.key);
+  RUN = { key, t0: Date.now() }; clearInterval(runIv);
+  runIv = setInterval(() => document.querySelectorAll('[data-live]').forEach(el => el.textContent = fmtDur(Date.now() - RUN.t0)), 250);
+  renderPanel();
+}
+
+/* ── Scenes tab (advanced) ── */
+function sceneInner(r, tl, per, checks) {
+  const sc = r.sc, rec = RUN && RUN.key === sc.key, nc = checks.get(r.k);
+  const runTxt = r.latest != null ? `⏱ ${fmtDur(r.latest)}${r.runs.length > 1 ? ` (avg ${fmtDur(r.avg)})` : ''}` : r.est ? `<span class="inh">≈${fmtDur(r.est)}</span>` : '';
+  return `<div class="l1"><span class="no">${esc(sc.n)}</span><span class="hd" title="${esc(sc.heading)}">${esc(sc.heading)}</span><span class="pg">${pageLabel(sc)} · ${fmtEighths(sc.eighths)}</span></div>
+    <div class="l2"><span class="${r.dayN ? 'dy' : 'inh'}">${r.dayN ? 'Day ' + r.dayN : 'No day'}</span>${todText(r) ? `<span class="${r.todSrc === 'prev' ? 'inh' : ''}">${esc(todText(r))}</span>` : ''}${rec ? `<span class="rec">● <span data-live>0:00</span></span>` : runTxt ? `<span>${runTxt}</span>` : ''}${nc ? `<span class="ck">◆ ${nc} check${nc > 1 ? 's' : ''}</span>` : ''}</div>
+    ${per[r.k].size ? `<div class="chips">${S.cats.filter(c => per[r.k].has(c.id)).map(c => `<span style="background:${c.color};color:${inkOn(c.color)}">${esc(c.code)} ${per[r.k].get(c.id)}</span>`).join('')}</div>` : ''}`;
+}
+function panelScenesAdv() {
+  const tl = TL(), keys = new Set(S.scenes.map(s => s.key)), story = S.sview === 'story';
+  const lost = Object.keys(S.sm).filter(k => !keys.has(k) && Object.keys(S.sm[k]).some(f => f !== 'runs' || S.sm[k].runs.length)).length;
+  const timed = tl.rows.filter(r => r.avg != null), tot = timed.reduce((s, r) => s + r.avg, 0), est = tl.rows.reduce((s, r) => s + (r.est || 0), 0);
+  const per = S.scenes.map(() => new Map());
+  for (const t of S.tags) { const k = S.lineScene[S.words[t.a].l]; if (k >= 0) per[k].set(t.cat, (per[k].get(t.cat) || 0) + 1); }
+  const checks = new Map(); S.cont.forEach(st => contScenes(st, tl).forEach(c => { if (!c.status) checks.set(c.r.k, (checks.get(c.r.k) || 0) + 1); }));
+  const anyDay = tl.rows.some(r => r.dayN);
+  let h = `<div class="ph">${S.scenes.length} scenes<span class="r">${timed.length ? `${fmtDur(tot)} timed${est ? ` · ≈${fmtDur(tot + est)} total` : ''}` : 'no run times yet'}</span></div>
+    <div class="sbar"><div class="seg"><button data-sview="script" class="${!story ? 'on' : ''}">Script order</button><button data-sview="story" class="${story ? 'on' : ''}">Story order</button></div>
+    ${tl.pace ? `<span class="stat" title="Worked out from the scenes you’ve timed; used to estimate the rest">Your pace ${fmtDur(tl.pace * 8)}/page</span>` : ''}</div>`;
+  if (story) h += `<p class="phint">The order things happen in the story. Drag scenes by <b>⠿</b> (or use ↑ ↓) to rearrange them. Drop a scene under another day and it moves to that day.${anyDay ? '' : ' <b>Tip:</b> click a scene and give it a Story Day number to group scenes by day.'}</p>`;
+  else h += `<p class="phint">The order they’re written in. Click a scene to set its story day, time of day and run time.</p>`;
+  if (lost) h += `<div class="fth-tip" style="margin-bottom:10px">Notes for ${lost} scene${lost > 1 ? 's' : ''} didn’t match a scene number + heading in this draft, so they’re hidden (not deleted).</div>`;
+  const list = story ? tl.order : tl.rows;
+  let lastD = null;
+  for (const r of list) {
+    if (story && r.dayN !== lastD) {
+      lastD = r.dayN; const inDay = tl.rows.filter(x => x.dayN === r.dayN), t = inDay.reduce((s, x) => s + (x.avg ?? x.est ?? 0), 0);
+      h += `<div class="dayhead" data-dropday="${r.dayN}"><b>${r.dayN ? 'Day ' + r.dayN : 'No story day'}</b>${r.dayN ? `<input class="dni" data-dname="${r.dayN}" value="${esc(dayLabel(r.dayN))}" placeholder="Name this day…" title="e.g. Christmas Day">` : '<span></span>'}<em>${inDay.length} sc${t ? ' · ' + (inDay.some(x => x.avg == null) ? '≈' : '') + fmtDur(t) : ''}</em></div>`;
+    }
+    const open = S.openScene === r.sc.key, btn = `<button class="scene${open ? ' open' : ''}" data-srow="${r.k}">${sceneInner(r, tl, per, checks)}</button>`;
+    if (story) {
+      const i = tl.pos.get(r.k);
+      h += `<div class="srw" draggable="true" data-skey="${esc(r.sc.key)}" data-dn="${r.dayN}"><span class="grip" title="Drag to reorder">⠿</span>${btn}<div class="arr"><button class="x" data-smove="${esc(r.sc.key)}" data-dir="-1" ${i ? '' : 'disabled'} title="Earlier in the story">↑</button><button class="x" data-smove="${esc(r.sc.key)}" data-dir="1" ${i < tl.order.length - 1 ? '' : 'disabled'} title="Later in the story">↓</button></div></div>`;
+    } else h += btn;
+    if (open) h += sceneEditor(r, tl);
+  }
+  return h;
+}
+function sceneEditor(r, tl) {
+  const sc = r.sc, m = S.sm[sc.key] || {}, key = esc(sc.key);
+  const autoT = (() => { const hb = headTod(sc.tod); if (hb.b) return todBy(hb.b)[1]; if (hb.inherit && r.k) { const p = tl.rows[r.k - 1]; return p.tod ? todBy(p.tod)[1] : ''; } return ''; })();
+  const todOpts = `<option value="">Auto${autoT ? ': ' + autoT : ''}</option>` + TODS.map(t => `<option value="${t[0]}"${m.tod === t[0] ? ' selected' : ''}>${t[1]}</option>`).join('');
+  const running = RUN && RUN.key === sc.key;
+  const here = S.cont.map(st => ({ st, c: contScenes(st, tl).find(x => x.r.k === r.k) })).filter(x => x.c);
+  const starts = S.cont.filter(st => st.start === sc.key);
+  return `<div class="sedit" data-sedit="${key}">
+    <div class="row2 dayrow"><label>Story day<input class="fi" type="number" min="1" step="1" inputmode="numeric" data-sf="day" value="${r.dayN || ''}" placeholder="—"></label>
+      <label>Name of this day <small>(shared)</small><input class="fi" data-dname="${r.dayN}" value="${esc(dayLabel(r.dayN))}" placeholder="${r.dayN ? 'e.g. Christmas Day' : 'Set a day number first'}" ${r.dayN ? '' : 'disabled'}></label></div>
+    <label class="tgl fill"><input type="checkbox" data-fill${S.fillFwd ? ' checked' : ''}>Also change the scenes after this one that were on the same day</label>
+    <div class="row2"><label>Time of day<select class="fi" data-sf="tod">${todOpts}</select></label>
+      <label>Approx. clock time<input class="fi" data-sf="time" value="${esc(m.time || '')}" placeholder="${r.timeSrc === 'prev' ? esc(r.time) + ' (carried)' : 'e.g. ~16:30'}"></label></div>
+    <div class="sbox"><h4>Run time<span class="r"><kbd>Space</kbd> start / stop</span></h4>
+      <div class="rt"><span class="big"${running ? ' data-live' : ''}>${running ? fmtDur(Date.now() - RUN.t0) : fmtDur(r.latest)}</span>
+        <span class="sub">${running ? 'recording…' : r.runs.length ? `latest · average ${fmtDur(r.avg)} over ${r.runs.length} run${r.runs.length > 1 ? 's' : ''}` : r.est ? `≈${fmtDur(r.est)} estimated from your pace` : 'not timed yet'}</span></div>
+      <div class="rt"><button class="btn sm ${running ? 'rec' : 'primary'}" data-run="${key}">${running ? '■ Stop' : '▶ Start run'}</button>
+        <span style="flex:1"></span><input class="fi" style="width:76px;height:30px" data-addrun-in placeholder="m:ss" title="Type a time you measured elsewhere"><button class="btn sm" data-addrun="${key}">Add</button></div>
+      ${r.runs.length ? `<ul class="runs">${r.runs.map((x, i) => `<li class="${i === r.runs.length - 1 ? 'latest' : ''}"><span>Run ${i + 1}</span><b>${fmtDur(x.ms)}</b><span class="d">${new Date(x.at).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span><button class="x" data-delrun="${key}" data-i="${i}" title="Delete this run">×</button></li>`).join('')}</ul>` : ''}</div>
+    <div class="sbox"><h4>Continuity<span class="r">${here.filter(x => !x.c.status).length} open</span></h4>
+      ${here.map(({ st, c }) => chkRow(st, r, c.status, false)).join('') || '<div class="phint" style="margin:0">Nothing carries into this scene.</div>'}
+      ${starts.length ? `<div class="phint" style="margin:0">Starts here: ${starts.map(s => esc(s.text || 'Untitled note')).join('; ')}</div>` : ''}
+      <button class="btn xs" data-newcont="${key}">+ Continuity note starting here</button></div>
+  </div>`;
+}
+function chkRow(st, r, status, showScene) {
+  const head = showScene
+    ? `<button class="chs" data-gosc="${r.k}" title="Go to scene"><b>Sc. ${esc(r.sc.n)}</b>${esc(r.sc.heading)}${r.dayN ? `<i>Day ${r.dayN}</i>` : ''}</button>`
+    : `<div class="cht"><b>${esc(st.text || 'Untitled note')}</b><small>${esc(targetLabel(st))} · from Sc. ${esc(sceneByKey(st.start)?.n || '?')}</small></div>`;
+  return `<div class="chk">${head}<div class="st3">${STATUS.map(([v, l, tip]) => `<button class="${status === v ? 'on ' + v : ''}" data-chk="${st.id}" data-ck="${esc(r.sc.key)}" data-v="${v}" title="${tip}">${l}</button>`).join('')}</div></div>`;
+}
+
+/* ── Continuity tab ── */
+function panelCont() {
+  if (!S.pdf) return `<div class="none">Open a script to add continuity notes.</div>`;
+  if (!S.scenes.length) return `<div class="none">Continuity notes need scene headings (INT./EXT.) to work out what comes later.</div>`;
+  const tl = TL();
+  const all = S.cont.map(st => ({ st, cs: contScenes(st, tl), p: tl.byKey.get(st.start) ? tl.pos.get(tl.byKey.get(st.start).k) : 1e9 })).sort((a, b) => a.p - b.p);
+  const open = all.reduce((s, x) => s + x.cs.filter(c => !c.status).length, 0);
+  let h = `<div class="ph">Continuity<span class="r">${open} open check${open === 1 ? '' : 's'}</span></div>
+    <p class="phint">A note starts in one scene and is attached to a tagged item (a character, a costume, a prop) or a location. Every later scene in <b>story order</b> where that item or location appears gets a check, until the note ends.</p>
+    <div class="sbar"><button class="btn sm primary" data-newcont="">+ New continuity note</button><span style="flex:1"></span><label class="tgl" style="font-size:12px"><input type="checkbox" id="openOnly"${S.openOnly ? ' checked' : ''}>Open checks only</label></div>`;
+  if (!all.length) return h + `<div class="none">No continuity notes yet.<br>Click a highlight in the script and choose <b>+ Continuity from here</b>, or start one above.</div>`;
+  for (const { st, cs } of all) {
+    const done = cs.filter(c => c.status).length, isOpen = S.openCont === st.id;
+    h += `<div class="cstate${isOpen ? ' open' : ''}"><button class="cshead" data-cedit="${st.id}"><b>${esc(st.text || 'Untitled note')}</b><span class="cc${done < cs.length ? ' open' : ''}">${done}/${cs.length}</span>
+      <span class="cm">${esc(targetLabel(st))}</span><span class="cm">From Sc. ${esc(sceneByKey(st.start)?.n || '?')} · ${esc(untilLabel(st))}</span></button>`;
+    if (isOpen) h += contEditor(st);
+    const shown = S.openOnly ? cs.filter(c => !c.status) : cs;
+    h += shown.length ? `<div class="chks">${shown.map(c => chkRow(st, c.r, c.status, true)).join('')}</div>`
+      : `<div class="phint" style="margin:0 10px 10px">${cs.length ? 'All checked.' : 'No later scenes match yet. Check what it’s attached to and when it ends.'}</div>`;
+    h += `</div>`;
+  }
+  return h;
+}
+function contEditor(st) {
+  const tt = st.target?.type || 'item', ut = st.until?.type || 'day';
+  const scOpts = sel => S.scenes.map(sc => `<option value="${esc(sc.key)}"${sc.key === sel ? ' selected' : ''}>Sc. ${esc(sc.n)} — ${esc(sc.heading.slice(0, 46))}</option>`).join('');
+  const locs = [...new Set(S.scenes.map(s => s.loc).filter(Boolean))].sort();
+  const bc = byCat();
+  return `<div class="cedit" data-cid="${st.id}">
+    <label>What should carry over<textarea class="fi" data-cf="text" rows="2" placeholder="e.g. Paint splash on left sleeve">${esc(st.text || '')}</textarea></label>
+    <div class="row2"><label>Attached to<select class="fi" data-cf="ttype"><option value="item"${tt === 'item' ? ' selected' : ''}>A tagged item</option><option value="loc"${tt === 'loc' ? ' selected' : ''}>A location</option></select></label>
+    ${tt === 'item' ? `<label>Item<select class="fi" data-cf="titem"><option value="">Choose…</option>${bc.map(({ cat, items }) => `<optgroup label="${esc(cat.name)}">${items.map(g => `<option value="${esc(g.key)}"${g.key === st.target?.key ? ' selected' : ''}>${esc(g.name)}</option>`).join('')}</optgroup>`).join('')}</select></label>`
+      : `<label>Location starts with<input class="fi" data-cf="tloc" list="locList" value="${esc(st.target?.loc || '')}" placeholder="e.g. ANNA'S FLAT"><datalist id="locList">${locs.map(l => `<option value="${esc(l)}">`).join('')}</datalist></label>`}</div>
+    <label>Starts in<select class="fi" data-cf="start">${scOpts(st.start)}</select></label>
+    <div class="${ut === 'scene' ? 'row2' : ''}" style="display:grid"><label>Lasts<select class="fi" data-cf="utype"><option value="day"${ut === 'day' ? ' selected' : ''}>Until the end of that story day</option><option value="scene"${ut === 'scene' ? ' selected' : ''}>Through a scene…</option><option value="forever"${ut === 'forever' ? ' selected' : ''}>For the rest of the story</option></select></label>
+    ${ut === 'scene' ? `<label>Through<select class="fi" data-cf="uscene">${scOpts(st.until.scene)}</select></label>` : ''}</div>
+    <div class="ra"><button class="btn xs danger" data-delcont="${st.id}">Delete note</button><button class="btn xs" data-cclose>Done</button></div></div>`;
+}
+
+/* ── advanced panel events ── */
+function advClick(e) {
+  const T = s => e.target.closest(s);
+  let el;
+  if ((el = T('[data-sview]'))) { S.sview = el.dataset.sview; renderPanel(); return true; }
+  if ((el = T('[data-smove]'))) {
+    const tl = TL(), r = tl.byKey.get(el.dataset.smove), dir = +el.dataset.dir, nb = tl.order[tl.pos.get(r.k) + dir]; if (!nb) return true;
+    if (nb.dayN === r.dayN) moveScene(r.sc.key, nb.sc.key, dir < 0 ? 'before' : 'after', r.dayN);
+    else moveScene(r.sc.key, nb.sc.key, dir < 0 ? 'after' : 'before', nb.dayN); // step across into the neighbouring day
+    return true;
+  }
+  if ((el = T('[data-srow]'))) { const sc = S.scenes[+el.dataset.srow]; S.openScene = S.openScene === sc.key ? null : sc.key; renderPanel(); gotoLine(sc.line); return true; }
+  if ((el = T('[data-gosc]'))) { gotoLine(S.scenes[+el.dataset.gosc].line); return true; }
+  if ((el = T('[data-run]'))) { toggleRun(el.dataset.run); return true; }
+  if ((el = T('[data-addrun]'))) { addRunFrom(el); return true; }
+  if ((el = T('[data-delrun]'))) { commit(); smw(el.dataset.delrun).runs.splice(+el.dataset.i, 1); changed(); toast('Run deleted — Ctrl+Z to undo'); return true; }
+  if ((el = T('[data-chk]'))) { const st = S.cont.find(c => c.id === el.dataset.chk); if (!st) return true; commit(); st.checks = st.checks || {}; const k = el.dataset.ck; if (st.checks[k] === el.dataset.v) delete st.checks[k]; else st.checks[k] = el.dataset.v; changed(); return true; }
+  if ((el = T('[data-newcont]'))) { newCont(el.dataset.newcont || null); return true; }
+  if ((el = T('[data-cedit]'))) { S.openCont = S.openCont === el.dataset.cedit ? null : el.dataset.cedit; renderPanel(); return true; }
+  if (T('[data-cclose]')) { S.openCont = null; renderPanel(); return true; }
+  if ((el = T('[data-delcont]'))) { commit(); S.cont = S.cont.filter(c => c.id !== el.dataset.delcont); S.openCont = null; changed(); toast('Continuity note deleted — Ctrl+Z to undo'); return true; }
+  return false;
+}
+function addRunFrom(btn) {
+  const inp = btn.closest('.rt').querySelector('[data-addrun-in]'), ms = parseDur(inp.value);
+  if (!ms) { toast('Type a time like 1:25 (minutes:seconds).'); inp.focus(); return; }
+  commit(); const m = smw(btn.dataset.addrun); (m.runs = m.runs || []).push({ ms, at: Date.now(), manual: 1 }); changed(); toast(`Run added: ${fmtDur(ms)}`);
+}
+function advChange(e) {
+  const t = e.target;
+  if (t.id === 'openOnly') { S.openOnly = t.checked; renderPanel(); return true; }
+  if (t.matches('[data-fill]')) { S.fillFwd = t.checked; return true; }
+  if (t.dataset.dname !== undefined) { if (!t._c && +t.dataset.dname) commit(); changed(); return true; }
+  const se = t.closest('[data-sedit]');
+  if (se && t.dataset.sf) {
+    const key = se.dataset.sedit, f = t.dataset.sf, v = t.value.trim();
+    if (f === 'day') {
+      const n = Math.max(0, Math.floor(+v || 0)), idx = S.scenes.findIndex(x => x.key === key), old = +((S.sm[key] || {}).day) || 0;
+      if (n === old) { renderPanel(); return true; }
+      commit(); const set = j => { const mm = smw(S.scenes[j].key); if (n) mm.day = n; else delete mm.day; };
+      set(idx); let last = idx;
+      if (S.fillFwd) for (let j = idx + 1; j < S.scenes.length; j++) { if ((+((S.sm[S.scenes[j].key] || {}).day) || 0) !== old) break; set(j); last = j; }
+      changed();
+      toast(`${n ? 'Day ' + n : 'Story day cleared'} — Sc. ${S.scenes[idx].n}${last > idx ? '–' + S.scenes[last].n : ''}`);
+      return true;
+    }
+    commit(); const m = smw(key);
+    if (v) m[f] = v; else delete m[f];
+    changed(); return true;
+  }
+  const ce = t.closest('[data-cid]');
+  if (ce && t.dataset.cf) {
+    const st = S.cont.find(c => c.id === ce.dataset.cid); if (!st) return true;
+    const f = t.dataset.cf, v = t.value;
+    if (!(f === 'text' && t._c)) commit();
+    if (f === 'text') st.text = v.trim();
+    else if (f === 'ttype') st.target = v === 'loc' ? { type: 'loc', loc: sceneByKey(st.start)?.loc || '' } : { type: 'item', key: '' };
+    else if (f === 'titem') st.target = { type: 'item', key: v };
+    else if (f === 'tloc') st.target = { type: 'loc', loc: v.trim() };
+    else if (f === 'start') st.start = v;
+    else if (f === 'utype') { st.until = { type: v }; if (v === 'scene') { const i = S.scenes.findIndex(s => s.key === st.start); st.until.scene = (S.scenes[i + 1] || S.scenes[i]).key; } }
+    else if (f === 'uscene') st.until = { type: 'scene', scene: v };
+    changed(); return true;
+  }
+  return false;
+}
+$('#pbody').addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.dname !== undefined) {           // day name: saved as you type, one undo step per edit
+    const n = +t.dataset.dname; if (!n) return;
+    if (!t._c) { commit(); t._c = 1; }
+    if (t.value.trim()) S.dnames[n] = t.value; else delete S.dnames[n];
+    autosave(); return;
+  }
+  if (t.matches('[data-cid] [data-cf=text]')) {  // continuity note: title updates live
+    const st = S.cont.find(c => c.id === t.closest('[data-cid]').dataset.cid); if (!st) return;
+    if (!t._c) { commit(); t._c = 1; }
+    st.text = t.value.trim();
+    const b = t.closest('.cstate')?.querySelector('.cshead b'); if (b) b.textContent = st.text || 'Untitled note';
+    autosave();
+  }
+});
+let DRAG = null;
+const clearDrop = () => document.querySelectorAll('.drop-before,.drop-after,.drop-in').forEach(x => x.classList.remove('drop-before', 'drop-after', 'drop-in'));
+$('#pbody').addEventListener('dragstart', e => {
+  const w = e.target.closest && e.target.closest('.srw'); if (!w) return;
+  DRAG = w.dataset.skey; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', DRAG);
+  requestAnimationFrame(() => w.classList.add('dragging'));
+});
+$('#pbody').addEventListener('dragend', () => { DRAG = null; clearDrop(); document.querySelectorAll('.srw.dragging').forEach(x => x.classList.remove('dragging')); });
+$('#pbody').addEventListener('dragover', e => {
+  if (!DRAG) return; const w = e.target.closest('.srw, .dayhead[data-dropday]'); if (!w) return;
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move'; clearDrop();
+  if (w.classList.contains('dayhead')) w.classList.add('drop-in');
+  else { const rc = w.getBoundingClientRect(); w.classList.add(e.clientY < rc.top + rc.height / 2 ? 'drop-before' : 'drop-after'); }
+});
+$('#pbody').addEventListener('drop', e => {
+  if (!DRAG) return; const w = e.target.closest('.srw, .dayhead[data-dropday]'); if (!w) return;
+  e.preventDefault(); const key = DRAG, before = w.classList.contains('drop-before'); DRAG = null; clearDrop();
+  if (w.classList.contains('dayhead')) { const n = +w.dataset.dropday, first = TL().order.find(r => r.dayN === n); moveScene(key, first && first.sc.key, 'before', n); return; }
+  if (w.dataset.skey === key) return;
+  moveScene(key, w.dataset.skey, before ? 'before' : 'after', +w.dataset.dn);
+});
+$('#pbody').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('[data-addrun-in]')) { e.preventDefault(); addRunFrom(e.target.closest('.rt').querySelector('[data-addrun]')); } });
+$('#advT').onchange = e => {
+  S.adv = e.target.checked; try { localStorage.setItem('sb-advanced', S.adv ? '1' : '0'); } catch (x) {}
+  closePop(); renderPanel();
+  if (S.adv) toast('Advanced mode: story days, time of day and run times are in the Scenes tab. Continuity has its own tab.', 5000);
+};
+
 /* ═════════════ change propagation ═════════════ */
 function changed(full) {
   redrawAll(); renderPanel();
@@ -964,6 +1428,7 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y' && !typing) { e.preventDefault(); redo(); return; }
   if (typing) { if (e.key === 'Escape') e.target.blur(); return; }
   if (e.key === 'Escape') { if (!$('#modal').hidden) closeModal(); else if (!$('#pop').hidden) closePop(); else setActive(null); return; }
+  if (e.key === ' ' && S.adv && $('#modal').hidden && (RUN || (S.tab === 'scenes' && S.openScene))) { e.preventDefault(); document.activeElement?.blur(); toggleRun(RUN ? RUN.key : S.openScene); return; }
   const k = KEYS.indexOf(e.key);
   if (k >= 0 && S.cats[k] && !e.ctrlKey && !e.metaKey && !e.altKey) setActive(S.active === S.cats[k].id ? null : S.cats[k].id);
 });
@@ -985,37 +1450,71 @@ function download(name, blob) { const u = URL.createObjectURL(blob), a = documen
 function b64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
 $('#saveBtn').onclick = () => {
   if (!S.bytes) return;
-  const d = { app: 'script-breakdown', version: 1, saved: new Date().toISOString(), title: $('#proj').value.trim(), fileName: S.fileName, cats: S.cats, tags: S.tags, notes: S.notes, labels: S.labels, pdf: b64(S.bytes) };
+  const d = { app: 'script-breakdown', version: 3, saved: new Date().toISOString(), title: $('#proj').value.trim(), fileName: S.fileName, cats: S.cats, tags: S.tags, notes: S.notes, dnames: S.dnames, sorder: S.sorder, sm: S.sm, cont: S.cont, labels: S.labels, pdf: b64(S.bytes) };
   download(slug(d.title || S.fileName.replace(/\.pdf$/i, '')) + '-breakdown.json', new Blob([JSON.stringify(d)], { type: 'application/json' }));
   toast('Project saved (includes the script PDF)');
 };
-$('#csvBtn').onclick = () => {
-  if (!S.tags.length) { toast('Tag something first.'); return; }
-  const q = v => { v = String(v ?? ''); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+const csvQ = v => { v = String(v ?? ''); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+const csvSave = (suffix, rows) => download(slug($('#proj').value || 'script') + suffix + '.csv', new Blob(['﻿' + rows.map(r => r.map(csvQ).join(',')).join('\r\n')], { type: 'text/csv' }));
+function csvMentions() {
   const rows = [['Category', 'Item', 'As written', 'Scene', 'Scene heading', 'Page', 'Item note']];
   for (const { cat, items } of byCat()) for (const g of items) for (const t of g.tags) { const sc = sceneOfWord(t.a); rows.push([cat.name, g.name, cleanText(t.text) || t.text, sc ? sc.n : '', sc ? sc.heading : '', S.words[t.a].p + 1, S.notes[g.key] || '']); }
-  download(slug($('#proj').value || 'script') + '-breakdown.csv', new Blob(['﻿' + rows.map(r => r.map(q).join(',')).join('\r\n')], { type: 'text/csv' }));
-  toast('CSV exported');
+  csvSave('-breakdown', rows);
+}
+function csvScenes() {
+  const tl = TL(), open = new Map();
+  S.cont.forEach(st => contScenes(st, tl).forEach(c => { if (!c.status) { if (!open.has(c.r.k)) open.set(c.r.k, []); open.get(c.r.k).push((st.text || 'Untitled note') + ' (' + targetLabel(st) + ')'); } }));
+  const rows = [['Scene', 'Heading', 'INT/EXT', 'Location', 'Pages', 'Length (eighths)', 'Story order', 'Story day', 'Day name', 'Time of day', 'Approx. time', 'Runs', 'Latest run', 'Average run', 'Estimated run', 'All runs', 'Open continuity checks']];
+  for (const r of tl.rows) {
+    const sc = r.sc;
+    rows.push([sc.n, sc.heading, sc.ie, sc.loc, pageLabel(sc), fmtEighths(sc.eighths), tl.pos.get(r.k) + 1, r.dayN || '', dayLabel(r.dayN), r.tod ? todBy(r.tod)[1] : '', r.time,
+      r.runs.length || '', r.latest != null ? fmtDur(r.latest) : '', r.avg != null ? fmtDur(r.avg) : '', r.est ? fmtDur(r.est) : '', r.runs.map(x => fmtDur(x.ms)).join(' / '), (open.get(r.k) || []).join('; ')]);
+  }
+  csvSave('-scenes', rows);
+}
+function csvCont() {
+  const tl = TL(), lab = Object.fromEntries(STATUS.map(s => [s[0], s[1]]));
+  const rows = [['Note', 'Attached to', 'Starts (scene)', 'Lasts', 'Check in scene', 'Scene heading', 'Story day', 'Status']];
+  for (const st of S.cont) { const s0 = sceneByKey(st.start); for (const c of contScenes(st, tl)) rows.push([st.text, targetLabel(st), s0 ? s0.n : '', untilLabel(st), c.r.sc.n, c.r.sc.heading, c.r.dayN || '', lab[c.status] || 'Open']); }
+  csvSave('-continuity', rows);
+}
+$('#csvBtn').onclick = () => {
+  if (!S.adv) { if (!S.tags.length) { toast('Tag something first.'); return; } csvMentions(); toast('CSV exported'); return; }
+  const m = $('#modal');
+  m.innerHTML = `<div class="m" role="dialog" aria-modal="true"><h3>Export CSV</h3><p>Each one downloads as its own spreadsheet.</p>
+    <label class="opt"><input type="checkbox" id="cM" ${S.tags.length ? 'checked' : 'disabled'}><div><b>Tagged mentions</b><small>Every tagged mention with its category, scene and page.</small></div></label>
+    <label class="opt"><input type="checkbox" id="cS" ${S.scenes.length ? 'checked' : 'disabled'}><div><b>Scenes &amp; story timeline</b><small>One row per scene: story day, time of day, run times and open continuity checks.</small></div></label>
+    <label class="opt"><input type="checkbox" id="cC" ${S.cont.length ? 'checked' : 'disabled'}><div><b>Continuity checks</b><small>One row per check, with its status.</small></div></label>
+    <div class="row"><button class="btn" id="mC">Cancel</button><button class="btn primary" id="mGo">Export</button></div></div>`;
+  m.hidden = false; $('#mC').onclick = closeModal; m.onclick = e => { if (e.target === m) closeModal(); };
+  $('#mGo').onclick = () => {
+    const jobs = [$('#cM').checked && csvMentions, $('#cS').checked && csvScenes, $('#cC').checked && csvCont].filter(Boolean);
+    closeModal(); if (!jobs.length) return;
+    jobs.forEach((f, i) => setTimeout(f, i * 400)); toast(`Exported ${jobs.length} CSV file${jobs.length > 1 ? 's' : ''}`);
+  };
 };
 
 /* ═════════════ PDF export ═════════════ */
 function closeModal() { $('#modal').hidden = true; }
 $('#pdfBtn').onclick = () => {
   if (!S.pdf) return;
-  if (!S.tags.length) { toast('Tag something first — the export is built from your tags.'); return; }
+  if (!S.tags.length && !S.adv) { toast('Tag something first — the export is built from your tags.'); return; }
   const m = $('#modal');
   m.innerHTML = `<div class="m" role="dialog" aria-modal="true"><h3>Export breakdown PDF</h3><p>A summary page comes first, then the sections you choose, in this order.</p>
     <label class="opt"><input type="checkbox" id="oL" checked><div><b>Category lists</b><small>Every item grouped by category, with each mention, its scene and page. Only categories you used.</small></div></label>
-    <label class="opt"><input type="checkbox" id="oS" checked><div><b>Scene breakdowns</b><small>One block per scene: heading, pages, length in eighths, and everything tagged in it.</small></div></label>
+    <label class="opt"><input type="checkbox" id="oS" checked><div><b>Scene breakdowns</b><small>One block per scene: heading, pages, length in eighths, and everything tagged in it.${S.adv ? ' Plus story day, time of day, run time and continuity checks.' : ''}</small></div></label>
+    ${S.adv ? `<label class="opt sub"><input type="checkbox" id="oSO"><div><b>In story order</b><small>Group scenes under their story days instead of script order.</small></div></label>
+    <label class="opt"><input type="checkbox" id="oC" ${S.cont.length ? 'checked' : 'disabled'}><div><b>Continuity checklist</b><small>Each note with every scene it carries into and its status.</small></div></label>` : ''}
     <label class="opt"><input type="checkbox" id="oX" checked><div><b>Highlighted script</b><small>The original pages with your colour highlights.</small></div></label>
     <label class="opt sub"><input type="checkbox" id="oM" ${S.labels ? 'checked' : ''}><div><b>Margin labels</b><small>Small category tags beside each highlighted line.</small></div></label>
     <div class="row"><button class="btn" id="mC">Cancel</button><button class="btn primary" id="mGo">Export PDF</button></div></div>`;
   m.hidden = false;
   $('#oX').onchange = e => $('#oM').disabled = !e.target.checked;
+  if ($('#oSO')) $('#oS').addEventListener('change', e => $('#oSO').disabled = !e.target.checked);
   $('#mC').onclick = closeModal;
   m.onclick = e => { if (e.target === m) closeModal(); };
   $('#mGo').onclick = async () => {
-    const o = { lists: $('#oL').checked, scenes: $('#oS').checked, script: $('#oX').checked, labels: $('#oM').checked };
+    const o = { lists: $('#oL').checked, scenes: $('#oS').checked, script: $('#oX').checked, labels: $('#oM').checked, story: S.adv && $('#oSO').checked, cont: S.adv && $('#oC').checked };
     closeModal(); toast('Building PDF…', 60000);
     try { await exportPdf(o); toast('PDF exported'); }
     catch (err) { console.error(err); toast(err && err.message === 'load' ? 'Couldn’t load the PDF library — check your internet connection.' : 'Export failed: ' + (err && err.message || err), 6000); }
@@ -1058,6 +1557,14 @@ async function exportPdf(o) {
   const stats = [[String(S.pages.length), 'pages'], [String(S.scenes.length), 'scenes'], [String(gs.length), 'items'], [String(S.tags.length), 'mentions']];
   stats.forEach(([v, l], i) => { const x = M + i * (CW / 4); txt(v, x, y, 22, FB); txt(l, x, y - 14, 9, F, MUT); });
   y -= 46;
+  const tl = S.adv ? TL() : null;
+  if (tl && S.scenes.length) {
+    const timed = tl.rows.filter(r => r.avg != null), tot = timed.reduce((s, r) => s + r.avg, 0), est = tl.rows.reduce((s, r) => s + (r.est || 0), 0);
+    const usedDays = new Set(tl.rows.map(r => r.dayN).filter(Boolean)).size;
+    const st2 = [[usedDays ? String(usedDays) : '—', 'story days'], [timed.length ? fmtDur(tot) : '—', `run time, ${timed.length}/${S.scenes.length} scenes timed`], [est ? '~' + fmtDur(tot + est) : '—', 'estimated total'], [String(openChecks(tl)), 'open continuity checks']];
+    st2.forEach(([v, l], i) => { const x = M + i * (CW / 4); txt(v, x, y, 16, FB); txt(fitTxt(l, F, 8.5, CW / 4 - 8), x, y - 13, 8.5, F, MUT); });
+    y -= 40;
+  }
   txt('By category', M, y, 11, FB); y -= 8;
   page.drawLine({ start: { x: M, y }, end: { x: PW - M, y }, thickness: .6, color: RULE }); y -= 16;
   for (const { cat, items, mentions } of bc) {
@@ -1066,12 +1573,13 @@ async function exportPdf(o) {
     y -= 19;
   }
   y -= 14;
-  const secs = [o.lists && 'Category lists', o.scenes && 'Scene breakdowns', o.script && 'Highlighted script'].filter(Boolean);
+  if (!bc.length) { txt('Nothing tagged yet.', M + 4, y, 9.5, FI, MUT); y -= 19; }
+  const secs = [o.lists && bc.length && 'Category lists', o.scenes && (o.story ? 'Scene breakdowns (story order)' : 'Scene breakdowns'), o.cont && S.cont.length && 'Continuity checklist', o.script && 'Highlighted script'].filter(Boolean);
   if (secs.length) { txt('In this document', M, y, 11, FB); y -= 16; secs.forEach((s, i) => { txt(`${i + 1}.  ${s}`, M, y, 10, F, INK); y -= 15; }); }
   if (S.scenes.length) { y -= 8; txt(`Script length: ${fmtEighths(totalE)} pages (scene lengths in eighths are estimated from the page layout).`, M, y, 8.5, FI, MUT); }
 
   /* category lists */
-  if (o.lists) {
+  if (o.lists && bc.length) {
     sectionStart('Category lists', 'Every item, grouped by category. Each mention is listed so different versions of an item stay distinct.');
     for (const { cat, items, mentions } of bc) {
       need(60);
@@ -1105,17 +1613,33 @@ async function exportPdf(o) {
     const blocks = S.scenes.map((sc, k) => ({ sc, k, tags: [] }));
     const orphan = [];
     for (const t of S.tags) { const k = S.lineScene[S.words[t.a].l]; (k >= 0 ? blocks[k].tags : orphan).push(t); }
-    const all = orphan.length ? [{ sc: { n: '—', heading: 'Before the first scene heading', p: 0, p1: 0, eighths: 0, none: 1 }, tags: orphan }, ...blocks] : blocks;
+    const ordered = o.story ? tl.order.map(r => blocks[r.k]) : blocks;
+    const all = orphan.length ? [{ sc: { n: '—', heading: 'Before the first scene heading', p: 0, p1: 0, eighths: 0, none: 1 }, tags: orphan }, ...ordered] : ordered;
     const LW = 108, VW = CW - LW - 20;
+    const checksAt = new Map();
+    if (tl) S.cont.forEach(st => contScenes(st, tl).forEach(c => { if (!checksAt.has(c.r.k)) checksAt.set(c.r.k, []); checksAt.get(c.r.k).push({ st, status: c.status }); }));
+    const mark = { '': '[  ] open', yes: '[x] yes', clean: '[x] cleaned up', na: '[x] n/a' };
+    let lastDay = null;
     for (const bl of all) {
-      const rows = [];
+      const rows = [], r = tl && bl.k != null ? tl.rows[bl.k] : null;
+      if (r) {
+        const run = r.latest != null ? `run ${fmtDur(r.latest)}${r.runs.length > 1 ? ` (avg ${fmtDur(r.avg)} over ${r.runs.length})` : ''}` : r.est ? `~${fmtDur(r.est)} estimated` : 'not timed';
+        rows.push({ name: 'Story', lines: wrap(`${r.dayN ? dayName(r.dayN) : 'No story day'}  ·  ${todText(r) || 'time not set'}  ·  ${run}`, F, 9, VW) });
+      }
       for (const c of S.cats) {
         const ts = bl.tags.filter(t => t.cat === c.id); if (!ts.length) continue;
         const cnt = new Map(); ts.sort((a, b) => a.a - b.a).forEach(t => cnt.set(t.item, (cnt.get(t.item) || 0) + 1));
         const val = [...cnt].map(([n, k]) => k > 1 ? `${n} (×${k})` : n).join(', ');
-        rows.push({ c, lines: wrap(val, F, 9, VW) });
+        rows.push({ name: c.name, color: c.color, lines: wrap(val, F, 9, VW) });
       }
-      const h = 26 + (rows.length ? rows.reduce((s, r) => s + r.lines.length * 11.5 + 5, 0) : 16) + 10;
+      if (r && checksAt.has(r.k)) rows.push({ name: 'Continuity', lines: checksAt.get(r.k).flatMap(({ st, status }) => wrap(`${mark[status]}  ${st.text || 'Untitled note'} — ${targetLabel(st)} (from Sc. ${sceneByKey(st.start)?.n || '?'})`, F, 9, VW)) });
+      const tagRows = rows.filter(x => x.color).length;
+      const h = 26 + rows.reduce((s, x) => s + x.lines.length * 11.5 + 5, 0) + (tagRows ? 0 : 16) + 10;
+      if (o.story && r && r.dayN !== lastDay) {
+        lastDay = r.dayN; need(h + 30);
+        const lbl = r.dayN ? `DAY ${r.dayN}${dayLabel(r.dayN) ? '  ·  ' + dayLabel(r.dayN).toUpperCase() : ''}` : 'NO STORY DAY SET';
+        txt(lbl, M, y, 11, FB); page.drawLine({ start: { x: M, y: y - 5 }, end: { x: PW - M, y: y - 5 }, thickness: 1.2, color: INK }); y -= 24;
+      }
       need(h);
       page.drawRectangle({ x: M, y: y - 7, width: CW, height: 22, color: BAND });
       const sc = bl.sc;
@@ -1125,14 +1649,42 @@ async function exportPdf(o) {
       txt(fitTxt(sc.heading, FB, 9.5, CW - 70 - mw - 16), M + 62, y + .5, 9.5, FB);
       if (meta) txt(meta, PW - M - 8 - mw, y + .5, 8.5, F, MUT);
       y -= 24;
-      if (!rows.length) { txt('No elements tagged', M + 8, y, 8.5, FI, MUT); y -= 16; }
-      for (const r of rows) {
-        page.drawRectangle({ x: M + 8, y: y - 1.5, width: 8, height: 8, color: col(r.c.color) });
-        txt(fitTxt(r.c.name, FB, 8.5, LW - 16), M + 21, y, 8.5, FB);
-        r.lines.forEach((l, i) => txt(l, M + LW + 12, y - i * 11.5, 9, F, INK));
-        y -= r.lines.length * 11.5 + 5;
-      }
+      for (const rw of rows.filter(x => !x.color && x.name === 'Story')) drawRow(rw);
+      if (!tagRows) { txt('No elements tagged', M + 8, y, 8.5, FI, MUT); y -= 16; }
+      for (const rw of rows.filter(x => x.color || x.name !== 'Story')) drawRow(rw);
       y -= 10;
+    }
+    function drawRow(rw) {
+      if (rw.color) page.drawRectangle({ x: M + 8, y: y - 1.5, width: 8, height: 8, color: col(rw.color) });
+      txt(fitTxt(rw.name, FB, 8.5, LW - 16), M + (rw.color ? 21 : 8), y, 8.5, FB, rw.color ? INK : MUT);
+      rw.lines.forEach((l, i) => txt(l, M + LW + 12, y - i * 11.5, 9, F, INK));
+      y -= rw.lines.length * 11.5 + 5;
+    }
+  }
+
+  /* continuity checklist */
+  if (o.cont && S.cont.length) {
+    sectionStart('Continuity checklist', 'Each note carries forward, in story order, into every later scene where its item or location appears.');
+    const lab = { '': '[  ]  open', yes: '[x]  yes', clean: '[x]  cleaned up', na: '[x]  n/a' };
+    const list = S.cont.map(st => ({ st, cs: contScenes(st, tl), p: tl.byKey.get(st.start) ? tl.pos.get(tl.byKey.get(st.start).k) : 1e9 })).sort((a, b) => a.p - b.p);
+    for (const { st, cs } of list) {
+      const tl1 = wrap(st.text || 'Untitled note', FB, 10.5, CW - 70);
+      need(30 + tl1.length * 13 + Math.min(cs.length, 3) * 12);
+      page.drawRectangle({ x: M, y: y - 7 - (tl1.length - 1) * 13, width: CW, height: 22 + (tl1.length - 1) * 13, color: BAND });
+      tl1.forEach((l, i) => txt(l, M + 8, y - i * 13, 10.5, FB));
+      const done = `${cs.filter(c => c.status).length}/${cs.length} checked`; txt(done, PW - M - 8 - F.widthOfTextAtSize(done, 8.5), y + .5, 8.5, F, MUT);
+      y -= 24 + (tl1.length - 1) * 13;
+      txt(fitTxt(`${targetLabel(st)}  ·  starts Sc. ${sceneByKey(st.start)?.n || '?'}  ·  lasts ${untilLabel(st)}`, F, 8.5, CW - 16), M + 8, y, 8.5, F, MUT); y -= 15;
+      if (!cs.length) { txt('No later scenes match.', M + 14, y, 8.5, FI, MUT); y -= 14; }
+      for (const c of cs) {
+        need(12);
+        txt(lab[c.status], M + 14, y, 8.5, c.status ? F : FB, c.status ? MUT : INK);
+        txt('Sc. ' + c.r.sc.n, M + 92, y, 8.5, FB);
+        txt(fitTxt(c.r.sc.heading, F, 8.5, CW - 210), M + 140, y, 8.5, F, INK);
+        if (c.r.dayN) txt('Day ' + c.r.dayN, PW - M - 8 - F.widthOfTextAtSize('Day ' + c.r.dayN, 8.5), y, 8.5, F, MUT);
+        y -= 12;
+      }
+      y -= 12;
     }
   }
 
