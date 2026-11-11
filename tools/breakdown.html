@@ -1092,6 +1092,7 @@ function migrateOldDays(days) {
 const sceneByKey = k => S.scenes.find(s => s.key === k);
 const todText = r => (r.tod ? todBy(r.tod)[1] : '') + (r.time ? (r.tod ? ' ' : '') + r.time : '');
 
+const EIGHTH_MS = 7500;
 /* everything derived per scene: story day, time of day, runs, estimates, story order */
 function TL() {
   const rows = []; let prev = null;
@@ -1109,15 +1110,14 @@ function TL() {
     const r = { k, sc, dayN: +m.day > 0 ? +m.day : 0, tod, todSrc, time, timeSrc, runs, avg: avgOf(runs), latest: runs.length ? runs[runs.length - 1].ms : null };
     rows.push(r); prev = r;
   });
-  let ms = 0, e = 0; rows.forEach(r => { if (r.avg != null) { ms += r.avg; e += r.sc.eighths; } });
-  const pace = e ? ms / e : null; // ms per eighth, from the scenes you've timed
-  rows.forEach(r => { r.est = r.avg == null && pace ? pace * r.sc.eighths : null; });
+  // untimed scenes: the industry rule of thumb, 1 page = 1 minute, so each eighth = 7.5 s (1 4/8 pages → 1:30)
+  rows.forEach(r => { r.est = r.avg == null ? r.sc.eighths * EIGHTH_MS : null; });
   // story order: by story day, then the order you've dragged them into (script order until you do)
   const man = new Map(S.sorder.map((k, i) => [k, i]));
   rows.forEach(r => { r.si = man.has(r.sc.key) ? man.get(r.sc.key) : 1e6 + r.k; });
   const order = rows.slice().sort((a, b) => (a.dayN || 1e9) - (b.dayN || 1e9) || a.si - b.si || a.k - b.k);
   const pos = new Map(order.map((r, i) => [r.k, i]));
-  return { rows, order, pos, pace, byKey: new Map(rows.map(r => [r.sc.key, r])) };
+  return { rows, order, pos, byKey: new Map(rows.map(r => [r.sc.key, r])) };
 }
 // put `key` before/after `ref` in story order, on story day `dayN` (0 = none)
 function moveScene(key, ref, where, dayN) {
@@ -1196,9 +1196,9 @@ function panelScenesAdv() {
   for (const t of S.tags) { const k = S.lineScene[S.words[t.a].l]; if (k >= 0) per[k].set(t.cat, (per[k].get(t.cat) || 0) + 1); }
   const checks = new Map(); S.cont.forEach(st => contScenes(st, tl).forEach(c => { if (!c.status) checks.set(c.r.k, (checks.get(c.r.k) || 0) + 1); }));
   const anyDay = tl.rows.some(r => r.dayN);
-  let h = `<div class="ph">${S.scenes.length} scenes<span class="r">${timed.length ? `${fmtDur(tot)} timed${est ? ` · ≈${fmtDur(tot + est)} total` : ''}` : 'no run times yet'}</span></div>
+  let h = `<div class="ph">${S.scenes.length} scenes<span class="r">${timed.length ? `${fmtDur(tot)} timed${est ? ` · ≈${fmtDur(tot + est)} total` : ''}` : `≈${fmtDur(est)} estimated`}</span></div>
     <div class="sbar"><div class="seg"><button data-sview="script" class="${!story ? 'on' : ''}">Script order</button><button data-sview="story" class="${story ? 'on' : ''}">Story order</button></div>
-    ${tl.pace ? `<span class="stat" title="Worked out from the scenes you’ve timed; used to estimate the rest">Your pace ${fmtDur(tl.pace * 8)}/page</span>` : ''}</div>`;
+    <span class="stat" title="Untimed scenes are estimated at 1 page = 1 minute">≈ = 1 page/min</span></div>`;
   if (story) h += `<p class="phint">The order things happen in the story. Drag scenes by <b>⠿</b> (or use ↑ ↓) to rearrange them. Drop a scene under another day and it moves to that day.${anyDay ? '' : ' <b>Tip:</b> click a scene and give it a Story Day number to group scenes by day.'}</p>`;
   else h += `<p class="phint">The order they’re written in. Click a scene to set its story day, time of day and run time.</p>`;
   if (lost) h += `<div class="fth-tip" style="margin-bottom:10px">Notes for ${lost} scene${lost > 1 ? 's' : ''} didn’t match a scene number + heading in this draft, so they’re hidden (not deleted).</div>`;
@@ -1233,7 +1233,7 @@ function sceneEditor(r, tl) {
       <label>Approx. clock time<input class="fi" data-sf="time" value="${esc(m.time || '')}" placeholder="${r.timeSrc === 'prev' ? esc(r.time) + ' (carried)' : 'e.g. ~16:30'}"></label></div>
     <div class="sbox"><h4>Run time<span class="r"><kbd>Space</kbd> start / stop</span></h4>
       <div class="rt"><span class="big"${running ? ' data-live' : ''}>${running ? fmtDur(Date.now() - RUN.t0) : fmtDur(r.latest)}</span>
-        <span class="sub">${running ? 'recording…' : r.runs.length ? `latest · average ${fmtDur(r.avg)} over ${r.runs.length} run${r.runs.length > 1 ? 's' : ''}` : r.est ? `≈${fmtDur(r.est)} estimated from your pace` : 'not timed yet'}</span></div>
+        <span class="sub">${running ? 'recording…' : r.runs.length ? `latest · average ${fmtDur(r.avg)} over ${r.runs.length} run${r.runs.length > 1 ? 's' : ''}` : r.est ? `≈${fmtDur(r.est)} estimated (1 page = 1 min)` : 'not timed yet'}</span></div>
       <div class="rt"><button class="btn sm ${running ? 'rec' : 'primary'}" data-run="${key}">${running ? '■ Stop' : '▶ Start run'}</button>
         <span style="flex:1"></span><input class="fi" style="width:76px;height:30px" data-addrun-in placeholder="m:ss" title="Type a time you measured elsewhere"><button class="btn sm" data-addrun="${key}">Add</button></div>
       ${r.runs.length ? `<ul class="runs">${r.runs.map((x, i) => `<li class="${i === r.runs.length - 1 ? 'latest' : ''}"><span>Run ${i + 1}</span><b>${fmtDur(x.ms)}</b><span class="d">${new Date(x.at).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span><button class="x" data-delrun="${key}" data-i="${i}" title="Delete this run">×</button></li>`).join('')}</ul>` : ''}</div>
