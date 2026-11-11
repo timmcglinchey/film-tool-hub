@@ -261,6 +261,25 @@
       "file": "tools/recce.html"
     },
     {
+      "id": "casting",
+      "name": "Casting Tracker",
+      "desc": "Cast every role: write breakdowns, track auditionees from submission to booked, score auditions and chemistry reads, and check availability and fees.",
+      "category": "plan",
+      "tags": [
+        "Casting",
+        "Director",
+        "Producer"
+      ],
+      "icon": "casting",
+      "fileName": "Casting Tracker.html",
+      "origTitle": "Casting Tracker",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611111040,
+      "file": "tools/casting.html"
+    },
+    {
       "id": "shotlist",
       "name": "Shot List Builder",
       "desc": "Plan every shot day by day with custom columns, sunrise and sunset times, breaks and company moves. Track it live on the day.",

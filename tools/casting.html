@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<!--fth-standalone-->
+<!-- Film Tool Hub: this block is only used when this file is opened on its own (for example while working on it).
+     Inside the hub it is removed and the hub supplies the same look from hub/kit.css. Keep it, but don't edit it here. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═════════ Film Tool Hub kit ═════════
+   Shared look for every tool. The hub injects this at the top of each tool's <head>,
+   sets data-theme="light|dark" on the tool's <html>, and sets --fth-cat to the tool's
+   category colour. Tools use the --fth-* tokens and the .fth-* components. */
+:root{
+  --fth-bg:#0b0c0e; --fth-bg2:#101216; --fth-surface:#15181d; --fth-surface2:#1b1f26; --fth-surface3:#232831;
+  --fth-line:#242931; --fth-line2:#333a45; --fth-line3:#46505e;
+  --fth-text:#f0ece5; --fth-muted:#9aa0aa; --fth-faint:#666c77;
+  --fth-good:#5cc98a; --fth-bad:#ff8f7a; --fth-warn:#f2bd5c;
+  /* accent tokens (--fth-cat, --fth-accent, --fth-accent-ink, --fth-accent-soft, --fth-accent-line, --fth-on-accent)
+     are written by the hub for each tool's category, as plain colours for both themes */
+  --fth-cat:#ffb547; --fth-accent:#ffb547; --fth-accent-ink:#ffb547; --fth-accent-soft:rgba(255,181,71,.14); --fth-accent-line:rgba(255,181,71,.45); --fth-on-accent:#14110b;
+  --fth-paper-backdrop:#07080a;
+  --fth-shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --fth-shadow-sm:none;
+  --fth-radius:14px; --fth-radius-sm:9px;
+  --fth-display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --fth-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --fth-script:"Courier Prime","Courier New",Courier,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --fth-bg:#f3f0ea; --fth-bg2:#f9f7f3; --fth-surface:#ffffff; --fth-surface2:#f1ede5; --fth-surface3:#e6e1d6;
+  --fth-line:#e3ded4; --fth-line2:#d2ccc0; --fth-line3:#b4ad9f;
+  --fth-text:#16181c; --fth-muted:#565c66; --fth-faint:#878c95;
+  --fth-good:#22804a; --fth-bad:#c0392b; --fth-warn:#9a6200;
+  --fth-paper-backdrop:#e4dfd5;
+  --fth-shadow:0 14px 30px -16px rgba(70,50,20,.30);
+  --fth-shadow-sm:0 1px 2px rgba(60,45,20,.05),0 4px 14px rgba(60,45,20,.05);
+  color-scheme:light;
+}
+
+/* base */
+html{background:var(--fth-bg)}
+body{background:var(--fth-bg);color:var(--fth-text);font-family:var(--fth-display);-webkit-font-smoothing:antialiased}
+::selection{background:var(--fth-accent-line)}
+:focus-visible{outline:2px solid var(--fth-accent);outline-offset:2px}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--fth-line2);border-radius:6px;border:2px solid var(--fth-bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--fth-line3)}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+
+/* tool header: category eyebrow, tool name, then actions on the right */
+.fth-head{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 20px;
+  background:color-mix(in srgb,var(--fth-bg) 88%,transparent);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  border-bottom:1px solid var(--fth-line)}
+.fth-head::before{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:linear-gradient(90deg,var(--fth-cat),transparent 38%);opacity:.75;pointer-events:none}
+.fth-id{display:flex;flex-direction:column;gap:5px;min-width:0;flex:none}
+.fth-eyebrow{display:flex;align-items:center;gap:8px;font:500 10.5px/1 var(--fth-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fth-accent-ink);white-space:nowrap}
+.fth-eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fth-cat);box-shadow:0 0 0 3px var(--fth-accent-soft);flex:none}
+.fth-title{margin:0;font-weight:800;font-variation-settings:"wdth" 68;font-size:23px;line-height:1;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap}
+.fth-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.fth-vsep{width:1px;height:22px;background:var(--fth-line2);margin:0 3px;flex:none}
+
+/* buttons */
+.fth-btn{height:34px;padding:0 13px;border-radius:var(--fth-radius-sm);border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);
+  font:600 13px/1 var(--fth-display);display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  transition:background-color .15s,border-color .15s,color .15s}
+.fth-btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.fth-btn:disabled{opacity:.45;cursor:default}
+.fth-btn.primary{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.fth-btn.primary:hover{filter:brightness(1.08)}
+.fth-btn.ghost{background:transparent;border-color:transparent;color:var(--fth-muted)}
+.fth-btn.ghost:hover{background:var(--fth-surface2);border-color:var(--fth-line2);color:var(--fth-text)}
+.fth-btn.danger{color:var(--fth-bad)}
+.fth-btn.sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.fth-btn.icon{width:30px;height:30px;padding:0}
+
+/* labels, fields */
+.fth-label{font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.fth-input{width:100%;min-width:0;background:var(--fth-bg2);border:1px solid var(--fth-line2);border-radius:8px;padding:7px 10px;color:var(--fth-text);font:14px/1.35 var(--fth-display);outline:none;transition:border-color .15s,box-shadow .15s}
+.fth-input:hover{border-color:var(--fth-line3)}
+.fth-input:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+select.fth-input{cursor:pointer}
+textarea.fth-input{resize:vertical;line-height:1.45}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-accent)}
+
+/* sections & surfaces */
+.fth-card{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);box-shadow:var(--fth-shadow-sm)}
+.fth-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.fth-sec::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+.fth-sec .fth-num{font:600 11px var(--fth-mono);color:var(--fth-accent-ink);letter-spacing:.08em}
+.fth-muted{color:var(--fth-muted)}
+.fth-mono{font-family:var(--fth-mono)}
+
+/* notes */
+.fth-tip{background:var(--fth-accent-soft);border-left:2px solid var(--fth-accent);color:var(--fth-text);padding:7px 10px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.45}
+.fth-warn{background:color-mix(in srgb,var(--fth-warn) 10%,var(--fth-surface));border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent);color:var(--fth-text);border-radius:10px;padding:10px 12px;font-size:13px}
+.fth-warn b:first-child{color:var(--fth-warn)}
+.fth-info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--fth-line3);color:var(--fth-muted);font:600 10px/1 var(--fth-mono);text-transform:none;letter-spacing:0;cursor:pointer;user-select:none;vertical-align:1px;margin-left:5px;transition:.15s}
+.fth-info:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+
+/* toast */
+.fth-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;z-index:200;background:var(--fth-text);color:var(--fth-bg);padding:10px 16px;border-radius:10px;font:500 13.5px var(--fth-display);box-shadow:var(--fth-shadow);transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.fth-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* paper: a printable page shown on screen stays paper-white in both themes */
+.fth-paper-wrap{background:var(--fth-paper-backdrop)}
+.fth-paper{background:#fff;color:#000;color-scheme:light;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55)}
+
+@media print{
+  html,body{background:#fff!important;color:#000}
+  .fth-head{display:none!important}
+  .fth-paper-wrap{background:#fff!important}
+  .fth-paper{box-shadow:none!important}
+}
+@media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
+@media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
+
+:root{--fth-cat:#4fc7b5;--fth-accent:#4fc7b5;--fth-accent-ink:#4fc7b5;--fth-accent-soft:rgba(79,199,181,0.14);--fth-accent-line:rgba(79,199,181,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#2e7369;--fth-accent-ink:#2e7369;--fth-accent-soft:rgba(79,199,181,0.16);--fth-accent-line:rgba(79,199,181,0.6);--fth-on-accent:#ffffff}
+</style>
+<script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
+<!--/fth-standalone-->
+<meta charset="utf-8"><title>Casting Tracker</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;font:14px/1.45 var(--fth-display)}
+button{font:inherit;color:inherit}
+a{color:var(--fth-accent-ink)}
+[hidden]{display:none!important}
+
+/* ---------- stage palette ---------- */
+:root{
+  --st-submitted:#8f96a3; --st-reviewed:#97a3ff; --st-selftape:#e889c8; --st-callback:#f5b14c;
+  --st-producer:#ff8a5c; --st-offered:#4fc7b5; --st-booked:#5cc98a; --st-passed:#666c77;
+}
+:root[data-theme="light"]{
+  --st-submitted:#7b8290; --st-reviewed:#5d6be0; --st-selftape:#c2479a; --st-callback:#c27d0e;
+  --st-producer:#d4582a; --st-offered:#1f9a87; --st-booked:#22804a; --st-passed:#9aa0aa;
+}
+
+/* ---------- header extras ---------- */
+.status{font:500 11px var(--fth-mono);letter-spacing:.04em;color:var(--fth-faint);white-space:nowrap}
+.modes{display:flex;gap:2px;padding:3px;border:1px solid var(--fth-line2);border-radius:11px;background:var(--fth-bg2)}
+.modes button{height:30px;padding:0 13px;border:0;border-radius:8px;background:transparent;color:var(--fth-muted);font:600 13px/1 var(--fth-display);cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.modes button:hover{color:var(--fth-text);background:var(--fth-surface2)}
+.modes button.on{background:var(--fth-accent);color:var(--fth-on-accent)}
+.modes svg{width:15px;height:15px}
+.menuwrap{position:relative}
+.pop{position:absolute;right:0;top:calc(100% + 6px);z-index:60;min-width:250px;background:var(--fth-surface);border:1px solid var(--fth-line2);border-radius:12px;box-shadow:var(--fth-shadow);padding:6px}
+.pop button{display:flex;width:100%;align-items:center;gap:10px;text-align:left;border:0;background:transparent;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13.5px}
+.pop button:hover{background:var(--fth-surface2)}
+.pop button small{display:block;color:var(--fth-muted);font-size:11.5px;margin-top:1px}
+.pop hr{border:0;border-top:1px solid var(--fth-line);margin:5px 4px}
+.pop .danger{color:var(--fth-bad)}
+.pop svg{width:16px;height:16px;flex:none;color:var(--fth-muted)}
+
+/* ---------- layout ---------- */
+.page{max-width:1320px;margin:0 auto;padding:18px 22px 80px}
+.crumbs{display:flex;align-items:center;gap:8px;margin:2px 0 14px;font:500 11px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.crumbs button{border:0;background:none;padding:0;cursor:pointer;color:var(--fth-muted);font:inherit;letter-spacing:inherit;text-transform:inherit}
+.crumbs button:hover{color:var(--fth-accent-ink)}
+.crumbs .sl{color:var(--fth-faint)}
+.intro{color:var(--fth-muted);font-size:13.5px;max-width:70ch;margin:0 0 6px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sp{flex:1}
+.lbl{font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted);display:block;margin-bottom:5px}
+.lbl em{font-style:normal;color:var(--fth-faint);text-transform:none;letter-spacing:0;font-family:var(--fth-display);font-size:11.5px}
+.f{min-width:0}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 14px}
+.span2{grid-column:span 2}.spanall{grid-column:1/-1}
+.pair{display:flex;align-items:center;gap:6px}
+.pair .fth-input{flex:1}
+.pair .to{color:var(--fth-faint);font-size:12px}
+textarea.fth-input{min-height:68px}
+.fth-input.sm{padding:5px 8px;font-size:13px}
+.empty{border:1.5px dashed var(--fth-line2);border-radius:var(--fth-radius);padding:34px 24px;text-align:center;color:var(--fth-muted)}
+.empty h3{margin:0 0 6px;color:var(--fth-text);font:800 20px/1.1 var(--fth-display);font-variation-settings:"wdth" 72;text-transform:uppercase}
+.empty p{margin:0 auto 14px;max-width:56ch}
+.empty .row{justify-content:center}
+.hint{font-size:12px;color:var(--fth-faint);margin-top:4px}
+.ico{width:16px;height:16px;flex:none}
+.fth-btn svg{width:15px;height:15px;flex:none}
+
+/* ---------- production strip ---------- */
+.prod{padding:14px 16px;margin-bottom:16px}
+.prod-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;cursor:pointer;user-select:none}
+.prod-top h2{margin:0;font:800 26px/1 var(--fth-display);font-variation-settings:"wdth" 66;text-transform:uppercase;letter-spacing:.01em}
+.prod-top h2.ph{color:var(--fth-faint)}
+.prod-meta{display:flex;gap:6px 16px;flex-wrap:wrap;color:var(--fth-muted);font-size:12.5px}
+.prod-meta b{color:var(--fth-text);font-weight:600}
+.chev{width:18px;height:18px;color:var(--fth-muted);transition:transform .2s}
+.open>.prod-top .chev,.open>.bd-top .chev{transform:rotate(180deg)}
+.prod-body{margin-top:14px;padding-top:14px;border-top:1px solid var(--fth-line)}
+
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.stat{padding:12px 14px;border:1px solid var(--fth-line);border-radius:12px;background:var(--fth-bg2)}
+.stat b{display:block;font:800 26px/1 var(--fth-display);font-variation-settings:"wdth" 70;margin-top:6px}
+.stat small{color:var(--fth-muted);font-size:12px}
+.stat .lbl{margin:0}
+
+/* ---------- role cards ---------- */
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+.toolbar h3{margin:0;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.toolbar .count{font:500 11px var(--fth-mono);color:var(--fth-faint)}
+.roles{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:14px}
+.rcard{position:relative;display:flex;flex-direction:column;text-align:left;padding:0;cursor:pointer;overflow:hidden;transition:border-color .15s,transform .15s}
+.rcard:hover{border-color:var(--fth-line3);transform:translateY(-2px)}
+.rcard .band{height:4px;background:var(--rc)}
+.rcard .in{padding:14px 15px 13px;display:flex;flex-direction:column;gap:9px;flex:1}
+.rcard .top{display:flex;align-items:flex-start;gap:10px}
+.rcard h4{margin:0;font:800 22px/1 var(--fth-display);font-variation-settings:"wdth" 66;text-transform:uppercase;letter-spacing:.01em;word-break:break-word}
+.rcard h4.ph{color:var(--fth-faint)}
+.rcard .type{font:500 10.5px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted);margin-top:4px}
+.rcard .spec{display:flex;flex-wrap:wrap;gap:5px}
+.chip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:6px;background:var(--fth-surface2);border:1px solid var(--fth-line);font-size:12px;color:var(--fth-text);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.chip.m{color:var(--fth-muted)}
+.chip svg{width:12px;height:12px}
+.rcard .desc{color:var(--fth-muted);font-size:13px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:0}
+.rcard .foot{display:flex;align-items:center;gap:10px;margin-top:auto;padding-top:10px;border-top:1px solid var(--fth-line)}
+.faces{display:flex}
+.faces .hs{width:28px;height:28px;border-radius:50%;border:2px solid var(--fth-surface);margin-left:-8px;font-size:10px}
+.faces .hs:first-child{margin-left:0}
+.rcard .foot small{color:var(--fth-muted);font-size:12px}
+.pipe{display:flex;height:6px;border-radius:4px;overflow:hidden;background:var(--fth-surface3);gap:1px}
+.pipe i{display:block;height:100%}
+.src{position:absolute;top:12px;right:12px;font:500 9.5px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-faint);border:1px solid var(--fth-line2);border-radius:5px;padding:2px 5px}
+.addcard{border:1.5px dashed var(--fth-line2);border-radius:var(--fth-radius);background:transparent;min-height:190px;color:var(--fth-muted);font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;padding:18px}
+.addcard:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+.addcard svg{width:22px;height:22px}
+
+/* role status pill */
+.rs{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:999px;font:600 11px/1 var(--fth-display);white-space:nowrap;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--fth-text);border:1px solid color-mix(in srgb,var(--c) 45%,transparent)}
+.rs::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}
+
+/* ---------- headshots ---------- */
+.hs{position:relative;display:grid;place-items:center;overflow:hidden;background:linear-gradient(150deg,color-mix(in srgb,var(--rc,#888) 38%,var(--fth-surface3)),var(--fth-surface2));color:var(--fth-text);font:800 18px/1 var(--fth-display);font-variation-settings:"wdth" 75;letter-spacing:.02em;flex:none}
+.hs img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ---------- role page ---------- */
+.rhead{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.rhead>.row{margin-top:10px}
+.rhead .dot{width:14px;height:14px;border-radius:50%;background:var(--rc);box-shadow:0 0 0 4px color-mix(in srgb,var(--rc) 22%,transparent);margin-top:15px;flex:none}
+.rname{flex:1;min-width:240px}
+.rname input{width:100%;border:0;background:transparent;color:var(--fth-text);font:800 44px/1 var(--fth-display);font-variation-settings:"wdth" 62;text-transform:uppercase;letter-spacing:.005em;padding:0;outline:none}
+.rname input::placeholder{color:var(--fth-faint)}
+.rname .sub{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.bd{margin-bottom:22px}
+.bd-top{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;user-select:none;flex-wrap:wrap}
+.bd-top h3{margin:0;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.bd-top .sum{display:flex;gap:5px;flex-wrap:wrap;flex:1;min-width:0}
+.bd-body{padding:4px 16px 18px;border-top:1px solid var(--fth-line)}
+.grp{margin-top:16px}
+.grp-h{display:flex;align-items:center;gap:8px;margin-bottom:10px;font:600 11px var(--fth-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fth-accent-ink)}
+.grp-h::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+.swatches{display:flex;gap:6px;flex-wrap:wrap;padding-top:3px}
+.swatches button{width:22px;height:22px;border-radius:50%;border:2px solid transparent;background:var(--c);cursor:pointer;padding:0}
+.swatches button.on{border-color:var(--fth-text);box-shadow:0 0 0 2px var(--fth-bg)}
+.seg{display:inline-flex;gap:2px;padding:2px;border:1px solid var(--fth-line2);border-radius:9px;background:var(--fth-bg2);flex-wrap:wrap}
+.seg button{height:28px;padding:0 10px;border:0;border-radius:7px;background:transparent;color:var(--fth-muted);font:600 12.5px/1 var(--fth-display);cursor:pointer;white-space:nowrap}
+.seg button:hover{color:var(--fth-text)}
+.seg button.on{background:var(--fth-surface3);color:var(--fth-text)}
+.seg.acc button.on{background:var(--fth-accent);color:var(--fth-on-accent)}
+.budgetline{font-size:12.5px;color:var(--fth-muted);margin-top:6px}
+.budgetline b{color:var(--fth-text)}
+
+/* stage filter chips */
+.stchips{display:flex;gap:6px;flex-wrap:wrap}
+.stchip{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px;border-radius:8px;border:1px solid var(--fth-line2);background:var(--fth-surface);cursor:pointer;font:600 12.5px var(--fth-display);color:var(--fth-muted)}
+.stchip:hover{color:var(--fth-text);border-color:var(--fth-line3)}
+.stchip i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.stchip b{font:500 11px var(--fth-mono);color:var(--fth-faint)}
+.stchip.on{color:var(--fth-text);border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--fth-surface))}
+
+/* actor cards */
+.actors{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.acard{display:flex;flex-direction:column;padding:0;overflow:hidden;cursor:pointer;text-align:left;transition:border-color .15s,transform .15s;position:relative}
+.acard:hover{border-color:var(--fth-line3);transform:translateY(-2px)}
+.acard .hs{width:100%;aspect-ratio:4/5;font-size:40px}
+.acard .in{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px}
+.acard h5{margin:0;font:700 16px/1.15 var(--fth-display);font-variation-settings:"wdth" 85}
+.acard .meta{color:var(--fth-muted);font-size:12px;line-height:1.35}
+.acard.passed{opacity:.5}
+.acard.passed h5{text-decoration:line-through}
+.acard .star{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.45);color:#fff;border:0;cursor:pointer;backdrop-filter:blur(4px)}
+.acard .star svg{width:15px;height:15px}
+.acard .star.on{background:var(--fth-accent);color:var(--fth-on-accent)}
+.acard .warnb{position:absolute;top:8px;left:8px;height:22px;padding:0 7px;border-radius:6px;display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.55);color:#ffd28a;font:600 10.5px var(--fth-mono);letter-spacing:.04em;backdrop-filter:blur(4px)}
+.acard .warnb svg{width:12px;height:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:6px;font:600 11.5px/1 var(--fth-display);white-space:nowrap;background:color-mix(in srgb,var(--c) 17%,transparent);border:1px solid color-mix(in srgb,var(--c) 42%,transparent);color:var(--fth-text)}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}
+.score{font:600 12px var(--fth-mono);color:var(--fth-muted);display:inline-flex;align-items:center;gap:4px}
+.score b{color:var(--fth-text)}
+.stars{display:inline-flex;gap:1px;color:var(--fth-accent)}
+.stars svg{width:13px;height:13px}
+.stars .off{color:var(--fth-line3)}
+
+/* board */
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(210px,1fr);gap:10px;overflow-x:auto;padding-bottom:10px}
+.col{background:var(--fth-bg2);border:1px solid var(--fth-line);border-radius:12px;display:flex;flex-direction:column;min-height:240px}
+.col-h{display:flex;align-items:center;gap:7px;padding:10px 11px;border-bottom:1px solid var(--fth-line);font:600 12.5px var(--fth-display)}
+.col-h i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.col-h b{margin-left:auto;font:500 11px var(--fth-mono);color:var(--fth-faint)}
+.col-b{padding:8px;display:flex;flex-direction:column;gap:7px;flex:1}
+.col.over{border-color:var(--fth-accent);background:var(--fth-accent-soft)}
+.bcard{display:flex;gap:9px;align-items:center;padding:7px;border-radius:9px;background:var(--fth-surface);border:1px solid var(--fth-line);cursor:grab;text-align:left}
+.bcard:hover{border-color:var(--fth-line3)}
+.bcard .hs{width:38px;height:46px;border-radius:6px;font-size:13px}
+.bcard b{display:block;font-size:13px;line-height:1.2}
+.bcard small{color:var(--fth-muted);font-size:11.5px}
+.bcard.dragging{opacity:.4}
+
+/* table */
+.tw{overflow-x:auto;border:1px solid var(--fth-line);border-radius:12px;background:var(--fth-bg2)}
+table.t{border-collapse:collapse;min-width:100%;font-size:13px}
+.t th{font:500 10px/1.2 var(--fth-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--fth-muted);text-align:left;white-space:nowrap;padding:10px 8px 8px;border-bottom:1px solid var(--fth-line);background:var(--fth-surface);position:sticky;top:0}
+.t td{padding:7px 8px;border-bottom:1px solid var(--fth-line);white-space:nowrap}
+.t tr:last-child td{border-bottom:0}
+.t tbody tr{cursor:pointer}
+.t tbody tr:hover td{background:var(--fth-surface)}
+.t .hs{width:30px;height:36px;border-radius:5px;font-size:11px}
+.t .num{font-family:var(--fth-mono);text-align:center}
+.t .hi{color:var(--fth-good);font-weight:600}
+.t .lo{color:var(--fth-bad)}
+
+/* ---------- dialog ---------- */
+dialog{overflow:auto;border:1px solid var(--fth-line2);border-radius:16px;padding:0;background:var(--fth-bg);color:var(--fth-text);box-shadow:0 30px 80px -20px rgba(0,0,0,.8);max-width:min(1120px,calc(100vw - 28px));width:100%;max-height:calc(100vh - 28px)}
+dialog.narrow{max-width:min(640px,calc(100vw - 28px))}
+dialog::backdrop{background:rgba(5,6,8,.62);backdrop-filter:blur(3px)}
+:root[data-theme="light"] dialog::backdrop{background:rgba(40,32,20,.35)}
+.dlg-h{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--fth-line);background:color-mix(in srgb,var(--fth-bg) 92%,transparent);backdrop-filter:blur(10px)}
+.dlg-h h3{margin:0;font:800 20px/1 var(--fth-display);font-variation-settings:"wdth" 70;text-transform:uppercase}
+.dlg-b{padding:18px}
+.dlg-f{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--fth-line);position:sticky;bottom:0;background:var(--fth-bg)}
+
+/* actor detail */
+.ad{display:grid;grid-template-columns:270px minmax(0,1fr);gap:22px}
+.ad-side{display:flex;flex-direction:column;gap:12px}
+.ad-shot{position:relative;width:100%;aspect-ratio:4/5;border-radius:12px;overflow:hidden;cursor:pointer;border:1px solid var(--fth-line2)}
+.ad-shot .hs{width:100%;height:100%;font-size:64px}
+.ad-shot .ov{position:absolute;inset:auto 0 0 0;padding:28px 10px 10px;background:linear-gradient(transparent,rgba(0,0,0,.75));color:#fff;font:600 12px var(--fth-display);display:flex;gap:6px;justify-content:center;opacity:0;transition:opacity .15s}
+.ad-shot:hover .ov,.ad-shot.drop .ov{opacity:1}
+.ad-shot.drop{outline:2px dashed var(--fth-accent);outline-offset:3px}
+.ad-name{width:100%;border:0;background:transparent;color:var(--fth-text);font:800 30px/1.05 var(--fth-display);font-variation-settings:"wdth" 66;text-transform:uppercase;outline:none;padding:0}
+.ad-name::placeholder{color:var(--fth-faint)}
+.stepper{display:flex;flex-direction:column;gap:2px}
+.stepper button{display:flex;align-items:center;gap:9px;padding:6px 8px;border:0;background:transparent;border-radius:7px;cursor:pointer;text-align:left;font-size:13px;color:var(--fth-muted)}
+.stepper button:hover{background:var(--fth-surface2);color:var(--fth-text)}
+.stepper .n{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font:600 10px var(--fth-mono);border:1.5px solid var(--fth-line3);color:var(--fth-faint);flex:none}
+.stepper .done .n{background:var(--c);border-color:var(--c);color:#111}
+.stepper .done{color:var(--fth-text)}
+.stepper .cur{background:color-mix(in srgb,var(--c) 15%,transparent);color:var(--fth-text);font-weight:600}
+.stepper .cur .n{background:var(--c);border-color:var(--c);color:#111;box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 30%,transparent)}
+.stepper .when{margin-left:auto;font:500 10.5px var(--fth-mono);color:var(--fth-faint)}
+.ad-main{min-width:0}
+.ad-tabs{display:flex;gap:2px;border-bottom:1px solid var(--fth-line);margin-bottom:16px;overflow-x:auto}
+.ad-tabs button{border:0;background:none;padding:9px 12px 10px;cursor:pointer;color:var(--fth-muted);font:600 13px var(--fth-display);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.ad-tabs button:hover{color:var(--fth-text)}
+.ad-tabs button.on{color:var(--fth-text);border-bottom-color:var(--fth-accent)}
+.ad-tabs button b{font:500 10px var(--fth-mono);color:var(--fth-faint);margin-left:4px}
+.links{display:flex;flex-direction:column;gap:7px}
+.lrow{display:grid;grid-template-columns:150px minmax(0,1fr) 120px auto auto;gap:6px;align-items:center}
+.lrow.two{grid-template-columns:150px minmax(0,1fr) auto auto}
+.ibtn{width:30px;height:30px;border-radius:7px;border:1px solid var(--fth-line2);background:var(--fth-surface);display:grid;place-items:center;cursor:pointer;color:var(--fth-muted);text-decoration:none}
+.ibtn:hover{color:var(--fth-text);border-color:var(--fth-line3)}
+.ibtn.x:hover{color:var(--fth-bad)}
+.ibtn svg{width:15px;height:15px}
+.ibtn.dis{opacity:.35;pointer-events:none}
+
+/* ratings */
+.rates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 22px}
+.rate{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:8px 10px;border:1px solid var(--fth-line);border-radius:10px;background:var(--fth-bg2)}
+.rate .rl{min-width:0}
+.rate .rl b{display:block;font-size:13px;font-weight:600}
+.rate .rl small{display:block;color:var(--fth-faint);font-size:11.5px;line-height:1.3}
+.dots{display:flex;gap:4px;flex:none}
+.dots button{width:26px;height:26px;border-radius:7px;border:1px solid var(--fth-line2);background:var(--fth-surface);cursor:pointer;font:600 11px var(--fth-mono);color:var(--fth-faint);padding:0}
+.dots button:hover{border-color:var(--fth-accent);color:var(--fth-text)}
+.dots button.on{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.dots button.lit{background:var(--fth-accent-soft);border-color:var(--fth-accent-line);color:var(--fth-text)}
+.overall{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:12px;background:var(--fth-accent-soft);border:1px solid var(--fth-accent-line);margin-bottom:12px}
+.overall b{font:800 34px/1 var(--fth-display);font-variation-settings:"wdth" 70}
+.overall small{color:var(--fth-muted);font-size:12.5px}
+.verdict{display:inline-flex;gap:4px}
+.verdict button{white-space:nowrap;height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--fth-line2);background:var(--fth-surface);cursor:pointer;font:600 12.5px var(--fth-display);color:var(--fth-muted)}
+.verdict button:hover{color:var(--fth-text);border-color:var(--fth-line3)}
+.verdict button.on.y{background:color-mix(in srgb,var(--fth-good) 22%,transparent);border-color:var(--fth-good);color:var(--fth-text)}
+.verdict button.on.m{background:color-mix(in srgb,var(--fth-warn) 22%,transparent);border-color:var(--fth-warn);color:var(--fth-text)}
+.verdict button.on.n{background:color-mix(in srgb,var(--fth-bad) 20%,transparent);border-color:var(--fth-bad);color:var(--fth-text)}
+.verdict button.on.sy{background:var(--fth-good);border-color:var(--fth-good);color:#0b1a10}
+
+/* calendar */
+.cal-wrap{display:flex;gap:18px;flex-wrap:wrap}
+.cal{width:252px}
+.cal h6{margin:0 0 6px;font:600 12px var(--fth-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--fth-muted)}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-g .dn{font:500 9.5px var(--fth-mono);color:var(--fth-faint);text-align:center;padding:2px 0}
+.cal-g button{aspect-ratio:1;border:1px solid var(--fth-line);border-radius:6px;background:var(--fth-bg2);cursor:pointer;font:500 11px var(--fth-mono);color:var(--fth-muted);padding:0;position:relative}
+.cal-g button:hover{border-color:var(--fth-line3);color:var(--fth-text)}
+.cal-g button.shoot{border-color:var(--fth-accent-line);color:var(--fth-text);box-shadow:inset 0 -2px 0 var(--fth-accent)}
+.cal-g button.a{background:color-mix(in srgb,var(--fth-good) 28%,var(--fth-bg2));color:var(--fth-text);border-color:color-mix(in srgb,var(--fth-good) 55%,transparent)}
+.cal-g button.p{background:color-mix(in srgb,var(--fth-warn) 26%,var(--fth-bg2));color:var(--fth-text);border-color:color-mix(in srgb,var(--fth-warn) 55%,transparent)}
+.cal-g button.u{background:color-mix(in srgb,var(--fth-bad) 24%,var(--fth-bg2));color:var(--fth-text);border-color:color-mix(in srgb,var(--fth-bad) 50%,transparent);text-decoration:line-through}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--fth-muted);margin-bottom:12px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.availsum{font-size:13px;margin:4px 0 12px}
+.availsum b{font-weight:700}
+
+.hist{display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--fth-muted)}
+.hist div{display:flex;gap:8px;align-items:center}
+.hist time{font:500 11px var(--fth-mono);color:var(--fth-faint);min-width:96px}
+.rounds{display:flex;flex-direction:column;gap:8px}
+.rsum{padding:10px 12px;border:1px solid var(--fth-line);border-radius:10px;background:var(--fth-bg2);font-size:13px}
+.rsum .row{gap:10px}
+.rsum p{margin:6px 0 0;color:var(--fth-muted);white-space:pre-wrap}
+
+/* ---------- auditions ---------- */
+.afil{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:10px 12px;border:1px solid var(--fth-line);border-radius:12px;background:var(--fth-bg2)}
+.afil .fth-input{width:auto}
+.afil .search{min-width:180px}
+.alist{display:flex;flex-direction:column;gap:12px}
+.au{display:grid;grid-template-columns:200px minmax(0,1fr);overflow:hidden}
+.au-side{padding:14px;border-right:1px solid var(--fth-line);display:flex;flex-direction:column;gap:9px;background:var(--fth-bg2)}
+.au-side .hs{width:100%;aspect-ratio:4/5;border-radius:10px;font-size:40px}
+.au-side h5{margin:0;font:800 19px/1.05 var(--fth-display);font-variation-settings:"wdth" 70;text-transform:uppercase}
+.au-side .role{font:500 10.5px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted);display:flex;align-items:center;gap:6px}
+.au-side .role i{width:7px;height:7px;border-radius:50%;background:var(--rc)}
+.au-main{padding:14px 16px 16px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.au-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.au-rates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.au-rates .rate{padding:7px 9px}
+.au-rates .dots button{width:24px;height:24px}
+.tags{display:flex;gap:5px;flex-wrap:wrap}
+.tag{height:26px;padding:0 10px;border-radius:999px;border:1px solid var(--fth-line2);background:transparent;color:var(--fth-muted);cursor:pointer;font:500 12px var(--fth-display)}
+.tag:hover{color:var(--fth-text);border-color:var(--fth-line3)}
+.tag.on{background:var(--fth-accent-soft);border-color:var(--fth-accent);color:var(--fth-text)}
+.au-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--fth-line)}
+.au-avg{font:500 11px var(--fth-mono);color:var(--fth-muted);letter-spacing:.04em}
+.au-avg b{font:800 20px var(--fth-display);font-variation-settings:"wdth" 70;color:var(--fth-text);margin-right:3px}
+.prev{display:flex;gap:6px;flex-wrap:wrap}
+.prof{grid-column:1/-1;border-top:1px solid var(--fth-line);padding:14px 16px;background:var(--fth-bg2);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 18px;font-size:13px}
+.prof .k{font:500 10px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-faint);margin-bottom:3px}
+.prof .v{white-space:pre-wrap;word-break:break-word}
+.prof .v a{word-break:break-all}
+.focusnav{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.focusnav .pos{font:500 12px var(--fth-mono);color:var(--fth-muted)}
+.au.focus{grid-template-columns:300px minmax(0,1fr)}
+.seen button.on.ok{background:color-mix(in srgb,var(--fth-good) 22%,transparent);color:var(--fth-text)}
+.seen button.on.ns{background:color-mix(in srgb,var(--fth-bad) 20%,transparent);color:var(--fth-text)}
+
+/* ---------- chemistry ---------- */
+.mx-wrap{overflow-x:auto;border:1px solid var(--fth-line);border-radius:12px;background:var(--fth-bg2);margin-bottom:22px}
+table.mx{border-collapse:separate;border-spacing:0}
+.mx th,.mx td{padding:8px;border-bottom:1px solid var(--fth-line);border-right:1px solid var(--fth-line)}
+.mx tr:last-child td{border-bottom:0}
+.mx th:last-child,.mx td:last-child{border-right:0}
+.mx thead th{background:var(--fth-surface);vertical-align:bottom;min-width:118px}
+.mx .who{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;white-space:nowrap;text-align:left}
+.mx .who .hs{width:30px;height:36px;border-radius:5px;font-size:11px}
+.mx thead .who{flex-direction:column;align-items:center;text-align:center;gap:5px}
+.mx thead .who .hs{width:44px;height:54px;border-radius:7px;font-size:14px}
+.mx .corner{font:500 10px var(--fth-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--fth-faint);text-align:left;line-height:1.5}
+.mx .corner b{color:var(--fth-text);font-weight:600}
+.cell{width:100%;min-width:100px;height:54px;border-radius:9px;border:1px dashed var(--fth-line2);background:transparent;cursor:pointer;color:var(--fth-faint);font:600 13px var(--fth-display);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.cell:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+.cell.has{border-style:solid;color:var(--fth-text);background:color-mix(in srgb,var(--c) calc(var(--k) * 32%),var(--fth-surface));border-color:color-mix(in srgb,var(--c) 55%,transparent)}
+.cell.has b{font:800 20px/1 var(--fth-display);font-variation-settings:"wdth" 70}
+.cell.has small{font:500 10px var(--fth-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--fth-muted)}
+.cell.sel{outline:2px solid var(--fth-accent);outline-offset:2px}
+.pairs{display:flex;flex-direction:column;gap:12px}
+.pc{overflow:hidden}
+.pc-h{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--fth-line);background:var(--fth-bg2);flex-wrap:wrap}
+.duo{display:flex;align-items:center;gap:10px}
+.duo .hs{width:46px;height:56px;border-radius:7px;font-size:15px}
+.duo .x{font:300 22px var(--fth-display);color:var(--fth-faint)}
+.duo b{display:block;font:700 15px/1.1 var(--fth-display)}
+.duo small{font:500 10px var(--fth-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--fth-muted)}
+.pc-b{padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px}
+.pc.flash{animation:flash 1.2s}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--fth-accent)}100%{box-shadow:0 0 0 0 transparent}}
+
+/* import list */
+.imp{display:flex;flex-direction:column;gap:6px;max-height:52vh;overflow:auto}
+.imp label{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 11px;border:1px solid var(--fth-line);border-radius:10px;background:var(--fth-bg2);cursor:pointer}
+.imp label:hover{border-color:var(--fth-line3)}
+.imp label b{font-size:14px}
+.imp label small{display:block;color:var(--fth-muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srcs{display:flex;gap:6px;flex-wrap:wrap}
+.srcnote{font-size:12.5px;color:var(--fth-muted);margin:0 0 12px;display:flex;flex-direction:column;gap:4px}
+.srcnote span{display:flex;gap:6px;align-items:center}
+.srcnote .ok{color:var(--fth-good)}.srcnote .no{color:var(--fth-faint)}
+
+/* print */
+#print{display:none}
+@media print{
+  @page{size:A4;margin:12mm}
+  body>*:not(#print){display:none!important}
+  #print{display:block;color:#000;font:10.5pt/1.4 Arial,Helvetica,sans-serif}
+  .pp{page-break-after:always;break-after:page}
+  .pp:last-child{page-break-after:auto;break-after:auto}
+  .pp h1{font:800 20pt/1.1 Arial,Helvetica,sans-serif;margin:0 0 2mm;text-transform:uppercase;letter-spacing:.02em}
+  .pp h2{font:700 9pt Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.1em;color:#555;margin:0 0 5mm}
+  .pp .ph{display:flex;justify-content:space-between;border-bottom:2pt solid #000;padding-bottom:2mm;margin-bottom:5mm;font-size:9pt}
+  .pp table{width:100%;border-collapse:collapse;margin-bottom:4mm}
+  .pp td,.pp th{border:0.6pt solid #999;padding:1.6mm 2.2mm;vertical-align:top;text-align:left;font-size:9.5pt}
+  .pp th{background:#eee;width:30%;font-weight:700}
+  .pp .txt{white-space:pre-wrap}
+  .pp .sheet{display:grid;grid-template-columns:repeat(4,1fr);gap:4mm}
+  .pp .tile{border:0.6pt solid #999;break-inside:avoid}
+  .pp .tile .im{-webkit-print-color-adjust:exact;print-color-adjust:exact;aspect-ratio:4/5;background:#ddd;display:grid;place-items:center;font:700 20pt Arial;color:#777;overflow:hidden}
+  .pp .tile img{width:100%;height:100%;object-fit:cover}
+  .pp .tile .tx{padding:1.6mm 2mm;font-size:8.5pt;line-height:1.3}
+  .pp .tile .tx b{font-size:10pt;display:block}
+}
+
+@media(max-width:1000px){
+  .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .ad{grid-template-columns:1fr}.ad-side{display:grid;grid-template-columns:180px 1fr;gap:14px}.ad-shot{grid-row:span 3}
+  .au-rates{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .prof{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  .page{padding:14px 14px 60px}
+  .g2,.g3,.g4,.rates{grid-template-columns:1fr}.span2{grid-column:auto}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .au,.au.focus{grid-template-columns:1fr}.au-side{border-right:0;border-bottom:1px solid var(--fth-line);flex-direction:row;flex-wrap:wrap}.au-side .hs{width:84px}
+  .ad-side{grid-template-columns:1fr}
+  .lrow,.lrow.two{grid-template-columns:1fr auto auto}
+  .lrow>:nth-child(1){grid-column:1/-1}
+  .rname input{font-size:34px}
+}
+</style>
+</head>
+<body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>04 · Planning &amp; Scheduling</span><h1 class="fth-title">Casting Tracker</h1></div>
+  <nav class="modes" id="modes" aria-label="Mode"></nav>
+  <div class="fth-actions">
+    <span class="status" id="saveState"></span>
+    <button class="fth-btn" data-act="import" title="Pull characters from Script Development and Script Breakdown"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg>Import characters</button>
+    <span class="fth-vsep"></span>
+    <div class="menuwrap">
+      <button class="fth-btn ghost" data-act="menu" aria-haspopup="menu">Export &amp; more<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l5 5 5-5"/></svg></button>
+      <div class="pop" id="pop" role="menu" hidden></div>
+    </div>
+  </div>
+</header>
+<main id="app"></main>
+<dialog id="adlg" aria-label="Auditionee"></dialog>
+<dialog id="dlg" class="narrow"></dialog>
+<div class="fth-toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="imgPick" accept="image/*" hidden>
+<input type="file" id="bkPick" accept=".json,application/json" hidden>
+<div id="print"></div>
+
+<script>
+'use strict';
+/* ═════════════ constants ═════════════ */
+const STAGES = [
+  {id:'submitted', n:'Submitted'},
+  {id:'reviewed',  n:'Reviewed'},
+  {id:'selftape',  n:'Self-tape received'},
+  {id:'callback',  n:'Callback'},
+  {id:'producer',  n:'Producer session'},
+  {id:'offered',   n:'Offered'},
+  {id:'booked',    n:'Booked'}
+];
+const SIDX = Object.fromEntries(STAGES.map((s, i) => [s.id, i]));
+const stName = id => (STAGES.find(s => s.id === id) || {n: id}).n;
+const stCol = id => `var(--st-${id})`;
+const ROLE_TYPES = ['Lead', 'Supporting', 'Featured', 'Day player', 'Recurring', 'Cameo', 'Background / SA'];
+const ROLE_COLORS = ['#4fc7b5', '#f5b14c', '#e889c8', '#97a3ff', '#ff7152', '#8bd16a', '#5ab8f0', '#c79bff', '#ffd166', '#ef6f8e'];
+const UNITS = [['day', 'per day'], ['hour', 'per hour'], ['week', 'per week'], ['project', 'flat fee'], ['deferred', 'deferred'], ['expenses', 'expenses only'], ['unpaid', 'unpaid']];
+const UNIT_SHORT = {hour: '/hr', day: '/day', week: '/wk', project: ' flat', deferred: ' deferred', expenses: ' expenses', unpaid: ' unpaid'};
+const UNIONS = ['', 'Equity (UK)', 'Irish Equity', 'SAG-AFTRA', 'ACTRA', 'MEAA', 'Non-union', 'Other'];
+const CONTRACTS = ['', 'Equity / PACT', 'Equity low-budget', 'SAG-AFTRA Ultra Low Budget', 'SAG-AFTRA Short Project', 'Non-union', 'Student / collaborative', 'Other'];
+const NUDITY = ['None', 'Implied', 'Partial', 'Full'];
+const FORMATS = ['Self-tape first', 'In person', 'Self-tape, then in person', 'Online (Zoom)', 'Offer only'];
+const DIR_RATES = [
+  ['pref', 'Preference', 'How much you want them for this role'],
+  ['look', 'Look suitability', 'Matches the look of the character'],
+  ['voice', 'Voice suitability', 'Voice, accent and delivery'],
+  ['perf', 'Performance', 'Truth and quality of the read or tape'],
+  ['adjust', 'Takes direction', 'Adjusts well when given a note'],
+  ['pro', 'Professionalism', 'Prep, punctuality, communication']
+];
+const AUD_RATES = [
+  ['prep', 'Preparation', 'Knew the material, made choices'],
+  ['fit', 'Character fit', 'Feels like the person on the page'],
+  ['truth', 'Emotional truth', 'Present, listening, believable'],
+  ['adjust', 'Redirection', 'How well they took the note'],
+  ['voice', 'Voice & accent', 'Clarity, accent, range'],
+  ['presence', 'Screen presence', 'Holds the frame / the room']
+];
+const AUD_TAGS = ['Off-book', 'Strong choices', 'Natural on camera', 'Great listener', 'Brought something new', 'Nervous', 'Needs accent work', 'Late'];
+const CHEM_RATES = [
+  ['spark', 'Connection', 'Spark and genuine rapport'],
+  ['listen', 'Listening', 'React to each other, not the page'],
+  ['rhythm', 'Rhythm & timing', 'Dialogue pace feels lived-in'],
+  ['status', 'Power dynamic', 'Status between them fits the story'],
+  ['visual', 'Visual match', 'Believable together on screen'],
+  ['history', 'Shared history', 'Feels like they have a past']
+];
+const ROUNDS = [['audition', 'Audition'], ['callback', 'Callback'], ['producer', 'Producer session']];
+const NEXT_STAGE = {audition: 'callback', callback: 'producer', producer: 'offered'};
+const KEY = 'fth-casting-v1';
+
+/* ═════════════ icons ═════════════ */
+const I = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const IC = {
+  plus: I('<path d="M12 5v14M5 12h14"/>'),
+  back: I('<path d="M15 6l-6 6 6 6"/>'),
+  chev: I('<path d="M7 10l5 5 5-5"/>'),
+  close: I('<path d="M6 6l12 12M18 6L6 18"/>'),
+  star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/></svg>',
+  starO: I('<path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/>'),
+  link: I('<path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'),
+  trash: I('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'),
+  mail: I('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6l8.5 7 8.5-7"/>'),
+  people: I('<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.2c2.8.3 5 2.6 5 5.8"/>'),
+  clap: I('<rect x="3.5" y="10" width="17" height="10" rx="1.5"/><path d="M3.3 10L2.7 6.6l16.2-2.9.6 3.4"/><path d="M7.2 5.8l2.3 3.1M11.6 5l2.3 3.1"/>'),
+  chem: I('<circle cx="8.5" cy="12" r="5"/><circle cx="15.5" cy="12" r="5"/>'),
+  grid: I('<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>'),
+  board: I('<rect x="3.5" y="4" width="5" height="16" rx="1"/><rect x="9.5" y="4" width="5" height="11" rx="1"/><rect x="15.5" y="4" width="5" height="7" rx="1"/>'),
+  table: I('<rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M3.5 9.5h17M3.5 14.5h17M9 4.5v15"/>'),
+  print: I('<path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8" rx="1.5"/><path d="M7 13h10v7.5H7z"/>'),
+  csv: I('<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 16.5h6"/>'),
+  save: I('<path d="M12 4v11M7 10l5 5 5-5M4 20h16"/>'),
+  open: I('<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>'),
+  spark: I('<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6"/>'),
+  reset: I('<path d="M4 4v5h5"/><path d="M5.2 15a7.5 7.5 0 1 0 1.4-7.6L4 9"/>'),
+  warn: I('<path d="M12 3.5l9 16H3z"/><path d="M12 10v4.5"/><circle cx="12" cy="17.2" r=".4" fill="currentColor"/>'),
+  cam: I('<rect x="3" y="7" width="13" height="11" rx="1.5"/><path d="M16 11l5-3v9l-5-3"/>'),
+  img: I('<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M20.5 16l-5-5-9 8.5"/>'),
+  list: I('<path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r=".8" fill="currentColor"/><circle cx="4" cy="12" r=".8" fill="currentColor"/><circle cx="4" cy="18" r=".8" fill="currentColor"/>'),
+  focus: I('<rect x="5" y="4" width="14" height="16" rx="1.5"/><path d="M9 9h6M9 13h6"/>'),
+  right: I('<path d="M9 6l6 6-6 6"/>'),
+  left: I('<path d="M15 6l-6 6 6 6"/>')
+};
+
+/* ═════════════ helpers ═════════════ */
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
+const iso = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const parseISO = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? new Date(+m[1], m[2] - 1, +m[3]) : null; };
+const today = () => iso(new Date());
+const fmtD = s => { const d = parseISO(s); return d ? d.toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) : ''; };
+const fmtDY = s => { const d = parseISO(s); return d ? d.toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'}) : ''; };
+const fmtT = t => t ? new Date(t).toLocaleDateString(undefined, {day: 'numeric', month: 'short'}) + ' ' + new Date(t).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '';
+const initials = n => { const p = String(n || '').trim().split(/\s+/).filter(Boolean); return p.length ? (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase() : '?'; };
+const getP = (o, p) => p.split('.').reduce((a, k) => a == null ? a : a[k], o);
+const setP = (o, p, v) => { const ks = p.split('.'); let t = o; ks.slice(0, -1).forEach(k => { if (t[k] == null || typeof t[k] !== 'object') t[k] = {}; t = t[k]; }); t[ks[ks.length - 1]] = v; };
+const avg = arr => { const v = arr.filter(x => typeof x === 'number' && x > 0); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+const f1 = n => n == null ? '–' : (Math.round(n * 10) / 10).toFixed(1);
+const cur = () => S.prod.currency || '£';
+const money = n => (n === '' || n == null || isNaN(n)) ? '' : cur() + Number(n).toLocaleString(undefined, {maximumFractionDigits: 2});
+const nameUp = s => String(s || '').trim().toUpperCase();
+
+function toast(msg, ms = 2400) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), ms); }
+
+/* ═════════════ state ═════════════ */
+const blankProd = () => ({title: '', company: '', director: '', producer: '', cd: '', shootStart: '', shootEnd: '', location: '', contract: '', deadline: '', currency: '£', notes: ''});
+const blank = () => ({v: 1, prod: blankProd(), roles: [], actors: [], auds: {}, pairs: [],
+  ui: {mode: 'manager', roleId: null, view: 'grid', stage: '', sort: 'stage', prodOpen: false, aRound: 'audition', aRole: '', aStage: 'active', aQ: '', aLayout: 'list', aIdx: 0, cA: '', cB: '', cAll: false}});
+function newRole(o = {}) {
+  return Object.assign({id: uid(), name: '', type: 'Supporting', color: ROLE_COLORS[S.roles.length % ROLE_COLORS.length],
+    ageMin: '', ageMax: '', gender: '', ethnicity: '', height: '', build: '', look: '', accent: '', skills: '',
+    desc: '', arc: '', traits: '', backstory: '', scenes: '', sceneList: '', days: '', dates: '',
+    nudity: 'None', intimacy: '', stunts: '', format: 'Self-tape first', sides: '', tapeInstr: '',
+    rate: '', budget: '', budgetUnit: 'day', hours: '', contract: '', usage: '', notes: '', src: null, created: Date.now(), bdOpen: true}, o);
+}
+function newActor(roleId, o = {}) {
+  return Object.assign({id: uid(), roleId, name: '', pronouns: '', ageMin: '', ageMax: '', base: '', height: '', union: '', skills: '',
+    rep: 'agent', agentName: '', agency: '', agentEmail: '', agentPhone: '', email: '', phone: '', profile: '', reel: '',
+    tapes: [], links: [], stage: 'submitted', passed: false, shortlist: false, submitted: today(),
+    hist: [{s: 'submitted', at: Date.now()}], avail: {days: {}, notes: '', confirmed: false},
+    fee: {amount: '', unit: 'day', notes: ''}, dir: {notes: '', concerns: '', rec: ''}, img: false, created: Date.now()}, o);
+}
+
+let S = blank(), savedAt = 0;
+function mergeDefaults(d, t) {
+  if (Array.isArray(t)) return Array.isArray(d) ? d : t;
+  if (t && typeof t === 'object') { const o = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {}; for (const k in t) o[k] = (k in o) ? mergeDefaults(o[k], t[k]) : t[k]; return o; }
+  return d === undefined ? t : d;
+}
+function normalise(s) {
+  s = mergeDefaults(s, blank());
+  s.roles = s.roles.map(r => mergeDefaults(r, newRole({id: r.id})));
+  s.actors = s.actors.map(a => mergeDefaults(a, newActor(a.roleId, {id: a.id, hist: a.hist || []})));
+  return s;
+}
+try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o && o.S) { S = normalise(o.S); savedAt = o.at || 0; } } catch (e) {}
+
+function showSaved() { const el = $('#saveState'); if (el) el.textContent = savedAt ? 'Saved in this browser · ' + new Date(savedAt).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : ''; }
+let saveT;
+function persist() {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    try { savedAt = Date.now(); localStorage.setItem(KEY, JSON.stringify({S, at: savedAt})); showSaved(); }
+    catch (e) { const el = $('#saveState'); if (el) el.textContent = 'Couldn’t save in this browser'; }
+  }, 350);
+}
+window.addEventListener('pagehide', () => { if (saveT) { clearTimeout(saveT); try { localStorage.setItem(KEY, JSON.stringify({S, at: Date.now()})); } catch (e) {} } });
+
+/* headshots live in IndexedDB (localStorage is too small for images) */
+const IMG = new Map();
+const imgDB = {
+  p: null,
+  open() { return this.p || (this.p = new Promise((res, rej) => { try { const r = indexedDB.open('casting-tracker', 1); r.onupgradeneeded = () => r.result.createObjectStore('img'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); } })); },
+  async all() { const d = await this.open(); return new Promise(res => { const out = new Map(), q = d.transaction('img').objectStore('img').openCursor(); q.onsuccess = () => { const c = q.result; if (c) { out.set(c.key, c.value); c.continue(); } else res(out); }; q.onerror = () => res(out); }); },
+  async put(k, v) { const d = await this.open(); return new Promise(res => { const t = d.transaction('img', 'readwrite'); t.objectStore('img').put(v, k); t.oncomplete = res; t.onerror = res; }); },
+  async del(k) { const d = await this.open(); return new Promise(res => { const t = d.transaction('img', 'readwrite'); t.objectStore('img').delete(k); t.oncomplete = res; t.onerror = res; }); },
+  async clear() { const d = await this.open(); return new Promise(res => { const t = d.transaction('img', 'readwrite'); t.objectStore('img').clear(); t.oncomplete = res; t.onerror = res; }); }
+};
+
+/* ═════════════ lookups & derived ═════════════ */
+const role = id => S.roles.find(r => r.id === id);
+const actor = id => S.actors.find(a => a.id === id);
+const pair = id => S.pairs.find(p => p.id === id);
+const actorsOf = rid => S.actors.filter(a => a.roleId === rid);
+const rc = r => (r && r.color) || '#888';
+const audKey = (aid, round) => aid + '|' + round;
+const aud = (aid, round) => S.auds[audKey(aid, round)];
+const dirAvg = a => avg(DIR_RATES.map(([k]) => a.dir[k]));
+const audAvg = rec => rec ? avg(AUD_RATES.map(([k]) => (rec.r || {})[k])) : null;
+const pairAvg = p => avg(CHEM_RATES.map(([k]) => (p.r || {})[k]));
+const ageTxt = (a, b) => a && b ? `${a}–${b}` : a ? `${a}+` : b ? `up to ${b}` : '';
+
+function roleStatus(r) {
+  const as = actorsOf(r.id).filter(a => !a.passed);
+  if (as.some(a => a.stage === 'booked')) return ['Cast', stCol('booked')];
+  if (as.some(a => a.stage === 'offered')) return ['Offer out', stCol('offered')];
+  if (as.some(a => SIDX[a.stage] >= SIDX.callback)) return ['Shortlisting', stCol('callback')];
+  if (actorsOf(r.id).length) return ['Auditioning', stCol('reviewed')];
+  return ['Open', stCol('submitted')];
+}
+const bookedOf = r => actorsOf(r.id).find(a => a.stage === 'booked' && !a.passed);
+
+function feeTotal(amount, unit, days, hours) {
+  const a = parseFloat(amount), d = parseFloat(days) || 0, h = parseFloat(hours) || 10;
+  if (isNaN(a)) return null;
+  if (unit === 'project') return a;
+  if (!d) return null;
+  if (unit === 'day') return a * d;
+  if (unit === 'hour') return a * h * d;
+  if (unit === 'week') return a * Math.max(1, Math.ceil(d / 5));
+  return null;
+}
+const roleBudget = r => feeTotal(r.budget, r.budgetUnit, r.days, r.hours);
+const actorCost = a => { const r = role(a.roleId); return r ? feeTotal(a.fee.amount, a.fee.unit, r.days, r.hours) : null; };
+
+function shootDays() {
+  const a = parseISO(S.prod.shootStart), b = parseISO(S.prod.shootEnd) || a;
+  if (!a) return [];
+  const out = []; for (let d = new Date(a); d <= b && out.length < 120; d.setDate(d.getDate() + 1)) out.push(iso(d));
+  return out;
+}
+function availSum(a) {
+  const days = shootDays(), o = {a: 0, p: 0, u: 0, n: 0, total: days.length};
+  days.forEach(d => { const v = a.avail.days[d]; o[v || 'n']++; });
+  return o;
+}
+
+/* ═════════════ rendering helpers ═════════════ */
+function hs(a, cls = '') {
+  const r = role(a.roleId), src = a.img && IMG.get(a.id);
+  return `<div class="hs ${cls}" style="--rc:${rc(r)}">${src ? `<img src="${src}" alt="">` : esc(initials(a.name))}</div>`;
+}
+const pill = st => `<span class="pill" style="--c:${stCol(st)}">${esc(stName(st))}</span>`;
+const passPill = () => `<span class="pill" style="--c:var(--st-passed)">Passed</span>`;
+const stagePill = a => a.passed ? passPill() : pill(a.stage);
+function stars(n) { n = Math.round(n || 0); let s = ''; for (let i = 1; i <= 5; i++) s += i <= n ? IC.star : `<span class="off">${IC.star}</span>`; return `<span class="stars">${s}</span>`; }
+const opt = (list, v) => list.map(o => { const [val, lab] = Array.isArray(o) ? o : [o, o || '—']; return `<option value="${esc(val)}"${String(val) === String(v ?? '') ? ' selected' : ''}>${esc(lab)}</option>`; }).join('');
+const inp = (k, v, ph = '', extra = '') => `<input class="fth-input" data-k="${k}" value="${esc(v)}" placeholder="${esc(ph)}" ${extra}>`;
+const num = (k, v, ph = '', extra = '') => `<input class="fth-input" type="number" min="0" step="any" data-k="${k}" data-type="num" value="${esc(v)}" placeholder="${esc(ph)}" ${extra}>`;
+const ta = (k, v, ph = '', rows = 3) => `<textarea class="fth-input" data-k="${k}" rows="${rows}" placeholder="${esc(ph)}">${esc(v)}</textarea>`;
+const sel = (k, list, v, extra = '') => `<select class="fth-input" data-k="${k}" ${extra}>${opt(list, v)}</select>`;
+const fld = (label, html, cls = '', hint = '') => `<div class="f ${cls}"><label class="lbl">${label}</label>${html}${hint ? `<div class="hint">${hint}</div>` : ''}</div>`;
+function dots(k, v, act = 'rate') {
+  let s = ''; for (let i = 1; i <= 5; i++) s += `<button type="button" data-act="${act}" data-k="${k}" data-v="${i}" class="${v === i ? 'on' : v > i ? 'lit' : ''}" aria-label="${i} of 5">${i}</button>`;
+  return `<div class="dots">${s}</div>`;
+}
+const rateRow = (k, label, help, v, act) => `<div class="rate"><div class="rl"><b>${esc(label)}</b><small>${esc(help)}</small></div>${dots(k, v, act)}</div>`;
+
+/* ═════════════ top: modes & menu ═════════════ */
+function renderModes() {
+  const m = S.ui.mode;
+  $('#modes').innerHTML = [['manager', 'Casting Manager', IC.people], ['auditions', 'Auditions', IC.clap], ['chemistry', 'Chemistry Reads', IC.chem]]
+    .map(([id, n, ic]) => `<button data-act="mode" data-v="${id}" class="${m === id ? 'on' : ''}">${ic}${n}</button>`).join('');
+}
+function renderMenu() {
+  $('#pop').innerHTML = `
+    <button data-act="printBreakdowns">${IC.print}<span>Print casting breakdowns<small>One page per role, ready to send out or save as PDF</small></span></button>
+    <button data-act="printSheet">${IC.img}<span>Print contact sheet<small>Headshots and scores, grouped by role</small></span></button>
+    <button data-act="csv">${IC.csv}<span>Download auditionees (CSV)<small>Opens in Excel, Numbers or Google Sheets</small></span></button>
+    <hr>
+    <button data-act="backup">${IC.save}<span>Download a backup<small>Everything, headshots included, in one file</small></span></button>
+    <button data-act="restore">${IC.open}<span>Restore from a backup</span></button>
+    <hr>
+    <button data-act="example">${IC.spark}<span>Load example</span></button>
+    <button data-act="startAgain" class="danger">${IC.reset}<span>Start again</span></button>`;
+}
+
+/* ═════════════ casting manager: home ═════════════ */
+function homePage() {
+  const p = S.prod, rs = S.roles;
+  const active = S.actors.filter(a => !a.passed);
+  const castN = rs.filter(r => bookedOf(r)).length;
+  const budget = rs.reduce((t, r) => t + (roleBudget(r) || 0), 0);
+  const committed = rs.reduce((t, r) => { const b = bookedOf(r); return t + ((b && actorCost(b)) || 0); }, 0);
+  const shortlisted = active.filter(a => SIDX[a.stage] >= SIDX.callback).length;
+  const dl = p.deadline ? `<span>Submissions close <b>${fmtDY(p.deadline)}</b></span>` : '';
+  const sd = p.shootStart ? `<span>Shooting <b>${fmtD(p.shootStart)}${p.shootEnd && p.shootEnd !== p.shootStart ? ' – ' + fmtDY(p.shootEnd) : ''}</b></span>` : '';
+  return `<div class="page">
+  <section class="fth-card prod ${S.ui.prodOpen ? 'open' : ''}" data-ctx="prod">
+    <div class="prod-top" data-act="toggleProd">
+      <div style="flex:1;min-width:220px">
+        <span class="lbl">Production</span>
+        <h2 class="${p.title ? '' : 'ph'}">${esc(p.title || 'Untitled production')}</h2>
+      </div>
+      <div class="prod-meta">
+        ${p.director ? `<span>Director <b>${esc(p.director)}</b></span>` : ''}
+        ${p.cd ? `<span>Casting <b>${esc(p.cd)}</b></span>` : ''}
+        ${sd}${dl}
+        ${!p.director && !p.cd && !sd && !dl ? '<span>Add the production details used on every breakdown</span>' : ''}
+      </div>
+      <span class="chev">${IC.chev}</span>
+    </div>
+    ${S.ui.prodOpen ? `<div class="prod-body">
+      <div class="g4">
+        ${fld('Production title', inp('title', p.title, 'e.g. Salt Lines'), 'span2')}
+        ${fld('Production company', inp('company', p.company, ''))}
+        ${fld('Location', inp('location', p.location, 'e.g. Belfast'))}
+        ${fld('Director', inp('director', p.director))}
+        ${fld('Producer', inp('producer', p.producer))}
+        ${fld('Casting director', inp('cd', p.cd))}
+        ${fld('Contract / agreement', sel('contract', CONTRACTS, p.contract))}
+        ${fld('Shoot starts', `<input class="fth-input" type="date" data-k="shootStart" data-r value="${esc(p.shootStart)}">`)}
+        ${fld('Shoot ends', `<input class="fth-input" type="date" data-k="shootEnd" data-r value="${esc(p.shootEnd)}">`)}
+        ${fld('Submission deadline', `<input class="fth-input" type="date" data-k="deadline" data-r value="${esc(p.deadline)}">`)}
+        ${fld('Currency', sel('currency', [['£', '£ GBP'], ['€', '€ EUR'], ['$', '$ USD'], ['A$', 'A$ AUD'], ['C$', 'C$ CAD']], p.currency, 'data-r'))}
+        ${fld('Notes for every breakdown', ta('notes', p.notes, 'Logline, tone, how to submit, self-tape address…', 2), 'spanall')}
+      </div></div>` : ''}
+  </section>
+  <div class="stats">
+    <div class="stat"><span class="lbl">Roles</span><b>${rs.length}</b><small>${castN} cast · ${rs.length - castN} open</small></div>
+    <div class="stat"><span class="lbl">Auditionees</span><b>${active.length}</b><small>${S.actors.length - active.length} passed</small></div>
+    <div class="stat"><span class="lbl">Shortlisted</span><b>${shortlisted}</b><small>Callback or further</small></div>
+    <div class="stat"><span class="lbl">Cast budget</span><b>${budget ? money(budget) : '–'}</b><small>${budget ? 'Across roles with fees set' : 'Set a budget on each role'}</small></div>
+    <div class="stat"><span class="lbl">Committed</span><b>${committed ? money(committed) : '–'}</b><small>${budget && committed ? Math.round(committed / budget * 100) + '% of budget, booked cast' : 'Booked cast fees'}</small></div>
+  </div>
+  <div class="toolbar"><h3>Roles</h3><span class="count">${rs.length}</span><span class="sp"></span>
+    <button class="fth-btn sm" data-act="import">${IC.save}Import from script</button>
+    <button class="fth-btn sm primary" data-act="addRole">${IC.plus}Add role</button></div>
+  ${rs.length ? `<div class="roles">${rs.map(roleCard).join('')}<button class="addcard" data-act="addRole">${IC.plus}Add a role</button></div>` :
+  `<div class="empty"><h3>No roles yet</h3><p>Each character you need to cast gets a card here with its breakdown, and every actor you consider sits underneath it. Pull your characters in from the Script Development tool or Script Breakdown, or add them by hand.</p>
+    <div class="row"><button class="fth-btn primary" data-act="import">${IC.save}Import characters</button><button class="fth-btn" data-act="addRole">${IC.plus}Add a role</button><button class="fth-btn ghost" data-act="example">Load example</button></div></div>`}
+  </div>`;
+}
+
+function roleCard(r) {
+  const as = actorsOf(r.id), [st, stc] = roleStatus(r), b = bookedOf(r);
+  const counts = STAGES.map(s => [s.id, as.filter(a => !a.passed && a.stage === s.id).length]);
+  const total = as.filter(a => !a.passed).length;
+  const top = (b ? [b] : as.filter(a => !a.passed).sort((x, y) => (y.shortlist - x.shortlist) || (SIDX[y.stage] - SIDX[x.stage]) || ((y.dir.pref || 0) - (x.dir.pref || 0)))).slice(0, 5);
+  const age = ageTxt(r.ageMin, r.ageMax);
+  const bud = r.budget ? money(r.budget) + (UNIT_SHORT[r.budgetUnit] || '') : r.rate;
+  return `<article class="fth-card rcard" data-act="openRole" data-id="${r.id}" style="--rc:${rc(r)}" tabindex="0">
+    <div class="band"></div>
+    ${r.src ? `<span class="src" title="Imported from ${esc(r.src.from)}">${r.src.from === 'Script Breakdown' ? 'Breakdown' : 'Script'}</span>` : ''}
+    <div class="in">
+      <div class="top"><div style="min-width:0;padding-right:46px"><h4 class="${r.name ? '' : 'ph'}">${esc(r.name || 'Unnamed role')}</h4><div class="type">${esc(r.type)}${r.scenes ? ' · ' + esc(r.scenes) + (+r.scenes === 1 ? ' scene' : ' scenes') : ''}${r.days ? ' · ' + esc(r.days) + (+r.days === 1 ? ' day' : ' days') : ''}</div></div></div>
+      <div class="spec">
+        <span class="rs" style="--c:${stc}">${st}</span>
+        ${age ? `<span class="chip">Playing ${esc(age)}</span>` : ''}
+        ${r.gender ? `<span class="chip">${esc(r.gender)}</span>` : ''}
+        ${bud ? `<span class="chip m">${esc(bud)}</span>` : ''}
+      </div>
+      ${r.desc ? `<div class="desc">${esc(r.desc)}</div>` : '<div class="desc" style="color:var(--fth-faint)">No description yet</div>'}
+      <div class="foot">
+        ${top.length ? `<div class="faces">${top.map(a => hs(a)).join('')}</div>` : ''}
+        <small>${b ? `Cast: <b style="color:var(--fth-text)">${esc(b.name || 'Unnamed')}</b>` : total ? `${total} in the running` : 'No auditionees yet'}</small>
+      </div>
+      ${total ? `<div class="pipe" title="${counts.filter(c => c[1]).map(c => stName(c[0]) + ': ' + c[1]).join(' · ')}">${counts.filter(c => c[1]).map(([id, n]) => `<i style="flex:${n};background:${stCol(id)}"></i>`).join('')}</div>` : ''}
+    </div></article>`;
+}
+
+/* ═════════════ casting manager: role page ═════════════ */
+function rolePage() {
+  const r = role(S.ui.roleId), [st, stc] = roleStatus(r);
+  const all = actorsOf(r.id);
+  return `<div class="page" style="--rc:${rc(r)}">
+  <div class="crumbs"><button data-act="home">${'All roles'}</button><span class="sl">/</span><span id="crumbName">${esc(r.name || 'Unnamed role')}</span></div>
+  <div class="rhead" data-ctx="role:${r.id}">
+    <span class="dot"></span>
+    <div class="rname"><input data-k="name" data-live="crumbName" value="${esc(r.name)}" placeholder="Character name" aria-label="Character name">
+      <div class="sub"><span class="rs" style="--c:${stc}">${st}</span><span class="chip m">${esc(r.type)}</span>${ageTxt(r.ageMin, r.ageMax) ? `<span class="chip m">Playing ${esc(ageTxt(r.ageMin, r.ageMax))}</span>` : ''}${r.src ? `<span class="chip m">From ${esc(r.src.from)}</span>` : ''}</div></div>
+    <div class="row"><button class="fth-btn ghost danger sm" data-act="delRole" data-id="${r.id}">${IC.trash}Delete role</button></div>
+  </div>
+  ${breakdown(r)}
+  <div class="toolbar"><h3>Auditionees</h3><span class="count">${all.length}</span><span class="sp"></span>
+    <div class="seg" role="group" aria-label="View">
+      <button data-act="view" data-v="grid" class="${S.ui.view === 'grid' ? 'on' : ''}" title="Cards">${IC.grid.replace('<svg', '<svg class="ico"')}</button>
+      <button data-act="view" data-v="board" class="${S.ui.view === 'board' ? 'on' : ''}" title="Board: drag cards between stages">${IC.board.replace('<svg', '<svg class="ico"')}</button>
+      <button data-act="view" data-v="table" class="${S.ui.view === 'table' ? 'on' : ''}" title="Compare in a table">${IC.table.replace('<svg', '<svg class="ico"')}</button>
+    </div>
+    ${S.ui.view !== 'board' ? `<select class="fth-input sm" style="width:auto" data-ctx="ui" data-k="sort" data-r aria-label="Sort">${opt([['stage', 'Sort: furthest along'], ['pref', 'Sort: preference'], ['score', 'Sort: overall score'], ['name', 'Sort: name'], ['new', 'Sort: newest']], S.ui.sort)}</select>` : ''}
+    <button class="fth-btn sm" data-act="bulkAdd" data-id="${r.id}">Paste a list</button>
+    <button class="fth-btn sm primary" data-act="addActor" data-id="${r.id}">${IC.plus}Add auditionee</button>
+  </div>
+  ${all.length ? (S.ui.view === 'board' ? board(r, all) : `${stageChips(all)}${S.ui.view === 'table' ? table(r, filtered(all)) : grid(r, filtered(all))}`) :
+  `<div class="empty"><h3>No auditionees yet</h3><p>Add actors as submissions come in. Each card tracks them from first submission to booked, with their contacts, self-tapes, availability, fee and your notes.</p><div class="row"><button class="fth-btn primary" data-act="addActor" data-id="${r.id}">${IC.plus}Add auditionee</button><button class="fth-btn" data-act="bulkAdd" data-id="${r.id}">Paste a list of names</button></div></div>`}
+  </div>`;
+}
+
+function breakdown(r) {
+  const open = r.bdOpen;
+  const bud = roleBudget(r);
+  const sum = [ageTxt(r.ageMin, r.ageMax) && 'Playing ' + ageTxt(r.ageMin, r.ageMax), r.gender, r.ethnicity, r.accent, r.days && r.days + (+r.days === 1 ? ' shoot day' : ' shoot days'), r.budget && money(r.budget) + (UNIT_SHORT[r.budgetUnit] || ''), r.nudity && r.nudity !== 'None' && 'Nudity: ' + r.nudity, r.stunts && 'Stunts'].filter(Boolean);
+  return `<section class="fth-card bd ${open ? 'open' : ''}" data-ctx="role:${r.id}">
+    <div class="bd-top" data-act="toggleBd" data-id="${r.id}"><h3>Cast breakdown</h3>
+      <div class="sum">${open ? '<span class="chip m">Everything a casting call or agent needs</span>' : sum.map(s => `<span class="chip">${esc(s)}</span>`).join('') || '<span class="chip m">Empty: open to fill in</span>'}</div>
+      <span class="chev">${IC.chev}</span></div>
+    ${open ? `<div class="bd-body">
+      <div class="grp"><div class="grp-h">The role</div>
+        <div class="g4">
+          ${fld('Role type', sel('type', ROLE_TYPES, r.type, 'data-r'))}
+          ${fld('Playing age', `<div class="pair">${num('ageMin', r.ageMin, 'from', 'data-r')}<span class="to">to</span>${num('ageMax', r.ageMax, 'to', 'data-r')}</div>`)}
+          ${fld('Gender', inp('gender', r.gender, 'e.g. Female, or Open'))}
+          ${fld('Ethnicity / heritage', inp('ethnicity', r.ethnicity, 'Open, unless the story needs it'))}
+          ${fld('Scenes', num('scenes', r.scenes, 'count'))}
+          ${fld('Scene numbers', inp('sceneList', r.sceneList, 'e.g. 1, 4, 7–9'))}
+          ${fld('Shoot days needed', num('days', r.days, 'days', 'data-r'))}
+          ${fld('Card colour', `<div class="swatches">${ROLE_COLORS.map(c => `<button type="button" data-act="roleColor" data-v="${c}" style="--c:${c}" class="${r.color === c ? 'on' : ''}" aria-label="Colour ${c}"></button>`).join('')}</div>`)}
+          ${fld('Character description <em>(as it will appear on the breakdown)</em>', ta('desc', r.desc, 'Who they are in two or three sentences. Personality, situation, what the audience should feel about them.', 3), 'spanall')}
+        </div></div>
+      <div class="grp"><div class="grp-h">Performance</div>
+        <div class="g2">
+          ${fld('Emotional arc', ta('arc', r.arc, 'Where they start, what changes them, where they end up.', 3))}
+          ${fld('Key traits', ta('traits', r.traits, 'e.g. Guarded, dry humour, fiercely loyal, quick to anger', 3))}
+          ${fld('Backstory & inner life', ta('backstory', r.backstory, 'What they want, what they’re hiding, history the actor should know.', 2))}
+          ${fld('Accent / dialect', inp('accent', r.accent, 'e.g. Belfast, native or strong ear'))}
+        </div></div>
+      <div class="grp"><div class="grp-h">Look & physicality</div>
+        <div class="g4">
+          ${fld('Height', inp('height', r.height, 'e.g. Under 5′8″'))}
+          ${fld('Build', inp('build', r.build, 'e.g. Wiry, athletic'))}
+          ${fld('Look & distinctive features', inp('look', r.look, 'Hair, tattoos, scars, styling notes'), 'span2')}
+          ${fld('Special skills', inp('skills', r.skills, 'e.g. Driving licence, swimming, guitar'), 'span2')}
+          ${fld('Stunts / fight', inp('stunts', r.stunts, 'e.g. Light stage combat, fall'), 'span2')}
+        </div></div>
+      <div class="grp"><div class="grp-h">Requirements & audition</div>
+        <div class="g4">
+          ${fld('Nudity', sel('nudity', NUDITY, r.nudity, 'data-r'))}
+          ${fld('Intimacy / sensitive content', inp('intimacy', r.intimacy, r.nudity !== 'None' ? 'Intimacy coordinator? Closed set?' : 'e.g. Kissing, violence, grief'), 'span2')}
+          ${fld('Audition format', sel('format', FORMATS, r.format))}
+          ${fld('Sides to prepare', inp('sides', r.sides, 'e.g. Sc. 12 and 34, or a link'), 'span2')}
+          ${fld('Shoot dates for this role', inp('dates', r.dates, 'e.g. 14–16 Dec, or leave for the whole shoot'), 'span2')}
+          ${fld('Self-tape instructions', ta('tapeInstr', r.tapeInstr, 'Framing, slate, reader, deadline, where to send.', 2), 'spanall')}
+        </div></div>
+      <div class="grp"><div class="grp-h">Fees & budget</div>
+        <div class="g4">
+          ${fld('Rate shown on the breakdown', inp('rate', r.rate, 'e.g. £150/day + travel, or Equity minimum'), 'span2')}
+          ${fld('Contract', sel('contract', CONTRACTS, r.contract || S.prod.contract))}
+          ${fld('Usage / buyout', inp('usage', r.usage || '', 'e.g. Festivals, online, worldwide'))}
+          ${fld('Internal budget', `<div class="pair">${num('budget', r.budget, cur(), 'data-r')}<select class="fth-input" data-k="budgetUnit" data-r style="max-width:130px">${opt(UNITS, r.budgetUnit)}</select></div>`, 'span2', 'Not shown on the breakdown. Used to check fees.')}
+          ${r.budgetUnit === 'hour' ? fld('Hours per day', num('hours', r.hours, '10', 'data-r')) : ''}
+          ${fld('Private notes', ta('notes', r.notes, 'Ideas, names to approach, anything not for the breakdown.', 2), r.budgetUnit === 'hour' ? '' : 'spanall')}
+        </div>
+        ${bud != null ? `<div class="budgetline">Role budget: <b>${money(bud)}</b>${r.budgetUnit === 'day' ? ` (${money(r.budget)} × ${r.days} days)` : r.budgetUnit === 'week' ? ` (${Math.max(1, Math.ceil(r.days / 5))} week${Math.ceil(r.days / 5) > 1 ? 's' : ''})` : r.budgetUnit === 'hour' ? ` (${r.hours || 10} hrs × ${r.days} days)` : ''}</div>` : r.budget && !r.days && r.budgetUnit !== 'project' ? '<div class="budgetline">Add shoot days to see the total for this role.</div>' : ''}
+      </div>
+      <div class="row" style="margin-top:14px"><span class="sp"></span><button class="fth-btn sm" data-act="printRole" data-id="${r.id}">${IC.print}Print this breakdown</button></div>
+    </div>` : ''}
+  </section>`;
+}
+
+function filtered(all) {
+  const f = S.ui.stage;
+  let as = all.filter(a => f === 'passed' ? a.passed : f ? !a.passed && a.stage === f : true);
+  const s = S.ui.sort;
+  const by = {
+    stage: (x, y) => (x.passed - y.passed) || (SIDX[y.stage] - SIDX[x.stage]) || (y.shortlist - x.shortlist) || ((y.dir.pref || 0) - (x.dir.pref || 0)),
+    pref: (x, y) => (x.passed - y.passed) || ((y.dir.pref || 0) - (x.dir.pref || 0)) || ((dirAvg(y) || 0) - (dirAvg(x) || 0)),
+    score: (x, y) => (x.passed - y.passed) || ((dirAvg(y) || 0) - (dirAvg(x) || 0)),
+    name: (x, y) => (x.name || '').localeCompare(y.name || ''),
+    new: (x, y) => y.created - x.created
+  }[s] || (() => 0);
+  return as.slice().sort(by);
+}
+function stageChips(all) {
+  const n = id => all.filter(a => !a.passed && a.stage === id).length;
+  const f = S.ui.stage;
+  return `<div class="stchips" style="margin-bottom:14px">
+    <button class="stchip ${!f ? 'on' : ''}" style="--c:var(--fth-text)" data-act="stageF" data-v="">All <b>${all.length}</b></button>
+    ${STAGES.map(s => `<button class="stchip ${f === s.id ? 'on' : ''}" style="--c:${stCol(s.id)}" data-act="stageF" data-v="${s.id}"><i></i>${s.n} <b>${n(s.id)}</b></button>`).join('')}
+    <button class="stchip ${f === 'passed' ? 'on' : ''}" style="--c:var(--st-passed)" data-act="stageF" data-v="passed"><i></i>Passed <b>${all.filter(a => a.passed).length}</b></button>
+  </div>`;
+}
+function grid(r, as) {
+  if (!as.length) return '<div class="empty"><p style="margin:0">Nobody at this stage.</p></div>';
+  return `<div class="actors">${as.map(actorCard).join('')}<button class="addcard" data-act="addActor" data-id="${r.id}" style="min-height:280px">${IC.plus}Add auditionee</button></div>`;
+}
+function actorCard(a) {
+  const av = availSum(a), sc = dirAvg(a);
+  const meta = [ageTxt(a.ageMin, a.ageMax) && 'Plays ' + ageTxt(a.ageMin, a.ageMax), a.base, a.rep === 'self' ? 'Self-represented' : a.agency || a.agentName].filter(Boolean).join(' · ');
+  return `<article class="fth-card acard ${a.passed ? 'passed' : ''}" data-act="openActor" data-id="${a.id}" tabindex="0">
+    ${hs(a)}
+    <button class="star ${a.shortlist ? 'on' : ''}" data-act="shortlist" data-id="${a.id}" title="${a.shortlist ? 'On your shortlist' : 'Add to shortlist'}">${a.shortlist ? IC.star : IC.starO}</button>
+    ${av.u ? `<span class="warnb" title="Unavailable on ${av.u} shoot day${av.u > 1 ? 's' : ''}">${IC.warn}${av.u} clash${av.u > 1 ? 'es' : ''}</span>` : ''}
+    <div class="in">
+      <h5>${esc(a.name || 'Unnamed')}</h5>
+      ${meta ? `<div class="meta">${esc(meta)}</div>` : ''}
+      <div class="row" style="gap:6px">${stagePill(a)}</div>
+      <div class="row" style="gap:10px">${a.dir.pref ? stars(a.dir.pref) : '<span class="score">Not rated</span>'}<span class="sp"></span>${sc ? `<span class="score" title="Average of your director ratings"><b>${f1(sc)}</b>/5</span>` : ''}</div>
+    </div></article>`;
+}
+function board(r, all) {
+  const cols = [...STAGES.map(s => [s.id, s.n, all.filter(a => !a.passed && a.stage === s.id)]), ['passed', 'Passed', all.filter(a => a.passed)]];
+  return `<p class="intro" style="margin-bottom:10px">Drag a card to another column to move it on. Click a card to open it.</p><div class="board">${cols.map(([id, n, as]) => `
+    <div class="col" data-drop="${id}"><div class="col-h" style="--c:${id === 'passed' ? 'var(--st-passed)' : stCol(id)}"><i></i>${n}<b>${as.length}</b></div>
+    <div class="col-b">${as.map(a => `<div class="bcard" draggable="true" data-drag="${a.id}" data-act="openActor" data-id="${a.id}">${hs(a)}<div style="min-width:0"><b>${esc(a.name || 'Unnamed')}</b><small>${a.dir.pref ? stars(a.dir.pref) : esc(a.base || a.agency || '')}</small></div></div>`).join('')}</div></div>`).join('')}</div>`;
+}
+function table(r, as) {
+  if (!as.length) return '<div class="empty"><p style="margin:0">Nobody at this stage.</p></div>';
+  const cell = v => v ? `<td class="num ${v >= 4 ? 'hi' : v <= 2 ? 'lo' : ''}">${v}</td>` : '<td class="num" style="color:var(--fth-faint)">–</td>';
+  const lastAud = a => { for (const [k] of ROUNDS.slice().reverse()) { const x = audAvg(aud(a.id, k)); if (x) return [x, k]; } return [null]; };
+  return `<div class="tw"><table class="t"><thead><tr><th></th><th>Name</th><th>Stage</th>${DIR_RATES.map(([, n]) => `<th class="num">${n.split(' ')[0]}</th>`).join('')}<th class="num">Overall</th><th class="num">Latest audition</th><th>Fee</th><th>Shoot days</th><th>Contact</th></tr></thead><tbody>
+  ${as.map(a => { const av = availSum(a), [la, lk] = lastAud(a); return `<tr data-act="openActor" data-id="${a.id}" style="${a.passed ? 'opacity:.5' : ''}">
+    <td>${hs(a)}</td><td><b>${esc(a.name || 'Unnamed')}</b>${a.shortlist ? ' <span style="color:var(--fth-accent)">★</span>' : ''}</td><td>${stagePill(a)}</td>
+    ${DIR_RATES.map(([k]) => cell(a.dir[k])).join('')}
+    <td class="num"><b>${f1(dirAvg(a))}</b></td><td class="num">${la ? `<b>${f1(la)}</b> <span style="color:var(--fth-faint)">${ROUNDS.find(x => x[0] === lk)[1]}</span>` : '–'}</td>
+    <td>${a.fee.amount ? esc(money(a.fee.amount) + (UNIT_SHORT[a.fee.unit] || '')) : '–'}</td>
+    <td>${av.total ? `<span style="color:${av.u ? 'var(--fth-bad)' : av.a === av.total ? 'var(--fth-good)' : 'var(--fth-muted)'}">${av.a}/${av.total} free${av.u ? ', ' + av.u + ' clash' : ''}</span>` : '<span style="color:var(--fth-faint)">–</span>'}</td>
+    <td>${esc(a.rep === 'self' ? (a.email || a.phone || '') : (a.agency || a.agentName || a.agentEmail || ''))}</td></tr>`; }).join('')}
+  </tbody></table></div>`;
+}
+
+/* ═════════════ actor detail ═════════════ */
+let curActor = null, actorTab = 'profile';
+function openActor(id, tab) {
+  curActor = id; if (tab) actorTab = tab;
+  renderActor();
+  const d = $('#adlg'); if (!d.open) d.showModal();
+  d.scrollTop = 0;
+}
+function renderActor() {
+  const a = actor(curActor), d = $('#adlg'); if (!a) { if (d.open) d.close(); return; }
+  const r = role(a.roleId), cIdx = SIDX[a.stage];
+  const hmap = {}; a.hist.forEach(h => { if (h.s in SIDX) hmap[h.s] = h.at; });
+  const nRounds = ROUNDS.filter(([k]) => aud(a.id, k)).length, nPairs = S.pairs.filter(p => p.a === a.id || p.b === a.id).length;
+  const tabs = [['profile', 'Profile'], ['contact', 'Contact & agent'], ['media', 'Self-tapes & links', a.tapes.length + a.links.length + (a.reel ? 1 : 0)], ['avail', 'Availability & fee'], ['notes', 'Director’s notes'], ['history', 'Auditions & history', nRounds + nPairs]];
+  const scroll = d.scrollTop, ae = document.activeElement, fk = ae && ae.dataset && ae.dataset.k && d.contains(ae) ? [ae.dataset.k, ae.selectionStart] : null;
+  d.innerHTML = `<div class="dlg-h" style="--rc:${rc(r)}">
+      <span class="rs" style="--c:${rc(r)}">${esc(r ? r.name || 'Unnamed role' : 'No role')}</span>
+      <span class="lbl" style="margin:0">${esc(r ? r.type : '')}${r && ageTxt(r.ageMin, r.ageMax) ? ' · playing ' + esc(ageTxt(r.ageMin, r.ageMax)) : ''}</span><span class="sp"></span>
+      <button class="fth-btn sm ${a.shortlist ? 'primary' : ''}" data-act="shortlist" data-id="${a.id}">${a.shortlist ? IC.star : IC.starO}${a.shortlist ? 'Shortlisted' : 'Shortlist'}</button>
+      <button class="fth-btn icon ghost" data-act="closeActor" aria-label="Close">${IC.close}</button></div>
+    <div class="dlg-b" data-ctx="actor:${a.id}">
+     <div class="ad">
+      <aside class="ad-side">
+        <div class="ad-shot" data-act="pickImg" data-id="${a.id}" title="Click or drop an image to set the headshot">${hs(a)}<div class="ov">${IC.img.replace('<svg', '<svg style="width:15px;height:15px"')}${a.img ? 'Replace headshot' : 'Add headshot'}</div></div>
+        ${a.img ? `<button class="fth-btn sm ghost" data-act="rmImg" data-id="${a.id}" style="align-self:flex-start">Remove headshot</button>` : ''}
+        <div><span class="lbl">Casting stage</span>
+          <div class="stepper">${STAGES.map((s, i) => `<button type="button" data-act="stage" data-v="${s.id}" style="--c:${stCol(s.id)}" class="${!a.passed && i === cIdx ? 'cur' : !a.passed && i < cIdx ? 'done' : ''}"><span class="n">${i + 1}</span>${s.n}<span class="when">${hmap[s.id] ? fmtD(iso(new Date(hmap[s.id]))) : ''}</span></button>`).join('')}</div></div>
+        <div class="row">
+          <button class="fth-btn sm ${a.passed ? 'primary' : ''}" data-act="pass" data-id="${a.id}">${a.passed ? 'Passed · undo' : 'Pass on this actor'}</button>
+          <span class="sp"></span>
+          <button class="fth-btn sm ghost danger" data-act="delActor" data-id="${a.id}">${IC.trash}Delete</button>
+        </div>
+        ${S.roles.length > 1 ? fld('Considering for', `<select class="fth-input sm" data-k="roleId" data-r>${opt(S.roles.map(x => [x.id, x.name || 'Unnamed role']), a.roleId)}</select>`) : ''}
+      </aside>
+      <div class="ad-main">
+        <input class="ad-name" data-k="name" value="${esc(a.name)}" placeholder="Actor’s name" aria-label="Actor’s name">
+        <div class="ad-tabs" role="tablist">${tabs.map(([id, n, c]) => `<button data-act="atab" data-v="${id}" class="${actorTab === id ? 'on' : ''}">${n}${c ? `<b>${c}</b>` : ''}</button>`).join('')}</div>
+        ${actorTabBody(a, r)}
+      </div>
+     </div>
+    </div>`;
+  d.scrollTop = scroll;
+  if (fk) { const el = $(`[data-k="${CSS.escape(fk[0])}"]`, d); if (el) { el.focus({preventScroll: true}); try { if (fk[1] != null) el.setSelectionRange(fk[1], fk[1]); } catch (e) {} } }
+}
+function actorTabBody(a, r) {
+  switch (actorTab) {
+    case 'profile': return `<div class="g4">
+        ${fld('Pronouns', inp('pronouns', a.pronouns, 'e.g. she/her'))}
+        ${fld('Playing age', `<div class="pair">${num('ageMin', a.ageMin, 'from')}<span class="to">to</span>${num('ageMax', a.ageMax, 'to')}</div>`, '', r && (r.ageMin || r.ageMax) ? 'Role: ' + esc(ageTxt(r.ageMin, r.ageMax)) : '')}
+        ${fld('Based in', inp('base', a.base, 'e.g. Belfast, Dublin'))}
+        ${fld('Height', inp('height', a.height, 'e.g. 5′6″'))}
+        ${fld('Union', sel('union', UNIONS, a.union))}
+        ${fld('Date submitted', `<input class="fth-input" type="date" data-k="submitted" value="${esc(a.submitted)}">`)}
+        ${fld('Accents & skills', inp('skills', a.skills, 'e.g. Belfast (native), RP, horse riding, piano'), 'span2')}
+        ${fld('Profile link <em>Spotlight, IMDb, Casting Networks…</em>', linkInp('profile', a.profile), 'span2')}
+        ${fld('Showreel', linkInp('reel', a.reel), 'span2')}
+      </div>
+      ${r && (r.accent || r.skills || r.height || r.look) ? `<div class="fth-tip" style="margin-top:16px"><b>The role asks for:</b> ${esc([r.accent && 'Accent: ' + r.accent, r.skills && 'Skills: ' + r.skills, r.height && 'Height: ' + r.height, r.look && 'Look: ' + r.look].filter(Boolean).join(' · '))}</div>` : ''}`;
+    case 'contact': return `<div class="g4">
+        ${fld('Representation', `<div class="seg acc">${[['agent', 'Agent'], ['manager', 'Manager'], ['self', 'Self-represented']].map(([v, n]) => `<button type="button" data-act="setRep" data-v="${v}" class="${a.rep === v ? 'on' : ''}">${n}</button>`).join('')}</div>`, 'spanall')}
+        ${a.rep !== 'self' ? `
+        ${fld(a.rep === 'manager' ? 'Manager' : 'Agent', inp('agentName', a.agentName, 'Name'))}
+        ${fld('Agency', inp('agency', a.agency, 'Agency name'))}
+        ${fld('Email', mailInp('agentEmail', a.agentEmail))}
+        ${fld('Phone', inp('agentPhone', a.agentPhone, '', 'type="tel"'))}` : ''}
+        <div class="spanall grp-h" style="margin:8px 0 0">Actor’s own details</div>
+        ${fld('Email', mailInp('email', a.email), 'span2')}
+        ${fld('Phone', inp('phone', a.phone, '', 'type="tel"'), 'span2')}
+      </div>
+      ${a.rep !== 'self' ? '<div class="fth-tip" style="margin-top:16px">Offers, fees and availability checks normally go through the agent. Keep the actor’s own details for on-the-day logistics once they’re booked.</div>' : ''}`;
+    case 'media': return `
+      <span class="lbl">Self-tapes</span>
+      <div class="links" style="margin-bottom:18px">
+        ${a.tapes.map((t, i) => `<div class="lrow">${inp(`tapes.${i}.label`, t.label, 'e.g. Sc. 12, take 2')}${inp(`tapes.${i}.url`, t.url, 'Link to the tape (Vimeo, YouTube, WeTransfer…)', 'data-r')}<input class="fth-input" type="date" data-k="tapes.${i}.date" value="${esc(t.date)}" title="Date received">${openBtn(t.url)}<button class="ibtn x" data-act="rmItem" data-list="tapes" data-i="${i}" title="Remove">${IC.trash}</button></div>`).join('')}
+        <div><button class="fth-btn sm" data-act="addTape">${IC.plus}Add a self-tape</button>${a.stage !== 'selftape' && SIDX[a.stage] < SIDX.selftape ? '<span class="hint" style="margin-left:8px">Adding a tape moves them to Self-tape received.</span>' : ''}</div>
+      </div>
+      <span class="lbl">Other links</span>
+      <div class="links">
+        ${a.links.map((t, i) => `<div class="lrow two">${inp(`links.${i}.label`, t.label, 'e.g. Voice reel, Instagram')}${inp(`links.${i}.url`, t.url, 'https://…', 'data-r')}${openBtn(t.url)}<button class="ibtn x" data-act="rmItem" data-list="links" data-i="${i}" title="Remove">${IC.trash}</button></div>`).join('')}
+        <div><button class="fth-btn sm" data-act="addLink">${IC.plus}Add a link</button></div>
+      </div>`;
+    case 'avail': {
+      const av = availSum(a), cost = actorCost(a), bud = r && roleBudget(r);
+      return `<div class="legend"><span><i style="background:color-mix(in srgb,var(--fth-good) 55%,transparent)"></i>Available</span><span><i style="background:color-mix(in srgb,var(--fth-warn) 55%,transparent)"></i>Pencilled / maybe</span><span><i style="background:color-mix(in srgb,var(--fth-bad) 50%,transparent)"></i>Unavailable</span><span><i style="box-shadow:inset 0 -2px 0 var(--fth-accent);border:1px solid var(--fth-accent-line)"></i>Shoot day</span><span style="color:var(--fth-faint)">Click a day to cycle</span></div>
+        ${av.total ? `<div class="availsum">Shoot days: <b style="color:var(--fth-good)">${av.a} available</b> · <b style="color:var(--fth-warn)">${av.p} pencilled</b> · <b style="color:var(--fth-bad)">${av.u} unavailable</b> · ${av.n} unknown <button class="fth-btn sm ghost" data-act="allAvail" style="margin-left:6px">Mark all shoot days available</button></div>` : '<div class="availsum" style="color:var(--fth-muted)">Set the shoot dates in Production details (on the roles page) to highlight them here.</div>'}
+        <div class="cal-wrap">${calMonths().map(m => calendar(a, m)).join('')}</div>
+        <div class="g2" style="margin-top:16px">
+          ${fld('Availability notes', ta('avail.notes', a.avail.notes, 'e.g. On stage until 3 Dec, can do Sundays only, holiday booked…', 3))}
+          <div class="f"><label class="lbl">Confirmed</label><label class="row" style="font-size:13.5px;cursor:pointer"><input type="checkbox" data-k="avail.confirmed" data-type="bool" ${a.avail.confirmed ? 'checked' : ''}> Availability confirmed with the agent / actor</label></div>
+        </div>
+        <div class="grp"><div class="grp-h">Fee</div>
+        <div class="g4">
+          ${fld('Fee asked / agreed', `<div class="pair">${num('fee.amount', a.fee.amount, cur(), 'data-r')}<select class="fth-input" data-k="fee.unit" data-r style="max-width:130px">${opt(UNITS, a.fee.unit)}</select></div>`, 'span2')}
+          ${fld('Fee notes', inp('fee.notes', a.fee.notes, 'Overtime, travel, accommodation, usage, agent commission…'), 'span2')}
+        </div>
+        ${cost != null || (r && r.budget) ? `<div class="budgetline">${cost != null ? `This fee for ${r.budgetUnit === 'project' && a.fee.unit === 'project' ? 'the project' : (r.days || '?') + ' shoot days'}: <b>${money(cost)}</b>` : ''}${bud != null ? ` · Role budget <b>${money(bud)}</b>${cost != null ? (cost > bud ? ` · <b style="color:var(--fth-bad)">${money(cost - bud)} over</b>` : ` · <b style="color:var(--fth-good)">within budget</b>`) : ''}` : r && r.budget ? ` Role budget ${money(r.budget)}${UNIT_SHORT[r.budgetUnit] || ''}` : ''}</div>` : ''}
+        </div>`;
+    }
+    case 'notes': {
+      const sc = dirAvg(a);
+      return `<div class="overall"><b>${f1(sc)}</b><div><div class="lbl" style="margin:0">Overall</div><small>Average of the ratings below. Ratings from auditions and chemistry reads are kept separately.</small></div><span class="sp"></span>
+          <div><span class="lbl">Recommendation</span><div class="verdict">${[['strong', 'Strong yes', 'sy'], ['yes', 'Yes', 'y'], ['maybe', 'Maybe', 'm'], ['no', 'No', 'n']].map(([v, n, c]) => `<button type="button" data-act="setv" data-k="dir.rec" data-v="${v}" class="${c} ${a.dir.rec === v ? 'on' : ''}">${n}</button>`).join('')}</div></div></div>
+        <div class="rates">${DIR_RATES.map(([k, n, h]) => rateRow('dir.' + k, n, h, a.dir[k])).join('')}</div>
+        <div class="g2" style="margin-top:14px">
+          ${fld('Director’s notes', ta('dir.notes', a.dir.notes, 'First impressions, what they brought, how they might play it, who they’d pair well with…', 6))}
+          ${fld('Concerns / to check', ta('dir.concerns', a.dir.concerns, 'Anything to look into: accent, availability, fit with the rest of the cast…', 6))}
+        </div>`;
+    }
+    case 'history': {
+      const pairs = S.pairs.filter(p => p.a === a.id || p.b === a.id);
+      return `<span class="lbl">Audition rounds</span>
+        <div class="rounds" style="margin-bottom:18px">${ROUNDS.map(([k, n]) => { const x = aud(a.id, k); if (!x) return ''; const v = audAvg(x);
+          return `<div class="rsum"><div class="row"><b>${n}</b>${x.date ? `<span class="chip m">${fmtDY(x.date)}</span>` : ''}${x.seen === 'noshow' ? '<span class="chip">No-show</span>' : ''}${x.verdict ? verdictChip(x.verdict) : ''}<span class="sp"></span><span class="score"><b>${f1(v)}</b>/5</span></div>
+          ${(x.tags || []).length ? `<div class="tags" style="margin-top:6px">${x.tags.map(t => `<span class="chip m">${esc(t)}</span>`).join('')}</div>` : ''}
+          ${x.redirect ? `<p><b style="color:var(--fth-text)">Note given:</b> ${esc(x.redirect)}</p>` : ''}${x.notes ? `<p>${esc(x.notes)}</p>` : ''}</div>`; }).join('') || '<div class="hint">No audition notes yet. Fill them in from Auditions mode.</div>'}
+          <div><button class="fth-btn sm" data-act="goAud" data-id="${a.id}">${IC.clap}Open in Auditions mode</button></div></div>
+        <span class="lbl">Chemistry reads</span>
+        <div class="rounds" style="margin-bottom:18px">${pairs.map(p => { const o = actor(p.a === a.id ? p.b : p.a); return `<div class="rsum"><div class="row"><b>With ${esc(o ? o.name || 'Unnamed' : '?')}</b>${o ? `<span class="chip m">${esc((role(o.roleId) || {}).name || '')}</span>` : ''}${p.verdict ? verdictChip(p.verdict) : ''}<span class="sp"></span><span class="score"><b>${f1(pairAvg(p))}</b>/5</span></div>${p.notes ? `<p>${esc(p.notes)}</p>` : ''}</div>`; }).join('') || '<div class="hint">No chemistry reads yet.</div>'}</div>
+        <span class="lbl">History</span>
+        <div class="hist">${a.hist.slice().reverse().map(h => `<div><time>${fmtT(h.at)}</time>${h.s === 'passed' ? 'Passed' : h.s === 'unpassed' ? 'Back in the running' : h.s === 'role' ? 'Moved to another role' : 'Moved to ' + esc(stName(h.s))}</div>`).join('')}</div>`;
+    }
+  }
+  return '';
+}
+const verdictChip = v => { const m = {yes: ['Yes', 'var(--fth-good)'], strong: ['Strong yes', 'var(--fth-good)'], maybe: ['Maybe', 'var(--fth-warn)'], no: ['No', 'var(--fth-bad)']}[v]; return m ? `<span class="pill" style="--c:${m[1]}">${m[0]}</span>` : ''; };
+const safeUrl = u => { u = String(u || '').trim(); if (!u) return ''; if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = 'https://' + u; return /^(https?|mailto):/i.test(u) ? u : ''; };
+const openBtn = u => { const s = safeUrl(u); return `<a class="ibtn ${s ? '' : 'dis'}" href="${esc(s || '#')}" target="_blank" rel="noopener" title="Open link">${IC.link}</a>`; };
+const linkInp = (k, v) => `<div class="pair">${inp(k, v, 'https://…', 'data-r')}${openBtn(v)}</div>`;
+const mailInp = (k, v) => `<div class="pair">${inp(k, v, '', 'type="email" data-r')}<a class="ibtn ${v ? '' : 'dis'}" href="mailto:${esc(v || '')}" title="Email">${IC.mail}</a></div>`;
+
+function calMonths() {
+  const s = parseISO(S.prod.shootStart), e = parseISO(S.prod.shootEnd) || s;
+  const out = [];
+  let d = s ? new Date(s.getFullYear(), s.getMonth(), 1) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const end = s ? new Date(e.getFullYear(), e.getMonth(), 1) : new Date(d.getFullYear(), d.getMonth() + 1, 1);
+  while (d <= end && out.length < 4) { out.push(new Date(d)); d.setMonth(d.getMonth() + 1); }
+  if (out.length < 2) out.push(new Date(out[0].getFullYear(), out[0].getMonth() + 1, 1));
+  return out;
+}
+function calendar(a, m) {
+  const sd = new Set(shootDays());
+  const first = (m.getDay() + 6) % 7, n = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+  let cells = ''; for (let i = 0; i < first; i++) cells += '<span></span>';
+  for (let i = 1; i <= n; i++) { const k = iso(new Date(m.getFullYear(), m.getMonth(), i)), v = a.avail.days[k] || ''; cells += `<button type="button" data-act="day" data-v="${k}" class="${v} ${sd.has(k) ? 'shoot' : ''}" title="${fmtDY(k)}${sd.has(k) ? ' · shoot day' : ''}">${i}</button>`; }
+  return `<div class="cal"><h6>${m.toLocaleDateString(undefined, {month: 'long', year: 'numeric'})}</h6><div class="cal-g">${['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(d => `<span class="dn">${d}</span>`).join('')}${cells}</div></div>`;
+}
+
+/* ═════════════ auditions mode ═════════════ */
+const expanded = new Set();
+function audList() {
+  const u = S.ui, q = u.aQ.trim().toLowerCase(), order = new Map(S.roles.map((r, i) => [r.id, i]));
+  return S.actors.filter(a => (!u.aRole || a.roleId === u.aRole) && (u.aStage === 'all' ? true : u.aStage === 'active' ? !a.passed : u.aStage === 'short' ? a.shortlist && !a.passed : !a.passed && a.stage === u.aStage) && (!q || (a.name || '').toLowerCase().includes(q)))
+    .sort((x, y) => ((order.get(x.roleId) ?? 99) - (order.get(y.roleId) ?? 99)) || (x.name || '').localeCompare(y.name || ''));
+}
+function auditionsPage() {
+  const u = S.ui, list = audList(), roundN = ROUNDS.find(r => r[0] === u.aRound)[1];
+  if (u.aIdx >= list.length) u.aIdx = Math.max(0, list.length - 1);
+  const body = !S.actors.length ? `<div class="empty"><h3>No auditionees yet</h3><p>Everyone you add in the Casting Manager appears here with a blank scorecard for each audition round.</p><div class="row"><button class="fth-btn primary" data-act="mode" data-v="manager">Go to Casting Manager</button></div></div>`
+    : !list.length ? '<div class="empty"><p style="margin:0">Nobody matches these filters.</p></div>'
+    : u.aLayout === 'focus' ? `<div class="focusnav"><button class="fth-btn sm" data-act="aIdx" data-v="-1" ${u.aIdx ? '' : 'disabled'}>${IC.left}Previous</button><span class="pos">${u.aIdx + 1} / ${list.length}</span><button class="fth-btn sm" data-act="aIdx" data-v="1" ${u.aIdx < list.length - 1 ? '' : 'disabled'}>Next${IC.right}</button><span class="sp"></span><select class="fth-input sm" style="width:auto" data-act-change="aJump">${list.map((a, i) => `<option value="${i}" ${i === u.aIdx ? 'selected' : ''}>${esc(a.name || 'Unnamed')} · ${esc((role(a.roleId) || {}).name || '')}</option>`).join('')}</select></div>${audCard(list[u.aIdx], true)}`
+    : `<div class="alist">${list.map(a => audCard(a)).join('')}</div>`;
+  return `<div class="page">
+    <div class="toolbar" style="margin-top:0"><div><span class="lbl">Auditions</span><p class="intro" style="margin:0">Pick the round you’re running. Every auditionee gets a blank scorecard for that round; fill it in during or straight after they read. Their full profile is one click away.</p></div></div>
+    <div class="afil" data-ctx="ui">
+      <div class="seg acc" role="group" aria-label="Round">${ROUNDS.map(([k, n]) => `<button data-act="round" data-v="${k}" class="${u.aRound === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+      <select class="fth-input sm" data-k="aRole" data-r aria-label="Role"><option value="">All roles</option>${opt(S.roles.map(r => [r.id, r.name || 'Unnamed role']), u.aRole)}</select>
+      <select class="fth-input sm" data-k="aStage" data-r aria-label="Who">${opt([['active', 'Everyone still in'], ['short', 'Shortlist only'], ...STAGES.map(s => [s.id, 'At: ' + s.n]), ['all', 'Everyone, incl. passed']], u.aStage)}</select>
+      <input class="fth-input sm search" type="search" data-k="aQ" data-r="soft" value="${esc(u.aQ)}" placeholder="Find an actor" aria-label="Search">
+      <span class="sp"></span>
+      <span class="hint" style="margin:0">${list.length} ${list.length === 1 ? 'person' : 'people'} · ${list.filter(a => aud(a.id, u.aRound)).length} scored for ${roundN.toLowerCase()}</span>
+      <div class="seg" role="group" aria-label="Layout"><button data-act="aLayout" data-v="list" class="${u.aLayout === 'list' ? 'on' : ''}" title="Everyone in a list">${IC.list.replace('<svg', '<svg class="ico"')}</button><button data-act="aLayout" data-v="focus" class="${u.aLayout === 'focus' ? 'on' : ''}" title="One at a time, for the room">${IC.focus.replace('<svg', '<svg class="ico"')}</button></div>
+    </div>
+    ${body}</div>`;
+}
+function audCard(a, focus) {
+  const u = S.ui, rnd = u.aRound, x = aud(a.id, rnd) || {}, r = role(a.roleId), rr = x.r || {}, v = audAvg(x);
+  const nxt = NEXT_STAGE[rnd], prevs = ROUNDS.filter(([k]) => k !== rnd && aud(a.id, k));
+  const canMove = x.verdict === 'yes' && !a.passed && SIDX[a.stage] < SIDX[nxt];
+  const open = expanded.has(a.id) || focus;
+  return `<article class="fth-card au ${focus ? 'focus' : ''}" data-ctx="aud:${a.id}:${rnd}" id="au-${a.id}" style="--rc:${rc(r)}">
+    <div class="au-side">
+      ${hs(a)}
+      <div><h5>${esc(a.name || 'Unnamed')}</h5><div class="role"><i></i>${esc(r ? r.name || 'Unnamed role' : '')}</div></div>
+      <div class="row" style="gap:6px">${stagePill(a)}${a.shortlist ? '<span class="pill" style="--c:var(--fth-accent)">Shortlist</span>' : ''}</div>
+      ${dirAvg(a) ? `<span class="score" title="Your director ratings">Director <b>${f1(dirAvg(a))}</b>/5</span>` : ''}
+      <div class="row" style="gap:6px">${focus ? '' : `<button class="fth-btn sm ghost" data-act="expand" data-id="${a.id}">${open ? 'Hide' : 'Show'} details</button>`}<button class="fth-btn sm ghost" data-act="openActor" data-id="${a.id}">Full profile</button></div>
+    </div>
+    <div class="au-main">
+      <div class="au-top">
+        <div class="seg seen">${[['seen', 'Seen', 'ok'], ['noshow', 'No-show', 'ns'], ['resched', 'Rescheduled', '']].map(([k, n, c]) => `<button type="button" data-act="setv" data-k="seen" data-v="${k}" class="${c} ${x.seen === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+        <input class="fth-input sm" type="date" data-k="date" value="${esc(x.date || '')}" style="width:auto" aria-label="Date" title="Date of this ${rnd}">
+        <input class="fth-input sm" type="time" data-k="time" value="${esc(x.time || '')}" style="width:auto" aria-label="Time slot">
+        <input class="fth-input sm" data-k="sides" value="${esc(x.sides || '')}" placeholder="${esc(r && r.sides ? r.sides : 'Scene / sides read')}" style="flex:1;min-width:160px" aria-label="Sides read">
+      </div>
+      <div class="au-rates">${AUD_RATES.map(([k, n, h]) => rateRow('r.' + k, n, h, rr[k])).join('')}</div>
+      <div class="tags">${AUD_TAGS.map(t => `<button type="button" class="tag ${(x.tags || []).includes(t) ? 'on' : ''}" data-act="tag" data-v="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+      <div class="g2">
+        ${fld('Note given → how they adjusted', ta('redirect', x.redirect || '', 'e.g. “Play it like you’re hiding it from her” → much quieter, landed the ending', 2))}
+        ${fld('Notes', ta('notes', x.notes || '', 'Anything else from the room…', 2))}
+      </div>
+      <div class="au-foot">
+        <span class="au-avg"><b>${f1(v)}</b>/5 this ${ROUNDS.find(z => z[0] === rnd)[1].toLowerCase()}</span>
+        <div class="verdict">${[['yes', 'Yes', 'y'], ['maybe', 'Maybe', 'm'], ['no', 'No', 'n']].map(([k, n, c]) => `<button type="button" data-act="setv" data-k="verdict" data-v="${k}" class="${c} ${x.verdict === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+        ${prevs.length ? `<div class="prev">${prevs.map(([k, n]) => { const p = aud(a.id, k); return `<span class="chip m" title="${esc(n)}">${n}: ${f1(audAvg(p))}${p.verdict ? ' · ' + ({yes: 'Yes', maybe: 'Maybe', no: 'No'}[p.verdict] || '') : ''}</span>`; }).join('')}</div>` : ''}
+        <span class="sp"></span>
+        ${canMove ? `<button class="fth-btn sm primary" data-act="advance" data-id="${a.id}" data-v="${nxt}">Move to ${esc(stName(nxt))}${IC.right}</button>` : ''}
+        ${x.verdict === 'no' && !a.passed ? `<button class="fth-btn sm" data-act="pass" data-id="${a.id}">Pass on ${esc((a.name || 'them').split(' ')[0])}</button>` : ''}
+      </div>
+    </div>
+    ${open ? profile(a, r) : ''}
+  </article>`;
+}
+function profile(a, r) {
+  const av = availSum(a);
+  const kv = (k, v) => v ? `<div><div class="k">${k}</div><div class="v">${v}</div></div>` : '';
+  const link = u => { const s = safeUrl(u); return s ? `<a href="${esc(s)}" target="_blank" rel="noopener">${esc(u)}</a>` : esc(u); };
+  const rep = a.rep === 'self' ? 'Self-represented' : [a.agentName, a.agency, a.agentEmail, a.agentPhone].filter(Boolean).map(esc).join('<br>');
+  return `<div class="prof">
+    ${kv('Playing age', esc(ageTxt(a.ageMin, a.ageMax)))}${kv('Based in', esc(a.base))}${kv('Height', esc(a.height))}${kv('Union', esc(a.union))}
+    ${kv('Accents & skills', esc(a.skills))}${kv(a.rep === 'manager' ? 'Manager' : 'Agent', rep)}${kv('Actor contact', [a.email, a.phone].filter(Boolean).map(esc).join('<br>'))}
+    ${kv('Fee', a.fee.amount ? esc(money(a.fee.amount) + (UNIT_SHORT[a.fee.unit] || '') + (a.fee.notes ? ' · ' + a.fee.notes : '')) : '')}
+    ${kv('Shoot-day availability', av.total ? `${av.a}/${av.total} available${av.u ? `, <span style="color:var(--fth-bad)">${av.u} clash</span>` : ''}${a.avail.notes ? '<br>' + esc(a.avail.notes) : ''}` : esc(a.avail.notes))}
+    ${kv('Profile', link(a.profile))}${kv('Showreel', link(a.reel))}
+    ${kv('Self-tapes', a.tapes.filter(t => t.url).map(t => `<a href="${esc(safeUrl(t.url))}" target="_blank" rel="noopener">${esc(t.label || 'Tape')}</a>`).join(' · '))}
+    ${kv('Director ratings', DIR_RATES.filter(([k]) => a.dir[k]).map(([k, n]) => `${n.split(' ')[0]} ${a.dir[k]}`).join(' · '))}
+    ${kv('Director’s notes', esc(a.dir.notes))}${kv('Concerns', esc(a.dir.concerns))}
+    ${!a.ageMin && !a.base && !a.email && !a.agentName && !a.dir.notes && !a.profile ? '<div class="hint" style="grid-column:1/-1">No profile details yet. Open the full profile to add them.</div>' : ''}
+  </div>`;
+}
+
+/* ═════════════ chemistry reads ═════════════ */
+function chemistryPage() {
+  const u = S.ui, rs = S.roles.filter(r => actorsOf(r.id).length);
+  if (!u.cA || !role(u.cA)) u.cA = (rs[0] || {}).id || '';
+  if (!u.cB || !role(u.cB) || u.cB === u.cA) u.cB = (rs.find(r => r.id !== u.cA) || {}).id || '';
+  const A = role(u.cA), B = role(u.cB);
+  const pool = rid => actorsOf(rid).filter(a => u.cAll || !a.passed).sort((x, y) => (SIDX[y.stage] - SIDX[x.stage]) || (x.name || '').localeCompare(y.name || ''));
+  const find = (x, y) => S.pairs.find(p => (p.a === x && p.b === y) || (p.a === y && p.b === x));
+  let mx = '';
+  if (A && B) {
+    const ra = pool(A.id), rb = pool(B.id);
+    mx = ra.length && rb.length ? `<div class="mx-wrap"><table class="mx"><thead><tr><th class="corner"><b>${esc(A.name || 'Role A')}</b> ↓<br><b>${esc(B.name || 'Role B')}</b> →</th>${rb.map(b => `<th><div class="who">${hs(b)}<span>${esc(b.name || 'Unnamed')}</span></div></th>`).join('')}</tr></thead><tbody>
+      ${ra.map(a => `<tr><th><div class="who">${hs(a)}<span>${esc(a.name || 'Unnamed')}</span></div></th>${rb.map(b => { const p = find(a.id, b.id), v = p && pairAvg(p);
+        const c = p && p.verdict === 'no' ? 'var(--fth-bad)' : p && p.verdict === 'maybe' ? 'var(--fth-warn)' : 'var(--fth-good)';
+        return `<td>${p ? `<button class="cell has" style="--c:${c};--k:${v ? (v - 1) / 4 : .15}" data-act="goPair" data-id="${p.id}" title="Open this pairing"><b>${f1(v)}</b><small>${p.verdict ? {yes: 'Yes', maybe: 'Maybe', no: 'No'}[p.verdict] : 'Unrated'}</small></button>` : `<button class="cell" data-act="newPair" data-a="${a.id}" data-b="${b.id}" title="Start a chemistry read for this pair">+ Pair</button>`}</td>`; }).join('')}</tr>`).join('')}
+    </tbody></table></div>` : '<div class="empty" style="margin-bottom:22px"><p style="margin:0">Both roles need at least one auditionee still in the running.</p></div>';
+  }
+  const shown = u.cShowAll ? S.pairs : S.pairs.filter(p => { const ra = (actor(p.a) || {}).roleId, rb = (actor(p.b) || {}).roleId; return A && B && ((ra === A.id && rb === B.id) || (ra === B.id && rb === A.id)); });
+  const sorted = shown.slice().sort((x, y) => (pairAvg(y) || 0) - (pairAvg(x) || 0));
+  return `<div class="page">
+    <div class="toolbar" style="margin-top:0"><div><span class="lbl">Chemistry reads</span><p class="intro" style="margin:0">Pick two roles to see every possible pairing. Click <b>+ Pair</b> to start a read; each pairing gets its own scores and notes, and the grid fills in so you can spot the strongest combination at a glance.</p></div></div>
+    ${rs.length < 2 ? `<div class="empty"><h3>Two roles needed</h3><p>Chemistry reads pair actors from two different roles. Add auditionees to at least two roles in the Casting Manager first.</p><div class="row"><button class="fth-btn primary" data-act="mode" data-v="manager">Go to Casting Manager</button>${S.pairs.length ? '' : ''}</div></div>` : `
+    <div class="afil" data-ctx="ui">
+      <span class="lbl" style="margin:0">Pair</span>
+      <select class="fth-input sm" data-k="cA" data-r aria-label="First role">${opt(rs.map(r => [r.id, r.name || 'Unnamed role']), u.cA)}</select>
+      <span class="hint" style="margin:0">with</span>
+      <select class="fth-input sm" data-k="cB" data-r aria-label="Second role">${opt(rs.filter(r => r.id !== u.cA).map(r => [r.id, r.name || 'Unnamed role']), u.cB)}</select>
+      <label class="row" style="font-size:13px;color:var(--fth-muted);cursor:pointer;gap:6px"><input type="checkbox" data-k="cAll" data-type="bool" data-r ${u.cAll ? 'checked' : ''}> Include passed</label>
+      <span class="sp"></span>
+      <button class="fth-btn sm" data-act="pairDlg">${IC.plus}Pair any two actors</button>
+    </div>
+    ${mx}`}
+    ${S.pairs.length ? `<div class="toolbar"><h3>Pairings</h3><span class="count">${shown.length}${u.cShowAll ? '' : ' of ' + S.pairs.length}</span><span class="sp"></span>
+      <div class="seg"><button data-act="cShow" data-v="0" class="${u.cShowAll ? '' : 'on'}">These two roles</button><button data-act="cShow" data-v="1" class="${u.cShowAll ? 'on' : ''}">All pairings</button></div></div>
+      <div class="pairs">${sorted.map(pairCard).join('') || '<div class="empty"><p style="margin:0">No pairings for these two roles yet.</p></div>'}</div>` : ''}
+  </div>`;
+}
+function pairCard(p) {
+  const a = actor(p.a), b = actor(p.b); if (!a || !b) return '';
+  const ra = role(a.roleId), rb = role(b.roleId), v = pairAvg(p), r = p.r || {};
+  const first = n => esc((n || 'Unnamed').split(' ')[0]);
+  return `<article class="fth-card pc" id="pc-${p.id}" data-ctx="pair:${p.id}">
+    <div class="pc-h">
+      <div class="duo"><span style="--rc:${rc(ra)}">${hs(a)}</span><div><b>${esc(a.name || 'Unnamed')}</b><small>${esc(ra ? ra.name : '')}</small></div><span class="x">×</span><span>${hs(b)}</span><div><b>${esc(b.name || 'Unnamed')}</b><small>${esc(rb ? rb.name : '')}</small></div></div>
+      <span class="sp"></span>
+      <input class="fth-input sm" type="date" data-k="date" value="${esc(p.date || '')}" style="width:auto" aria-label="Date">
+      <input class="fth-input sm" data-k="scene" value="${esc(p.scene || '')}" placeholder="Scene read" style="width:170px" aria-label="Scene read">
+      <span class="au-avg"><b>${f1(v)}</b>/5</span>
+      <button class="ibtn x" data-act="delPair" data-id="${p.id}" title="Delete pairing">${IC.trash}</button>
+    </div>
+    <div class="pc-b">
+      <div class="au-rates">${CHEM_RATES.map(([k, n, h]) => rateRow('r.' + k, n, h, r[k])).join('')}</div>
+      <div class="g3">
+        ${fld('How they work together', ta('notes', p.notes || '', 'Energy, who leads, moments that clicked or didn’t…', 3))}
+        ${fld(`${first(a.name)} in this pairing`, ta('na', p.na || '', '', 3))}
+        ${fld(`${first(b.name)} in this pairing`, ta('nb', p.nb || '', '', 3))}
+      </div>
+      <div class="au-foot"><span class="lbl" style="margin:0">Would you cast them together?</span>
+        <div class="verdict">${[['yes', 'Yes', 'y'], ['maybe', 'Maybe', 'm'], ['no', 'No', 'n']].map(([k, n, c]) => `<button type="button" data-act="setv" data-k="verdict" data-v="${k}" class="${c} ${p.verdict === k ? 'on' : ''}">${n}</button>`).join('')}</div>
+        <span class="sp"></span><button class="fth-btn sm ghost" data-act="openActor" data-id="${a.id}">${first(a.name)}’s profile</button><button class="fth-btn sm ghost" data-act="openActor" data-id="${b.id}">${first(b.name)}’s profile</button></div>
+    </div></article>`;
+}
+
+/* ═════════════ main render ═════════════ */
+function render(keepFocus = true) {
+  if (S.ui.roleId && !role(S.ui.roleId)) S.ui.roleId = null;
+  const ae = document.activeElement, ctxEl = ae && ae.closest && ae.closest('[data-ctx]'), fk = keepFocus && ae && ae.dataset && ae.dataset.k && ctxEl && $('#app').contains(ae) ? [ctxEl.dataset.ctx, ae.dataset.k, ae.selectionStart] : null;
+  renderModes();
+  const m = S.ui.mode;
+  $('#app').innerHTML = m === 'auditions' ? auditionsPage() : m === 'chemistry' ? chemistryPage() : S.ui.roleId ? rolePage() : homePage();
+  if (fk) { const el = $$(`[data-ctx="${CSS.escape(fk[0])}"] [data-k="${CSS.escape(fk[1])}"]`, $('#app'))[0]; if (el) { el.focus(); try { if (fk[2] != null) el.setSelectionRange(fk[2], fk[2]); } catch (e) {} } }
+  showSaved();
+}
+function rerenderAll() { render(); if ($('#adlg').open) renderActor(); }
+
+/* ═════════════ binding ═════════════ */
+function ctxObj(el) {
+  const c = el.closest('[data-ctx]'); if (!c) return null;
+  const [t, id, x] = c.dataset.ctx.split(':');
+  if (t === 'prod') return S.prod;
+  if (t === 'ui') return S.ui;
+  if (t === 'role') return role(id);
+  if (t === 'actor') return actor(id);
+  if (t === 'pair') return pair(id);
+  if (t === 'aud') { const k = audKey(id, x); return S.auds[k] || (S.auds[k] = {date: today(), r: {}, tags: []}); }
+  return null;
+}
+function readVal(el) {
+  if (el.dataset.type === 'bool') return el.checked;
+  if (el.dataset.type === 'num') return el.value === '' ? '' : Math.max(0, parseFloat(el.value));
+  return el.value;
+}
+function onField(e) {
+  const el = e.target; if (!el.dataset || !el.dataset.k) return;
+  const o = ctxObj(el); if (!o) return;
+  const k = el.dataset.k, v = readVal(el);
+  if (k === 'roleId' && o.roleId !== v) { o.hist.push({s: 'role', at: Date.now()}); }
+  setP(o, k, v);
+  if (el.dataset.live) { const t = document.getElementById(el.dataset.live); if (t) t.textContent = v || (el.dataset.live === 'adTitle' ? 'New auditionee' : 'Unnamed role'); }
+  if (k.startsWith('tapes.') && k.endsWith('.url') && v && SIDX[o.stage] < SIDX.selftape) { o.stage = 'selftape'; o.passed = false; o.hist.push({s: 'selftape', at: Date.now()}); }
+  persist();
+  const r = el.dataset.r;
+  if (e.type === 'change' && r !== undefined) setTimeout(rerenderAll, 0);   /* after focus has moved on, so it can be restored */
+  else if (e.type === 'input' && r === 'soft') { clearTimeout(onField.t); onField.t = setTimeout(() => render(), 250); }
+}
+document.addEventListener('input', onField);
+document.addEventListener('change', e => {
+  if (e.target.dataset && e.target.dataset.actChange === 'aJump') { S.ui.aIdx = +e.target.value; persist(); render(false); return; }
+  if (e.target.type === 'checkbox' || e.target.tagName === 'SELECT' || e.target.type === 'date' || e.target.type === 'number' || e.target.dataset.r !== undefined) onField(e);
+});
+
+/* ═════════════ actions ═════════════ */
+function setStage(a, st) {
+  if (a.stage === st && !a.passed) return;
+  a.stage = st; a.passed = false; a.hist.push({s: st, at: Date.now()});
+}
+const A = {
+  mode(el) { S.ui.mode = el.dataset.v; persist(); render(false); window.scrollTo(0, 0); },
+  menu(el, e) { e.stopPropagation(); const p = $('#pop'); if (p.hidden) { renderMenu(); p.hidden = false; } else p.hidden = true; },
+  toggleProd() { S.ui.prodOpen = !S.ui.prodOpen; persist(); render(false); },
+  home() { S.ui.roleId = null; persist(); render(false); window.scrollTo(0, 0); },
+  addRole() { const r = newRole(); S.roles.push(r); S.ui.roleId = r.id; S.ui.mode = 'manager'; S.ui.stage = ''; persist(); render(false); window.scrollTo(0, 0); setTimeout(() => { const i = $('.rname input'); if (i) i.focus(); }, 30); },
+  openRole(el) { S.ui.roleId = el.dataset.id; S.ui.stage = ''; persist(); render(false); window.scrollTo(0, 0); },
+  async delRole(el) {
+    const r = role(el.dataset.id), n = actorsOf(r.id).length;
+    if (!await confirmDlg('Delete this role?', `${esc(r.name || 'This role')} and its breakdown will be removed${n ? `, along with ${n} auditionee${n > 1 ? 's' : ''} and their notes` : ''}.`, 'Delete role')) return;
+    actorsOf(r.id).forEach(removeActor); S.roles = S.roles.filter(x => x !== r); S.ui.roleId = null; persist(); render(false);
+  },
+  toggleBd(el) { const r = role(el.dataset.id); r.bdOpen = !r.bdOpen; persist(); render(false); },
+  roleColor(el) { ctxObj(el).color = el.dataset.v; persist(); render(false); },
+  view(el) { S.ui.view = el.dataset.v; persist(); render(false); },
+  stageF(el) { S.ui.stage = el.dataset.v; persist(); render(false); },
+  addActor(el) { const a = newActor(el.dataset.id); S.actors.push(a); persist(); render(false); openActor(a.id, 'profile'); setTimeout(() => { const i = $('#adlg .ad-name'); if (i) i.focus(); }, 40); },
+  bulkAdd(el) { bulkDlg(el.dataset.id); },
+  openActor(el) { openActor(el.dataset.id); },
+  closeActor() { $('#adlg').close(); },
+  atab(el) { actorTab = el.dataset.v; renderActor(); },
+  shortlist(el, e) { e.stopPropagation(); const a = actor(el.dataset.id); a.shortlist = !a.shortlist; persist(); rerenderAll(); },
+  stage(el) { const a = ctxObj(el); setStage(a, el.dataset.v); persist(); rerenderAll(); toast(`${a.name || 'Actor'} moved to ${stName(el.dataset.v)}`); },
+  pass(el) { const a = actor(el.dataset.id); a.passed = !a.passed; a.hist.push({s: a.passed ? 'passed' : 'unpassed', at: Date.now()}); persist(); rerenderAll(); toast(a.passed ? `Passed on ${a.name || 'actor'}` : `${a.name || 'Actor'} is back in the running`); },
+  async delActor(el) { const a = actor(el.dataset.id); if (!await confirmDlg('Delete this auditionee?', `${esc(a.name || 'This actor')}, their notes, audition scores and chemistry reads will be removed.`, 'Delete')) return; removeActor(a); $('#adlg').close(); persist(); render(false); },
+  pickImg(el) { pickFor = el.dataset.id; $('#imgPick').click(); },
+  async rmImg(el) { const a = actor(el.dataset.id); a.img = false; IMG.delete(a.id); await imgDB.del(a.id); persist(); rerenderAll(); },
+  setRep(el) { ctxObj(el).rep = el.dataset.v; persist(); renderActor(); },
+  addTape(el) { const a = ctxObj(el); a.tapes.push({label: '', url: '', date: today()}); persist(); renderActor(); setTimeout(() => { const i = $$('#adlg .lrow:not(.two) input')[(a.tapes.length - 1) * 3]; if (i) i.focus(); }, 20); },
+  addLink(el) { const a = ctxObj(el); a.links.push({label: '', url: ''}); persist(); renderActor(); setTimeout(() => { const i = $$('#adlg .lrow.two input')[(a.links.length - 1) * 2]; if (i) i.focus(); }, 20); },
+  rmItem(el) { const a = ctxObj(el); a[el.dataset.list].splice(+el.dataset.i, 1); persist(); renderActor(); },
+  day(el) { const a = ctxObj(el), k = el.dataset.v, nx = {'': 'a', a: 'p', p: 'u', u: ''}[a.avail.days[k] || '']; if (nx) a.avail.days[k] = nx; else delete a.avail.days[k]; persist(); renderActor(); },
+  allAvail(el) { const a = ctxObj(el); shootDays().forEach(d => { if (!a.avail.days[d]) a.avail.days[d] = 'a'; }); persist(); renderActor(); },
+  rate(el) { const o = ctxObj(el), k = el.dataset.k, v = +el.dataset.v; setP(o, k, getP(o, k) === v ? null : v); persist(); rerenderAll(); },
+  setv(el) { const o = ctxObj(el), k = el.dataset.k, v = el.dataset.v; setP(o, k, getP(o, k) === v ? '' : v); persist(); rerenderAll(); },
+  tag(el) { const o = ctxObj(el), t = el.dataset.v; o.tags = o.tags || []; const i = o.tags.indexOf(t); if (i >= 0) o.tags.splice(i, 1); else o.tags.push(t); persist(); render(); },
+  goAud(el) { const a = actor(el.dataset.id); $('#adlg').close(); Object.assign(S.ui, {mode: 'auditions', aRole: a.roleId, aStage: a.passed ? 'all' : 'active', aQ: ''}); const l = audList(); S.ui.aIdx = Math.max(0, l.indexOf(a)); expanded.add(a.id); persist(); render(false); setTimeout(() => { const c = $('#au-' + a.id); if (c) c.scrollIntoView({block: 'start', behavior: 'smooth'}); }, 30); },
+  round(el) { S.ui.aRound = el.dataset.v; persist(); render(false); },
+  aLayout(el) { S.ui.aLayout = el.dataset.v; persist(); render(false); },
+  aIdx(el) { S.ui.aIdx = Math.max(0, S.ui.aIdx + (+el.dataset.v)); persist(); render(false); window.scrollTo({top: 0}); },
+  expand(el) { const id = el.dataset.id; if (expanded.has(id)) expanded.delete(id); else expanded.add(id); render(false); },
+  advance(el) { const a = actor(el.dataset.id); setStage(a, el.dataset.v); persist(); render(false); toast(`${a.name || 'Actor'} moved to ${stName(el.dataset.v)}`); },
+  newPair(el) { const p = {id: uid(), a: el.dataset.a, b: el.dataset.b, date: today(), scene: '', r: {}, verdict: '', notes: '', na: '', nb: ''}; S.pairs.push(p); persist(); render(false); flashPair(p.id); },
+  goPair(el) { flashPair(el.dataset.id); },
+  async delPair(el) { if (!await confirmDlg('Delete this pairing?', 'Its scores and notes will be removed.', 'Delete')) return; S.pairs = S.pairs.filter(p => p.id !== el.dataset.id); persist(); render(false); },
+  cShow(el) { S.ui.cShowAll = el.dataset.v === '1'; persist(); render(false); },
+  pairDlg() { pairDlg(); },
+  import() { importDlg(); },
+  printBreakdowns() { printBreakdowns(S.roles); },
+  printRole(el) { printBreakdowns([role(el.dataset.id)]); },
+  printSheet() { printSheet(); },
+  csv() { downloadCSV(); },
+  backup() { backup(); },
+  restore() { $('#bkPick').click(); },
+  async example() { if ((S.roles.length || S.actors.length) && !await confirmDlg('Load the example?', 'This replaces everything in the Casting Tracker for this project. Download a backup first if you want to keep it.', 'Load example')) return; await loadExample(); },
+  async startAgain() { if (!await confirmDlg('Start again?', 'Every role, auditionee, note and headshot in the Casting Tracker for this project will be cleared.', 'Clear everything')) return; S = blank(); IMG.clear(); await imgDB.clear(); persist(); render(false); toast('Cleared'); }
+};
+function removeActor(a) {
+  S.actors = S.actors.filter(x => x !== a);
+  ROUNDS.forEach(([k]) => delete S.auds[audKey(a.id, k)]);
+  S.pairs = S.pairs.filter(p => p.a !== a.id && p.b !== a.id);
+  if (a.img) { IMG.delete(a.id); imgDB.del(a.id); }
+}
+function flashPair(id) {
+  const p = pair(id), a = actor(p.a), b = actor(p.b);
+  if (!$('#pc-' + id)) { S.ui.cShowAll = true; if (a && b) { S.ui.cA = a.roleId; S.ui.cB = b.roleId; } render(false); }
+  setTimeout(() => { const el = $('#pc-' + id); if (el) { el.scrollIntoView({block: 'center', behavior: 'smooth'}); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); } }, 30);
+}
+document.addEventListener('click', e => {
+  const pop = $('#pop'); if (!pop.hidden && !e.target.closest('#pop') && !e.target.closest('[data-act="menu"]')) pop.hidden = true;
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  if (el.tagName === 'A') return;
+  const f = A[el.dataset.act]; if (!f) return;
+  if (el.closest('#pop')) pop.hidden = true;
+  e.preventDefault();
+  f(el, e);
+});
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('article[data-act], tr[data-act]')) { e.preventDefault(); A[e.target.dataset.act](e.target, e); }
+  if (e.key === 'Escape' && !$('#pop').hidden) $('#pop').hidden = true;
+});
+$('#adlg').addEventListener('close', () => { curActor = null; render(false); });
+$('#adlg').addEventListener('click', e => { if (e.target === $('#adlg')) $('#adlg').close(); });
+
+/* board drag & drop */
+let dragId = null;
+document.addEventListener('dragstart', e => { const c = e.target.closest && e.target.closest('[data-drag]'); if (!c) return; dragId = c.dataset.drag; c.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', dragId); } catch (_) {} });
+document.addEventListener('dragend', e => { $$('.dragging').forEach(x => x.classList.remove('dragging')); $$('.col.over').forEach(x => x.classList.remove('over')); dragId = null; });
+document.addEventListener('dragover', e => { const col = e.target.closest && e.target.closest('[data-drop]'); if (col && dragId) { e.preventDefault(); $$('.col.over').forEach(x => x !== col && x.classList.remove('over')); col.classList.add('over'); } });
+document.addEventListener('drop', e => {
+  const col = e.target.closest && e.target.closest('[data-drop]'); if (!col || !dragId) return; e.preventDefault();
+  const a = actor(dragId), st = col.dataset.drop; if (!a) return;
+  if (st === 'passed') { if (!a.passed) { a.passed = true; a.hist.push({s: 'passed', at: Date.now()}); } } else setStage(a, st);
+  persist(); render(false);
+});
+
+/* ═════════════ headshots ═════════════ */
+let pickFor = null;
+function shrink(file) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => { const im = new Image(); im.onload = () => { const max = 520, s = Math.min(1, max / Math.max(im.width, im.height)); const c = document.createElement('canvas'); c.width = Math.round(im.width * s); c.height = Math.round(im.height * s); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); res(c.toDataURL('image/jpeg', .84)); }; im.onerror = rej; im.src = fr.result; };
+    fr.onerror = rej; fr.readAsDataURL(file);
+  });
+}
+async function setHeadshot(id, file) {
+  if (!file || !/^image\//.test(file.type)) { toast('That isn’t an image file'); return; }
+  try { const url = await shrink(file); const a = actor(id); if (!a) return; IMG.set(id, url); a.img = true; await imgDB.put(id, url); persist(); rerenderAll(); toast('Headshot saved'); }
+  catch (e) { toast('Couldn’t read that image'); }
+}
+$('#imgPick').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f && pickFor) setHeadshot(pickFor, f); });
+document.addEventListener('dragover', e => { const s = e.target.closest && e.target.closest('.ad-shot'); if (s && !dragId) { e.preventDefault(); s.classList.add('drop'); } });
+document.addEventListener('dragleave', e => { const s = e.target.closest && e.target.closest('.ad-shot'); if (s) s.classList.remove('drop'); });
+document.addEventListener('drop', e => { const s = e.target.closest && e.target.closest('.ad-shot'); if (!s || dragId) return; e.preventDefault(); s.classList.remove('drop'); const f = e.dataTransfer.files[0]; if (f) setHeadshot(s.dataset.id, f); });
+document.addEventListener('paste', e => { if (!$('#adlg').open || !curActor) return; const f = [...(e.clipboardData || {}).files || []].find(x => /^image\//.test(x.type)); if (f) { e.preventDefault(); setHeadshot(curActor, f); } });
+
+/* ═════════════ small dialogs ═════════════ */
+function confirmDlg(title, msg, ok) {
+  return new Promise(res => {
+    const d = $('#dlg');
+    d.innerHTML = `<div class="dlg-h"><h3>${esc(title)}</h3></div><div class="dlg-b"><p style="margin:0;color:var(--fth-muted)">${msg}</p></div><div class="dlg-f"><button class="fth-btn ghost" value="0">Cancel</button><button class="fth-btn primary" value="1">${esc(ok)}</button></div>`;
+    const done = v => { d.close(); res(v); };
+    d.querySelectorAll('.dlg-f button').forEach(b => b.onclick = () => done(b.value === '1'));
+    d.onclose = () => res(false);
+    d.showModal(); d.querySelector('.primary').focus();
+  });
+}
+function bulkDlg(rid) {
+  const d = $('#dlg'), r = role(rid);
+  d.innerHTML = `<div class="dlg-h"><h3>Add auditionees for ${esc(r.name || 'this role')}</h3></div><div class="dlg-b"><p class="intro">Paste names, one per line. Add an agency after a comma if you have it, e.g. <span class="fth-mono">Aoife Brennan, Lisa Richards Agency</span>.</p><textarea class="fth-input" id="bulkTx" rows="9" placeholder="One actor per line"></textarea></div><div class="dlg-f"><button class="fth-btn ghost" data-x="0">Cancel</button><button class="fth-btn primary" data-x="1">Add them</button></div>`;
+  d.onclose = null;
+  d.querySelector('[data-x="0"]').onclick = () => d.close();
+  d.querySelector('[data-x="1"]').onclick = () => {
+    const lines = $('#bulkTx').value.split('\n').map(s => s.trim()).filter(Boolean);
+    lines.forEach(l => { const [n, ...ag] = l.split(','); S.actors.push(newActor(rid, {name: n.trim(), agency: ag.join(',').trim()})); });
+    d.close(); persist(); render(false); if (lines.length) toast(`Added ${lines.length} auditionee${lines.length > 1 ? 's' : ''}`);
+  };
+  d.showModal(); $('#bulkTx').focus();
+}
+function pairDlg() {
+  const d = $('#dlg'), opts = S.roles.map(r => `<optgroup label="${esc(r.name || 'Unnamed role')}">${actorsOf(r.id).filter(a => !a.passed).map(a => `<option value="${a.id}">${esc(a.name || 'Unnamed')}</option>`).join('')}</optgroup>`).join('');
+  d.innerHTML = `<div class="dlg-h"><h3>New chemistry read</h3></div><div class="dlg-b"><div class="g2">${fld('First actor', `<select class="fth-input" id="pA">${opts}</select>`)}${fld('Second actor', `<select class="fth-input" id="pB">${opts}</select>`)}</div></div><div class="dlg-f"><button class="fth-btn ghost" data-x="0">Cancel</button><button class="fth-btn primary" data-x="1">Create pairing</button></div>`;
+  d.onclose = null;
+  const B = $('#pB'); if (B.options.length > 1) B.selectedIndex = 1;
+  d.querySelector('[data-x="0"]').onclick = () => d.close();
+  d.querySelector('[data-x="1"]').onclick = () => {
+    const a = $('#pA').value, b = $('#pB').value; if (!a || !b || a === b) { toast('Pick two different actors'); return; }
+    let p = S.pairs.find(x => (x.a === a && x.b === b) || (x.a === b && x.b === a));
+    if (!p) { p = {id: uid(), a, b, date: today(), scene: '', r: {}, verdict: '', notes: '', na: '', nb: ''}; S.pairs.push(p); }
+    d.close(); S.ui.cShowAll = true; persist(); render(false); flashPair(p.id);
+  };
+  d.showModal();
+}
+
+/* ═════════════ import from other hub tools ═════════════
+   Every tool in the hub runs on the same origin and the hub files each tool's storage under the current
+   project, so the Casting Tracker can read Script Development (localStorage) and Script Breakdown
+   (IndexedDB) for the same project directly. Nothing in those tools is changed. */
+const ARC_NAMES = {positive: ['Positive change', 'Lie', 'Truth'], flat: ['Flat', 'Truth', 'Truth'], corruption: ['Corruption', 'Truth', 'Lie'], fall: ['Fall', 'Lie', 'Lie'], disillusionment: ['Disillusionment', 'Lie', 'Tragic Truth']};
+const TYPE_MAP = {Protagonist: 'Lead', Antagonist: 'Lead', Supporting: 'Supporting', Minor: 'Day player'};
+function readScriptDev() {
+  try {
+    const keys = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.indexOf('scaffold-script:p:') === 0) keys.push(k); }
+    const projs = keys.map(k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }).filter(p => p && p.develop);
+    if (!projs.length) return null;
+    const last = localStorage.getItem('scaffold-script:last');
+    return projs.find(p => p.id === last) || projs.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0))[0];
+  } catch (e) { return null; }
+}
+function readBreakdown() {
+  return new Promise(res => {
+    let r, made = false;
+    try { r = indexedDB.open('script-breakdown'); } catch (e) { return res(null); }
+    r.onupgradeneeded = () => { made = true; try { r.transaction.abort(); } catch (e) {} };   /* it didn't exist: don't create it */
+    r.onerror = r.onblocked = () => res(null);
+    r.onsuccess = () => {
+      const db = r.result;
+      if (made || !db.objectStoreNames.contains('s')) { db.close(); return res(null); }
+      try { const q = db.transaction('s').objectStore('s').get('last'); q.onsuccess = () => { db.close(); res(q.result || null); }; q.onerror = () => { db.close(); res(null); }; }
+      catch (e) { db.close(); res(null); }
+    };
+  });
+}
+function fountainScenes(text) {
+  const L = String(text || '').replace(/\r/g, '').split('\n'), cues = new Map(); let sc = 0;
+  for (let i = 0; i < L.length; i++) {
+    const t = L[i].trim(), prevBlank = i === 0 || !L[i - 1].trim(), next = (L[i + 1] || '').trim();
+    if (!t) continue;
+    if (prevBlank && /^(\.(?=[A-Z0-9])|(INT|EXT|EST|INT\.?\/EXT|I\/E)[.\s])/i.test(t)) { sc++; continue; }
+    if (prevBlank && next && (t[0] === '@' || (t === t.toUpperCase() && /[A-Z]/.test(t) && !/TO:$/.test(t) && t.length < 40 && !/^[!>=#~]/.test(t)))) {
+      const n = t.replace(/^@/, '').replace(/\^$/, '').replace(/\(.*?\)/g, '').trim().toUpperCase();
+      if (n) { if (!cues.has(n)) cues.set(n, new Set()); cues.get(n).add(sc || 1); }
+    }
+  }
+  return cues;
+}
+function cueFor(cues, name) {
+  const up = nameUp(name), parts = up.split(/\s+/);
+  for (const k of [up, parts[0], parts[parts.length - 1]]) if (k && cues.has(k)) return cues.get(k);
+  return null;
+}
+function rangeList(nums) {
+  const s = [...nums].sort((a, b) => a - b), out = [];
+  for (let i = 0; i < s.length; i++) { let j = i; while (j + 1 < s.length && s[j + 1] === s[j] + 1) j++; out.push(j > i + 1 ? `${s[i]}–${s[j]}` : j === i + 1 ? `${s[i]}, ${s[j]}` : `${s[i]}`); i = j; }
+  return out.join(', ');
+}
+async function gatherSources() {
+  const found = new Map(), info = {sd: null, bd: null};
+  const sd = readScriptDev();
+  if (sd) {
+    const d = sd.develop, cues = fountainScenes(sd.script && sd.script.text);
+    info.sd = {title: sd.title || 'Untitled script', n: 0};
+    (d.characters || []).filter(c => (c.name || '').trim()).forEach(c => {
+      const isP = c.role === 'Protagonist', arcK = isP ? d.arc : c.arcOn ? c.arc : null, an = ARC_NAMES[arcK];
+      const lie = isP ? d.lie : c.lie, truth = isP ? (arcK === 'disillusionment' ? d.tragic || d.truth : d.truth) : c.truth;
+      let arc = '';
+      if (an) { const fr = (an[1] === 'Lie' ? lie : truth) || '…', to = (an[2] === 'Lie' ? lie : truth) || '…';
+        arc = `${an[0]} arc` + (lie || truth ? (an[1] === an[2] ? `: holds to “${fr}” while it’s tested` : `: from believing “${fr}” to “${to}”`) : ''); }
+      const cyc = c.cycle || {}, cycTxt = [cyc.s, cyc.e, cyc.b, cyc.r].some(Boolean) ? `Pattern: ${[cyc.s, cyc.e, cyc.b, cyc.r].map(x => x || '…').join(' › ')}` : '';
+      const back = [c.want && 'Wants: ' + c.want, c.flaw && 'Flaw: ' + c.flaw, c.history && c.history, cycTxt].filter(Boolean).join('\n');
+      const sc = cueFor(cues, c.name);
+      found.set(nameUp(c.name), {name: c.name.trim(), from: ['Script Development'], sdId: c.id,
+        fields: {type: TYPE_MAP[c.role] || 'Supporting', desc: c.desc || '', arc, backstory: back, scenes: sc ? sc.size : '', sceneList: sc ? rangeList(sc) : ''},
+        note: [c.role, sc && sc.size + ' scene' + (sc.size > 1 ? 's' : '')].filter(Boolean).join(' · ')});
+      info.sd.n++;
+    });
+  }
+  const bd = await readBreakdown();
+  if (bd && Array.isArray(bd.tags)) {
+    const castCat = (bd.cats || []).find(c => c && (c.id === 'cast' || /^cast$/i.test(c.name || ''))), cid = castCat ? castCat.id : 'cast';
+    const counts = new Map();
+    bd.tags.filter(t => t.cat === cid && (t.item || '').trim()).forEach(t => { const k = nameUp(t.item); counts.set(k, {name: counts.get(k) ? counts.get(k).name : t.item.trim(), n: (counts.get(k) ? counts.get(k).n : 0) + 1}); });
+    info.bd = {title: bd.title || bd.fileName || 'Script', n: counts.size};
+    counts.forEach((v, k) => {
+      const nt = (bd.notes || {})[cid + '|' + v.name.toLowerCase()], noteTxt = typeof nt === 'string' ? nt : nt && (nt.text || nt.note) || '';
+      const ex = found.get(k) || [...found.values()].find(f => cueFor(new Map([[k, 1]]), f.name));
+      if (ex) { ex.from.push('Script Breakdown'); ex.note += ` · tagged ${v.n}× in Breakdown`; if (!ex.fields.desc && noteTxt) ex.fields.desc = noteTxt; }
+      else found.set(k, {name: v.name.replace(/\b\w+/g, w => w[0] + w.slice(1).toLowerCase()), from: ['Script Breakdown'], fields: {type: 'Supporting', desc: noteTxt}, note: `Tagged ${v.n}× as cast in Breakdown`});
+    });
+  }
+  return {list: [...found.values()], info};
+}
+async function importDlg() {
+  const d = $('#dlg');
+  d.innerHTML = `<div class="dlg-h"><h3>Import characters</h3></div><div class="dlg-b"><p class="intro">Looking in Script Development and Script Breakdown…</p></div>`;
+  d.onclose = null; if (!d.open) d.showModal();
+  const {list, info} = await gatherSources();
+  const have = new Map(S.roles.map(r => [nameUp(r.name), r]));
+  const src = (k, n, x) => x ? `<span class="ok">●<span style="color:var(--fth-text)">${n}: <b>${esc(x.title)}</b>, ${x.n} character${x.n === 1 ? '' : 's'}</span></span>` : `<span class="no">○<span>${n}: nothing saved for this project yet</span></span>`;
+  const body = list.length ? `<div class="imp">${list.map((c, i) => { const ex = have.get(nameUp(c.name)) || S.roles.find(r => c.sdId && r.src && r.src.sdId === c.sdId); return `<label><input type="checkbox" data-i="${i}" ${ex ? '' : 'checked'}><div style="min-width:0"><b>${esc(c.name)}</b><small>${esc(c.note || '')}${c.fields.desc ? ' · ' + esc(c.fields.desc) : ''}</small></div><div class="srcs">${ex ? '<span class="chip m">Already a role: fills empty fields</span>' : '<span class="chip">New role</span>'}</div></label>`; }).join('')}</div>` :
+    `<div class="empty"><p style="margin:0">No characters found yet. Add characters in the Script Development tool’s Develop tab, or tag cast in Script Breakdown (its <b>Find characters</b> button does it automatically), then come back here.</p></div>`;
+  d.innerHTML = `<div class="dlg-h"><h3>Import characters</h3></div><div class="dlg-b">
+    <div class="srcnote">${src('sd', 'Script Development', info.sd)}${src('bd', 'Script Breakdown', info.bd)}</div>${body}
+    ${list.length ? '<p class="hint" style="margin-top:10px">Imported roles keep a link to where they came from. Importing again only fills in fields you’ve left empty; it never overwrites your edits.</p>' : ''}</div>
+    <div class="dlg-f"><button class="fth-btn ghost" data-x="0">${list.length ? 'Cancel' : 'Close'}</button>${list.length ? '<button class="fth-btn primary" data-x="1">Import selected</button>' : ''}</div>`;
+  d.querySelector('[data-x="0"]').onclick = () => d.close();
+  const go = d.querySelector('[data-x="1"]');
+  if (go) go.onclick = () => {
+    let added = 0, upd = 0;
+    $$('#dlg .imp input:checked').forEach(cb => {
+      const c = list[+cb.dataset.i];
+      let r = have.get(nameUp(c.name)) || S.roles.find(x => c.sdId && x.src && x.src.sdId === c.sdId);
+      if (r) { for (const [k, v] of Object.entries(c.fields)) if (v !== '' && v != null && (r[k] === '' || r[k] == null || (k === 'type' && !r.src && r.type === 'Supporting'))) r[k] = v; r.src = r.src || {from: c.from[0], sdId: c.sdId}; upd++; }
+      else { r = newRole({name: c.name, ...c.fields, src: {from: c.from[0], sdId: c.sdId || null}, bdOpen: false}); S.roles.push(r); have.set(nameUp(c.name), r); added++; }
+    });
+    d.close(); S.ui.mode = 'manager'; S.ui.roleId = null; persist(); render(false);
+    toast([added && `Added ${added} role${added > 1 ? 's' : ''}`, upd && `updated ${upd}`].filter(Boolean).join(', ') || 'Nothing selected');
+  };
+}
+
+/* ═════════════ print, CSV, backup ═════════════ */
+function printHead(sub) {
+  const p = S.prod;
+  return `<div class="ph"><div><b>${esc(p.title || 'Untitled production')}</b>${p.company ? ' · ' + esc(p.company) : ''}</div><div>${esc(sub)}</div></div>`;
+}
+function printBreakdowns(rs) {
+  if (!rs.length) { toast('Add a role first'); return; }
+  const p = S.prod, row = (k, v) => v ? `<tr><th>${k}</th><td class="txt">${esc(v)}</td></tr>` : '';
+  $('#print').innerHTML = rs.map(r => `<div class="pp">${printHead('Casting breakdown')}
+    <h1>${esc(r.name || 'Unnamed role')}</h1><h2>${esc([r.type, ageTxt(r.ageMin, r.ageMax) && 'Playing ' + ageTxt(r.ageMin, r.ageMax), r.gender].filter(Boolean).join(' · '))}</h2>
+    <table>${row('Description', r.desc)}${row('Emotional arc', r.arc)}${row('Key traits', r.traits)}${row('Ethnicity / heritage', r.ethnicity)}${row('Accent / dialect', r.accent)}
+    ${row('Height', r.height)}${row('Build', r.build)}${row('Look', r.look)}${row('Special skills', r.skills)}${row('Stunts / fight', r.stunts)}
+    ${row('Nudity', r.nudity && r.nudity !== 'None' ? r.nudity : '')}${row('Sensitive content', r.intimacy)}</table>
+    <table>${row('Scenes', [r.scenes, r.sceneList && '(' + r.sceneList + ')'].filter(Boolean).join(' '))}${row('Shoot days', r.days)}${row('Shoot dates', r.dates || (p.shootStart ? fmtDY(p.shootStart) + (p.shootEnd && p.shootEnd !== p.shootStart ? ' – ' + fmtDY(p.shootEnd) : '') : ''))}
+    ${row('Location', p.location)}${row('Rate', r.rate)}${row('Contract', r.contract || p.contract)}${row('Usage', r.usage)}</table>
+    <table>${row('Audition', r.format)}${row('Sides', r.sides)}${row('Self-tape instructions', r.tapeInstr)}${row('Submission deadline', p.deadline ? fmtDY(p.deadline) : '')}
+    ${row('Director', p.director)}${row('Producer', p.producer)}${row('Casting', p.cd)}</table>
+    ${p.notes ? `<p class="txt" style="font-size:9.5pt">${esc(p.notes)}</p>` : ''}</div>`).join('');
+  window.print();
+}
+function printSheet() {
+  const rs = S.roles.filter(r => actorsOf(r.id).some(a => !a.passed));
+  if (!rs.length) { toast('Add some auditionees first'); return; }
+  $('#print').innerHTML = rs.map(r => `<div class="pp">${printHead('Contact sheet · ' + new Date().toLocaleDateString())}<h1>${esc(r.name || 'Unnamed role')}</h1><h2>${esc([r.type, ageTxt(r.ageMin, r.ageMax) && 'Playing ' + ageTxt(r.ageMin, r.ageMax)].filter(Boolean).join(' · '))}</h2>
+    <div class="sheet">${actorsOf(r.id).filter(a => !a.passed).sort((x, y) => (SIDX[y.stage] - SIDX[x.stage]) || (y.shortlist - x.shortlist) || ((dirAvg(y) || 0) - (dirAvg(x) || 0))).map(a => { const src = a.img && IMG.get(a.id); return `<div class="tile"><div class="im">${src ? `<img src="${src}">` : esc(initials(a.name))}</div><div class="tx"><b>${esc(a.name || 'Unnamed')}${a.shortlist ? ' ★' : ''}</b>${esc(stName(a.stage))}${dirAvg(a) ? ' · ' + f1(dirAvg(a)) + '/5' : ''}<br>${esc([ageTxt(a.ageMin, a.ageMax), a.base].filter(Boolean).join(' · '))}<br>${esc(a.rep === 'self' ? a.email || a.phone || 'Self-represented' : a.agency || a.agentName || '')}</div></div>`; }).join('')}</div></div>`).join('');
+  window.print();
+}
+function csvCell(v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function download(name, text, type) { const b = new Blob([text], {type}), u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }
+const fileBase = () => (S.prod.title || 'Casting').replace(/[^\w\- ]+/g, '').trim() || 'Casting';
+function downloadCSV() {
+  if (!S.actors.length) { toast('No auditionees to export yet'); return; }
+  const head = ['Role', 'Name', 'Stage', 'Passed', 'Shortlist', 'Pronouns', 'Playing age', 'Based in', 'Height', 'Union', 'Accents & skills', 'Representation', 'Agent / manager', 'Agency', 'Agent email', 'Agent phone', 'Actor email', 'Actor phone', 'Profile', 'Showreel', 'Self-tapes', 'Fee', 'Fee unit', 'Fee notes', 'Shoot days available', 'Shoot days unavailable', 'Availability notes', ...DIR_RATES.map(r => r[1]), 'Overall', 'Recommendation', ...ROUNDS.map(r => r[1] + ' score'), ...ROUNDS.map(r => r[1] + ' verdict'), 'Director notes', 'Concerns', 'Submitted'];
+  const rows = S.actors.map(a => { const r = role(a.roleId) || {}, av = availSum(a); return [r.name, a.name, stName(a.stage), a.passed ? 'Yes' : '', a.shortlist ? 'Yes' : '', a.pronouns, ageTxt(a.ageMin, a.ageMax), a.base, a.height, a.union, a.skills, a.rep, a.agentName, a.agency, a.agentEmail, a.agentPhone, a.email, a.phone, a.profile, a.reel, a.tapes.map(t => [t.label, t.url].filter(Boolean).join(': ')).join(' | '), a.fee.amount, a.fee.unit, a.fee.notes, av.total ? av.a + '/' + av.total : '', av.u || '', a.avail.notes, ...DIR_RATES.map(([k]) => a.dir[k] || ''), dirAvg(a) ? f1(dirAvg(a)) : '', a.dir.rec, ...ROUNDS.map(([k]) => { const x = audAvg(aud(a.id, k)); return x ? f1(x) : ''; }), ...ROUNDS.map(([k]) => (aud(a.id, k) || {}).verdict || ''), a.dir.notes, a.dir.concerns, a.submitted]; });
+  download(fileBase() + ' - Auditionees.csv', '﻿' + [head, ...rows].map(r => r.map(csvCell).join(',')).join('\r\n'), 'text/csv;charset=utf-8');
+}
+function backup() { download(fileBase() + ' - Casting backup.json', JSON.stringify({app: 'fth-casting', v: 1, at: Date.now(), S, img: Object.fromEntries(IMG)}), 'application/json'); toast('Backup downloaded'); }
+$('#bkPick').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const o = JSON.parse(await f.text()); if (!o || o.app !== 'fth-casting' || !o.S) throw 0;
+    if (!await confirmDlg('Restore this backup?', `Everything in the Casting Tracker for this project is replaced with the backup from ${new Date(o.at).toLocaleString()}.`, 'Restore')) return;
+    S = normalise(o.S); IMG.clear(); await imgDB.clear();
+    for (const [k, v] of Object.entries(o.img || {})) { IMG.set(k, v); await imgDB.put(k, v); }
+    persist(); render(false); toast('Backup restored');
+  } catch (err) { toast('That file isn’t a Casting Tracker backup'); }
+});
+
+/* ═════════════ example ═════════════ */
+async function loadExample() {
+  const s = new Date(); s.setDate(s.getDate() + 35); const e = new Date(s); e.setDate(e.getDate() + 4);
+  const add = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return iso(x); };
+  S = blank();
+  Object.assign(S.prod, {title: 'Salt Lines', company: 'Harbour Light Films', director: 'Niamh Kelly', producer: 'Ciarán Doyle', cd: 'Ruth McAllister', shootStart: iso(s), shootEnd: iso(e), location: 'Portrush, Co. Antrim', contract: 'Equity low-budget', deadline: add(new Date(), 10), notes: 'A 15-minute drama. A woman returns to the seaside town she left at eighteen to clear out her late mother’s house, and finds her estranged brother already living in it.'});
+  const maya = newRole({name: 'Maya Quinn', type: 'Lead', color: '#4fc7b5', ageMin: 28, ageMax: 36, gender: 'Female', ethnicity: 'Open', accent: 'Northern Irish (Causeway Coast), or strong ear', desc: 'Sharp, self-sufficient and quietly exhausted. Left town at eighteen and built a life in London that looks good from the outside. Coming home is the last thing she wants.', arc: 'Positive change: from believing she owes this place nothing to admitting she ran because staying meant facing her brother.', traits: 'Guarded, dry, quick to take charge, cries alone', backstory: 'Wants: to sell the house and leave by Sunday.\nFlaw: treats every feeling as a problem to fix.', scenes: 14, sceneList: '1–9, 11–15', days: 5, height: 'Any', build: 'Any', look: 'Natural, minimal make-up', skills: 'Driving licence (manual)', nudity: 'None', intimacy: 'Grief, a heated argument with light physical contact', format: 'Self-tape, then in person', sides: 'Sc. 6 (kitchen) and Sc. 13 (pier)', tapeInstr: 'Mid-shot, landscape, plain background. Slate with name, height, location. Off-camera reader. Send a link by the deadline.', rate: '£180/day + travel', budget: 180, budgetUnit: 'day', usage: 'Festivals and online', bdOpen: false});
+  const tom = newRole({name: 'Tom Quinn', type: 'Lead', color: '#f5b14c', ageMin: 30, ageMax: 40, gender: 'Male', ethnicity: 'Open', accent: 'Northern Irish (native)', desc: 'Maya’s older brother. Never left. Charming in the pub, chaotic at home, and has been quietly sleeping in their mother’s house since the funeral.', arc: 'Flat: he already knows the truth about why Maya left; the story tests whether he’ll ever say it.', traits: 'Warm, deflects with jokes, proud, tired', scenes: 10, sceneList: '3–9, 12–14', days: 4, build: 'Lived-in', skills: 'Can handle a small boat (we will train)', stunts: 'Short fall on a slipway (stunt coordinator on set)', format: 'Self-tape, then in person', sides: 'Sc. 6 (kitchen)', rate: '£180/day + travel', budget: 180, budgetUnit: 'day', bdOpen: false});
+  const pat = newRole({name: 'Pat Devlin', type: 'Day player', color: '#97a3ff', ageMin: 60, ageMax: 75, gender: 'Any', desc: 'The neighbour who has watched both of them grow up. Says what nobody else will, then offers you a biscuit.', scenes: 2, sceneList: '10, 15', days: 1, rate: '£150 flat', budget: 150, budgetUnit: 'project', format: 'Self-tape first', bdOpen: false});
+  S.roles.push(maya, tom, pat);
+  const mk = (r, o, st, dir, av) => { const a = newActor(r.id, o); a.hist = [{s: 'submitted', at: Date.now() - 864e6}]; STAGES.slice(1, SIDX[st] + 1).forEach((x, i) => a.hist.push({s: x.id, at: Date.now() - (6 - i) * 864e5})); a.stage = st; Object.assign(a.dir, dir || {}); if (av) shootDays().forEach((d, i) => { if (av[i]) a.avail.days[d] = av[i]; }); S.actors.push(a); return a; };
+  const a1 = mk(maya, {name: 'Aoife Brennan', pronouns: 'she/her', ageMin: 27, ageMax: 35, base: 'Belfast', height: '5′6″', union: 'Equity (UK)', skills: 'Belfast (native), RP, Dublin; sea swimming', agentName: 'Lisa Richards', agency: 'Harbour Talent', agentEmail: 'lisa@example.com', agentPhone: '028 9000 0000', profile: 'spotlight.com/example', reel: 'vimeo.com/example', tapes: [{label: 'Sc. 6 + 13', url: 'vimeo.com/example-tape', date: add(new Date(), -3)}], fee: {amount: 180, unit: 'day', notes: 'Plus travel from Belfast'}, shortlist: true}, 'callback', {pref: 5, look: 5, voice: 4, perf: 5, adjust: 4, pro: 5, rec: 'strong', notes: 'Found the humour in Sc. 6 without losing the hurt. The silence before “I know” was the best moment in any tape.'}, ['a', 'a', 'a', 'a', 'a']);
+  const a2 = mk(maya, {name: 'Priya Sandhu', pronouns: 'she/her', ageMin: 28, ageMax: 36, base: 'London', union: 'Equity (UK)', skills: 'Good ear for accents, stage combat', agency: 'North Star Management', agentName: 'Ben Ford', agentEmail: 'ben@example.com', tapes: [{label: 'Sc. 6', url: 'youtube.com/example', date: add(new Date(), -5)}], fee: {amount: 220, unit: 'day', notes: ''}}, 'callback', {pref: 4, look: 4, voice: 3, perf: 5, adjust: 5, pro: 4, rec: 'yes', notes: 'Very strong actor. Accent needs work: would a dialect coach fit the budget?', concerns: 'Accent. Fee is over budget.'}, ['a', 'a', 'p', 'a', 'a']);
+  mk(maya, {name: 'Hannah Doyle', ageMin: 30, ageMax: 38, base: 'Derry', rep: 'self', email: 'hannah@example.com', tapes: [{label: 'Sc. 13', url: 'vimeo.com/example-2', date: add(new Date(), -2)}], fee: {amount: 160, unit: 'day', notes: ''}}, 'selftape', {pref: 3, look: 4, voice: 5, perf: 3}, ['a', 'a', 'u', 'u', 'a']);
+  mk(maya, {name: 'Sarah Kenny', ageMin: 25, ageMax: 32, base: 'Dublin', agency: 'Abbey Artists'}, 'reviewed', {pref: 2, look: 2});
+  mk(maya, {name: 'Jade Wilson', ageMin: 24, ageMax: 30, base: 'Glasgow'}, 'submitted', {});
+  const t1 = mk(tom, {name: 'Conor Walsh', pronouns: 'he/him', ageMin: 30, ageMax: 40, base: 'Coleraine', height: '5′11″', union: 'Equity (UK)', skills: 'Causeway Coast (native), sailing', agency: 'Harbour Talent', agentName: 'Lisa Richards', agentEmail: 'lisa@example.com', tapes: [{label: 'Sc. 6', url: 'vimeo.com/example-3', date: add(new Date(), -4)}], fee: {amount: 180, unit: 'day', notes: ''}, shortlist: true}, 'callback', {pref: 5, look: 5, voice: 5, perf: 4, adjust: 4, pro: 5, rec: 'yes', notes: 'Exactly the warmth we need. Funny without trying.'}, ['a', 'a', 'a', 'a', 'a']);
+  const t2 = mk(tom, {name: 'Declan Murphy', ageMin: 33, ageMax: 43, base: 'Belfast', agency: 'Lagan Artists', tapes: [{label: 'Sc. 6', url: 'vimeo.com/example-4', date: add(new Date(), -4)}], fee: {amount: 200, unit: 'day', notes: ''}}, 'callback', {pref: 4, look: 3, voice: 4, perf: 5, adjust: 3, pro: 4, rec: 'maybe'}, ['a', 'p', 'a', 'a', 'a']);
+  mk(tom, {name: 'Ryan Moore', ageMin: 28, ageMax: 35, base: 'Belfast', rep: 'self'}, 'reviewed', {pref: 3});
+  mk(pat, {name: 'Bernadette Hughes', ageMin: 62, ageMax: 75, base: 'Ballycastle', union: 'Equity (UK)', agency: 'Glens Talent', fee: {amount: 150, unit: 'project', notes: ''}}, 'offered', {pref: 5, look: 5, voice: 5, perf: 4, rec: 'strong'}, ['a', 'a', 'a', 'a', 'a']);
+  mk(pat, {name: 'Gerry O’Neill', ageMin: 65, ageMax: 78, base: 'Portstewart', rep: 'self', email: 'gerry@example.com'}, 'selftape', {pref: 3, perf: 3});
+  S.auds[audKey(a1.id, 'audition')] = {date: add(new Date(), -2), time: '10:00', seen: 'seen', sides: 'Sc. 6', r: {prep: 5, fit: 5, truth: 5, adjust: 4, voice: 4, presence: 5}, verdict: 'yes', tags: ['Off-book', 'Strong choices', 'Great listener'], redirect: '“Don’t let him see you’re hurt” → held it all in, broke on the last line. Perfect.', notes: ''};
+  S.auds[audKey(a2.id, 'audition')] = {date: add(new Date(), -2), time: '10:30', seen: 'seen', sides: 'Sc. 6', r: {prep: 5, fit: 4, truth: 5, adjust: 5, voice: 3, presence: 4}, verdict: 'yes', tags: ['Off-book', 'Brought something new', 'Needs accent work'], redirect: '“Play it lighter” → found a great sarcastic edge.', notes: ''};
+  S.pairs.push({id: uid(), a: a1.id, b: t1.id, date: add(new Date(), -1), scene: 'Sc. 6 (kitchen)', r: {spark: 5, listen: 5, rhythm: 4, status: 4, visual: 5, history: 5}, verdict: 'yes', notes: 'Instantly believable as siblings. They overlapped naturally by the second take.', na: 'Let Conor lead, then took the scene back at the end.', nb: 'Funnier opposite Aoife than on his own tape.'});
+  S.pairs.push({id: uid(), a: a2.id, b: t1.id, date: add(new Date(), -1), scene: 'Sc. 6 (kitchen)', r: {spark: 3, listen: 4, rhythm: 3, status: 4, visual: 3, history: 3}, verdict: 'maybe', notes: 'Good actors, different energies. Felt more like old friends than siblings.', na: '', nb: ''});
+  S.ui.prodOpen = true;
+  IMG.clear(); await imgDB.clear().catch(() => {});
+  persist(); render(false); toast('Example loaded');
+}
+
+/* ═════════════ boot ═════════════ */
+render(false);
+imgDB.all().then(m => { m.forEach((v, k) => IMG.set(k, v)); if (m.size) rerenderAll(); }).catch(() => {});
+window.addEventListener('storage', e => { /* another tab of this tool saved */ if ((e.key === KEY || e.key === 'fth:p:' + window.__fthProjectId + ':' + KEY) && e.newValue && !$('#adlg').open) { try { const o = JSON.parse(e.newValue); if (o && o.S && o.at > savedAt) { S = normalise(o.S); savedAt = o.at; render(false); } } catch (_) {} } });
+</script>
+</body>
+</html>
