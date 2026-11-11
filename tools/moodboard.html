@@ -1,0 +1,1666 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!--fth-standalone-->
+<!-- Film Tool Hub: this block is only used when this file is opened on its own (for example while working on it).
+     Inside the hub it is removed and the hub supplies the same look from hub/kit.css. Keep it, but don't edit it here. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═════════ Film Tool Hub kit ═════════
+   Shared look for every tool. The hub injects this at the top of each tool's <head>,
+   sets data-theme="light|dark" on the tool's <html>, and sets --fth-cat to the tool's
+   category colour. Tools use the --fth-* tokens and the .fth-* components. */
+:root{
+  --fth-bg:#0b0c0e; --fth-bg2:#101216; --fth-surface:#15181d; --fth-surface2:#1b1f26; --fth-surface3:#232831;
+  --fth-line:#242931; --fth-line2:#333a45; --fth-line3:#46505e;
+  --fth-text:#f0ece5; --fth-muted:#9aa0aa; --fth-faint:#666c77;
+  --fth-good:#5cc98a; --fth-bad:#ff8f7a; --fth-warn:#f2bd5c;
+  /* accent tokens (--fth-cat, --fth-accent, --fth-accent-ink, --fth-accent-soft, --fth-accent-line, --fth-on-accent)
+     are written by the hub for each tool's category, as plain colours for both themes */
+  --fth-cat:#ffb547; --fth-accent:#ffb547; --fth-accent-ink:#ffb547; --fth-accent-soft:rgba(255,181,71,.14); --fth-accent-line:rgba(255,181,71,.45); --fth-on-accent:#14110b;
+  --fth-paper-backdrop:#07080a;
+  --fth-shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --fth-shadow-sm:none;
+  --fth-radius:14px; --fth-radius-sm:9px;
+  --fth-display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --fth-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --fth-script:"Courier Prime","Courier New",Courier,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --fth-bg:#f3f0ea; --fth-bg2:#f9f7f3; --fth-surface:#ffffff; --fth-surface2:#f1ede5; --fth-surface3:#e6e1d6;
+  --fth-line:#e3ded4; --fth-line2:#d2ccc0; --fth-line3:#b4ad9f;
+  --fth-text:#16181c; --fth-muted:#565c66; --fth-faint:#878c95;
+  --fth-good:#22804a; --fth-bad:#c0392b; --fth-warn:#9a6200;
+  --fth-paper-backdrop:#e4dfd5;
+  --fth-shadow:0 14px 30px -16px rgba(70,50,20,.30);
+  --fth-shadow-sm:0 1px 2px rgba(60,45,20,.05),0 4px 14px rgba(60,45,20,.05);
+  color-scheme:light;
+}
+
+/* base */
+html{background:var(--fth-bg)}
+body{background:var(--fth-bg);color:var(--fth-text);font-family:var(--fth-display);-webkit-font-smoothing:antialiased}
+::selection{background:var(--fth-accent-line)}
+:focus-visible{outline:2px solid var(--fth-accent);outline-offset:2px}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--fth-line2);border-radius:6px;border:2px solid var(--fth-bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--fth-line3)}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+
+/* tool header: category eyebrow, tool name, then actions on the right */
+.fth-head{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 20px;
+  background:color-mix(in srgb,var(--fth-bg) 88%,transparent);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  border-bottom:1px solid var(--fth-line)}
+.fth-head::before{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:linear-gradient(90deg,var(--fth-cat),transparent 38%);opacity:.75;pointer-events:none}
+.fth-id{display:flex;flex-direction:column;gap:5px;min-width:0;flex:none}
+.fth-eyebrow{display:flex;align-items:center;gap:8px;font:500 10.5px/1 var(--fth-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fth-accent-ink);white-space:nowrap}
+.fth-eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fth-cat);box-shadow:0 0 0 3px var(--fth-accent-soft);flex:none}
+.fth-title{margin:0;font-weight:800;font-variation-settings:"wdth" 68;font-size:23px;line-height:1;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap}
+.fth-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.fth-vsep{width:1px;height:22px;background:var(--fth-line2);margin:0 3px;flex:none}
+
+/* buttons */
+.fth-btn{height:34px;padding:0 13px;border-radius:var(--fth-radius-sm);border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);
+  font:600 13px/1 var(--fth-display);display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  transition:background-color .15s,border-color .15s,color .15s}
+.fth-btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.fth-btn:disabled{opacity:.45;cursor:default}
+.fth-btn.primary{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.fth-btn.primary:hover{filter:brightness(1.08)}
+.fth-btn.ghost{background:transparent;border-color:transparent;color:var(--fth-muted)}
+.fth-btn.ghost:hover{background:var(--fth-surface2);border-color:var(--fth-line2);color:var(--fth-text)}
+.fth-btn.danger{color:var(--fth-bad)}
+.fth-btn.sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.fth-btn.icon{width:30px;height:30px;padding:0}
+
+/* labels, fields */
+.fth-label{font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.fth-input{width:100%;min-width:0;background:var(--fth-bg2);border:1px solid var(--fth-line2);border-radius:8px;padding:7px 10px;color:var(--fth-text);font:14px/1.35 var(--fth-display);outline:none;transition:border-color .15s,box-shadow .15s}
+.fth-input:hover{border-color:var(--fth-line3)}
+.fth-input:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+select.fth-input{cursor:pointer}
+textarea.fth-input{resize:vertical;line-height:1.45}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-accent)}
+
+/* sections & surfaces */
+.fth-card{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);box-shadow:var(--fth-shadow-sm)}
+.fth-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.fth-sec::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+.fth-sec .fth-num{font:600 11px var(--fth-mono);color:var(--fth-accent-ink);letter-spacing:.08em}
+.fth-muted{color:var(--fth-muted)}
+.fth-mono{font-family:var(--fth-mono)}
+
+/* notes */
+.fth-tip{background:var(--fth-accent-soft);border-left:2px solid var(--fth-accent);color:var(--fth-text);padding:7px 10px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.45}
+.fth-warn{background:color-mix(in srgb,var(--fth-warn) 10%,var(--fth-surface));border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent);color:var(--fth-text);border-radius:10px;padding:10px 12px;font-size:13px}
+.fth-warn b:first-child{color:var(--fth-warn)}
+.fth-info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--fth-line3);color:var(--fth-muted);font:600 10px/1 var(--fth-mono);text-transform:none;letter-spacing:0;cursor:pointer;user-select:none;vertical-align:1px;margin-left:5px;transition:.15s}
+.fth-info:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+
+/* toast */
+.fth-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;z-index:200;background:var(--fth-text);color:var(--fth-bg);padding:10px 16px;border-radius:10px;font:500 13.5px var(--fth-display);box-shadow:var(--fth-shadow);transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.fth-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* paper: a printable page shown on screen stays paper-white in both themes */
+.fth-paper-wrap{background:var(--fth-paper-backdrop)}
+.fth-paper{background:#fff;color:#000;color-scheme:light;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55)}
+
+@media print{
+  html,body{background:#fff!important;color:#000}
+  .fth-head{display:none!important}
+  .fth-paper-wrap{background:#fff!important}
+  .fth-paper{box-shadow:none!important}
+}
+@media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
+@media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
+
+:root{--fth-cat:#97a3ff;--fth-accent:#97a3ff;--fth-accent-ink:#97a3ff;--fth-accent-soft:rgba(151,163,255,0.14);--fth-accent-line:rgba(151,163,255,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#585f94;--fth-accent-ink:#585f94;--fth-accent-soft:rgba(151,163,255,0.16);--fth-accent-line:rgba(151,163,255,0.6);--fth-on-accent:#ffffff}
+</style>
+<script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
+<!--/fth-standalone-->
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mood Board</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-size:14px;line-height:1.45}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+img{display:block}
+
+/* tag colours, shared with the hub's stage colours */
+:root{--t-camera:#97a3ff;--t-lighting:#f5b14c;--t-colour:#e889c8;--t-wardrobe:#4fc7b5;--t-hmu:#ff7152;--t-set:#8bd16a}
+
+.title-in{flex:1;min-width:180px;max-width:380px;height:34px}
+.fth-btn svg{width:15px;height:15px;flex:none}
+.app{max-width:1600px;margin:0 auto;padding:16px 20px 60px}
+
+/* top bar: panels */
+.bar{display:flex;align-items:center;gap:12px 18px;flex-wrap:wrap;margin-bottom:14px}
+.seg{display:inline-flex;background:var(--fth-bg2);border:1px solid var(--fth-line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:none;color:var(--fth-muted);padding:6px 12px;border-radius:7px;font-size:13px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:7px}
+.seg button:hover{color:var(--fth-text)}
+.seg button.on{background:var(--fth-surface2);color:var(--fth-text);box-shadow:inset 0 0 0 1px var(--fth-line2)}
+.seg.modes button{padding:8px 15px;font-size:13.5px}
+.seg.modes button svg{width:16px;height:16px}
+.seg.modes button.on{background:var(--fth-accent);color:var(--fth-on-accent);box-shadow:none}
+.seg .n{font:500 11px var(--fth-mono);opacity:.75}
+.hint{font-size:12.5px;color:var(--fth-muted)}
+kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--fth-bg2)}
+
+/* add + filter strip */
+.tools{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);margin-bottom:16px}
+.addrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;padding:12px 14px;border-bottom:1px solid var(--fth-line)}
+.urlbox{display:flex;gap:6px;flex:1 1 380px;min-width:240px;max-width:640px}
+.urlbox .fth-input{height:34px}
+.frow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:11px 14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{height:30px;padding:0 11px;border-radius:999px;border:1px solid var(--fth-line2);background:none;color:var(--fth-muted);font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.chip:hover{color:var(--fth-text);border-color:var(--fth-line3)}
+.chip .d{width:8px;height:8px;border-radius:50%;background:var(--c,var(--fth-faint));flex:none}
+.chip .n{font:500 10.5px var(--fth-mono);color:var(--fth-faint)}
+.chip[aria-pressed="true"]{color:var(--fth-text);border-color:color-mix(in srgb,var(--c,var(--fth-text)) 70%,transparent);background:color-mix(in srgb,var(--c,var(--fth-text)) 18%,transparent)}
+.chip.all[aria-pressed="true"]{background:var(--fth-text);border-color:var(--fth-text);color:var(--fth-bg)}
+.chip.all[aria-pressed="true"] .n{color:color-mix(in srgb,var(--fth-bg) 60%,var(--fth-text))}
+.chip[aria-pressed="true"] .n{color:var(--fth-muted)}
+.chip.untag .d{background:none;border:1.5px dashed var(--fth-faint)}
+.fsp{flex:1}
+.search{position:relative;width:200px}
+.search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--fth-faint)}
+.search .fth-input{height:30px;padding-left:28px;font-size:13px}
+.ctl{display:flex;align-items:center;gap:8px}
+.ctl input[type=range]{width:110px}
+.status{display:flex;align-items:center;gap:10px;min-height:22px;margin:-4px 2px 12px;font:500 11px var(--fth-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--fth-faint)}
+.status button{background:none;border:0;padding:0;color:var(--fth-accent-ink);font:inherit;letter-spacing:inherit;text-transform:inherit;text-decoration:underline;text-underline-offset:3px}
+
+/* layout: board + editor */
+.cols{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start}
+.cols.ed{grid-template-columns:minmax(0,1fr) 360px}
+
+/* masonry board */
+.board{display:flex;gap:14px;align-items:flex-start;min-height:120px}
+.board .col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:14px}
+.ref{position:relative;background:var(--fth-surface);border:1px solid var(--fth-line);border-radius:12px;overflow:hidden;transition:border-color .15s,box-shadow .15s,transform .15s;outline:none}
+.ref:hover{border-color:var(--fth-line3)}
+.ref.sel{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+.ref:focus-visible{border-color:var(--fth-accent)}
+.ref.dragging{opacity:.35}
+.ref.drop-before::before,.ref.drop-after::after,.snd.drop-before::before,.snd.drop-after::after{content:"";position:absolute;left:0;right:0;height:3px;background:var(--fth-accent);z-index:3;border-radius:2px}
+.ref.drop-before::before{top:0}.ref.drop-after::after{bottom:0}
+.media{position:relative;background:var(--fth-bg2);cursor:zoom-in;overflow:hidden}
+.media img{width:100%;height:auto;min-height:60px;object-fit:cover;background:var(--fth-surface2)}
+.media .ph{aspect-ratio:16/10;display:grid;place-items:center;text-align:center;padding:16px;color:var(--fth-muted);font-size:12.5px;background:repeating-linear-gradient(-45deg,var(--fth-surface2) 0 10px,var(--fth-bg2) 10px 20px)}
+.media .ph b{display:block;color:var(--fth-text);font-size:13.5px;margin-bottom:3px;word-break:break-all}
+.media .ph svg{width:26px;height:26px;margin:0 auto 8px;color:var(--fth-faint)}
+.media .badge{position:absolute;left:8px;top:8px;display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:6px;background:rgba(8,9,11,.72);color:#fff;font:600 10px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;backdrop-filter:blur(4px)}
+.media .badge svg{width:11px;height:11px}
+.media .play{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.media .play i{width:46px;height:46px;border-radius:50%;background:rgba(8,9,11,.6);display:grid;place-items:center;backdrop-filter:blur(4px)}
+.media .play svg{width:18px;height:18px;color:#fff;margin-left:2px}
+.media .tools-ov{position:absolute;right:7px;top:7px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.ref:hover .tools-ov,.ref:focus-within .tools-ov{opacity:1}
+.ov-btn{width:28px;height:28px;border-radius:7px;border:0;background:rgba(8,9,11,.66);color:#fff;display:grid;place-items:center;backdrop-filter:blur(4px)}
+.ov-btn:hover{background:rgba(8,9,11,.9)}
+.ov-btn svg{width:14px;height:14px}
+.loading{min-height:120px;animation:shim 1.2s ease-in-out infinite alternate}
+@keyframes shim{to{opacity:.55}}
+.rbody{padding:9px 11px 11px;cursor:pointer}
+/* grid view: images on their own; title and ticks slide up over the image on hover */
+@media (hover:hover){
+  .board:not(.list) .ref .rbody{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:10px 11px 11px;background:color-mix(in srgb,var(--fth-surface) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--fth-line);transform:translateY(calc(100% + 2px));opacity:0;transition:transform .2s ease,opacity .16s ease;max-height:100%;overflow:auto}
+  .board:not(.list) .ref:hover .rbody,.board:not(.list) .ref:focus-visible .rbody,.board:not(.list) .ref:has(:focus-visible) .rbody{transform:none;opacity:1}
+  .board:not(.list) .ref .rn,.board:not(.list) .ref .rlink{display:none}
+  .board:not(.list) .ref .media img{min-height:0}
+  .tagdots{position:absolute;left:8px;bottom:8px;z-index:1;display:flex;gap:4px;padding:4px 5px;border-radius:999px;background:rgba(8,9,11,.55);backdrop-filter:blur(4px);transition:opacity .15s;pointer-events:none}
+  .tagdots:empty{display:none}
+  .tagdots i{width:7px;height:7px;border-radius:50%}
+  .ref:hover .tagdots,.board.list .tagdots{opacity:0}
+}
+@media (hover:none){.tagdots{display:none}.board:not(.list) .ref .rn,.board:not(.list) .ref .rlink{display:none}}
+.tk .l{display:none}
+.rlink{margin-top:7px;font-size:12px}
+.rlink a{color:var(--fth-accent-ink);text-decoration:none;font-weight:600}
+.rlink a:hover{text-decoration:underline}
+.rkind{font:600 10px var(--fth-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fth-faint);margin-bottom:4px;display:none}
+
+/* list view: one reference per row, the rest of the row for tags and notes */
+.board.list{display:flex;flex-direction:column;align-items:stretch;gap:10px}
+.media:not(:has(img)) .play{display:none}
+.board.list .ref{display:grid;grid-template-columns:var(--tw,260px) minmax(0,1fr);align-items:stretch}
+.board.list .ref.drop-before::before,.board.list .ref.drop-after::after{z-index:3}
+.board.list .media{display:grid;place-items:center;background:var(--fth-bg2);border-right:1px solid var(--fth-line)}
+.board.list .media img{width:100%;height:auto;max-height:calc(var(--tw,260px) * 1.1);object-fit:contain;min-height:0;background:none}
+.board.list .media > div[hidden]+*, .board.list .media .ph{width:100%}
+.board.list .rbody{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,330px);gap:8px 28px;padding:16px 18px;align-content:start}
+.board.list .rt{font-size:16px;white-space:normal}
+.board.list .rs{font-size:13px;white-space:normal}
+.board.list .rkind{display:block}
+.board.list .rn{display:block;-webkit-line-clamp:unset;font-size:13.5px;color:var(--fth-text);margin-top:10px;white-space:pre-wrap;line-height:1.5}
+.board.list .pal{height:18px;max-width:280px;margin-top:12px}
+.board.list .ticks{margin-top:0;align-content:start;gap:6px}
+.board.list .tk{height:28px;font-size:12px;padding:0 10px 0 8px;gap:7px}
+.board.list .tk .bx{width:12px;height:12px}
+.board.list .tk .s{display:none}.board.list .tk .l{display:inline}
+.board.list .tools-ov{opacity:1}
+@media (max-width:900px){.board.list .ref{grid-template-columns:minmax(110px,34%) minmax(0,1fr)}.board.list .rbody{grid-template-columns:minmax(0,1fr)}}
+.rt{font-weight:650;font-size:13.5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rt.un{color:var(--fth-faint);font-weight:500}
+.rs{font-size:12px;color:var(--fth-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.rn{font-size:12px;color:var(--fth-muted);margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pal{display:flex;height:14px;border-radius:4px;overflow:hidden;margin-top:8px;box-shadow:inset 0 0 0 1px rgba(127,127,127,.2)}
+.pal i{flex:1}
+
+/* tick pills on each card */
+.ticks{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.tk{height:22px;padding:0 7px 0 6px;border-radius:6px;border:1px solid var(--fth-line2);background:none;color:var(--fth-faint);font:600 10.5px/1 var(--fth-display);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;transition:background-color .12s,border-color .12s,color .12s}
+.tk .bx{width:10px;height:10px;border-radius:3px;border:1.5px solid color-mix(in srgb,var(--c) 70%,var(--fth-faint));flex:none;display:grid;place-items:center}
+.tk .bx svg{width:8px;height:8px;opacity:0;color:var(--fth-on-accent)}
+.tk:hover{color:var(--fth-text);border-color:var(--fth-line3)}
+.tk[aria-pressed="true"]{color:var(--fth-text);border-color:color-mix(in srgb,var(--c) 60%,transparent);background:color-mix(in srgb,var(--c) 17%,transparent)}
+.tk[aria-pressed="true"] .bx{background:var(--c);border-color:var(--c)}
+.tk[aria-pressed="true"] .bx svg{opacity:1;color:#111}
+.tk.all{--c:var(--fth-text)}
+.tk.all[aria-pressed="true"] .bx svg{color:var(--fth-bg)}
+
+/* empty / drop */
+.empty{display:grid;place-items:center;text-align:center;min-height:46vh;border:1.5px dashed var(--fth-line2);border-radius:16px;background:var(--fth-surface);padding:30px;cursor:pointer;transition:border-color .2s,background .2s;width:100%}
+.empty:hover{border-color:var(--fth-accent);background:var(--fth-accent-soft)}
+.empty h3{margin:14px 0 6px;font-weight:750;font-variation-settings:"wdth" 80;font-size:26px}
+.empty p{margin:0 auto;color:var(--fth-muted);max-width:480px}
+.empty .tiles{display:flex;gap:5px;justify-content:center;align-items:flex-end}
+.empty .tiles i{width:34px;border-radius:5px;display:block;opacity:.85}
+.nomatch{padding:46px 20px;text-align:center;color:var(--fth-muted);border:1px dashed var(--fth-line2);border-radius:14px;width:100%}
+#dropCover{position:fixed;inset:10px;z-index:150;border:2px dashed var(--fth-accent);border-radius:18px;background:color-mix(in srgb,var(--fth-accent) 7%,transparent);pointer-events:none;display:flex;align-items:flex-end;justify-content:center;padding-bottom:40px}
+#dropCover div{background:var(--fth-accent);color:var(--fth-on-accent);font-weight:700;padding:12px 20px;border-radius:12px;font-size:15px}
+
+/* editor */
+.editor{position:sticky;top:74px;max-height:calc(100vh - 90px);overflow:auto;background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);padding:14px}
+.ehead{display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.ehead .fth-label{flex:1}
+.eprev{border-radius:9px;overflow:hidden;background:var(--fth-bg2);margin-bottom:12px;cursor:zoom-in}
+.eprev img{width:100%;max-height:260px;object-fit:contain;background:#000}
+.eprev .ph{aspect-ratio:16/9}
+.eplayer{border-radius:9px;overflow:hidden;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:11px}
+.field textarea{min-height:76px}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.checks{display:grid;gap:2px;margin:4px 0 12px;padding:6px;border:1px solid var(--fth-line);border-radius:10px;background:var(--fth-bg2)}
+.checks label{display:flex;align-items:center;gap:10px;padding:6px 7px;border-radius:7px;cursor:pointer;font-size:13.5px}
+.checks label:hover{background:var(--fth-surface2)}
+.checks input{width:16px;height:16px;margin:0;flex:none}
+.checks .d{width:9px;height:9px;border-radius:50%;background:var(--c);margin-left:auto}
+.checks label.allrow{border-top:1px solid var(--fth-line);border-radius:0 0 7px 7px;margin-top:3px;padding-top:9px;font-weight:600}
+.epal{display:flex;border-radius:7px;overflow:hidden;margin:4px 0 12px;box-shadow:inset 0 0 0 1px rgba(127,127,127,.2)}
+.epal button{flex:1;height:44px;border:0;padding:0 0 4px;display:flex;align-items:flex-end;justify-content:center;font:600 9.5px var(--fth-mono)}
+.eacts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;padding-top:12px;border-top:1px solid var(--fth-line)}
+.eacts .sp{flex:1}
+.added{font:500 10.5px var(--fth-mono);color:var(--fth-faint);margin-top:10px;letter-spacing:.04em}
+@media (max-width:1000px){
+  .cols.ed{grid-template-columns:minmax(0,1fr)}
+  .editor{position:fixed;z-index:60;right:10px;left:10px;bottom:10px;top:auto;max-height:70vh;box-shadow:var(--fth-shadow)}
+}
+
+/* sound board */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;align-items:start}
+.snd{position:relative;background:var(--fth-surface);border:1px solid var(--fth-line);border-radius:12px;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.snd:hover{border-color:var(--fth-line3)}
+.snd.sel{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+.snd.dragging{opacity:.35}
+.snd.drop-before::before{top:0;bottom:0;left:-8px;right:auto;width:3px;height:auto}
+.snd.drop-after::after{top:0;bottom:0;right:-8px;left:auto;width:3px;height:auto}
+.snd.drop-before,.snd.drop-after{overflow:visible}
+.shead{display:grid;grid-template-columns:76px minmax(0,1fr);gap:12px;padding:11px;cursor:pointer}
+.sthumb{width:76px;height:76px;border-radius:8px;overflow:hidden;background:var(--fth-surface2);display:grid;place-items:center;position:relative;color:var(--pc,var(--fth-muted))}
+.sthumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sthumb svg{width:30px;height:30px}
+.sthumb .pb{position:absolute;inset:0;margin:auto;width:34px;height:34px;border-radius:50%;border:0;background:rgba(8,9,11,.66);color:#fff;display:grid;place-items:center}
+.sthumb .pb svg{width:14px;height:14px}
+.sthumb .pb:hover{background:var(--fth-accent);color:var(--fth-on-accent)}
+.splat{display:inline-flex;align-items:center;gap:6px;font:600 10px var(--fth-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fth-muted)}
+.splat i{width:7px;height:7px;border-radius:50%;background:var(--pc,var(--fth-faint))}
+.splat .cue{color:var(--fth-faint);letter-spacing:.04em}
+.st{font-weight:650;font-size:14.5px;line-height:1.25;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st.un{color:var(--fth-faint);font-weight:500}
+.sa{font-size:12.5px;color:var(--fth-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sscene{font-size:12px;color:var(--fth-text);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sscene b{font:500 9.5px var(--fth-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fth-faint);margin-right:5px}
+.sbody{padding:0 11px 11px}
+.sbody .ticks{margin-top:0}
+.sbody .rn{margin-top:7px}
+.splayer{border-top:1px solid var(--fth-line);background:var(--fth-bg2)}
+.splayer iframe{display:block;width:100%;border:0}
+.splayer audio{display:block;width:100%;padding:8px}
+.vid{position:relative;aspect-ratio:16/9;background:#000}
+.vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.plink{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 11px;font-size:12px;color:var(--fth-muted);border-top:1px solid var(--fth-line)}
+.plink a{color:var(--fth-accent-ink);font-weight:600;text-decoration:none;white-space:nowrap}
+.plink a:hover{text-decoration:underline}
+
+/* export dialog */
+#px{position:fixed;inset:0;z-index:130;background:var(--fth-bg);display:flex;flex-direction:column}
+.pxbar{display:flex;align-items:center;gap:8px;padding:12px 18px;border-bottom:1px solid var(--fth-line);background:var(--fth-surface)}
+.pxbar b{font-size:17px;font-weight:750;margin-right:12px}
+.pxbar .sp{flex:1}
+.pxbody{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 340px}
+.pxprev{overflow:auto;padding:24px 28px 40px;background:var(--fth-bg2);display:flex;flex-direction:column;align-items:center;gap:22px}
+.pxpage{display:flex;flex-direction:column;align-items:center;gap:7px}
+.pxpage canvas{display:block;box-shadow:0 1px 2px rgba(0,0,0,.25),0 8px 28px rgba(0,0,0,.22);border-radius:2px}
+.pxpage span{font:500 10.5px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-faint)}
+.pxnone{margin:auto;color:var(--fth-muted);max-width:340px;text-align:center}
+.pxopts{overflow:auto;border-left:1px solid var(--fth-line);background:var(--fth-surface);padding:6px 18px 30px}
+.pxopts section{padding:14px 0;border-bottom:1px solid var(--fth-line)}
+.pxopts section:last-child{border-bottom:0}
+.pxopts h4{margin:0 0 10px;font:600 10.5px var(--fth-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--fth-faint)}
+.pxopts .ck{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:13.5px;cursor:pointer}
+.pxopts .ck input{width:16px;height:16px;margin:0}
+.pxopts .ck .n{font:500 11px var(--fth-mono);color:var(--fth-faint)}
+.pxopts .ck.dim{opacity:.45;cursor:default}
+.pxopts .note{margin:6px 0 0;font-size:12px;color:var(--fth-muted);line-height:1.45}
+.orow{display:grid;grid-template-columns:96px minmax(0,1fr) auto;align-items:center;gap:6px 10px;margin:0 0 10px;font-size:13px}
+.orow > span{color:var(--fth-muted)}
+.orow em{font:500 11px var(--fth-mono);font-style:normal;color:var(--fth-muted);min-width:62px;text-align:right}
+.orow .seg,.orow select{grid-column:2 / -1;justify-self:start}
+.orow select{height:32px;width:100%}
+.orow input[type=range]{width:100%}
+.pxopts .seg button{padding:5px 10px;font-size:12.5px}
+.seg.wide{display:flex;margin-bottom:8px}.seg.wide button{flex:1}
+.bgs{grid-column:2 / -1;display:flex;flex-wrap:wrap;gap:6px}
+.sw{width:28px;height:28px;border-radius:50%;border:1px solid var(--fth-line3);background:var(--sw);padding:0;position:relative;cursor:pointer}
+.sw.on{box-shadow:0 0 0 2px var(--fth-bg),0 0 0 4px var(--fth-accent)}
+.sw.more{background:conic-gradient(#ff7152,#f5b14c,#8bd16a,#4fc7b5,#97a3ff,#e889c8,#ff7152);display:grid;place-items:center}
+.sw.more i{width:14px;height:14px;border-radius:50%;background:var(--mc,transparent);border:2px solid #fff;display:block}
+.sw.more:not(.on) i{background:var(--fth-surface);border-color:var(--fth-surface)}
+.sw.more input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+@media (max-width:860px){.pxbody{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,46%)}.pxopts{border-left:0;border-top:1px solid var(--fth-line)}}
+
+/* lightbox */
+#lb{position:fixed;inset:0;z-index:120;background:rgba(5,6,8,.93);display:flex;flex-direction:column;color:#f0ece5;overflow:hidden}
+#lb .lbtop{display:flex;align-items:center;gap:10px;padding:12px 16px}
+#lb .lbtop .c{font:500 11px var(--fth-mono);letter-spacing:.1em;color:#9aa0aa;text-transform:uppercase}
+#lb .lbtop .sp{flex:1}
+#lb .lbb{width:38px;height:38px;border-radius:10px;border:1px solid #333a45;background:#15181d;color:#f0ece5;display:grid;place-items:center}
+#lb .lbb:hover{background:#232831}
+#lb .lbb svg{width:18px;height:18px}
+#lb .stage{position:relative;flex:1 1 0;min-height:0;container-type:size}
+#lb .stage > img,#lb .stage > .vid,#lb .stage > .lbph{position:absolute;inset:0;margin:auto}
+#lb .stage > img{max-width:calc(100cqw - 140px);max-height:100cqh;width:auto;height:auto;object-fit:contain;border-radius:4px}
+#lb .stage > .vid{width:min(100cqw - 140px,100cqh * 16 / 9);height:auto;aspect-ratio:16/9}
+#lb .stage > .lbph{height:max-content;text-align:center;color:#9aa0aa}
+#lb .nav{position:absolute;top:50%;transform:translateY(-50%)}
+#lb .nav.p{left:16px}#lb .nav.n{right:16px}
+#lb .cap{flex:none;padding:12px 20px 16px;text-align:center;max-height:30vh;overflow:auto}
+#lb .cap b{font-size:16px}
+#lb .cap .s{color:#9aa0aa;font-size:13px;margin-left:8px}
+#lb .cap .tg{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+#lb .cap .tg span{display:inline-flex;align-items:center;gap:6px;font:600 11px var(--fth-mono);letter-spacing:.06em;text-transform:uppercase;color:#cfd3d9}
+#lb .cap .tg i{width:8px;height:8px;border-radius:50%}
+#lb .cap p{margin:6px auto 0;max-width:720px;color:#b9bec7;font-size:13.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+@media (max-width:700px){#lb .stage > img{max-width:calc(100cqw - 20px)}#lb .stage > .vid{width:min(100cqw - 20px,100cqh * 16 / 9)}#lb .nav{display:none}.search{width:100%}}
+</style>
+</head>
+<body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>05 · Visual Planning</span><h1 class="fth-title">Mood Board</h1></div>
+  <span class="fth-vsep"></span><input id="boardTitle" class="fth-input title-in" placeholder="Board title (used on exports)" aria-label="Board title">
+  <div class="fth-actions">
+    <button class="fth-btn ghost" id="openBtn" title="Open a mood board .json file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5V18a1.5 1.5 0 0 0 1.5 1.5h15A1.5 1.5 0 0 0 21 18V9a1.5 1.5 0 0 0-1.5-1.5H12L10 5H4.5A1.5 1.5 0 0 0 3 6.5z"/></svg>Open .json</button>
+    <button class="fth-btn ghost" id="jsonBtn" title="Download the whole board, uploads included, as a .json file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M4.5 19.5h15"/></svg>Download .json</button>
+    <button class="fth-btn primary" id="pdfBtn" title="Export both boards as a PDF, using the filters you have set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 13h6M9 16.5h4"/></svg><span id="pdfLbl">Export PDF</span></button>
+  </div>
+</header>
+
+<div class="app">
+  <div class="bar">
+    <div class="seg modes" role="tablist" aria-label="Board">
+      <button data-tab="visual" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="8" height="10" rx="1.4"/><rect x="13" y="3" width="8" height="7" rx="1.4"/><rect x="13" y="12" width="8" height="9" rx="1.4"/><rect x="3" y="15" width="8" height="6" rx="1.4"/></svg>Visual references<span class="n" id="vN"></span></button>
+      <button data-tab="sound" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>Music &amp; sound<span class="n" id="sN"></span></button>
+    </div>
+    <span class="hint" id="tabHint"></span>
+  </div>
+
+  <!-- ───── visual panel ───── -->
+  <section id="visualPanel">
+    <div class="tools">
+      <div class="addrow">
+        <button class="fth-btn primary" id="vUpload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload images</button>
+        <form class="urlbox" id="vForm"><input class="fth-input" id="vUrl" placeholder="Paste an image link, a YouTube or Vimeo clip, or any web page" aria-label="Reference link"><button class="fth-btn" type="submit">Add link</button></form>
+        <span class="hint">Or drop and paste images anywhere · <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>V</kbd></span>
+      </div>
+      <div class="frow">
+        <span class="fth-label">Show</span>
+        <div class="chips" id="vChips" role="group" aria-label="Filter references"></div>
+        <div class="seg" id="vMode" title="With more than one filter: show references tagged with any of them, or only those tagged with all of them">
+          <button data-m="any">Any</button><button data-m="all">All</button>
+        </div>
+        <span class="fsp"></span>
+        <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input class="fth-input" id="vQ" type="search" placeholder="Search titles and notes" aria-label="Search references"></label>
+        <div class="seg" id="vView" title="Grid shows just the pictures; list gives each reference its own row with tags and notes">
+          <button data-v="grid" title="Grid view"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg>Grid</button>
+          <button data-v="list" title="List view"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="6" height="6" rx="1.2"/><rect x="3.5" y="14" width="6" height="6" rx="1.2"/><path d="M13 6h8M13 9h5M13 16h8M13 19h5"/></svg>List</button>
+        </div>
+        <div class="ctl"><span class="fth-label">Size</span><input type="range" id="vSize" min="170" max="480" step="10" aria-label="Card size"></div>
+      </div>
+    </div>
+    <div class="status" id="vStatus"></div>
+    <div class="cols" id="vCols">
+      <div><div class="board" id="board"></div></div>
+      <aside class="editor" id="vEd" hidden></aside>
+    </div>
+  </section>
+
+  <!-- ───── sound panel ───── -->
+  <section id="soundPanel" hidden>
+    <div class="tools">
+      <div class="addrow">
+        <form class="urlbox" id="sForm"><input class="fth-input" id="sUrl" placeholder="Paste a Spotify, YouTube, SoundCloud, Apple Music, Bandcamp or Vimeo link" aria-label="Music or sound link"><button class="fth-btn primary" type="submit">Add link</button></form>
+        <button class="fth-btn" id="sUpload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload audio</button>
+        <span class="hint">Links keep your project light. Uploads are stored in the project.</span>
+      </div>
+      <div class="frow">
+        <span class="fth-label">Show</span>
+        <div class="chips" id="sChips" role="group" aria-label="Filter sounds"></div>
+        <div class="seg" id="sMode" title="With more than one filter: show sounds tagged with any of them, or only those tagged with all of them">
+          <button data-m="any">Any</button><button data-m="all">All</button>
+        </div>
+        <span class="fsp"></span>
+        <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg><input class="fth-input" id="sQ" type="search" placeholder="Search titles, artists, scenes" aria-label="Search sounds"></label>
+      </div>
+    </div>
+    <div class="status" id="sStatus"></div>
+    <div class="cols" id="sCols">
+      <div><div class="sgrid" id="sgrid"></div></div>
+      <aside class="editor" id="sEd" hidden></aside>
+    </div>
+  </section>
+</div>
+
+<div id="px" hidden role="dialog" aria-modal="true" aria-label="Export PDF">
+  <div class="pxbar">
+    <div><b>Export PDF</b><span class="hint" id="pxInfo"></span></div>
+    <span class="sp"></span>
+    <button class="fth-btn ghost" id="pxReset" title="Back to the default settings">Reset</button>
+    <button class="fth-btn" id="pxCancel">Cancel</button>
+    <button class="fth-btn primary" id="pxGo">Download PDF</button>
+  </div>
+  <div class="pxbody">
+    <div class="pxprev" id="pxPrev"></div>
+    <form class="pxopts" id="pxOpts">
+      <section><h4>Include</h4>
+        <label class="ck"><input type="checkbox" data-o="visual">Visual references <span class="n" id="pxVN"></span></label>
+        <label class="ck"><input type="checkbox" data-o="sound">Music &amp; sound <span class="n" id="pxSN"></span></label>
+        <p class="note" id="pxFilt"></p>
+      </section>
+      <section><h4>Page</h4>
+        <div class="orow"><span>Size</span><div class="seg" data-o="page"><button type="button" data-v="a4">A4</button><button type="button" data-v="letter">US Letter</button></div></div>
+        <div class="orow"><span>Orientation</span><div class="seg" data-o="orient"><button type="button" data-v="landscape">Landscape</button><button type="button" data-v="portrait">Portrait</button></div></div>
+        <div class="orow"><span>Background</span>
+          <div class="bgs" id="pxBg"><button type="button" class="sw" data-bg="#ffffff" title="White" style="--sw:#ffffff"></button><button type="button" class="sw" data-bg="#f4f0e8" title="Paper" style="--sw:#f4f0e8"></button><button type="button" class="sw" data-bg="#e6e3dd" title="Stone" style="--sw:#e6e3dd"></button><button type="button" class="sw" data-bg="#2b2c30" title="Charcoal" style="--sw:#2b2c30"></button><button type="button" class="sw" data-bg="#0d0d0f" title="Black" style="--sw:#0d0d0f"></button><button type="button" class="sw" data-bg="#1d2433" title="Midnight" style="--sw:#1d2433"></button><label class="sw more" id="pxMore" title="More colours"><input type="color" id="pxColour"><i></i></label></div></div>
+        <label class="ck"><input type="checkbox" data-o="header">Title and page numbers at the top</label>
+      </section>
+      <section><h4>Layout</h4>
+        <div class="orow"><span>Arrange</span><div class="seg" data-o="layout"><button type="button" data-v="masonry" title="Each image keeps its own shape">Masonry</button><button type="button" data-v="grid" title="Every image in a cell of the same shape">Grid</button></div></div>
+        <div id="pxGridOpts">
+          <div class="orow"><span>Cell shape</span><select class="fth-input" data-o="shape"><option value="16:9">16:9 widescreen</option><option value="2.39:1">2.39:1 scope</option><option value="3:2">3:2</option><option value="4:3">4:3</option><option value="1:1">1:1 square</option><option value="4:5">4:5 portrait</option></select></div>
+          <div class="orow"><span>Images</span><div class="seg" data-o="fit"><button type="button" data-v="fill" title="Fill the cell, trimming the edges">Fill cell</button><button type="button" data-v="fit" title="Show the whole frame, with bars">Whole frame</button></div></div>
+        </div>
+        <div class="orow"><span>Card size</span><input type="range" min="1" max="6" step="1" data-o="size"><em id="pxSizeV"></em></div>
+        <div class="orow"><span>Spacing</span><input type="range" min="0" max="16" step="1" data-o="gap"><em id="pxGapV"></em></div>
+        <div class="orow"><span>Margins</span><input type="range" min="5" max="25" step="1" data-o="margin"><em id="pxMarV"></em></div>
+      </section>
+      <section><h4>Names</h4>
+        <div class="seg wide" data-o="names"><button type="button" data-v="below">Under image</button><button type="button" data-v="overlay">On image</button><button type="button" data-v="none">No names</button></div>
+        <label class="ck"><input type="checkbox" data-o="credit" id="pxCredit">Source / credit under the name</label>
+      </section>
+      <section><h4>Details</h4>
+        <label class="ck"><input type="checkbox" data-o="tags">Tags</label>
+        <label class="ck"><input type="checkbox" data-o="notes">Notes</label>
+        <div class="orow"><span>Colour palettes</span><div class="seg" data-o="pal"><button type="button" data-v="off">Off</button><button type="button" data-v="tagged" title="Only on references ticked for Colour Palette">Colour-ticked</button><button type="button" data-v="all">All</button></div></div>
+      </section>
+    </form>
+  </div>
+</div>
+<div id="lb" hidden role="dialog" aria-modal="true" aria-label="Reference viewer"></div>
+<div id="dropCover" hidden><div id="dropMsg">Drop to add to the board</div></div>
+<div class="fth-toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="vFile" accept="image/*" multiple hidden>
+<input type="file" id="sFile" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.aif,.aiff" multiple hidden>
+<input type="file" id="jsonFile" accept=".json,application/json" hidden>
+
+<script>
+'use strict';
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const safeHref = u => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : ''; } catch (e) { return ''; } };
+let toastT;
+function toast(msg, ms = 2800) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms); }
+
+const I = {
+  check: '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.3l2.3 2.2 4.7-5"/></svg>',
+  expand: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  prev: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  next: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg>',
+  stop: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>',
+  link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></svg>',
+  video: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg>',
+  globe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/></svg>',
+  note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5.5l11-2V16"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>',
+  wave: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 12h1M6.5 8v8M10 5v14M13.5 9v6M17 6.5v11M20.5 10.5v3"/></svg>',
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></svg>',
+  out: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>'
+};
+
+/* ───────── tags ───────── */
+const VTAGS = [
+  {id: 'camera',   label: 'Camera',          short: 'Camera',   c: '#97a3ff'},
+  {id: 'lighting', label: 'Lighting',        short: 'Lighting', c: '#f5b14c'},
+  {id: 'colour',   label: 'Colour Palette',  short: 'Colour',   c: '#e889c8'},
+  {id: 'wardrobe', label: 'Wardrobe',        short: 'Wardrobe', c: '#4fc7b5'},
+  {id: 'hmu',      label: 'Hair and Makeup', short: 'Hair & MU', c: '#ff7152'},
+  {id: 'set',      label: 'Set/Locations',   short: 'Set/Loc',  c: '#8bd16a'}
+];
+const STAGS = [
+  {id: 'score',    label: 'Score',              short: 'Score',    c: '#97a3ff'},
+  {id: 'source',   label: 'Source music',       short: 'Source',   c: '#f5b14c'},
+  {id: 'ambience', label: 'Ambience / atmos',   short: 'Ambience', c: '#4fc7b5'},
+  {id: 'sfx',      label: 'Sound design / SFX', short: 'SFX',      c: '#ff7152'},
+  {id: 'foley',    label: 'Foley',              short: 'Foley',    c: '#8bd16a'},
+  {id: 'voice',    label: 'Dialogue & VO',      short: 'Dialogue', c: '#e889c8'}
+];
+const TAGSET = {visual: VTAGS, sound: STAGS};
+const tagOf = (kind, id) => TAGSET[kind].find(t => t.id === id);
+const hasAll = (kind, it) => TAGSET[kind].every(t => it.tags.includes(t.id));
+
+/* ───────── platforms ───────── */
+const PLAT = {
+  youtube:    {name: 'YouTube',     c: '#ff4e45'},
+  vimeo:      {name: 'Vimeo',       c: '#3fb4e8'},
+  spotify:    {name: 'Spotify',     c: '#1ed760'},
+  soundcloud: {name: 'SoundCloud',  c: '#ff7a1a'},
+  apple:      {name: 'Apple Music', c: '#fa5a74'},
+  bandcamp:   {name: 'Bandcamp',    c: '#4fb7c9'},
+  audio:      {name: 'Audio link',  c: '#b9bec7'},
+  file:       {name: 'Upload',      c: '#b9bec7'},
+  image:      {name: 'Image',       c: '#b9bec7'},
+  web:        {name: 'Web page',    c: '#b9bec7'}
+};
+function parseTime(s) {
+  s = String(s || '').trim(); if (!s) return 0;
+  if (/^\d+$/.test(s)) return +s;
+  let m = s.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/i);
+  if (m && (m[1] || m[2] || m[3])) return (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0);
+  m = s.split(':').map(Number); if (m.every(n => !isNaN(n))) return m.reduce((a, n) => a * 60 + n, 0);
+  return 0;
+}
+const fmtTime = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, x = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${x}` : `${m}:${x}`; };
+
+function parseLink(raw) {
+  raw = String(raw || '').trim(); if (!raw) return null;
+  let u; try { u = new URL(raw); } catch (e) { try { u = new URL('https://' + raw); } catch (e2) { return null; } }
+  if (!/^https?:$/.test(u.protocol) || !u.hostname.includes('.')) return null;
+  const h = u.hostname.replace(/^(www|m|music)\./, ''), path = u.pathname, url = u.href;
+  const out = {url, host: h};
+  if (h === 'youtu.be' || h.endsWith('youtube.com') || h.endsWith('youtube-nocookie.com')) {
+    let id = h === 'youtu.be' ? path.slice(1).split('/')[0] : u.searchParams.get('v');
+    if (!id) { const m = path.match(/\/(?:shorts|embed|live|v)\/([\w-]{6,})/); if (m) id = m[1]; }
+    const list = u.searchParams.get('list');
+    const t = parseTime(u.searchParams.get('t') || u.searchParams.get('start'));
+    if (id) return {...out, platform: 'youtube', vid: id, start: t, thumb: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`};
+    if (list) return {...out, platform: 'youtube', list};
+    return {...out, platform: 'web'};
+  }
+  if (h.endsWith('vimeo.com')) {
+    const m = path.match(/(?:video\/)?(\d{5,})(?:\/([\da-f]{6,}))?/);
+    if (m) return {...out, platform: 'vimeo', vid: m[1], hash: m[2] || u.searchParams.get('h') || '', start: parseTime((u.hash.match(/t=([\dhms]+)/) || [])[1])};
+  }
+  if (h.endsWith('spotify.com')) {
+    const m = path.match(/\/(?:intl-[\w-]+\/)?(?:embed\/)?(track|album|playlist|episode|show|artist)\/([A-Za-z0-9]+)/);
+    if (m) return {...out, platform: 'spotify', stype: m[1], sid: m[2]};
+  }
+  if (h.endsWith('soundcloud.com')) return {...out, platform: 'soundcloud', set: /\/sets\//.test(path)};
+  if (u.hostname.endsWith('music.apple.com')) return {...out, platform: 'apple', song: u.searchParams.has('i') || /\/song\//.test(path)};
+  if (h.endsWith('bandcamp.com')) return {...out, platform: 'bandcamp'};
+  if (/\.(mp3|wav|m4a|aac|ogg|oga|flac|opus|aiff?)$/i.test(path)) return {...out, platform: 'audio'};
+  if (/\.(jpe?g|png|gif|webp|avif|bmp)$/i.test(path) || /^(images\.unsplash\.com|i\.pinimg\.com|i\.imgur\.com|pbs\.twimg\.com)$/.test(u.hostname)) return {...out, platform: 'image'};
+  return {...out, platform: 'web'};
+}
+/* the embeddable player for a link, or null */
+function embedFor(it) {
+  const p = it.p || {}, start = parseTime(it.cue) || p.start || 0;
+  switch (it.platform) {
+    case 'youtube': return {src: p.vid ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(p.vid)}?rel=0&autoplay=1&playsinline=1${start ? '&start=' + start : ''}` : `https://www.youtube-nocookie.com/embed/videoseries?list=${encodeURIComponent(p.list)}&autoplay=1`, video: true};
+    case 'vimeo': return {src: `https://player.vimeo.com/video/${p.vid}?autoplay=1${p.hash ? '&h=' + p.hash : ''}${start ? '#t=' + start + 's' : ''}`, video: true};
+    case 'spotify': return {src: `https://open.spotify.com/embed/${p.stype}/${p.sid}?utm_source=generator`, h: p.stype === 'track' || p.stype === 'episode' ? 152 : 352};
+    case 'soundcloud': return {src: `https://w.soundcloud.com/player/?url=${encodeURIComponent(it.url)}&auto_play=true&visual=false&show_comments=false&color=%2397a3ff`, h: p.set ? 300 : 166};
+    case 'apple': { const u = new URL(it.url); u.hostname = 'embed.music.apple.com'; return {src: u.href, h: p.song ? 175 : 450}; }
+  }
+  return null;
+}
+function iframeHTML(e) {
+  const f = `<iframe src="${esc(e.src)}" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"${e.video ? '' : ` style="height:${e.h}px"`}></iframe>`;
+  return e.video ? `<div class="vid">${f}</div>` : f;
+}
+
+/* a readable name from the link itself, for when the platform can't be asked */
+function guessTitle(p) {
+  const P = PLAT[p.platform] || PLAT.web, kind = {youtube: p.list ? 'playlist' : 'video', vimeo: 'video', spotify: p.stype, apple: p.song ? 'song' : 'album'}[p.platform];
+  let seg = '';
+  try {
+    const parts = new URL(p.url).pathname.split('/').filter(Boolean).map(decodeURIComponent);
+    seg = (parts.reverse().find(x => /[a-z]{3,}/i.test(x) && !/^(track|album|playlist|video|watch|sets|song|music|intl-\w+|[a-z]{2})$/i.test(x)) || '').replace(/\.[a-z0-9]{2,5}$/i, '').replace(/[-_+]+/g, ' ').trim();
+  } catch (e) {}
+  if (seg && !/^[A-Za-z0-9]{16,}$/.test(seg)) return seg.charAt(0).toUpperCase() + seg.slice(1);
+  return kind ? `${P.name} ${kind}` : p.host;
+}
+async function fetchT(url, ms = 7000, opts) {
+  const ac = new AbortController(), t = setTimeout(() => ac.abort(), ms);
+  try { return await fetch(url, {...opts, signal: ac.signal}); } finally { clearTimeout(t); }
+}
+/* title, artist and thumbnail from the platform (oEmbed); quietly gives up when offline */
+async function oembed(p) {
+  const E = {youtube: 'https://www.youtube.com/oembed?format=json&url=', vimeo: 'https://vimeo.com/api/oembed.json?url=', spotify: 'https://open.spotify.com/oembed?url=', soundcloud: 'https://soundcloud.com/oembed?format=json&url='};
+  const tries = [];
+  if (E[p.platform]) tries.push(E[p.platform] + encodeURIComponent(p.url));
+  if (p.platform !== 'audio' && p.platform !== 'image') tries.push('https://noembed.com/embed?url=' + encodeURIComponent(p.url));
+  for (const u of tries) {
+    try { const r = await fetchT(u, 6000); if (!r.ok) continue; const j = await r.json(); if (j && !j.error && (j.title || j.thumbnail_url)) return j; } catch (e) {}
+  }
+  return null;
+}
+
+/* ───────── images ───────── */
+const MAX_EDGE = 1800;
+const readAsDataURL = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
+const loadImg = (src, cors) => new Promise((res, rej) => { const im = new Image(); if (cors) im.crossOrigin = 'anonymous'; im.onload = () => res(im); im.onerror = () => rej(new Error('image')); im.src = src; });
+/* shrink big stills so a board of 100 references stays quick to save */
+async function blobToStill(blob) {
+  const raw = await readAsDataURL(blob);
+  const im = await loadImg(raw);
+  const w = im.naturalWidth, h = im.naturalHeight;
+  let data = raw;
+  const keep = (blob.type === 'image/gif' && blob.size < 6e6) || (blob.size < 350e3 && /jpe?g|png|webp/.test(blob.type) && Math.max(w, h) <= MAX_EDGE);
+  if (!keep) {
+    const s = Math.min(1, MAX_EDGE / Math.max(w, h)), c = document.createElement('canvas');
+    c.width = Math.round(w * s); c.height = Math.round(h * s);
+    const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
+    data = c.toDataURL('image/jpeg', 0.86);
+  }
+  return {data, w, h, pal: paletteOf(im)};
+}
+/* five main colours of a still (k-means on a small copy) */
+function paletteOf(im, k = 5) {
+  try {
+    const c = document.createElement('canvas'), s = 72 / Math.max(im.naturalWidth || im.width, im.naturalHeight || im.height);
+    c.width = Math.max(1, Math.round((im.naturalWidth || im.width) * s)); c.height = Math.max(1, Math.round((im.naturalHeight || im.height) * s));
+    const x = c.getContext('2d', {willReadFrequently: true}); x.drawImage(im, 0, 0, c.width, c.height);
+    const d = x.getImageData(0, 0, c.width, c.height).data, px = [];
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 128) px.push([d[i], d[i + 1], d[i + 2]]);
+    if (px.length < k) return [];
+    px.sort((a, b) => (a[0] * .3 + a[1] * .59 + a[2] * .11) - (b[0] * .3 + b[1] * .59 + b[2] * .11));
+    let cen = Array.from({length: k}, (_, i) => px[Math.floor((i + .5) * px.length / k)].slice());
+    let asg = new Array(px.length).fill(0);
+    for (let it = 0; it < 10; it++) {
+      const sum = cen.map(() => [0, 0, 0, 0]);
+      px.forEach((p, i) => {
+        let best = 0, bd = Infinity;
+        cen.forEach((q, j) => { const dd = (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2; if (dd < bd) { bd = dd; best = j; } });
+        asg[i] = best; const s2 = sum[best]; s2[0] += p[0]; s2[1] += p[1]; s2[2] += p[2]; s2[3]++;
+      });
+      cen = cen.map((q, j) => sum[j][3] ? [sum[j][0] / sum[j][3], sum[j][1] / sum[j][3], sum[j][2] / sum[j][3]] : q);
+    }
+    const cnt = cen.map(() => 0); asg.forEach(a => cnt[a]++);
+    return cen.map((q, j) => ({q, n: cnt[j]})).filter(o => o.n).sort((a, b) => b.n - a.n)
+      .map(o => '#' + o.q.map(v => Math.round(v).toString(16).padStart(2, '0')).join(''));
+  } catch (e) { return []; }
+}
+/* try to keep a copy of a linked image (works when the site allows it), so it shows offline and in the PDF */
+async function grabRemote(url) {
+  try {
+    const r = await fetchT(url, 9000, {mode: 'cors'}); if (!r.ok) return null;
+    const b = await r.blob(); if (!/^image\//.test(b.type)) return null;
+    return await blobToStill(b);
+  } catch (e) { return null; }
+}
+
+/* ───────── state + storage ─────────
+   Inside the hub everything is filed under the current project (fthStore). Opened on its own,
+   the tool keeps a small IndexedDB store of its own. Stills and audio are stored as their own
+   records so a change to a note doesn't rewrite every image. */
+const store = window.fthStore || (() => {
+  let p = null;
+  const db = () => p || (p = new Promise((res, rej) => { const r = indexedDB.open('fth-moodboard', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }));
+  const tx = (m, fn) => db().then(d => new Promise((res, rej) => { const t = d.transaction('kv', m), q = fn(t.objectStore('kv')); t.oncomplete = () => res(q && q.result); t.onerror = t.onabort = () => rej(t.error); })).catch(() => undefined);
+  return {get: k => tx('readonly', s => s.get(k)), set: (k, v) => tx('readwrite', s => s.put(v, k)), del: k => tx('readwrite', s => s.delete(k))};
+})();
+
+const PDFDEF = {page: 'a4', orient: 'landscape', layout: 'masonry', size: 3, gap: 5, margin: 12, shape: '16:9', fit: 'fill',
+  names: 'below', credit: true, tags: true, notes: true, pal: 'tagged', bg: '#ffffff', header: true, visual: true, sound: true};
+const blank = () => ({app: 'fth-moodboard', v: 1, title: '', tab: 'visual', size: 260, view: 'grid', refs: [], sounds: [], pdf: {...PDFDEF},
+  vf: {tags: [], untagged: false, mode: 'any', q: ''}, sf: {tags: [], untagged: false, mode: 'any', q: ''}});
+let state = blank();
+const media = new Map();   /* id → data URL (stills, video thumbs, audio) */
+let sel = {visual: null, sound: null};
+let playing = null;        /* id of the sound whose player is open */
+let ready = false, saveT;
+
+function meta() { return JSON.parse(JSON.stringify(state)); }
+function saveNow() { if (!ready) return; clearTimeout(saveT); store.set('board', meta()); }
+function dirty() { clearTimeout(saveT); saveT = setTimeout(saveNow, 500); }
+async function putMedia(id, data) { media.set(id, data); await store.set('m:' + id, data); }
+function dropMedia(id) { media.delete(id); store.del('m:' + id); }
+if (window.fthAutosave) fthAutosave(saveNow, 1500);
+window.addEventListener('pagehide', saveNow);
+
+/* ───────── filtering ───────── */
+const listOf = kind => kind === 'visual' ? state.refs : state.sounds;
+const filterOf = kind => kind === 'visual' ? state.vf : state.sf;
+function matches(kind, it) {
+  const f = filterOf(kind);
+  const q = f.q.trim().toLowerCase();
+  if (q && ![it.title, it.source, it.artist, it.scene, it.notes, it.url, it.fileName].some(s => s && String(s).toLowerCase().includes(q))) return false;
+  if (!f.tags.length && !f.untagged) return true;
+  if (f.untagged && !it.tags.length) return true;
+  if (!f.tags.length) return false;
+  return f.mode === 'all' ? f.tags.every(t => it.tags.includes(t)) : f.tags.some(t => it.tags.includes(t));
+}
+const visible = kind => listOf(kind).filter(it => matches(kind, it));
+const filterLabel = kind => {
+  const f = filterOf(kind), parts = f.tags.map(t => tagOf(kind, t).label);
+  if (f.untagged) parts.push('Untagged');
+  let s = parts.length ? parts.join(f.mode === 'all' && f.tags.length > 1 ? ' + ' : ', ') : '';
+  if (f.q.trim()) s += (s ? ' · ' : '') + `"${f.q.trim()}"`;
+  return s;
+};
+
+function renderChips(kind) {
+  const f = filterOf(kind), list = listOf(kind), el = $(kind === 'visual' ? '#vChips' : '#sChips');
+  const none = !f.tags.length && !f.untagged;
+  let h = `<button class="chip all" data-f="*" aria-pressed="${none}">Everything <span class="n">${list.length}</span></button>`;
+  h += TAGSET[kind].map(t => `<button class="chip" style="--c:${t.c}" data-f="${t.id}" aria-pressed="${f.tags.includes(t.id)}"><span class="d"></span>${esc(t.label)} <span class="n">${list.filter(x => x.tags.includes(t.id)).length}</span></button>`).join('');
+  h += `<button class="chip untag" data-f="untagged" aria-pressed="${f.untagged}" title="References you haven't ticked anything for yet"><span class="d"></span>Untagged <span class="n">${list.filter(x => !x.tags.length).length}</span></button>`;
+  el.innerHTML = h;
+  $$(kind === 'visual' ? '#vMode button' : '#sMode button').forEach(b => b.classList.toggle('on', b.dataset.m === f.mode));
+  const n = visible(kind).length, st = $(kind === 'visual' ? '#vStatus' : '#sStatus'), noun = kind === 'visual' ? 'reference' : 'sound';
+  const lbl = filterLabel(kind);
+  st.innerHTML = !list.length ? '' : lbl ? `Showing ${n} of ${list.length} ${noun}s · ${esc(lbl)} <button data-clear="${kind}">Clear filter</button>` : `${list.length} ${noun}${list.length === 1 ? '' : 's'}`;
+}
+function onChip(kind, e) {
+  const b = e.target.closest('.chip'); if (!b) return;
+  const f = filterOf(kind), v = b.dataset.f;
+  if (v === '*') { f.tags = []; f.untagged = false; }
+  else if (v === 'untagged') f.untagged = !f.untagged;
+  else f.tags = f.tags.includes(v) ? f.tags.filter(t => t !== v) : [...f.tags, v];
+  dirty(); render(kind);
+}
+$('#vChips').onclick = e => onChip('visual', e);
+$('#sChips').onclick = e => onChip('sound', e);
+$('#vMode').onclick = e => { const b = e.target.closest('button'); if (!b) return; state.vf.mode = b.dataset.m; dirty(); render('visual'); };
+$('#sMode').onclick = e => { const b = e.target.closest('button'); if (!b) return; state.sf.mode = b.dataset.m; dirty(); render('sound'); };
+$('#vQ').oninput = e => { state.vf.q = e.target.value; dirty(); render('visual'); };
+$('#sQ').oninput = e => { state.sf.q = e.target.value; dirty(); render('sound'); };
+document.addEventListener('click', e => { const c = e.target.closest('[data-clear]'); if (!c) return; const f = filterOf(c.dataset.clear); f.tags = []; f.untagged = false; f.q = ''; $(c.dataset.clear === 'visual' ? '#vQ' : '#sQ').value = ''; dirty(); render(c.dataset.clear); });
+
+/* new items pick up the tags you're filtering by, so adding while viewing "Lighting" files them there */
+function defaultTags(kind) { return filterOf(kind).tags.slice(); }
+function noteDefault(kind, n) {
+  const t = defaultTags(kind); if (!t.length) return;
+  toast(`Ticked ${t.map(x => tagOf(kind, x).label).join(', ')} on ${n === 1 ? 'the new item' : n + ' new items'} to match your filter`, 3600);
+}
+
+/* tick pills (shared by both boards) */
+function ticksHTML(kind, it) {
+  const all = hasAll(kind, it);
+  return TAGSET[kind].map(t => `<button class="tk" style="--c:${t.c}" data-tk="${t.id}" aria-pressed="${it.tags.includes(t.id)}" title="${esc(t.label)}"><span class="bx">${I.check}</span><span class="s">${esc(t.short)}</span><span class="l">${esc(t.label)}</span></button>`).join('')
+    + `<button class="tk all" data-tk="*" aria-pressed="${all}" title="All of the above"><span class="bx">${I.check}</span><span class="s">All</span><span class="l">All of the above</span></button>`;
+}
+function toggleTag(kind, it, t) {
+  const ids = TAGSET[kind].map(x => x.id);
+  if (t === '*') it.tags = hasAll(kind, it) ? [] : ids.slice();
+  else it.tags = it.tags.includes(t) ? it.tags.filter(x => x !== t) : ids.filter(x => x === t || it.tags.includes(x));
+  dirty(); render(kind);
+}
+
+/* ───────── visual board ───────── */
+const cardCache = new Map();
+function srcOf(it) { return media.get(it.id) || (it.hasData ? '' : (it.thumb || (it.platform === 'image' ? it.url : ''))); }
+function mediaHTML(it) {
+  const src = srcOf(it);
+  const badge = it.kind === 'video' ? `<span class="badge" style="color:${PLAT[it.platform].c}">${I.video}<span style="color:#fff">${PLAT[it.platform].name}</span></span>` : it.kind === 'link' ? `<span class="badge">${I.link}<span>Link</span></span>` : '';
+  let inner;
+  const ph = `<div class="ph"><div>${it.kind === 'video' ? I.video : I.globe}<b>${esc(it.host || 'Link')}</b>${it.kind === 'video' ? 'Video reference' : it.kind === 'image' ? "Linked image · couldn't load right now" : 'Web reference · opens in a new tab'}</div></div>`;
+  if (src) inner = `<img src="${esc(src)}" alt="" loading="lazy" draggable="false"${it.w ? ` width="${it.w}" height="${it.h}"` : ''} onerror="this.nextElementSibling.hidden=false;this.remove()"><div hidden>${ph}</div>`;
+  else if (it.hasData) inner = `<div class="ph loading"></div>`;
+  else inner = ph;
+  return inner + badge + (it.kind === 'video' ? `<div class="play"><i>${I.play}</i></div>` : '')
+    + `<div class="tools-ov"><button class="ov-btn" data-act="lb" title="View large">${I.expand}</button></div>`;
+}
+function updateCard(el, it) {
+  const key = srcOf(it) + '|' + it.kind + '|' + (it.hasData ? 1 : 0);
+  if (el._mk !== key) { el._mk = key; $('.media', el).innerHTML = mediaHTML(it); }
+  const showPal = it.tags.includes('colour') && it.pal && it.pal.length;
+  const href = safeHref(it.url);
+  const kindTxt = it.kind === 'video' ? `Video · ${(PLAT[it.platform] || PLAT.web).name}${it.cue ? ' · from ' + it.cue : ''}` : it.kind === 'link' ? 'Web reference' : 'Still';
+  $('.rbody', el).innerHTML = `<div class="rinfo"><div class="rkind">${esc(kindTxt)}</div><div class="rt${it.title ? '' : ' un'}">${esc(it.title || 'Untitled reference')}</div>`
+    + (it.source ? `<div class="rs">${esc(it.source)}</div>` : '')
+    + (it.notes ? `<div class="rn">${esc(it.notes)}</div>` : '')
+    + (showPal ? `<div class="pal">${it.pal.map(c => `<i style="background:${c}"></i>`).join('')}</div>` : '')
+    + (href ? `<div class="rlink"><a href="${esc(href)}" target="_blank" rel="noopener">${esc(it.host || href)} ↗</a></div>` : '')
+    + `</div><div class="ticks">${ticksHTML('visual', it)}</div>`;
+  $('.tagdots', el).innerHTML = it.tags.map(t => `<i style="background:${tagOf('visual', t).c}"></i>`).join('');
+  el.classList.toggle('sel', sel.visual === it.id);
+}
+function cardFor(it) {
+  let el = cardCache.get(it.id);
+  if (!el) {
+    el = document.createElement('article'); el.className = 'ref'; el.dataset.id = it.id; el.tabIndex = 0; el.draggable = true;
+    el.innerHTML = '<div class="media"></div><div class="tagdots"></div><div class="rbody"></div>';
+    cardCache.set(it.id, el);
+  }
+  updateCard(el, it); return el;
+}
+function layoutBoard() {
+  const b = $('#board'), list = visible('visual');
+  if (!state.refs.length) {
+    b.classList.remove('list');
+    b.innerHTML = `<div class="empty" id="vEmpty"><div><div class="tiles">${VTAGS.map((t, i) => `<i style="background:${t.c};height:${[44, 30, 52, 36, 46, 28][i]}px"></i>`).join('')}</div>
+      <h3>Start your mood board</h3><p>Drop stills here, paste them from your clipboard, or add links to images, clips and web pages. Then tick what each one is a reference for: camera, lighting, colour palette, wardrobe, hair and makeup, or sets and locations.</p></div></div>`;
+    return;
+  }
+  b.classList.toggle('list', state.view === 'list');
+  if (!list.length) { b.innerHTML = `<div class="nomatch">No references match this filter. <button class="fth-btn sm" data-clear="visual" style="margin-left:8px">Clear filter</button></div>`; return; }
+  if (state.view === 'list') { b.style.setProperty('--tw', state.size + 'px'); b.replaceChildren(...list.map(cardFor)); return; }
+  const W = b.clientWidth || 900, gap = 14, size = state.size, capH = matchMedia('(hover: none)').matches;
+  const n = Math.max(1, Math.min(list.length, Math.floor((W + gap) / (size + gap))) || 1);
+  const cw = (W - gap * (n - 1)) / n;
+  const cols = Array.from({length: n}, () => { const c = document.createElement('div'); c.className = 'col'; return {c, h: 0}; });
+  list.forEach(it => {
+    const ratio = it.w && it.h ? it.h / it.w : it.kind === 'link' ? 0.62 : 0.5625;
+    const est = cw * ratio + (capH ? 92 + (it.source ? 16 : 0) : 0);
+    let best = cols[0]; for (const c of cols) if (c.h < best.h - 1) best = c;
+    best.c.appendChild(cardFor(it)); best.h += est + gap;
+  });
+  if (n < Math.floor((W + gap) / (size + gap))) for (let i = n; i < Math.floor((W + gap) / (size + gap)); i++) { const c = document.createElement('div'); c.className = 'col'; cols.push({c}); }
+  b.replaceChildren(...cols.map(c => c.c));
+}
+function renderView() { $$('#vView button').forEach(x => x.classList.toggle('on', x.dataset.v === state.view)); }
+$('#vView').onclick = e => { const x = e.target.closest('button'); if (!x || state.view === x.dataset.v) return; state.view = x.dataset.v; dirty(); renderView(); layoutBoard(); renderEditor('visual'); };
+
+/* ───────── sound board ───────── */
+function sThumb(it) {
+  const src = media.get('t:' + it.id) || it.thumb;
+  const pc = PLAT[it.platform] ? PLAT[it.platform].c : '';
+  const canPlay = it.kind === 'file' || it.platform === 'audio' || embedFor(it);
+  const on = playing === it.id;
+  return `<div class="sthumb" style="--pc:${pc}">${it.kind === 'file' ? I.wave : I.note}${src ? `<img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">` : ''}`
+    + (canPlay ? `<button class="pb" data-act="play" title="${on ? 'Close player' : 'Play'}">${on ? I.stop : I.play}</button>` : '') + '</div>';
+}
+function playerHTML(it) {
+  if (it.kind === 'file' || it.platform === 'audio') {
+    const src = it.kind === 'file' ? media.get(it.id) : it.url;
+    return src ? `<audio controls autoplay preload="metadata" src="${esc(src)}" data-cue="${parseTime(it.cue)}"></audio>` : '<div class="plink">Loading audio…</div>';
+  }
+  const e = embedFor(it); return e ? iframeHTML(e) : '';
+}
+function sCardHTML(it) {
+  const P = PLAT[it.platform] || PLAT.web, href = safeHref(it.url);
+  return `<div class="shead">${sThumb(it)}<div style="min-width:0">
+      <div class="splat" style="--pc:${P.c}"><i></i>${esc(it.kind === 'file' ? 'Upload' : P.name)}${it.cue ? `<span class="cue">· from ${esc(it.cue)}</span>` : ''}</div>
+      <div class="st${it.title ? '' : ' un'}">${esc(it.title || it.fileName || 'Untitled sound')}</div>
+      ${it.artist ? `<div class="sa">${esc(it.artist)}</div>` : ''}
+      ${it.scene ? `<div class="sscene"><b>For</b>${esc(it.scene)}</div>` : ''}
+    </div></div>
+    <div class="sbody"><div class="ticks">${ticksHTML('sound', it)}</div>${it.notes ? `<div class="rn">${esc(it.notes)}</div>` : ''}</div>
+    ${playing === it.id ? `<div class="splayer">${playerHTML(it)}</div>` : ''}
+    ${playing === it.id && href && it.kind !== 'file' ? `<div class="plink"><span>Player not loading?</span><a href="${esc(href)}" target="_blank" rel="noopener">Open on ${esc(P.name)} ↗</a></div>` : ''}`;
+}
+function layoutSounds() {
+  const g = $('#sgrid'), list = visible('sound');
+  if (!state.sounds.length) {
+    g.innerHTML = `<div class="empty" id="sEmpty" style="grid-column:1/-1"><div><div class="tiles">${STAGS.map((t, i) => `<i style="background:${t.c};height:${[22, 40, 54, 34, 46, 26][i]}px;width:12px"></i>`).join('')}</div>
+      <h3>Build the sound of the film</h3><p>Paste links to tracks, playlists, clips and sound design references from Spotify, YouTube, SoundCloud, Apple Music, Bandcamp or Vimeo, or upload your own audio. Tick whether each is score, source music, ambience, sound design, foley or dialogue.</p></div></div>`;
+    return;
+  }
+  if (!list.length) { g.innerHTML = `<div class="nomatch" style="grid-column:1/-1">No sounds match this filter. <button class="fth-btn sm" data-clear="sound" style="margin-left:8px">Clear filter</button></div>`; return; }
+  const keep = new Map($$('.snd', g).map(el => [el.dataset.id, el]));
+  const els = list.map(it => {
+    let el = keep.get(it.id);
+    const html = sCardHTML(it);
+    if (!el) { el = document.createElement('article'); el.className = 'snd'; el.dataset.id = it.id; el.tabIndex = 0; el.draggable = true; }
+    /* keep a running player untouched when only the tags or notes change */
+    if (el._h !== html) {
+      const pl = $('.splayer', el), keepPl = pl && playing === it.id && el._pk === playerKey(it);
+      el.innerHTML = html; el._h = html;
+      if (keepPl) $('.splayer', el).replaceWith(pl);
+    }
+    el._pk = playerKey(it);
+    el.classList.toggle('sel', sel.sound === it.id);
+    return el;
+  });
+  g.replaceChildren(...els);
+  $$('audio[data-cue]', g).forEach(a => { if (!a._cued) { a._cued = 1; const c = +a.dataset.cue; if (c) a.addEventListener('loadedmetadata', () => { a.currentTime = c; }, {once: true}); } });
+}
+const playerKey = it => playing === it.id ? it.url + '|' + it.cue + '|' + (media.has(it.id) ? 1 : 0) : '';
+
+/* ───────── editor panel ───────── */
+function field(lbl, k, val, ph, type = 'input') {
+  return `<label class="field"><span class="fth-label">${lbl}</span>${type === 'textarea'
+    ? `<textarea class="fth-input" data-k="${k}" rows="3" placeholder="${esc(ph)}">${esc(val)}</textarea>`
+    : `<input class="fth-input" data-k="${k}" value="${esc(val)}" placeholder="${esc(ph)}">`}</label>`;
+}
+function checksHTML(kind, it) {
+  return `<div class="checks">${TAGSET[kind].map(t => `<label style="--c:${t.c}"><input type="checkbox" data-ck="${t.id}"${it.tags.includes(t.id) ? ' checked' : ''}>${esc(t.label)}<span class="d"></span></label>`).join('')}
+    <label class="allrow"><input type="checkbox" data-ck="*"${hasAll(kind, it) ? ' checked' : ''}>All of the above</label></div>`;
+}
+function renderEditor(kind) {
+  const ed = $(kind === 'visual' ? '#vEd' : '#sEd'), cols = $(kind === 'visual' ? '#vCols' : '#sCols');
+  const it = listOf(kind).find(x => x.id === sel[kind]);
+  if (!it) { ed.hidden = true; cols.classList.remove('ed'); ed.innerHTML = ''; return; }
+  ed.hidden = false; cols.classList.add('ed');
+  const vis = visible(kind), i = vis.findIndex(x => x.id === it.id);
+  const nav = `<button class="fth-btn icon ghost" data-ed="prev" title="Previous"${i <= 0 ? ' disabled' : ''}>${I.prev}</button><button class="fth-btn icon ghost" data-ed="next" title="Next"${i < 0 || i >= vis.length - 1 ? ' disabled' : ''}>${I.next}</button><button class="fth-btn icon ghost" data-ed="close" title="Close (Esc)">${I.close}</button>`;
+  const href = safeHref(it.url);
+  let h;
+  if (kind === 'visual') {
+    const src = srcOf(it);
+    h = `<div class="ehead"><span class="fth-label">${it.kind === 'video' ? 'Video reference' : it.kind === 'link' ? 'Web reference' : 'Still'}${vis.length && i >= 0 ? ` · ${i + 1} of ${vis.length}` : ''}</span>${nav}</div>
+      <div class="eprev" data-ed="lb">${src ? `<img src="${esc(src)}" alt="" onerror="this.remove()">` : `<div class="ph media" style="display:grid"><div class="ph">${esc(it.host || '')}</div></div>`}</div>
+      ${state.view === 'list' ? '' : `<span class="fth-label">This is a reference for</span>${checksHTML(kind, it)}`}
+      ${it.pal && it.pal.length && state.view !== 'list' ? `<span class="fth-label">Colours in this frame <span class="fth-muted" style="text-transform:none;letter-spacing:0;font-family:var(--fth-display)">· click to copy</span></span><div class="epal">${it.pal.map(c => `<button data-hex="${c}" style="background:${c};color:${lum(c) > .55 ? '#111' : '#fff'}" title="Copy ${c}">${c}</button>`).join('')}</div>` : ''}
+      ${field('Title', 'title', it.title, 'e.g. In the Mood for Love')}
+      ${field('Source / credit', 'source', it.source, 'Director, DP, photographer, year')}
+      ${it.kind === 'video' ? field('Start at', 'cue', it.cue, 'e.g. 1:24') : ''}
+      ${field('Link', 'url', it.url, 'https://')}
+      ${field('Notes', 'notes', it.notes, 'What to take from this: the move, the key-to-fill ratio, the texture…', 'textarea')}`;
+  } else {
+    const P = PLAT[it.platform] || PLAT.web;
+    h = `<div class="ehead"><span class="fth-label">${esc(it.kind === 'file' ? 'Uploaded audio' : P.name)}${vis.length && i >= 0 ? ` · ${i + 1} of ${vis.length}` : ''}</span>${nav}</div>
+      <span class="fth-label">This is a reference for</span>${checksHTML(kind, it)}
+      ${field('Title', 'title', it.title, it.fileName || 'Track or sound name')}
+      ${field('Artist / composer', 'artist', it.artist, 'e.g. Mica Levi')}
+      <div class="frow2">${field('Used for', 'scene', it.scene, 'Scene, moment, title seq.')}${field('Start at', 'cue', it.cue, 'e.g. 2:10')}</div>
+      ${it.kind === 'file' ? `<div class="field"><span class="fth-label">File</span><div class="fth-muted" style="font-size:13px;word-break:break-all">${esc(it.fileName || 'audio')}${it.size ? ' · ' + (it.size / 1048576).toFixed(1) + ' MB' : ''}</div></div>` : field('Link', 'url', it.url, 'https://')}
+      ${field('Notes', 'notes', it.notes, 'Why this works: tempo, texture, instrumentation, how it should sit under the scene…', 'textarea')}`;
+  }
+  h += `<div class="eacts">${href ? `<a class="fth-btn sm" href="${esc(href)}" target="_blank" rel="noopener">${I.out}Open link</a>` : ''}
+      <button class="fth-btn sm" data-ed="dup">${I.copy}Duplicate</button><span class="sp"></span>
+      <button class="fth-btn sm danger" data-ed="del">${I.trash}Remove</button></div>
+    <div class="added">Added ${new Date(it.added || Date.now()).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'})}</div>`;
+  ed.innerHTML = h;
+  ed.dataset.kind = kind; ed.dataset.id = it.id;
+}
+function lum(hex) { const n = parseInt(hex.slice(1), 16); return ((n >> 16 & 255) * .2126 + (n >> 8 & 255) * .7152 + (n & 255) * .0722) / 255; }
+function edItem(ed) { return listOf(ed.dataset.kind).find(x => x.id === ed.dataset.id); }
+['#vEd', '#sEd'].forEach(s => {
+  const ed = $(s);
+  ed.addEventListener('input', e => {
+    const k = e.target.dataset.k, it = edItem(ed); if (!k || !it) return;
+    it[k] = e.target.value;
+    if (k === 'url') { const p = parseLink(it.url); if (p) { it.host = p.host; if (ed.dataset.kind === 'sound' && it.kind !== 'file') { it.platform = p.platform; it.p = p; } } }
+    dirty(); refreshItem(ed.dataset.kind, it);
+  });
+  ed.addEventListener('change', e => {
+    const ck = e.target.dataset.ck, it = edItem(ed); if (!ck || !it) return;
+    toggleTag(ed.dataset.kind, it, ck); renderEditor(ed.dataset.kind);
+  });
+  ed.addEventListener('click', e => {
+    const hx = e.target.closest('[data-hex]');
+    if (hx) { navigator.clipboard && navigator.clipboard.writeText(hx.dataset.hex).then(() => toast(`Copied ${hx.dataset.hex}`), () => toast(hx.dataset.hex)); return; }
+    const b = e.target.closest('[data-ed]'); if (!b) return;
+    const kind = ed.dataset.kind, it = edItem(ed); if (!it) return;
+    const a = b.dataset.ed;
+    if (a === 'close') { select(kind, null); }
+    else if (a === 'prev' || a === 'next') { const v = visible(kind), i = v.findIndex(x => x.id === it.id), n = v[i + (a === 'prev' ? -1 : 1)]; if (n) select(kind, n.id, true); }
+    else if (a === 'lb') openLB(it.id);
+    else if (a === 'del') removeItem(kind, it);
+    else if (a === 'dup') duplicate(kind, it);
+  });
+});
+/* update one card without re-laying out the whole board (keeps typing smooth) */
+function refreshItem(kind, it) {
+  if (kind === 'visual') { const el = cardCache.get(it.id); if (el) updateCard(el, it); }
+  else render('sound', true);
+  renderChips(kind);
+}
+function select(kind, id, scroll) {
+  sel[kind] = id;
+  if (kind === 'visual') { cardCache.forEach((el, k) => el.classList.toggle('sel', k === id)); }
+  else $$('.snd').forEach(el => el.classList.toggle('sel', el.dataset.id === id));
+  renderEditor(kind);
+  requestAnimationFrame(() => { if (kind === 'visual') layoutBoard(); });
+  if (id && scroll) { const el = kind === 'visual' ? cardCache.get(id) : $(`.snd[data-id="${id}"]`); el && el.scrollIntoView({block: 'nearest', behavior: 'smooth'}); }
+}
+function removeItem(kind, it) {
+  if (!confirm(`Remove "${it.title || it.fileName || 'this ' + (kind === 'visual' ? 'reference' : 'sound')}" from the board?`)) return;
+  const L = listOf(kind), i = L.indexOf(it); L.splice(i, 1);
+  if (it.hasData || it.kind === 'file') dropMedia(it.id);
+  if (media.has('t:' + it.id)) dropMedia('t:' + it.id);
+  cardCache.delete(it.id); if (playing === it.id) playing = null;
+  const v = visible(kind); sel[kind] = v.length ? (v[Math.min(i, v.length - 1)] || v[0]).id : null;
+  saveNow(); render(kind); renderEditor(kind); toast('Removed');
+}
+async function duplicate(kind, it) {
+  const c = JSON.parse(JSON.stringify(it)); c.id = uid(); c.added = Date.now(); c.title = it.title ? it.title + ' (copy)' : '';
+  if (media.has(it.id)) await putMedia(c.id, media.get(it.id));
+  if (media.has('t:' + it.id)) await putMedia('t:' + c.id, media.get('t:' + it.id));
+  const L = listOf(kind); L.splice(L.indexOf(it) + 1, 0, c);
+  saveNow(); render(kind); select(kind, c.id, true);
+}
+
+/* ───────── board interactions ───────── */
+$('#board').addEventListener('click', e => {
+  if (e.target.closest('#vEmpty')) { $('#vFile').click(); return; }
+  const card = e.target.closest('.ref'); if (!card) return;
+  const it = state.refs.find(x => x.id === card.dataset.id); if (!it) return;
+  const tk = e.target.closest('[data-tk]');
+  if (tk) { toggleTag('visual', it, tk.dataset.tk); if (sel.visual === it.id) renderEditor('visual'); return; }
+  if (e.target.closest('[data-act="lb"]') || e.target.closest('.media')) { openLB(it.id); select('visual', it.id); return; }
+  select('visual', sel.visual === it.id ? null : it.id);
+});
+$('#board').addEventListener('keydown', e => {
+  const card = e.target.closest('.ref'); if (!card || e.target !== card) return;
+  if (e.key === 'Enter') { select('visual', card.dataset.id); }
+  if (e.key === ' ') { e.preventDefault(); openLB(card.dataset.id); }
+});
+$('#sgrid').addEventListener('click', e => {
+  if (e.target.closest('#sEmpty')) { $('#sUrl').focus(); return; }
+  const card = e.target.closest('.snd'); if (!card) return;
+  const it = state.sounds.find(x => x.id === card.dataset.id); if (!it) return;
+  const tk = e.target.closest('[data-tk]');
+  if (tk) { toggleTag('sound', it, tk.dataset.tk); if (sel.sound === it.id) renderEditor('sound'); return; }
+  if (e.target.closest('[data-act="play"]')) { playing = playing === it.id ? null : it.id; render('sound'); return; }
+  if (e.target.closest('.splayer,.plink')) return;
+  select('sound', sel.sound === it.id ? null : it.id);
+});
+$('#sgrid').addEventListener('keydown', e => { const c = e.target.closest('.snd'); if (c && e.target === c && e.key === 'Enter') select('sound', c.dataset.id); });
+
+/* drag to reorder */
+let dragId = null;
+function wireReorder(container, sel, kind, horizontal) {
+  container.addEventListener('dragstart', e => {
+    const c = e.target.closest(sel); if (!c) return;
+    dragId = c.dataset.id; c.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/x-moodboard', dragId);
+  });
+  container.addEventListener('dragend', () => { dragId = null; $$('.dragging,.drop-before,.drop-after').forEach(x => x.classList.remove('dragging', 'drop-before', 'drop-after')); });
+  container.addEventListener('dragover', e => {
+    if (!dragId) return; const c = e.target.closest(sel); if (!c || c.dataset.id === dragId) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+    const r = c.getBoundingClientRect(), after = horizontal ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2;
+    $$('.drop-before,.drop-after').forEach(x => x !== c && x.classList.remove('drop-before', 'drop-after'));
+    c.classList.toggle('drop-after', after); c.classList.toggle('drop-before', !after);
+  });
+  container.addEventListener('drop', e => {
+    if (!dragId) return; const c = e.target.closest(sel); e.preventDefault(); e.stopPropagation();
+    if (c && c.dataset.id !== dragId) {
+      const L = listOf(kind), from = L.findIndex(x => x.id === dragId), item = L.splice(from, 1)[0];
+      let to = L.findIndex(x => x.id === c.dataset.id); if (c.classList.contains('drop-after')) to++;
+      L.splice(to, 0, item); saveNow();
+    }
+    dragId = null; render(kind);
+  });
+}
+wireReorder($('#board'), '.ref', 'visual', false);
+wireReorder($('#sgrid'), '.snd', 'sound', true);
+
+/* ───────── adding references ───────── */
+async function addImageFiles(files) {
+  files = [...files].filter(f => /^image\//.test(f.type)); if (!files.length) return 0;
+  const tags = defaultTags('visual');
+  toast(files.length > 1 ? `Adding ${files.length} stills…` : 'Adding still…', 9000);
+  let n = 0, last = null;
+  for (const f of files) {
+    try {
+      const s = await blobToStill(f), it = {id: uid(), kind: 'image', platform: 'image', title: f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim(), source: '', url: '', notes: '', tags: tags.slice(), w: s.w, h: s.h, pal: s.pal, hasData: true, added: Date.now()};
+      await putMedia(it.id, s.data); state.refs.push(it); n++; last = it;
+    } catch (e) { toast(`Couldn't read ${f.name}`); }
+  }
+  if (n) { saveNow(); setTab('visual'); render('visual'); toast(`Added ${n} still${n === 1 ? '' : 's'}`); noteDefault('visual', n); }
+  return n;
+}
+async function addVisualLink(raw, opts = {}) {
+  const p = parseLink(raw); if (!p) { toast("That doesn't look like a link"); return; }
+  if (['spotify', 'soundcloud', 'apple', 'bandcamp', 'audio'].includes(p.platform)) { setTab('sound'); return addSoundLink(raw); }
+  const it = {id: uid(), kind: p.platform === 'youtube' || p.platform === 'vimeo' ? 'video' : p.platform === 'image' || opts.image ? 'image' : 'link', platform: p.platform === 'web' && opts.image ? 'image' : p.platform,
+    url: p.url, host: p.host, p, title: '', source: '', notes: '', tags: defaultTags('visual'), cue: p.start ? fmtTime(p.start) : '', hasData: false, added: Date.now()};
+  if (it.kind === 'video' && p.thumb) it.thumb = p.thumb;
+  state.refs.push(it); saveNow(); render('visual'); noteDefault('visual', 1);
+  /* fill in what we can find out */
+  if (it.kind === 'image') {
+    const s = await grabRemote(it.url);
+    if (s) { await putMedia(it.id, s.data); Object.assign(it, {w: s.w, h: s.h, pal: s.pal, hasData: true}); }
+    else { try { const im = await loadImg(it.url); it.w = im.naturalWidth; it.h = im.naturalHeight; } catch (e) { it.kind = 'link'; it.platform = 'web'; toast("Couldn't load that image, so it's saved as a link"); } }
+    if (!it.title) it.title = decodeURIComponent((p.url.split('/').pop() || '').split('?')[0]).replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 80);
+  } else {
+    const o = await oembed(p);
+    if (o) {
+      if (!it.title && o.title) it.title = o.title;
+      if (!it.source && o.author_name) it.source = o.author_name;
+      if (!it.thumb && o.thumbnail_url) it.thumb = o.thumbnail_url;
+      if (o.width && o.height && it.kind === 'video') { it.w = o.width; it.h = o.height; }
+    }
+    if (it.thumb) {
+      const s = await grabRemote(it.thumb);
+      if (s) { await putMedia(it.id, s.data); Object.assign(it, {w: s.w, h: s.h, pal: s.pal, hasData: true}); }
+      else { try { const im = await loadImg(it.thumb); it.w = im.naturalWidth; it.h = im.naturalHeight; } catch (e) { delete it.thumb; } }
+    }
+    if (!it.title) it.title = guessTitle(p);
+  }
+  saveNow(); render('visual'); if (sel.visual === it.id) renderEditor('visual');
+}
+async function addSoundLink(raw) {
+  const p = parseLink(raw); if (!p) { toast("That doesn't look like a link"); return; }
+  const it = {id: uid(), kind: 'link', platform: p.platform === 'image' ? 'web' : p.platform, url: p.url, host: p.host, p, title: '', artist: '', scene: '', cue: p.start ? fmtTime(p.start) : '', notes: '', tags: defaultTags('sound'), added: Date.now()};
+  if (p.thumb) it.thumb = p.thumb;
+  if (p.platform === 'audio') it.title = decodeURIComponent(p.url.split('/').pop().split('?')[0]);
+  state.sounds.push(it); saveNow(); setTab('sound'); render('sound'); noteDefault('sound', 1);
+  if (!embedFor(it) && p.platform !== 'audio') toast(`${(PLAT[it.platform] || PLAT.web).name} links can't play here, so this one opens in a new tab`, 3600);
+  const o = await oembed(p);
+  if (o) {
+    let t = o.title || '';
+    /* SoundCloud and others give "Track by Artist" */
+    const m = t.match(/^(.*) by (.+)$/);
+    if (m && !o.author_name) { t = m[1]; it.artist = it.artist || m[2]; }
+    if (!it.title) it.title = t;
+    if (!it.artist && o.author_name) it.artist = o.author_name;
+    if (o.thumbnail_url) it.thumb = o.thumbnail_url;
+  }
+  if (it.thumb) { const s = await grabRemote(it.thumb); if (s) await putMedia('t:' + it.id, s.data); }
+  if (!it.title) it.title = guessTitle(p);
+  saveNow(); render('sound'); if (sel.sound === it.id) renderEditor('sound');
+}
+async function addAudioFiles(files) {
+  files = [...files].filter(f => /^audio\//.test(f.type) || /\.(mp3|wav|m4a|aac|ogg|flac|aiff?)$/i.test(f.name)); if (!files.length) return 0;
+  let n = 0;
+  for (const f of files) {
+    if (f.size > 80 * 1048576) { toast(`${f.name} is over 80 MB. Link to it instead.`, 4200); continue; }
+    if (f.size > 20 * 1048576) toast(`${f.name} is large (${(f.size / 1048576).toFixed(0)} MB) and will make the project slower to save`, 4200);
+    const data = await readAsDataURL(f);
+    const it = {id: uid(), kind: 'file', platform: 'file', fileName: f.name, size: f.size, title: f.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '), artist: '', scene: '', cue: '', notes: '', tags: defaultTags('sound'), added: Date.now()};
+    await putMedia(it.id, data); state.sounds.push(it); n++;
+  }
+  if (n) { saveNow(); setTab('sound'); render('sound'); toast(`Added ${n} audio file${n === 1 ? '' : 's'}`); noteDefault('sound', n); }
+  return n;
+}
+$('#vUpload').onclick = () => $('#vFile').click();
+$('#sUpload').onclick = () => $('#sFile').click();
+$('#vFile').onchange = e => { addImageFiles(e.target.files); e.target.value = ''; };
+$('#sFile').onchange = e => { addAudioFiles(e.target.files); e.target.value = ''; };
+$('#vForm').onsubmit = e => { e.preventDefault(); const v = $('#vUrl').value; if (!v.trim()) return; $('#vUrl').value = ''; addVisualLink(v); };
+$('#sForm').onsubmit = e => { e.preventDefault(); const v = $('#sUrl').value; if (!v.trim()) return; $('#sUrl').value = ''; addSoundLink(v); };
+
+/* drop and paste anywhere */
+function routeFiles(files) {
+  const imgs = [...files].filter(f => /^image\//.test(f.type)), auds = [...files].filter(f => !/^image\//.test(f.type));
+  if (imgs.length) addImageFiles(imgs);
+  if (auds.length) addAudioFiles(auds).then(n => { if (!n && !imgs.length) toast('Drop images or audio files'); });
+}
+function routeText(txt, html) {
+  let img = null;
+  if (html) { const m = html.match(/<img[^>]+src=["']([^"']+)["']/i); if (m && /^https?:/.test(m[1])) img = m[1]; }
+  const url = (txt || '').split(/\s+/).find(s => /^https?:\/\//i.test(s));
+  if (img && (!url || !/youtu|vimeo|spotify|soundcloud|apple|bandcamp/.test(url))) return addVisualLink(img, {image: true});
+  if (!url) return false;
+  const p = parseLink(url);
+  if (p && ['spotify', 'soundcloud', 'apple', 'bandcamp', 'audio'].includes(p.platform)) return addSoundLink(url);
+  return state.tab === 'sound' && p && p.platform === 'youtube' ? addSoundLink(url) : addVisualLink(url);
+}
+let dragDepth = 0;
+const external = e => e.dataTransfer && !dragId && [...e.dataTransfer.types].some(t => t === 'Files' || t === 'text/uri-list' || t === 'text/html');
+window.addEventListener('dragenter', e => { if (!external(e)) return; dragDepth++; $('#dropCover').hidden = false; });
+window.addEventListener('dragleave', e => { if (!external(e)) return; if (--dragDepth <= 0) { dragDepth = 0; $('#dropCover').hidden = true; } });
+window.addEventListener('dragover', e => { if (external(e)) e.preventDefault(); });
+window.addEventListener('drop', e => {
+  dragDepth = 0; $('#dropCover').hidden = true;
+  if (!external(e)) return; e.preventDefault();
+  const dt = e.dataTransfer;
+  if (dt.files && dt.files.length) routeFiles(dt.files);
+  else routeText(dt.getData('text/uri-list') || dt.getData('text/plain'), dt.getData('text/html'));
+});
+window.addEventListener('paste', e => {
+  if (e.target.closest && e.target.closest('input,textarea')) return;
+  const cd = e.clipboardData; if (!cd) return;
+  const files = [...cd.files]; if (files.length) { e.preventDefault(); routeFiles(files); return; }
+  const txt = cd.getData('text/plain'), html = cd.getData('text/html');
+  if (routeText(txt, html) !== false) e.preventDefault();
+});
+
+/* ───────── lightbox ───────── */
+let lbId = null;
+function openLB(id) { lbId = id; renderLB(); $('#lb').hidden = false; }
+function closeLB() { $('#lb').hidden = true; $('#lb').innerHTML = ''; lbId = null; }
+function renderLB() {
+  const v = visible('visual'); let i = v.findIndex(x => x.id === lbId);
+  const it = i >= 0 ? v[i] : state.refs.find(x => x.id === lbId); if (!it) return closeLB();
+  const e = it.kind === 'video' ? embedFor(it) : null, src = srcOf(it), href = safeHref(it.url);
+  const stage = e ? iframeHTML(e) : src ? `<img src="${esc(src)}" alt="">` : `<div class="lbph">${I.globe.replace('<svg', '<svg style="width:40px;height:40px;margin:0 auto 10px"')}${esc(it.host || '')}<br>${href ? `<a href="${esc(href)}" target="_blank" rel="noopener" style="color:#f0ece5">Open the page ↗</a>` : ''}</div>`;
+  $('#lb').innerHTML = `<div class="lbtop"><span class="c">${i >= 0 ? `${i + 1} / ${v.length}` : ''}</span><span class="sp"></span>
+      ${href ? `<a class="lbb" href="${esc(href)}" target="_blank" rel="noopener" title="Open link">${I.out}</a>` : ''}<button class="lbb" data-lb="close" title="Close (Esc)">${I.close}</button></div>
+    <div class="stage">${stage}${v.length > 1 && i >= 0 ? `<button class="lbb nav p" data-lb="prev" title="Previous (←)">${I.prev}</button><button class="lbb nav n" data-lb="next" title="Next (→)">${I.next}</button>` : ''}</div>
+    <div class="cap"><b>${esc(it.title || 'Untitled reference')}</b>${it.source ? `<span class="s">${esc(it.source)}</span>` : ''}
+      ${it.tags.length ? `<div class="tg">${it.tags.map(t => tagOf('visual', t)).map(t => `<span><i style="background:${t.c}"></i>${esc(t.label)}</span>`).join('')}</div>` : ''}
+      ${it.notes ? `<p>${esc(it.notes)}</p>` : ''}</div>`;
+}
+function lbStep(d) { const v = visible('visual'); if (!v.length) return; const i = v.findIndex(x => x.id === lbId); lbId = v[(i + d + v.length) % v.length].id; renderLB(); select('visual', lbId); }
+$('#lb').addEventListener('click', e => {
+  const b = e.target.closest('[data-lb]');
+  if (b) { const a = b.dataset.lb; if (a === 'close') closeLB(); else lbStep(a === 'prev' ? -1 : 1); return; }
+  if (e.target.classList.contains('stage')) closeLB();
+});
+document.addEventListener('keydown', e => {
+  if (!$('#lb').hidden) {
+    if (e.key === 'Escape') closeLB(); else if (e.key === 'ArrowLeft') lbStep(-1); else if (e.key === 'ArrowRight') lbStep(1);
+    return;
+  }
+  if (e.key === 'Escape' && !e.target.closest('input,textarea')) { if (sel[state.tab]) select(state.tab, null); }
+});
+
+/* ───────── tabs + rendering ───────── */
+function setTab(t) {
+  if (state.tab === t) return; state.tab = t; dirty(); renderTabs();
+  if (t === 'visual') requestAnimationFrame(layoutBoard);
+}
+function renderTabs() {
+  $$('.seg.modes button').forEach(b => { const on = b.dataset.tab === state.tab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+  $('#visualPanel').hidden = state.tab !== 'visual'; $('#soundPanel').hidden = state.tab !== 'sound';
+  $('#vN').textContent = state.refs.length || ''; $('#sN').textContent = state.sounds.length || '';
+  $('#tabHint').textContent = state.tab === 'visual' ? 'Tick what each reference is for, then filter the board by department.' : 'Click play to listen without leaving the board.';
+}
+$('.seg.modes').onclick = e => { const b = e.target.closest('button'); if (b) setTab(b.dataset.tab); };
+function render(kind, light) {
+  renderTabs();
+  if (!kind || kind === 'visual') { renderChips('visual'); layoutBoard(); }
+  if (!kind || kind === 'sound') { renderChips('sound'); layoutSounds(); }
+  if (!light) { if (sel.visual && !state.refs.some(x => x.id === sel.visual)) { sel.visual = null; renderEditor('visual'); } if (sel.sound && !state.sounds.some(x => x.id === sel.sound)) { sel.sound = null; renderEditor('sound'); } }
+}
+$('#vSize').oninput = e => { state.size = +e.target.value; dirty(); layoutBoard(); };
+$('#boardTitle').oninput = e => { state.title = e.target.value; dirty(); };
+let rzT; new ResizeObserver(() => { clearTimeout(rzT); rzT = setTimeout(() => { if (state.tab === 'visual') layoutBoard(); }, 60); }).observe($('#board'));
+
+/* ───────── JSON open / save ───────── */
+const slug = s => (s || 'mood-board').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'mood-board';
+$('#jsonBtn').onclick = () => {
+  const m = {};
+  media.forEach((v, k) => { m[k] = v; });
+  const blob = new Blob([JSON.stringify({...meta(), media: m})], {type: 'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = slug(state.title) + '-moodboard.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('Board downloaded');
+};
+$('#openBtn').onclick = () => $('#jsonFile').click();
+$('#jsonFile').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!d || d.app !== 'fth-moodboard') throw new Error('not a mood board');
+    if ((state.refs.length || state.sounds.length) && !confirm('Replace the current board with this file?')) return;
+    for (const it of [...state.refs, ...state.sounds]) { store.del('m:' + it.id); store.del('m:t:' + it.id); }
+    await loadState(d, d.media || {}); saveNow(); toast('Board opened');
+  } catch (er) { toast("That file isn't a Mood Board .json"); }
+};
+async function loadState(d, mediaObj) {
+  const b = blank();
+  state = {...b, ...d, pdf: {...PDFDEF, ...(d.pdf || {})}, vf: {...b.vf, ...(d.vf || {})}, sf: {...b.sf, ...(d.sf || {})}, refs: (d.refs || []).map(x => ({tags: [], ...x})), sounds: (d.sounds || []).map(x => ({tags: [], ...x}))};
+  delete state.media;
+  media.clear(); cardCache.clear(); sel = {visual: null, sound: null}; playing = null;
+  if (mediaObj) for (const [k, v] of Object.entries(mediaObj)) await putMedia(k, v);
+  renderView(); $('#boardTitle').value = state.title || ''; $('#vQ').value = state.vf.q || ''; $('#sQ').value = state.sf.q || ''; $('#vSize').value = state.size;
+  renderEditor('visual'); renderEditor('sound'); render();
+}
+
+/* ───────── PDF export ─────────
+   One layout engine produces every page as a list of drawing operations (in millimetres).
+   The preview draws those operations on a canvas and the export draws the very same
+   operations with jsPDF, so the download always matches what the preview showed. */
+let jspdfP;
+function loadJsPDF() {
+  if (window.jspdf) return Promise.resolve(window.jspdf);
+  return jspdfP || (jspdfP = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = () => window.jspdf ? res(window.jspdf) : rej(new Error('jspdf')); s.onerror = () => { jspdfP = null; rej(new Error('jspdf')); }; document.head.appendChild(s);
+  }));
+}
+const PAGESZ = {a4: [297, 210], letter: [279.4, 215.9]};
+const SHAPES = {'16:9': 16 / 9, '3:2': 3 / 2, '4:3': 4 / 3, '1:1': 1, '2.39:1': 2.39, '4:5': 4 / 5};
+const BGS = [['#ffffff', 'White'], ['#f4f0e8', 'Paper'], ['#e6e3dd', 'Stone'], ['#2b2c30', 'Charcoal'], ['#0d0d0f', 'Black'], ['#1d2433', 'Midnight']];
+const PT = 0.3528; /* mm per point */
+const perRow = o => 7 - o.size;
+const rgb = h => { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const mixHex = (a, b, t) => '#' + rgb(a).map((v, i) => Math.round(v + (rgb(b)[i] - v) * t).toString(16).padStart(2, '0')).join('');
+/* the PDF's built-in fonts only cover Western characters */
+const pdfTxt = s => String(s || '').replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, '-').replace(/…/g, '...').replace(/[^\x20-\x7e\xa0-\xff]/g, '');
+/* text is measured once, with Helvetica's metrics, and both renderers draw the same strings */
+const mctx = document.createElement('canvas').getContext('2d');
+function tw(s, pt, st) { mctx.font = `${st === 'bold' ? 'bold ' : st === 'italic' ? 'italic ' : ''}100px Helvetica, Arial, sans-serif`; return mctx.measureText(s).width / 100 * pt * PT; }
+function fitT(s, w, pt, st) { s = pdfTxt(s); if (tw(s, pt, st) <= w) return s; while (s.length > 1 && tw(s + '...', pt, st) > w) s = s.slice(0, -1); return s.trimEnd() + '...'; }
+function wrapT(s, w, pt, st, max) {
+  const words = pdfTxt(s).replace(/\s+/g, ' ').trim().split(' '), lines = [];
+  let cur = '';
+  for (let i = 0; i < words.length; i++) {
+    const t = cur ? cur + ' ' + words[i] : words[i];
+    if (tw(t, pt, st) <= w || !cur) { cur = t; continue; }
+    lines.push(cur); cur = words[i];
+    if (lines.length === max) { lines[max - 1] = fitT(lines[max - 1] + ' ' + words.slice(i).join(' '), w, pt, st); return lines; }
+  }
+  if (cur) lines.push(cur);
+  return lines.slice(0, max).map(l => fitT(l, w, pt, st));
+}
+function scheme(bg) {
+  const dark = lum(bg) < 0.42, ink = dark ? '#f2efe9' : '#18191c';
+  return {bg, dark, ink, muted: mixHex(bg, ink, dark ? .62 : .58), faint: mixHex(bg, ink, .38), rule: mixHex(bg, ink, .16), cell: mixHex(bg, ink, .06), link: dark ? '#9fb0ff' : '#3c50c8'};
+}
+
+function buildPDF(o) {
+  const refs = o.visual ? visible('visual') : [], snds = o.sound ? visible('sound') : [];
+  const sz = PAGESZ[o.page] || PAGESZ.a4, W = o.orient === 'portrait' ? Math.min(...sz) : Math.max(...sz), H = o.orient === 'portrait' ? Math.max(...sz) : Math.min(...sz);
+  const sc = scheme(o.bg), M = o.margin, top = o.header ? M + 17 : M, bottom = H - M;
+  const pages = [];
+  const newPage = kind => { const p = {kind, ops: [{t: 'rect', x: 0, y: 0, w: W, h: H, fill: sc.bg}]}; pages.push(p); return p; };
+  const cols = perRow(o), gap = o.gap, cw = (W - 2 * M - (cols - 1) * gap) / cols;
+  const nameSz = cols >= 5 ? 7.2 : cols <= 2 ? 9.5 : 8, small = Math.max(6, nameSz - 1.4);
+
+  /* caption under an image: what's shown and how tall it is */
+  const caption = (it, forHeight) => {
+    const L = [];
+    if (o.names === 'below') L.push({s: fitT(it.title || 'Untitled reference', cw, nameSz, 'bold'), pt: nameSz, st: 'bold', c: sc.ink, h: nameSz * PT + 1.2});
+    if (o.names === 'below' && o.credit && (it.source || forHeight === 'grid')) L.push({s: fitT(it.source || '', cw, small), pt: small, c: sc.muted, h: small * PT + 1.1});
+    if (o.tags && (it.tags.length || forHeight === 'grid')) L.push({tags: it.tags, pt: small - .3, h: small * PT + 1.2});
+    if (o.notes && (it.notes || forHeight === 'grid')) wrapT(it.notes || '', cw, small - .2, 'italic', 2).concat(forHeight === 'grid' ? ['', ''] : []).slice(0, forHeight === 'grid' ? 2 : 9)
+      .forEach(s => L.push({s, pt: small - .2, st: 'italic', c: sc.muted, h: (small - .2) * PT + .9}));
+    const h = L.length ? L.reduce((a, l) => a + l.h, 0) + 1.6 : 0;
+    return {L, h};
+  };
+  const palOn = it => o.pal !== 'off' && it.pal && it.pal.length && (o.pal === 'all' || it.tags.includes('colour'));
+  const palH = 3.2;
+
+  function drawItem(ops, it, x, y, w, ih, fit, cap) {
+    const href = safeHref(it.url);
+    ops.push({t: 'img', it, x, y, w, h: ih, fit, cell: sc.cell, ph: it.kind === 'video' ? `Video: ${(PLAT[it.platform] || PLAT.web).name}` : it.kind === 'link' ? 'Web reference' : 'Image', sub: it.host || ''});
+    if (href) ops.push({t: 'link', x, y, w, h: ih, url: href});
+    if (it.kind === 'video') { ops.push({t: 'rect', x: x + 1.8, y: y + 1.8, w: 12.5, h: 4.4, fill: '#141416', r: .9, a: .85}); ops.push({t: 'text', s: 'VIDEO', x: x + 8.05, y: y + 4.95, pt: 5.6, st: 'bold', c: '#ffffff', align: 'center'}); }
+    if (o.names === 'overlay' && it.title) {
+      const pt = Math.max(5.6, nameSz - 1.6), s = fitT(it.title, w - 6, pt, 'bold'), tww = tw(s, pt, 'bold'), ph = pt * PT + 2.2;
+      ops.push({t: 'rect', x: x + 1.6, y: y + ih - 1.6 - ph, w: tww + 3.2, h: ph, fill: '#000000', r: .9, a: .58});
+      ops.push({t: 'text', s, x: x + 3.2, y: y + ih - 1.6 - ph / 2 + pt * PT * .36, pt, st: 'bold', c: '#ffffff'});
+    }
+    let yy = y + ih;
+    if (palOn(it)) { const n = it.pal.length, sw = w / n; it.pal.forEach((c, j) => ops.push({t: 'rect', x: x + j * sw, y: yy + 1, w: sw + .04, h: 1.9, fill: c})); }
+    if (o.pal !== 'off' && (palOn(it) || cap.grid)) yy += palH;
+    let ty = yy + 1.6;
+    for (const l of cap.L) {
+      ty += l.h;
+      if (l.tags) {
+        const list = TAGSET.visual.filter(t => l.tags.includes(t.id)), ly = ty - 1.1;
+        if (!list.length) { if (!cap.grid || true) ops.push({t: 'text', s: 'No tags', x, y: ly, pt: l.pt, c: sc.faint}); continue; }
+        if (list.length === TAGSET.visual.length) {
+          list.forEach((t, i) => ops.push({t: 'circle', x: x + 1 + i * 2.3, y: ly - l.pt * PT * .36, r: .85, fill: t.c}));
+          ops.push({t: 'text', s: 'All of the above', x: x + list.length * 2.3 + .8, y: ly, pt: l.pt, c: sc.muted}); continue;
+        }
+        let cx = x;
+        for (const t of list) {
+          const lw = tw(t.short, l.pt) + 4; if (cx + lw > x + w + 1) break;
+          ops.push({t: 'circle', x: cx + 1, y: ly - l.pt * PT * .36, r: .85, fill: t.c});
+          ops.push({t: 'text', s: pdfTxt(t.short), x: cx + 2.5, y: ly, pt: l.pt, c: sc.muted}); cx += lw;
+        }
+      } else if (l.s) ops.push({t: 'text', s: l.s, x, y: ty - 1.1, pt: l.pt, st: l.st, c: l.c});
+    }
+  }
+
+  /* visual pages */
+  if (refs.length) {
+    if (o.layout === 'grid') {
+      const ratio = SHAPES[o.shape] || 16 / 9, ih = cw / ratio;
+      const capH = caption({title: '', source: '', tags: [], notes: ''}, 'grid').h + (o.pal !== 'off' ? palH : 0);
+      const rowH = ih + capH, rows = Math.max(1, Math.floor((bottom - top + gap) / (rowH + gap))), per = rows * cols;
+      for (let i = 0; i < refs.length; i += per) {
+        const p = newPage('visual');
+        refs.slice(i, i + per).forEach((it, k) => {
+          const x = M + (k % cols) * (cw + gap), y = top + Math.floor(k / cols) * (rowH + gap);
+          const cap = caption(it); cap.grid = true;
+          drawItem(p.ops, it, x, y, cw, Math.min(ih, bottom - top - capH), o.fit, cap);
+        });
+      }
+    } else {
+      let p = null, colY = [];
+      const fresh = () => { p = newPage('visual'); colY = Array(cols).fill(top); };
+      fresh();
+      for (const it of refs) {
+        const cap = caption(it), r = it.w && it.h ? it.h / it.w : 0.5625;
+        const extra = cap.h + (palOn(it) ? palH : 0);
+        let ih = cw * r;
+        ih = Math.min(ih, bottom - top - extra);            /* a very tall still never runs off the page */
+        let c = 0; colY.forEach((y, j) => { if (y < colY[c] - .01) c = j; });
+        if (colY[c] + ih + extra > bottom + .01 && colY.some(y => y > top)) { fresh(); c = 0; }
+        drawItem(p.ops, it, M + c * (cw + gap), colY[c], cw, ih, 'fill', cap);
+        colY[c] += ih + extra + gap;
+      }
+    }
+  }
+
+  /* music & sound pages */
+  if (snds.length) {
+    const rowH = o.notes ? 19 : 15.5, rows = Math.max(1, Math.floor((bottom - top) / rowH));
+    const tx = M + 5, rx = Math.max(W * .56, M + 120), rw = W - M - rx, lw = rx - tx - 10;
+    for (let i = 0; i < snds.length; i += rows) {
+      const p = newPage('sound'); let y = top;
+      for (const it of snds.slice(i, i + rows)) {
+        const P = PLAT[it.platform] || PLAT.web, href = safeHref(it.url);
+        p.ops.push({t: 'circle', x: M + 1.6, y: y + 2.2, r: 1.3, fill: P.c});
+        p.ops.push({t: 'text', s: fitT(it.title || it.fileName || 'Untitled sound', lw, 10.5, 'bold'), x: tx, y: y + 3.4, pt: 10.5, st: 'bold', c: sc.ink});
+        p.ops.push({t: 'text', s: fitT([it.artist, it.kind === 'file' ? 'Uploaded file: ' + (it.fileName || '') : P.name, it.cue ? 'from ' + it.cue : ''].filter(Boolean).join('  ·  '), lw, 8), x: tx, y: y + 7.4, pt: 8, c: sc.muted});
+        let ly = y + 7.4;
+        if (o.tags) {
+          ly += 3.8; const list = STAGS.filter(t => it.tags.includes(t.id));
+          if (!list.length) p.ops.push({t: 'text', s: 'No tags', x: tx, y: ly, pt: 6.4, c: sc.faint});
+          let cx = tx;
+          for (const t of list) { const w = tw(t.short, 6.4) + 4; p.ops.push({t: 'circle', x: cx + 1, y: ly - .8, r: .85, fill: t.c}); p.ops.push({t: 'text', s: t.short, x: cx + 2.5, y: ly, pt: 6.4, c: sc.muted}); cx += w; }
+        }
+        if (href) { ly += 3.6; p.ops.push({t: 'text', s: fitT(href.replace(/^https?:\/\/(www\.)?/, ''), lw, 7), x: tx, y: ly, pt: 7, c: sc.link, url: href}); }
+        let ry = y + 2.6;
+        if (it.scene) { p.ops.push({t: 'text', s: 'USED FOR', x: rx, y: ry, pt: 6.4, c: sc.faint}); p.ops.push({t: 'text', s: fitT(it.scene, rw, 8.4), x: rx, y: ry + 3.8, pt: 8.4, c: sc.ink}); ry += 7.8; }
+        if (o.notes && it.notes) wrapT(it.notes, rw, 7.6, 'italic', it.scene ? 2 : 3).forEach((s, j) => p.ops.push({t: 'text', s, x: rx, y: ry + .8 + j * 3.3, pt: 7.6, st: 'italic', c: sc.muted}));
+        p.ops.push({t: 'line', x1: M, y1: y + rowH - 1.5, x2: W - M, y2: y + rowH - 1.5, c: sc.rule});
+        y += rowH;
+      }
+    }
+  }
+
+  /* headers, once the page count is known */
+  const T = state.title.trim() || 'Mood board', date = new Date().toLocaleDateString('en-GB', {day: 'numeric', month: 'long', year: 'numeric'});
+  pages.forEach((p, i) => {
+    if (!o.header) return;
+    const kind = p.kind, n = kind === 'visual' ? refs.length : snds.length, fl = filterLabel(kind);
+    const sub = (kind === 'visual' ? `Visual references · ${n}` : `Music & sound · ${n}`) + (fl ? ` · Filtered: ${fl}` : '') + ` · ${date}`;
+    p.ops.push({t: 'text', s: fitT(T, W - 2 * M - 40, 16, 'bold'), x: M, y: M + 5, pt: 16, st: 'bold', c: sc.ink});
+    p.ops.push({t: 'text', s: fitT(sub, W - 2 * M - 40, 8.5), x: M, y: M + 10.5, pt: 8.5, c: sc.muted});
+    p.ops.push({t: 'text', s: 'Mood Board', x: W - M, y: M + 5, pt: 7.5, c: sc.muted, align: 'right'});
+    p.ops.push({t: 'text', s: `Page ${i + 1} of ${pages.length}`, x: W - M, y: M + 10.5, pt: 7.5, c: sc.muted, align: 'right'});
+    p.ops.push({t: 'line', x1: M, y1: M + 14, x2: W - M, y2: M + 14, c: sc.rule});
+  });
+  return {W, H, pages, refs, snds};
+}
+
+/* draws a still into a box, either whole (letterboxed) or filling the box (cropped) */
+function drawStill(ctx, im, x, y, w, h, fit, cell) {
+  ctx.fillStyle = cell; ctx.fillRect(x, y, w, h);
+  const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height; if (!iw || !ih) return;
+  if (fit === 'fit') { const s = Math.min(w / iw, h / ih); ctx.drawImage(im, x + (w - iw * s) / 2, y + (h - ih * s) / 2, iw * s, ih * s); }
+  else { const s = Math.max(w / iw, h / ih), sw = w / s, sh = h / s; ctx.drawImage(im, (iw - sw) / 2, (ih - sh) / 2, sw, sh, x, y, w, h); }
+}
+function drawPlaceholderTxt(ctx, op, k) {
+  const sc = scheme(op.cell);
+  ctx.fillStyle = mixHex(op.cell, sc.dark ? '#ffffff' : '#000000', .45); ctx.textAlign = 'center';
+  ctx.font = `${7 * PT * k}px Helvetica, Arial, sans-serif`; ctx.fillText(pdfTxt(op.ph), (op.x + op.w / 2) * k, (op.y + op.h / 2) * k);
+  ctx.font = `${6 * PT * k}px Helvetica, Arial, sans-serif`; ctx.fillText(fitT(op.sub, op.w - 4, 6), (op.x + op.w / 2) * k, (op.y + op.h / 2 + 3.4) * k);
+  ctx.textAlign = 'left';
+}
+const prevImgs = new Map();
+function previewImg(it) {
+  if (prevImgs.has(it.id)) return prevImgs.get(it.id);
+  const src = srcOf(it), rec = {im: null, ok: false};
+  prevImgs.set(it.id, rec);
+  if (src) loadImg(src).then(im => { rec.im = im; rec.ok = true; schedulePreview(); }).catch(() => {});
+  return rec;
+}
+function paintPage(cv, layout, page, cssW) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), k = cssW * dpr / layout.W;
+  cv.width = Math.round(cssW * dpr); cv.height = Math.round(layout.H * k);
+  cv.style.width = cssW + 'px'; cv.style.height = (layout.H * k / dpr) + 'px';
+  const ctx = cv.getContext('2d'); ctx.textBaseline = 'alphabetic';
+  for (const op of page.ops) {
+    ctx.globalAlpha = op.a == null ? 1 : op.a;
+    if (op.t === 'rect') { ctx.fillStyle = op.fill; ctx.beginPath(); if (op.r && ctx.roundRect) ctx.roundRect(op.x * k, op.y * k, op.w * k, op.h * k, op.r * k); else ctx.rect(op.x * k, op.y * k, op.w * k, op.h * k); ctx.fill(); }
+    else if (op.t === 'circle') { ctx.fillStyle = op.fill; ctx.beginPath(); ctx.arc(op.x * k, op.y * k, op.r * k, 0, Math.PI * 2); ctx.fill(); }
+    else if (op.t === 'line') { ctx.strokeStyle = op.c; ctx.lineWidth = Math.max(1, .25 * k); ctx.beginPath(); ctx.moveTo(op.x1 * k, op.y1 * k); ctx.lineTo(op.x2 * k, op.y2 * k); ctx.stroke(); }
+    else if (op.t === 'text') { ctx.fillStyle = op.c; ctx.font = `${op.st === 'bold' ? 'bold ' : op.st === 'italic' ? 'italic ' : ''}${op.pt * PT * k}px Helvetica, Arial, sans-serif`; ctx.textAlign = op.align || 'left'; ctx.fillText(op.s, op.x * k, op.y * k); ctx.textAlign = 'left'; }
+    else if (op.t === 'img') {
+      const r = previewImg(op.it);
+      if (r.ok) drawStill(ctx, r.im, op.x * k, op.y * k, op.w * k, op.h * k, op.fit, op.cell);
+      else { ctx.fillStyle = op.cell; ctx.fillRect(op.x * k, op.y * k, op.w * k, op.h * k); drawPlaceholderTxt(ctx, op, k); }
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* ───────── export dialog ───────── */
+const px = $('#px');
+let pxT, pxLayout = null;
+function pdfOpts() { return state.pdf; }
+function syncPxForm() {
+  const o = pdfOpts(), f = $('#pxOpts');
+  $$('[data-o]', f).forEach(el => {
+    const k = el.dataset.o;
+    if (el.classList.contains('seg')) $$('button', el).forEach(b => b.classList.toggle('on', b.dataset.v === String(o[k])));
+    else if (el.type === 'checkbox') el.checked = !!o[k];
+    else el.value = o[k];
+  });
+  $('#pxSizeV').textContent = `${perRow(o)} per row`; $('#pxGapV').textContent = `${o.gap} mm`; $('#pxMarV').textContent = `${o.margin} mm`;
+  $$('#pxBg .sw').forEach(b => b.classList.toggle('on', b.dataset.bg === o.bg));
+  $('#pxColour').value = o.bg;
+  const custom = !BGS.some(b => b[0] === o.bg); $('#pxMore').classList.toggle('on', custom); $('#pxMore').style.setProperty('--mc', custom ? o.bg : 'transparent');
+  $('#pxGridOpts').hidden = o.layout !== 'grid';
+  $('#pxCredit').closest('label').classList.toggle('dim', o.names !== 'below'); $('#pxCredit').disabled = o.names !== 'below';
+  const nv = visible('visual').length, ns = visible('sound').length;
+  $('#pxVN').textContent = nv; $('#pxSN').textContent = ns;
+  const fl = [filterLabel('visual') && 'visual: ' + filterLabel('visual'), filterLabel('sound') && 'sound: ' + filterLabel('sound')].filter(Boolean).join(' · ');
+  $('#pxFilt').textContent = fl ? `Using your current filters (${fl}).` : 'Includes everything on the board. Filter the board first to export just one department.';
+}
+function schedulePreview() { clearTimeout(pxT); pxT = setTimeout(renderPreview, 60); }
+function renderPreview() {
+  if (px.hidden) return;
+  const L = pxLayout = buildPDF(pdfOpts()), box = $('#pxPrev');
+  $('#pxInfo').textContent = L.pages.length ? `${L.pages.length} page${L.pages.length === 1 ? '' : 's'} · ${(pdfOpts().page === 'a4' ? 'A4' : 'US Letter')} ${pdfOpts().orient}` : '';
+  $('#pxGo').disabled = !L.pages.length;
+  if (!L.pages.length) { box.innerHTML = `<div class="pxnone">Nothing to export with these settings. Tick at least one board, or clear your filters.</div>`; return; }
+  const cssW = Math.max(240, Math.min(box.clientWidth - 56, 980));
+  const wraps = $$('.pxpage', box);
+  if (wraps.length !== L.pages.length) {
+    box.innerHTML = L.pages.map((_, i) => `<div class="pxpage"><canvas></canvas><span>Page ${i + 1}</span></div>`).join('');
+  }
+  $$('.pxpage canvas', box).forEach((cv, i) => paintPage(cv, L, L.pages[i], cssW));
+}
+function openExport() {
+  if (!state.refs.length && !state.sounds.length) { toast('Add some references first'); return; }
+  prevImgs.clear();
+  px.hidden = false; syncPxForm(); requestAnimationFrame(renderPreview);
+  $('#pxGo').focus();
+}
+function closeExport() { px.hidden = true; $('#pxPrev').innerHTML = ''; }
+$('#pdfBtn').onclick = openExport;
+$('#pxCancel').onclick = closeExport;
+$('#pxReset').onclick = () => { state.pdf = {...PDFDEF}; dirty(); syncPxForm(); schedulePreview(); };
+document.addEventListener('keydown', e => { if (!px.hidden && e.key === 'Escape') { e.stopImmediatePropagation(); closeExport(); } }, true);
+$('#pxOpts').addEventListener('click', e => {
+  const b = e.target.closest('.seg[data-o] button');
+  if (b) { const k = b.closest('.seg').dataset.o; state.pdf[k] = b.dataset.v; }
+  const sw = e.target.closest('.sw[data-bg]'); if (sw) state.pdf.bg = sw.dataset.bg;
+  if (b || sw) { dirty(); syncPxForm(); schedulePreview(); }
+});
+$('#pxOpts').addEventListener('input', e => {
+  const el = e.target;
+  if (el.id === 'pxColour') { state.pdf.bg = el.value; }
+  else if (el.dataset.o) { const k = el.dataset.o; state.pdf[k] = el.type === 'checkbox' ? el.checked : el.type === 'range' ? +el.value : el.value; }
+  else return;
+  dirty(); syncPxForm(); schedulePreview();
+});
+$('#pxOpts').addEventListener('submit', e => e.preventDefault());
+new ResizeObserver(() => { if (!px.hidden) schedulePreview(); }).observe($('#pxPrev'));
+
+$('#pxGo').onclick = async () => {
+  const btn = $('#pxGo'), lbl = btn.textContent; btn.disabled = true; btn.textContent = 'Building…';
+  try {
+    const {jsPDF} = await loadJsPDF();
+    const o = pdfOpts(), L = buildPDF(o);
+    const doc = new jsPDF({orientation: o.orient, unit: 'mm', format: o.page, compress: true});
+    const pdfImgs = new Map();
+    const getIm = async it => {
+      if (pdfImgs.has(it.id)) return pdfImgs.get(it.id);
+      let src = srcOf(it), im = null;
+      if (src && !/^data:/.test(src)) { const r = await grabRemote(src); src = r ? r.data : ''; }
+      if (src) { try { im = await loadImg(src); } catch (e) {} }
+      pdfImgs.set(it.id, im); return im;
+    };
+    const alpha = a => { try { doc.setGState(new doc.GState({opacity: a})); } catch (e) {} };
+    let n = 0;
+    for (let pi = 0; pi < L.pages.length; pi++) {
+      if (pi) doc.addPage(o.page, o.orient);
+      for (const op of L.pages[pi].ops) {
+        if (op.a != null) alpha(op.a);
+        if (op.t === 'rect') { doc.setFillColor(...rgb(op.fill)); if (op.r) doc.roundedRect(op.x, op.y, op.w, op.h, op.r, op.r, 'F'); else doc.rect(op.x, op.y, op.w, op.h, 'F'); }
+        else if (op.t === 'circle') { doc.setFillColor(...rgb(op.fill)); doc.circle(op.x, op.y, op.r, 'F'); }
+        else if (op.t === 'line') { doc.setDrawColor(...rgb(op.c)); doc.setLineWidth(.25); doc.line(op.x1, op.y1, op.x2, op.y2); }
+        else if (op.t === 'text') {
+          doc.setFont('helvetica', op.st || 'normal'); doc.setFontSize(op.pt); doc.setTextColor(...rgb(op.c));
+          if (op.url) doc.textWithLink(op.s, op.x, op.y, {url: op.url}); else doc.text(op.s, op.x, op.y, {align: op.align || 'left'});
+        }
+        else if (op.t === 'link') doc.link(op.x, op.y, op.w, op.h, {url: op.url});
+        else if (op.t === 'img') {
+          btn.textContent = `Building… ${++n}`;
+          const im = await getIm(op.it);
+          if (im) {
+            /* rasterise the box exactly as the preview drew it, at about 200 dpi */
+            const ppm = 8, c = document.createElement('canvas');
+            c.width = Math.max(8, Math.min(2000, Math.round(op.w * ppm))); c.height = Math.max(8, Math.round(c.width * op.h / op.w));
+            drawStill(c.getContext('2d'), im, 0, 0, c.width, c.height, op.fit, op.cell);
+            try { doc.addImage(c.toDataURL('image/jpeg', .86), 'JPEG', op.x, op.y, op.w, op.h, undefined, 'FAST'); }
+            catch (e) { doc.setFillColor(...rgb(op.cell)); doc.rect(op.x, op.y, op.w, op.h, 'F'); }
+          } else {
+            doc.setFillColor(...rgb(op.cell)); doc.rect(op.x, op.y, op.w, op.h, 'F');
+            const s = scheme(op.cell); doc.setTextColor(...rgb(mixHex(op.cell, s.dark ? '#ffffff' : '#000000', .45)));
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.text(pdfTxt(op.ph), op.x + op.w / 2, op.y + op.h / 2, {align: 'center'});
+            doc.setFontSize(6); doc.text(fitT(op.sub, op.w - 4, 6), op.x + op.w / 2, op.y + op.h / 2 + 3.4, {align: 'center'});
+          }
+        }
+        if (op.a != null) alpha(1);
+      }
+    }
+    doc.save(slug(state.title) + '-moodboard.pdf'); toast('PDF exported'); closeExport();
+  } catch (e) { console.error(e); toast(window.jspdf ? 'Something went wrong building the PDF' : "Couldn't load the PDF tools. Check your connection.", 4000); }
+  btn.disabled = false; btn.textContent = lbl;
+};
+
+/* ───────── start ───────── */
+(async () => {
+  $('#vSize').value = state.size; renderView();
+  render();
+  const d = await store.get('board');
+  if (d && d.app === 'fth-moodboard') {
+    await loadState(d, null);
+    const ids = [];
+    state.refs.forEach(r => { if (r.hasData) ids.push(r.id); });
+    state.sounds.forEach(s => { if (s.kind === 'file') ids.push(s.id); ids.push('t:' + s.id); });
+    await Promise.all(ids.map(k => store.get('m:' + k).then(v => { if (v) media.set(k, v); })));
+    render();
+  }
+  ready = true;
+})();
+</script>
+</body>
+</html>
