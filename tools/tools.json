@@ -242,6 +242,25 @@
       "file": "tools/schedule.html"
     },
     {
+      "id": "recce",
+      "name": "Location Recce",
+      "desc": "Recce every location: print a field sheet to fill in on site, then write up access, power, sound, light and safety, add photos, and compare candidates.",
+      "category": "plan",
+      "tags": [
+        "Locations",
+        "Producer",
+        "1st AD"
+      ],
+      "icon": "recce",
+      "fileName": "Location Recce.html",
+      "origTitle": "Location Recce",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611111030,
+      "file": "tools/recce.html"
+    },
+    {
       "id": "shotlist",
       "name": "Shot List Builder",
       "desc": "Plan every shot day by day with custom columns, sunrise and sunset times, breaks and company moves. Track it live on the day.",

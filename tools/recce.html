@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<!--fth-standalone-->
+<!-- Film Tool Hub: this block is only used when this file is opened on its own (for example while working on it).
+     Inside the hub it is removed and the hub supplies the same look from hub/kit.css. Keep it, but don't edit it here. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═════════ Film Tool Hub kit ═════════
+   Shared look for every tool. The hub injects this at the top of each tool's <head>,
+   sets data-theme="light|dark" on the tool's <html>, and sets --fth-cat to the tool's
+   category colour. Tools use the --fth-* tokens and the .fth-* components. */
+:root{
+  --fth-bg:#0b0c0e; --fth-bg2:#101216; --fth-surface:#15181d; --fth-surface2:#1b1f26; --fth-surface3:#232831;
+  --fth-line:#242931; --fth-line2:#333a45; --fth-line3:#46505e;
+  --fth-text:#f0ece5; --fth-muted:#9aa0aa; --fth-faint:#666c77;
+  --fth-good:#5cc98a; --fth-bad:#ff8f7a; --fth-warn:#f2bd5c;
+  /* accent tokens (--fth-cat, --fth-accent, --fth-accent-ink, --fth-accent-soft, --fth-accent-line, --fth-on-accent)
+     are written by the hub for each tool's category, as plain colours for both themes */
+  --fth-cat:#ffb547; --fth-accent:#ffb547; --fth-accent-ink:#ffb547; --fth-accent-soft:rgba(255,181,71,.14); --fth-accent-line:rgba(255,181,71,.45); --fth-on-accent:#14110b;
+  --fth-paper-backdrop:#07080a;
+  --fth-shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --fth-shadow-sm:none;
+  --fth-radius:14px; --fth-radius-sm:9px;
+  --fth-display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --fth-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --fth-script:"Courier Prime","Courier New",Courier,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --fth-bg:#f3f0ea; --fth-bg2:#f9f7f3; --fth-surface:#ffffff; --fth-surface2:#f1ede5; --fth-surface3:#e6e1d6;
+  --fth-line:#e3ded4; --fth-line2:#d2ccc0; --fth-line3:#b4ad9f;
+  --fth-text:#16181c; --fth-muted:#565c66; --fth-faint:#878c95;
+  --fth-good:#22804a; --fth-bad:#c0392b; --fth-warn:#9a6200;
+  --fth-paper-backdrop:#e4dfd5;
+  --fth-shadow:0 14px 30px -16px rgba(70,50,20,.30);
+  --fth-shadow-sm:0 1px 2px rgba(60,45,20,.05),0 4px 14px rgba(60,45,20,.05);
+  color-scheme:light;
+}
+
+/* base */
+html{background:var(--fth-bg)}
+body{background:var(--fth-bg);color:var(--fth-text);font-family:var(--fth-display);-webkit-font-smoothing:antialiased}
+::selection{background:var(--fth-accent-line)}
+:focus-visible{outline:2px solid var(--fth-accent);outline-offset:2px}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--fth-line2);border-radius:6px;border:2px solid var(--fth-bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--fth-line3)}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+
+/* tool header: category eyebrow, tool name, then actions on the right */
+.fth-head{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 20px;
+  background:color-mix(in srgb,var(--fth-bg) 88%,transparent);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  border-bottom:1px solid var(--fth-line)}
+.fth-head::before{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:linear-gradient(90deg,var(--fth-cat),transparent 38%);opacity:.75;pointer-events:none}
+.fth-id{display:flex;flex-direction:column;gap:5px;min-width:0;flex:none}
+.fth-eyebrow{display:flex;align-items:center;gap:8px;font:500 10.5px/1 var(--fth-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fth-accent-ink);white-space:nowrap}
+.fth-eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fth-cat);box-shadow:0 0 0 3px var(--fth-accent-soft);flex:none}
+.fth-title{margin:0;font-weight:800;font-variation-settings:"wdth" 68;font-size:23px;line-height:1;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap}
+.fth-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.fth-vsep{width:1px;height:22px;background:var(--fth-line2);margin:0 3px;flex:none}
+
+/* buttons */
+.fth-btn{height:34px;padding:0 13px;border-radius:var(--fth-radius-sm);border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);
+  font:600 13px/1 var(--fth-display);display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  transition:background-color .15s,border-color .15s,color .15s}
+.fth-btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.fth-btn:disabled{opacity:.45;cursor:default}
+.fth-btn.primary{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.fth-btn.primary:hover{filter:brightness(1.08)}
+.fth-btn.ghost{background:transparent;border-color:transparent;color:var(--fth-muted)}
+.fth-btn.ghost:hover{background:var(--fth-surface2);border-color:var(--fth-line2);color:var(--fth-text)}
+.fth-btn.danger{color:var(--fth-bad)}
+.fth-btn.sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.fth-btn.icon{width:30px;height:30px;padding:0}
+
+/* labels, fields */
+.fth-label{font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.fth-input{width:100%;min-width:0;background:var(--fth-bg2);border:1px solid var(--fth-line2);border-radius:8px;padding:7px 10px;color:var(--fth-text);font:14px/1.35 var(--fth-display);outline:none;transition:border-color .15s,box-shadow .15s}
+.fth-input:hover{border-color:var(--fth-line3)}
+.fth-input:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+select.fth-input{cursor:pointer}
+textarea.fth-input{resize:vertical;line-height:1.45}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-accent)}
+
+/* sections & surfaces */
+.fth-card{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);box-shadow:var(--fth-shadow-sm)}
+.fth-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.fth-sec::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+.fth-sec .fth-num{font:600 11px var(--fth-mono);color:var(--fth-accent-ink);letter-spacing:.08em}
+.fth-muted{color:var(--fth-muted)}
+.fth-mono{font-family:var(--fth-mono)}
+
+/* notes */
+.fth-tip{background:var(--fth-accent-soft);border-left:2px solid var(--fth-accent);color:var(--fth-text);padding:7px 10px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.45}
+.fth-warn{background:color-mix(in srgb,var(--fth-warn) 10%,var(--fth-surface));border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent);color:var(--fth-text);border-radius:10px;padding:10px 12px;font-size:13px}
+.fth-warn b:first-child{color:var(--fth-warn)}
+.fth-info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--fth-line3);color:var(--fth-muted);font:600 10px/1 var(--fth-mono);text-transform:none;letter-spacing:0;cursor:pointer;user-select:none;vertical-align:1px;margin-left:5px;transition:.15s}
+.fth-info:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+
+/* toast */
+.fth-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;z-index:200;background:var(--fth-text);color:var(--fth-bg);padding:10px 16px;border-radius:10px;font:500 13.5px var(--fth-display);box-shadow:var(--fth-shadow);transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.fth-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* paper: a printable page shown on screen stays paper-white in both themes */
+.fth-paper-wrap{background:var(--fth-paper-backdrop)}
+.fth-paper{background:#fff;color:#000;color-scheme:light;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55)}
+
+@media print{
+  html,body{background:#fff!important;color:#000}
+  .fth-head{display:none!important}
+  .fth-paper-wrap{background:#fff!important}
+  .fth-paper{box-shadow:none!important}
+}
+@media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
+@media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
+
+:root{--fth-cat:#4fc7b5;--fth-accent:#4fc7b5;--fth-accent-ink:#4fc7b5;--fth-accent-soft:rgba(79,199,181,0.14);--fth-accent-line:rgba(79,199,181,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#2e7369;--fth-accent-ink:#2e7369;--fth-accent-soft:rgba(79,199,181,0.16);--fth-accent-line:rgba(79,199,181,0.6);--fth-on-accent:#ffffff}
+</style>
+<script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
+<!--/fth-standalone-->
+<meta charset="utf-8"><title>Location Recce</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;font:14px/1.45 var(--fth-display);display:flex;flex-direction:column}
+button{font:inherit;color:inherit}
+.app{flex:1;min-height:0;display:grid;grid-template-columns:minmax(420px,47%) 1fr}
+.ed{padding:0 22px 60px;border-right:1px solid var(--fth-line);overflow:auto;position:relative}
+.pvw{padding:0 24px 40px;overflow:auto}
+.status{font:500 11px var(--fth-mono);letter-spacing:.04em;color:var(--fth-faint);white-space:nowrap}
+.intro{color:var(--fth-muted);margin:16px 0 12px;font-size:13.5px;max-width:64ch}
+.how{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+.how .fth-card{padding:12px 14px}
+.how b{display:block;font:700 13px/1.2 var(--fth-display);text-transform:uppercase;letter-spacing:.03em;font-variation-settings:"wdth" 82;margin-bottom:4px}
+.how b small{font:500 10px var(--fth-mono);color:var(--fth-accent-ink);letter-spacing:.1em;margin-right:6px}
+.how p{margin:0;color:var(--fth-muted);font-size:12.5px;line-height:1.45}
+.how p b{display:inline;font:inherit;font-weight:700;color:var(--fth-text);text-transform:none;letter-spacing:0;margin:0}
+.kit{margin:0 0 14px}.kit summary{cursor:pointer;font:500 10.5px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.kit ul{margin:8px 0 0;padding-left:18px;color:var(--fth-muted);font-size:12.5px;columns:2;column-gap:24px}
+/* location bar */
+.locbar{padding:12px 14px;margin:0 0 4px;display:grid;grid-template-columns:1fr auto;gap:10px 12px;align-items:end}
+.locbar .lbs{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.locbar .prod{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:10px;border-top:1px solid var(--fth-line)}
+.locsel{display:flex;flex-direction:column;gap:5px;min-width:0}
+.stdot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:1px;margin-right:6px}
+/* section nav */
+.snav{position:sticky;top:0;z-index:5;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding:10px 0 9px;margin:0 -22px;padding-left:22px;padding-right:22px;
+  background:color-mix(in srgb,var(--fth-bg) 92%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--fth-line)}
+.snav::-webkit-scrollbar{display:none}
+.snav a{flex:none;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;border:1px solid var(--fth-line2);color:var(--fth-muted);font:500 12px var(--fth-display);text-decoration:none;white-space:nowrap}
+.snav a:hover{color:var(--fth-text);border-color:var(--fth-line3)}
+.snav a i{font:600 10px var(--fth-mono);font-style:normal;color:var(--fth-accent-ink)}
+.snav a.done{border-color:var(--fth-accent-line)}
+.snav a.off{opacity:.45;text-decoration:line-through}
+/* sections */
+.sec{scroll-margin-top:56px}
+.sh{cursor:pointer;user-select:none}
+.sh .pg{font:500 10.5px var(--fth-mono);color:var(--fth-faint);letter-spacing:.04em;text-transform:none}
+.sh .tg{margin-left:auto;order:3}
+.sh::after{order:2}
+.sh .car{order:4;width:14px;color:var(--fth-faint);transition:transform .15s;font-size:11px}
+.sec.shut .car{transform:rotate(-90deg)}
+.sec.shut .sb{display:none}
+.sec.off .sh{opacity:.55}
+.prt{height:24px;padding:0 8px;border-radius:6px;border:1px solid var(--fth-line2);background:none;color:var(--fth-muted);font:500 10px var(--fth-mono);letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.prt:hover{border-color:var(--fth-line3);color:var(--fth-text)}
+.sec.off .prt{color:var(--fth-bad);border-color:color-mix(in srgb,var(--fth-bad) 40%,transparent)}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}.g .w{grid-column:1/-1}
+.ed label{display:flex;align-items:center;margin-bottom:5px;font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+textarea.fth-input{min-height:60px}
+.tip{display:none;margin:2px 0 8px}.tip.on{display:block}
+.sectip{margin:0 0 12px}
+.fth-sec .fth-info{margin-left:0}
+.cg{margin-top:16px}
+.cgh{font:500 10.5px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted);margin:0 0 6px}
+.ckl{border:1px solid var(--fth-line);border-radius:11px;background:var(--fth-bg2);overflow:hidden}
+.ckr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 8px 6px 12px;border-bottom:1px solid var(--fth-line);font-size:13.5px}
+.ckr:last-child{border-bottom:0}
+.seg{display:inline-flex;border:1px solid var(--fth-line2);border-radius:7px;overflow:hidden;flex:none;background:var(--fth-surface)}
+.seg button{height:26px;min-width:36px;padding:0 8px;border:0;border-left:1px solid var(--fth-line2);background:none;color:var(--fth-muted);font:600 11px var(--fth-mono);cursor:pointer}
+.seg button:first-child{border-left:0}
+.seg button:hover{color:var(--fth-text);background:var(--fth-surface2)}
+.seg button.on[data-v=y]{background:color-mix(in srgb,var(--fth-good) 22%,transparent);color:var(--fth-good)}
+.seg button.on[data-v=n]{background:color-mix(in srgb,var(--fth-bad) 20%,transparent);color:var(--fth-bad)}
+.seg button.on[data-v=na],.seg button.on.sv{background:var(--fth-accent-soft);color:var(--fth-accent-ink)}
+.tks{display:flex;flex-wrap:wrap;gap:6px}
+.tks button{height:30px;padding:0 11px;border-radius:999px;border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-muted);font-size:13px;cursor:pointer}
+.tks button:hover{color:var(--fth-text);border-color:var(--fth-line3)}
+.tks button.on{background:var(--fth-accent-soft);border-color:var(--fth-accent);color:var(--fth-text)}
+.tks button.on::before{content:"✓ ";color:var(--fth-accent-ink);font-weight:700}
+.sub{color:var(--fth-muted);font-size:12.5px;margin:6px 0 0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.lnk{color:var(--fth-accent-ink);font-size:12.5px;text-decoration:none}.lnk:hover{text-decoration:underline}
+/* sun */
+.sunw{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start;margin-top:14px;padding:14px;border:1px solid var(--fth-line);border-radius:12px;background:var(--fth-bg2)}
+.sunw svg{width:100%;height:auto}
+.sunsvg .ring{fill:none;stroke:var(--fth-line2)}.sunsvg .hz{fill:none;stroke:var(--fth-line3);stroke-width:1.2}
+.sunsvg .ax{stroke:var(--fth-line2)}.sunsvg text{fill:var(--fth-muted);font:600 10px var(--fth-mono)}
+.sunsvg .path{fill:none;stroke:var(--fth-warn);stroke-width:2.4;stroke-linecap:round}
+.sunsvg .hr{fill:var(--fth-warn)}.sunsvg .hrt{fill:var(--fth-faint);font-size:7.5px}
+.sunsvg .rs{fill:var(--fth-bg2);stroke:var(--fth-warn);stroke-width:1.6}
+.sunsvg .dir{stroke:var(--fth-accent);stroke-width:1.8;stroke-dasharray:4 3}.sunsvg .dirh{fill:var(--fth-accent)}.sunsvg .dirt{fill:var(--fth-accent-ink);font-size:8.5px}
+.sunsvg .now{fill:var(--fth-warn);stroke:var(--fth-bg2);stroke-width:2}
+.st{width:100%;border-collapse:collapse;font-size:12.5px}
+.st td{padding:4px 0;border-bottom:1px solid var(--fth-line)}.st td:last-child{text-align:right;font-family:var(--fth-mono);font-size:12px}
+.st tr:last-child td{border-bottom:0}
+.sunh{font:500 10.5px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted);margin-bottom:6px}
+.dirs{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.dirs .dr{display:grid;grid-template-columns:1fr 140px 30px;gap:6px}
+.winsun{margin-top:8px;font-size:12.5px;color:var(--fth-text)}.winsun div{padding:2px 0}.winsun b{color:var(--fth-accent-ink);font-weight:600}
+/* photos */
+.drop{border:1.5px dashed var(--fth-line3);border-radius:12px;padding:14px;text-align:center;color:var(--fth-muted);font-size:13px;background:var(--fth-bg2)}
+.drop.over{border-color:var(--fth-accent);background:var(--fth-accent-soft)}
+.phs{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:10px}
+.phc{border:1px solid var(--fth-line);border-radius:11px;overflow:hidden;background:var(--fth-surface);display:flex;flex-direction:column}
+.phc .im{position:relative;aspect-ratio:3/2;background:#000}
+.phc img{width:100%;height:100%;object-fit:cover;display:block}
+.phc .n{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.65);color:#fff;font:600 10px var(--fth-mono);padding:2px 6px;border-radius:5px}
+.phc .del{position:absolute;right:5px;top:5px;width:24px;height:24px;border-radius:6px;border:0;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;font-size:12px}
+.phc .del:hover{background:#c0392b}
+.phc .mv{position:absolute;right:33px;top:5px;display:flex;gap:3px}.phc .mv button{width:24px;height:24px;border-radius:6px;border:0;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;font-size:11px}
+.phc .fl{padding:7px;display:flex;flex-direction:column;gap:5px}
+.phc .fl .fth-input{padding:5px 7px;font-size:12.5px}
+.phc .fl .two{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.sk{margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.sk img{max-height:110px;border-radius:9px;border:1px solid var(--fth-line2)}
+/* verdict */
+.scs{display:flex;flex-direction:column;gap:6px}
+.scr{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13.5px}
+.avg{display:flex;align-items:baseline;gap:10px;margin:12px 0 0;padding:12px 14px;border-radius:11px;background:var(--fth-accent-soft);border:1px solid var(--fth-accent-line)}
+.avg b{font:800 28px/1 var(--fth-display);font-variation-settings:"wdth" 70}.avg span{color:var(--fth-muted);font-size:12.5px}
+.acts{display:flex;flex-direction:column;gap:6px}
+.act{display:grid;grid-template-columns:22px 1fr 150px 30px;gap:6px;align-items:center}
+.x{color:var(--fth-faint)}.x:hover{color:var(--fth-bad)}
+/* preview */
+.pvbar{position:sticky;top:0;z-index:4;max-width:860px;margin:0 auto 14px;padding:14px 0 10px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:var(--fth-paper-backdrop)}
+.mode{display:inline-flex;border:1px solid var(--fth-line2);border-radius:9px;overflow:hidden;background:var(--fth-surface)}
+.mode button{height:32px;padding:0 13px;border:0;border-left:1px solid var(--fth-line2);background:none;color:var(--fth-muted);font:600 12.5px var(--fth-display);cursor:pointer}
+.mode button:first-child{border-left:0}
+.mode button.on{background:var(--fth-accent);color:var(--fth-on-accent)}
+.pvbar .opt{display:inline-flex;gap:7px;align-items:center;color:var(--fth-muted);font-size:12.5px;cursor:pointer}
+.pvbar .sp{flex:1}
+.mhint{max-width:860px;margin:-6px auto 12px;color:var(--fth-muted);font-size:12.5px}
+.mswitch{display:none}
+.empty{padding:40px 20px;text-align:center;color:var(--fth-muted)}
+.fth-toast{white-space:pre-line}
+
+/* ═════ the printed page (stays white in both themes) ═════ */
+#pv{width:100%;max-width:860px;margin:0 auto;padding:30px 34px;font:10.5px/1.4 Arial,Helvetica,sans-serif;color:#111}
+#pv *{box-sizing:border-box}
+#pv .hd{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;padding-bottom:12px;border-bottom:2.5px solid #111;margin-bottom:6px}
+#pv .kick{font:700 9px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:#2e7369;margin-bottom:7px;display:flex;align-items:center;gap:7px}
+#pv .kick::before{content:"";width:8px;height:8px;background:#4fc7b5;border-radius:50%}
+#pv .ln1{font:800 26px/1.02 Archivo,"Arial Narrow",Arial,sans-serif;font-variation-settings:"wdth" 68;text-transform:uppercase;letter-spacing:.005em;min-height:28px}
+#pv .ln2{margin-top:5px;font-size:11.5px;color:#333}
+#pv .hm{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;align-content:start;font-size:10px}
+#pv .hm span{font:600 8px/1.9 "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#666;white-space:nowrap}
+#pv .hm b{font-weight:600;border-bottom:1px solid #bbb;min-height:16px}
+#pv .ps{margin-top:14px;break-inside:auto}
+#pv .ph{display:flex;align-items:center;gap:8px;font:800 12.5px/1 Archivo,"Arial Narrow",Arial,sans-serif;font-variation-settings:"wdth" 78;text-transform:uppercase;letter-spacing:.04em;padding:0 0 5px;border-bottom:1.2px solid #111;margin-bottom:8px;break-after:avoid}
+#pv .ph i{font:700 9px "JetBrains Mono",monospace;font-style:normal;background:#111;color:#fff;padding:2px 5px;border-radius:3px;letter-spacing:.06em}
+#pv .ph small{margin-left:auto;font:500 8px "JetBrains Mono",monospace;letter-spacing:.06em;color:#777;text-transform:uppercase}
+#pv .pg{display:grid;grid-template-columns:1fr 1fr;gap:7px 18px}
+#pv .pg .w{grid-column:1/-1}
+#pv .pf{break-inside:avoid}
+#pv .pl{font:600 7.8px/1.3 "JetBrains Mono",monospace;letter-spacing:.07em;text-transform:uppercase;color:#555;margin-bottom:2px}
+#pv .pvv{font-size:11px;min-height:15px;white-space:pre-wrap;word-break:break-word}
+#pv .wl{height:19px;border-bottom:1px solid #9a9a9a}
+#pv .opts{display:flex;gap:12px;flex-wrap:wrap;padding-top:3px;font-size:10.5px}
+#pv .bx{display:inline-block;width:10px;height:10px;border:1.1px solid #222;border-radius:2px;vertical-align:-1px;margin-right:4px;position:relative}
+#pv .bx.on::after{content:"✓";position:absolute;left:0;top:-3px;font:700 11px/1 Arial;color:#111}
+#pv .dots{display:flex;gap:6px;align-items:center;font-size:9px;color:#555;padding-top:2px}
+#pv .dots i{width:15px;height:15px;border:1.1px solid #222;border-radius:50%;display:inline-grid;place-items:center;font:600 8.5px Arial;font-style:normal;color:#333}
+#pv .dots i.on{background:#111;color:#fff}
+#pv .cks{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-top:9px}
+#pv .ckr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3.5px 0;border-bottom:1px solid #e2e2e2;break-inside:avoid;font-size:10.3px}
+#pv .yn{display:flex;gap:7px;flex:none;font:600 7.8px "JetBrains Mono",monospace;color:#444}
+#pv .yn .bx{margin-right:2px}
+#pv .cgh{grid-column:1/-1;font:600 7.8px "JetBrains Mono",monospace;letter-spacing:.07em;text-transform:uppercase;color:#555;margin:6px 0 2px}
+#pv .tkg{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:4px 12px;padding:3px 0 5px;font-size:10.3px}
+#pv .ra{font-size:10.5px;padding:3px 0;border-bottom:1px solid #e8e8e8;display:flex;gap:8px;break-inside:avoid}
+#pv .ra b{width:14px;flex:none;text-align:center}
+#pv .ra.y b{color:#1d7a45}#pv .ra.n b{color:#b3261e}#pv .ra.na b{color:#888}
+#pv .rt{grid-column:1/-1;font-size:10.5px;padding:4px 0}
+#pv .rt span{font:600 7.8px "JetBrains Mono",monospace;letter-spacing:.07em;text-transform:uppercase;color:#555;margin-right:6px}
+#pv .nt{margin-top:9px;break-inside:avoid}#pv .ps.keep{break-inside:avoid}
+#pv .sunp{display:grid;grid-template-columns:190px 1fr;gap:16px;align-items:start;margin-top:10px;break-inside:avoid;padding:10px;border:1px solid #ccc;border-radius:6px}
+#pv .sunp svg{width:100%;height:auto}
+#pv .sunsvg .ring{fill:none;stroke:#d0d0d0}#pv .sunsvg .hz{fill:none;stroke:#333;stroke-width:1.1}#pv .sunsvg .ax{stroke:#d8d8d8}
+#pv .sunsvg text{fill:#333;font:700 10px Arial}#pv .sunsvg .path{fill:none;stroke:#d08a00;stroke-width:2.4}
+#pv .sunsvg .hr{fill:#d08a00}#pv .sunsvg .hrt{fill:#777;font:600 7.5px Arial}#pv .sunsvg .rs{fill:#fff;stroke:#d08a00;stroke-width:1.6}
+#pv .sunsvg .dir{stroke:#2e7369;stroke-width:1.8;stroke-dasharray:4 3}#pv .sunsvg .dirh{fill:#2e7369}#pv .sunsvg .dirt{fill:#2e7369;font:700 8.5px Arial}
+#pv .sunsvg .now{fill:#d08a00;stroke:#fff;stroke-width:2}
+#pv .stt{width:100%;border-collapse:collapse;font-size:10.3px}
+#pv .stt td{padding:3px 0;border-bottom:1px solid #e2e2e2}#pv .stt td:last-child{text-align:right;font-weight:700}
+#pv .sunh{font:600 7.8px "JetBrains Mono",monospace;letter-spacing:.07em;text-transform:uppercase;color:#555;margin-bottom:4px}
+#pv table.tb{width:100%;border-collapse:collapse;font-size:10px}
+#pv table.tb th{font:600 7.8px "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:#444;text-align:left;border-bottom:1.2px solid #111;padding:3px 5px}
+#pv table.tb td{border-bottom:1px solid #cfcfcf;padding:4px 5px;height:22px;vertical-align:top}
+#pv table.tb tr{break-inside:avoid}
+#pv .grid{height:600px;border:1.2px solid #111;margin-top:6px;position:relative;
+  background-image:linear-gradient(#e3e3e3 1px,transparent 1px),linear-gradient(90deg,#e3e3e3 1px,transparent 1px);background-size:18.9px 18.9px;background-position:-1px -1px}
+#pv .grid .na{position:absolute;right:10px;top:10px;width:34px;height:46px;background:#fff;border:1px solid #111;border-radius:4px;display:grid;place-items:center;font:800 11px Arial}
+#pv .grid .na::before{content:"";position:absolute;top:6px;left:50%;margin-left:-5px;border:5px solid transparent;border-bottom:10px solid #111;border-top:0}
+#pv .grid .na span{margin-top:14px}
+#pv .key{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:9.5px;color:#444;margin-top:6px}
+#pv .newpg{break-before:page;padding-top:2px}
+#pv .phg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+#pv .phg figure{margin:0;break-inside:avoid}
+#pv .phg img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block;border-radius:3px}
+#pv .phg figcaption{font-size:9.5px;margin-top:3px;line-height:1.3}
+#pv .phg figcaption small{display:block;font:600 7.5px "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:#666}
+#pv .skimg{max-width:100%;max-height:520px;display:block;margin:6px auto 0;border:1px solid #ccc}
+#pv .kitb{border:1px solid #bbb;border-radius:6px;padding:8px 10px;margin-top:12px;font-size:9.8px;color:#333;break-inside:avoid}
+#pv .kitb b{font:700 7.8px "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:4px;color:#2e7369}
+#pv .kitb div{display:grid;grid-template-columns:repeat(3,1fr);gap:2px 12px}
+#pv .vsum{display:grid;grid-template-columns:auto 1fr 1fr;gap:16px;margin-top:12px;padding:12px 14px;border:1.2px solid #111;border-radius:6px;break-inside:avoid}
+#pv .vsum .big{font:800 34px/1 Archivo,Arial,sans-serif;font-variation-settings:"wdth" 70}
+#pv .vsum .big small{font-size:12px;color:#666}
+#pv .vsum .vl{font:700 8px "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#555;margin-bottom:3px}
+#pv .bars{display:grid;grid-template-columns:auto 1fr auto;gap:3px 8px;align-items:center;font-size:9.5px}
+#pv .bars .b{height:6px;background:#e6e6e6;border-radius:3px;overflow:hidden}#pv .bars .b i{display:block;height:100%;background:#2e7369}
+#pv .chip{display:inline-block;font:700 8px "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:3px;color:#fff}
+#pv .ft{margin-top:18px;padding-top:6px;border-top:1px solid #ccc;font:500 8px "JetBrains Mono",monospace;letter-spacing:.06em;color:#888;display:flex;justify-content:space-between}
+#pv table.cmp{width:100%;border-collapse:collapse;font-size:9.8px}
+#pv table.cmp th{font:600 7.5px "JetBrains Mono",monospace;letter-spacing:.05em;text-transform:uppercase;color:#444;text-align:left;border-bottom:1.2px solid #111;padding:4px;vertical-align:bottom}
+#pv table.cmp td{border-bottom:1px solid #d5d5d5;padding:5px 4px;vertical-align:top}
+#pv table.cmp tr.grp td{background:#f0f0f0;font:800 10.5px Archivo,Arial,sans-serif;font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em;padding:6px 5px;border-bottom:1.2px solid #111}
+#pv table.cmp .c{text-align:center}
+#pv table.cmp .sc{font:800 14px Archivo,Arial;font-variation-settings:"wdth" 70}
+#pv .mk{font-weight:700}#pv .mk.y{color:#1d7a45}#pv .mk.n{color:#b3261e}#pv .mk.u{color:#aaa}
+#pv .emptyp{padding:60px 10px;text-align:center;color:#777;font-size:12px}
+
+@media(max-width:1000px){.how{grid-template-columns:1fr}}
+@media(max-width:900px){
+  html,body{height:auto}body{display:block}
+  .app{display:block}.ed{border-right:0;overflow:visible}.pvw{overflow:visible;padding:0 10px 40px}
+  .mswitch{display:flex;position:sticky;top:0;z-index:31;gap:0;padding:8px 14px;background:var(--fth-bg);border-bottom:1px solid var(--fth-line)}
+  .mswitch button{flex:1;height:34px;border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-muted);font:600 13px var(--fth-display)}
+  .mswitch button:first-child{border-radius:9px 0 0 9px}.mswitch button:last-child{border-radius:0 9px 9px 0;border-left:0}
+  .mswitch button.on{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+  body:not(.vpv) .pvw{display:none}body.vpv .ed{display:none}
+  .snav{top:51px}.fth-head{position:static}
+  .ed{padding:0 14px 60px}.snav{margin:0 -14px;padding-left:14px;padding-right:14px}
+  #pv{padding:18px 16px}
+  .locbar{grid-template-columns:1fr}.locbar .lbs{justify-content:flex-start}
+}
+@media(max-width:560px){.g{grid-template-columns:1fr}.locbar .prod{grid-template-columns:1fr}.sunw{grid-template-columns:1fr}.sunw svg{max-width:240px;margin:auto}.ckr{flex-wrap:wrap}.act{grid-template-columns:22px 1fr 30px}.act .who{grid-column:2}.kit ul{columns:1}}
+@media print{
+  @page{size:A4;margin:11mm 11mm 12mm}
+  html,body{height:auto;background:#fff!important}body{display:block}
+  .ed,.pvbar,.mhint,.mswitch,.fth-toast{display:none!important}
+  .app{display:block}.pvw{padding:0!important;overflow:visible;display:block!important}
+  #pv{max-width:none;padding:0;box-shadow:none!important;font-size:9.6pt}
+  #pv *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #pv .grid{height:205mm;background-size:5mm 5mm}
+}
+</style></head><body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>04 · Planning &amp; Scheduling</span><h1 class="fth-title">Location Recce</h1></div>
+  <div class="fth-actions">
+    <span class="status" id="saveState"></span>
+    <button class="fth-btn ghost" id="impBtn" title="Create a recce for each location in your Production Schedule">Import from schedule</button>
+    <button class="fth-btn" id="addBtn">＋ New location</button>
+    <span class="fth-vsep"></span>
+    <button class="fth-btn primary" id="printBtn">Save as PDF</button>
+  </div>
+</header>
+<div class="mswitch"><button data-view="ed" class="on">Fill in</button><button data-view="pv">Preview &amp; print</button></div>
+<div class="app">
+  <div class="ed" id="ed"></div>
+  <div class="pvw fth-paper-wrap" id="pvw">
+    <div class="pvbar">
+      <div class="mode" id="mode"><button data-m="field">Field sheet</button><button data-m="report">Report</button><button data-m="compare">Compare</button></div>
+      <label class="opt" id="optFill"><input type="checkbox" id="incFill" checked> Include what's filled in</label>
+      <span class="sp"></span>
+      <button class="fth-btn sm" id="csvBtn" hidden>Download CSV</button>
+      <span class="fth-label" id="pvLbl">Preview · A4</span>
+    </div>
+    <p class="mhint" id="mhint"></p>
+    <div id="pv" class="fth-paper"></div>
+  </div>
+</div>
+<div class="fth-toast" id="toast"></div>
+<input type="file" id="photoPick" accept="image/*" multiple hidden>
+<input type="file" id="sketchPick" accept="image/*" hidden>
+<script>
+'use strict';
+/* ───────── reference data ───────── */
+const STATUS=[["Idea","#8a9099"],["To recce","#5b8fd6"],["Recced","#d99a1e"],["Shortlisted","#2fa594"],["Locked","#2e9a5a"],["Rejected","#c8553f"]];
+const stCol=s=>(STATUS.find(x=>x[0]===s)||STATUS[1])[1];
+const PTS=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+const ptOf=d=>PTS[Math.round((((+d)%360)+360)%360/22.5)%16];
+const TAGS=["Wide","Reverse","Detail","Window / light","Power","Access / parking","Facilities","Sound","Hazard","Other"];
+const SCORES=[["look","Look"],["sound","Sound"],["light","Light"],["access","Access & parking"],["power","Power"],["fac","Facilities"],["cost","Cost & permission"]];
+const VERDICTS=["Strong yes","Possible","Backup only","No"];
+const KIT=["Phone + power bank","Tape / laser measure","Compass app","Viewfinder app (Artemis, Cadrage)","Light meter app","Sound level app","This sheet, pen, clipboard","Torch","Socket tester","Owner's phone number","Snacks & water","Something warm"];
+/* NI emergency departments (same list as the Risk Assessment Builder), with approximate coordinates for a straight-line nearest guess */
+const HS=[["Royal Victoria Hospital","274 Grosvenor Road, Belfast BT12 6BA","24h Emergency Department",54.5946,-5.9536],["Ulster Hospital","Upper Newtownards Road, Dundonald BT16 1RH","24h Emergency Department",54.5878,-5.8164],["Antrim Area Hospital","45 Bush Road, Antrim BT41 2RL","24h Emergency Department",54.7232,-6.2280],["Causeway Hospital","4 Newbridge Road, Coleraine BT52 1HS","Emergency Department",55.1358,-6.6878],["Craigavon Area Hospital","68 Lurgan Road, Portadown BT63 5QQ","24h Emergency Department",54.4436,-6.4097],["Daisy Hill Hospital","5 Hospital Road, Newry BT35 8DR","Emergency Department",54.1835,-6.3483],["Altnagelvin Area Hospital","Glenshane Road, Derry/Londonderry BT47 6SB","24h Emergency Department",54.9918,-7.2952],["South West Acute Hospital","124 Irvinestown Road, Enniskillen BT74 6DN","Emergency Department",54.3712,-7.6545],["Royal Belfast Hospital for Sick Children","Falls Road, Belfast BT12 6BE","Children's Emergency Department",54.5951,-5.9551],["Lagan Valley Hospital","Hillsborough Road, Lisburn BT28 1JP","Minor injuries (limited hours)",54.5047,-6.0477],["Whiteabbey Hospital","Doagh Road, Newtownabbey BT37 9RH","Minor injuries (limited hours)",54.6720,-5.9105],["Mid Ulster Hospital","59 Hospital Road, Magherafelt BT45 5EX","Minor injuries (limited hours)",54.7590,-6.6010],["Downe Hospital","Pound Lane, Downpatrick BT30 6JA","Minor injuries (limited hours)",54.3232,-5.7160],["Omagh Hospital and Primary Care Complex","Mullan Road, Omagh BT79 0NS","Minor injuries (limited hours)",54.6180,-7.3222],["Ards Community Hospital","Church Street, Newtownards BT23 4AS","Minor injuries (limited hours)",54.5953,-5.6948]];
+
+/* ───────── the recce, section by section ─────────
+   fields: [key, label, type, extras]   types: text area sel date time num scale coords
+   checks: groups of yes/no/n-a questions (yn) or things to tick if present (tick)
+   extras: w = full width, o = options, ph = placeholder, ln = write-in lines on the field sheet, ie = only for INT or EXT */
+const SEC=[
+{id:"ov",t:"Overview",nav:"Overview",tip:"The basics. Fill these in before you go and they print at the top of the field sheet, so you only write the rest on location.",
+ f:[["name","Location name","text",{w:1,ph:"e.g. Rose's flat, Ormeau Avenue"}],["setting","Script setting(s) it's for","text",{ph:"e.g. INT. FLAT - KITCHEN"}],["scenes","Scenes","text",{ph:"e.g. 5, 9, 12"}],
+    ["ie","Int / Ext","sel",{o:["INT","EXT","INT/EXT"]}],["dn","Day / Night","sel",{o:["DAY","NIGHT","DAY & NIGHT"]}],["status","Status","sel",{o:STATUS.map(s=>s[0])}],["w3w","What3Words","text",{ph:"///word.word.word"}],
+    ["addr","Address","area",{w:1,ln:2}],["coords","Coordinates","coords",{w:1}],
+    ["shoot","Planned shoot date","date"],["rdate","Recce date","date"],["rtime","Recce time","time"],["rwx","Weather on the recce","text"],["by","Recce team","text",{w:1,ph:"Names and roles, e.g. Aoife (Dir), Tom (DP)"}]],
+ n:["First impressions",3]},
+{id:"perm",t:"Owner & permission",nav:"Permission",tip:"Who says yes, what it costs and what you've agreed. Get it in writing before the shoot: a short location agreement signed by the owner protects everyone.",
+ f:[["cName","Owner / manager","text"],["cRole","Their role","text",{ph:"e.g. Owner, venue manager"}],["cPhone","Phone","text"],["cEmail","Email","text"],
+    ["dayC","Contact on the day (name & phone)","text",{w:1}],["perm","Permission","sel",{o:["Not asked yet","Asked, waiting","Verbal yes","Written yes","Agreement signed","Refused"]}],["fee","Fee / cost","text",{ph:"e.g. Free, £50, donation"}],
+    ["avail","Dates & times available","text",{w:1}],["hours","Earliest in / latest out","text"],["deadline","Must be cleared by","text",{ph:"e.g. 6pm, shop opens 9am"}],["restr","Restrictions & house rules","area",{w:1,ln:2}]],
+ c:[{y:"yn",i:[["rel","Location agreement / release needed"],["ins","Public liability insurance certificate requested"],["permit","Council or landowner filming permit needed"],["nbr","Neighbours or residents to be told"],["pub","Public or staff using the space during the shoot"],["dep","Deposit or damage cover needed"],["keys","Keys, fobs or alarm codes needed"],["secu","Caretaker / security on site"]]}],
+ n:["Notes",2]},
+{id:"acc",t:"Access & parking",nav:"Access",tip:"How cast, crew and kit get in. Walk the route from where vehicles stop to set, and time it.",
+ f:[["park","Parking (spaces & where)","text",{w:1}],["unit","Unit base (kit, vehicles, crew base)","text",{w:1}],["load","Load-in route to set","area",{w:1,ln:2}],["walk","Parking to set (mins / metres)","text"],["trans","Nearest public transport","text"]],
+ c:[{y:"yn",i:[["stepfree","Step-free route from vehicles to set"],["lift","Lift available","INT"],["stairs","Stairs to carry kit up or down"],["doors","Doors wide enough for trolleys / dolly"],["parkfree","Parking free or included"],["parkres","Parking restrictions or permits"],["findable","Easy to find (signs needed?)"],["mobility","Accessible for anyone with mobility needs"],["overnight","Kit can be left overnight"]]}],
+ n:["Notes",2]},
+{id:"pow",t:"Power",nav:"Power",tip:"Find the fuse board and count the sockets near set. Ask before you plug in, and never overload one circuit with lights and kettles.",
+ f:[["sockets","Sockets: how many & where","text",{w:1}],["fuse","Fuse board / breakers location","text"],["run","Cable run to set (m)","text"],["circuits","Circuits & ratings (if known)","text",{w:1}]],
+ c:[{y:"yn",i:[["perm","Allowed to use mains power"],["near","Enough sockets near set"],["sep","Sockets on separate circuits"],["gen","Generator or battery power needed"],["genok","Generator allowed (noise / fumes)"],["path","Cables cross walkways (matting / ramps needed)"],["safe","Electrics look safe (no scorching, loose sockets)"],["outdoor","Outdoor socket available","EXT"],["charge","Somewhere safe to charge batteries"]]}],
+ n:["Notes",2]},
+{id:"snd",t:"Sound",nav:"Sound",tip:"Stand still for a minute with your eyes closed and listen. Record 30 seconds on your phone so the sound recordist can hear it too.",
+ f:[["noise","Ambient noise","scale",{lo:"Silent",hi:"Very loud"}],["echo","Echo / reverb","sel",{o:["Dead","Some","Lots"]}],["quiet","Quietest times","text"],["tone","Room tone notes","text"]],
+ c:[{y:"tick",h:"Noise sources (tick any you hear)",i:[["traffic","Road traffic"],["air","Aircraft / flight path"],["rail","Trains"],["fridge","Fridges / freezers"],["hvac","Heating, air-con, extractors"],["works","Building works"],["school","School / playground"],["bells","Church bells / clocks"],["music","Pubs, shops, music"],["foot","Neighbours / footfall"],["animal","Dogs, birds, livestock"],["wind","Wind exposure"],["water","Water (river, fountain, rain on roof)"],["buzz","Buzzing lights / electrics"]]},
+    {y:"yn",i:[["off","Noisy appliances can be switched off"],["soft","Soft furnishings to tame echo"],["hold","Can hold traffic / public for takes"]]}],
+ n:["Notes",2]},
+{id:"lit",t:"Light & sun",nav:"Light",tip:"Note which way the windows (or the main shooting direction) face. With coordinates in 01 and a shoot date, the sun's path, golden hour and when sun hits each window are worked out here, with no internet needed.",
+ f:[["walls","Wall, floor & ceiling colours","text",{w:1}],["win","Windows: size & coverings","text",{w:1,ie:"INT"}],["ceil","Ceiling height (m)","text",{ie:"INT"}],["prac","Existing lights / practicals","text"]],
+ sp:"sun",
+ c:[{y:"yn",i:[["black","Windows can be blacked out","INT"],["swap","Existing lights can be switched off or swapped"],["mixed","Mixed colour temperatures"],["flick","Flicker risk (fluorescent / cheap LED)"],["refl","Reflective surfaces (glass, mirrors, gloss)"],["stands","Room for lighting stands"],["rig","Can fix to walls / ceilings"],["tod","Light suits the script's time of day"],["spill","Street lights / spill after dark"]]}],
+ n:["Notes",2]},
+{id:"cam",t:"Camera & frame",nav:"Camera",tip:"Stand where camera would go for each planned shot. Use a viewfinder app to check your widest lens fits, and look at what's behind you for the reverse.",
+ f:[["shots","Shots & angles that work","area",{w:1,ln:3}],["lens","Widest / longest lens that fits","text"],["back","Space behind camera (m)","text"],["moves","Room for moves (dolly, slider, gimbal)","text",{w:1}],["rev","What we see on the reverse","text",{w:1}]],
+ c:[{y:"yn",i:[["floor","Floor smooth enough for a dolly or slider"],["revok","Reverse angle works without cheating"],["logos","Signs, logos or artwork in shot to clear"],["modern","Things in shot that break the look"],["depth","Can shoot through doors / windows for depth"],["vv","Space for a monitor / video village"]]}],
+ n:["Notes",2]},
+{id:"art",t:"Art department",nav:"Art",tip:"Take reference photos before anything is moved so the location can be put back exactly as you found it.",
+ f:[["dress","What needs dressing or changing","area",{w:1,ln:2}],["protect","What must be protected","text",{w:1}],["move","What can be moved","text"],["store","Where removed items go","text"]],
+ c:[{y:"yn",i:[["floorp","Floor protection needed"],["valuables","Owner's valuables to be put away"],["alter","Allowed to paint, fix or alter anything"],["refs","Reference photos taken before moving anything"],["clear","Artwork / branding to cover or clear"]]}],
+ n:["Notes",2]},
+{id:"fac",t:"Facilities & welfare",nav:"Facilities",tip:"Where people will wait, eat, change and go to the loo. A cold, hungry crew with nowhere to sit slows everything down.",
+ f:[["loos","Toilets","text"],["hold","Holding / green room for cast","text"],["mu","Make-up & wardrobe space","text"],["signal","Mobile signal (network & bars)","text"],["food","Where crew can eat (kitchen, kettle, water)","text",{w:1}],["wifi","Wi-Fi","text"]],
+ c:[{y:"yn",i:[["wc","Toilets crew can use"],["water","Running water"],["heat","Heating / shelter from the weather"],["change","Private space to change"],["eat","Space to eat away from set"],["stage","Kit staging area near set"],["bins","Bins / rubbish removal"],["smoke","Smoking area away from set"]]}],
+ n:["Notes",2]},
+{id:"safe",t:"Safety & emergency",nav:"Safety",tip:"Anything ticked here belongs in your Risk Assessment (Shoot-Day Paperwork). The recce is the best time to spot it.",
+ f:[["hosp","Nearest A&E","text"],["hospPhone","A&E phone","text"],["hospAddr","A&E address","text",{w:1}],["aid","First aid kit & first aider","text"],["exits","Fire exits & assembly point","text"],["ems","Emergency vehicle access","text",{w:1}]],
+ sp:"hosp",
+ c:[{y:"tick",h:"Hazards spotted (tick any)",i:[["trip","Trips / uneven ground"],["height","Stairs, ledges, working at height"],["water","Water (river, pond, coast)"],["road","Working near roads"],["public","Members of the public"],["dark","Poor light after dark"],["build","Old building (damp, asbestos, weak floors)"],["elec","Electrical hazards"],["animals","Animals / livestock"],["weather","Exposure to weather"],["tide","Tides or flooding"],["remote","Remote / lone working"]]},
+    {y:"yn",i:[["ext","Fire extinguishers on site"],["call","Signal good enough to call 999"]]}],
+ n:["Hazard notes",3]},
+{id:"ph",t:"Photos & floor plan",nav:"Photos",tip:"Take a wide from every corner, then the reverse of each planned shot, the windows, sockets, fuse board, route in, toilets and anything hazardous. Note which way each photo faces.",
+ sp:"photos"},
+{id:"ver",t:"Verdict",nav:"Verdict",tip:"Score it while it's fresh. Scores feed the Compare view so you can weigh up candidates for the same setting side by side.",
+ sp:"verdict"}
+];
+
+/* ───────── state ───────── */
+const KEY="fth-recce-v1";
+const uid=()=>Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-4);
+const newR=()=>({id:uid(),f:{status:"To recce"},ck:{},sc:{},dirs:[{l:"Main window",d:""}],acts:[],photos:[],sketch:null,off:{},at:Date.now()});
+let S={prod:{title:"",company:""},cur:null,locs:[]},savedAt=0;
+try{const o=JSON.parse(localStorage.getItem(KEY)||"null");if(o&&o.S){S=o.S;savedAt=o.at||0}}catch(e){}
+if(!S.locs||!S.locs.length){const r=newR();S.locs=[r];S.cur=r.id}
+if(!S.prod)S.prod={title:"",company:""};
+const UI={mode:"field",fill:true,shut:{}};
+try{const u=JSON.parse(localStorage.getItem(KEY+"-ui")||"null");if(u){UI.mode=u.mode||"field";UI.fill=u.fill!==false}}catch(e){}
+const cur=()=>S.locs.find(r=>r.id===S.cur)||S.locs[0];
+const $=(s,e=document)=>e.querySelector(s),$$=(s,e=document)=>[...e.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nl=s=>esc(s).replace(/\n/g,"<br>");
+const fmtD=d=>d?new Date(d+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"}):"";
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),3200)}
+let saveT;function persist(){clearTimeout(saveT);saveT=setTimeout(()=>{try{savedAt=Date.now();localStorage.setItem(KEY,JSON.stringify({S,at:savedAt}));showSaved()}catch(e){$("#saveState").textContent="Couldn't save in this browser"}},350)}
+function showSaved(){$("#saveState").textContent=savedAt?"Saved in this browser · "+new Date(savedAt).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""}
+function saveUI(){try{localStorage.setItem(KEY+"-ui",JSON.stringify({mode:UI.mode,fill:UI.fill}))}catch(e){}}
+
+/* ───────── photos (IndexedDB, so they don't fill up the small text store) ───────── */
+const IMG=new Map();let dbp=null;
+function db(){return dbp||(dbp=new Promise((res,rej)=>{const q=indexedDB.open("fth-recce",1);q.onupgradeneeded=()=>q.result.createObjectStore("img");q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)}))}
+function itx(mode,fn){return db().then(d=>new Promise((res,rej)=>{const t=d.transaction("img",mode),r=fn(t.objectStore("img"));t.oncomplete=()=>res(r&&r.result);t.onerror=t.onabort=()=>rej(t.error)}))}
+const putImg=(id,blob)=>itx("readwrite",s=>s.put(blob,id)).then(()=>{IMG.set(id,URL.createObjectURL(blob))});
+const delImg=id=>{const u=IMG.get(id);if(u)URL.revokeObjectURL(u);IMG.delete(id);return itx("readwrite",s=>s.delete(id)).catch(()=>{})};
+async function loadImgs(){try{const d=await db();await new Promise(res=>{const t=d.transaction("img"),c=t.objectStore("img").openCursor();c.onsuccess=e=>{const k=e.target.result;if(k){if(k.value instanceof Blob)IMG.set(k.key,URL.createObjectURL(k.value));k.continue()}};t.oncomplete=res;t.onerror=res})}catch(e){}}
+function shrink(file,max=1600){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(),"image/jpeg",.82)};im.onerror=()=>{URL.revokeObjectURL(u);rej()};im.src=u})}
+async function addPhotos(files){const R=cur();let n=0;for(const f of files){if(!/^image\//.test(f.type))continue;try{const b=await shrink(f),id="p"+uid();await putImg(id,b);R.photos.push({id,cap:"",tag:"",dir:""});n++}catch(e){}}
+  if(n){persist();renderSpecial("photos");prevSoon();toast(n+" photo"+(n>1?"s":"")+" added")}else toast("Couldn't read those files as images")}
+
+/* ───────── sun (NOAA-style approximation, accurate to a minute or two) ───────── */
+const RAD=Math.PI/180;
+function sunAt(ms,lat,lng){const d=ms/864e5-10957.5,g=(357.529+.98560028*d)*RAD,q=280.459+.98564736*d,L=(q+1.915*Math.sin(g)+.02*Math.sin(2*g))*RAD,e=(23.439-3.6e-7*d)*RAD;
+  const ra=Math.atan2(Math.cos(e)*Math.sin(L),Math.cos(L)),dec=Math.asin(Math.sin(e)*Math.sin(L)),gm=(((18.697374558+24.06570982441908*d)%24)+24)%24,H=(gm*15+lng)*RAD-ra,la=lat*RAD;
+  const el=Math.asin(Math.sin(la)*Math.sin(dec)+Math.cos(la)*Math.cos(dec)*Math.cos(H)),az=(Math.atan2(Math.sin(H),Math.cos(H)*Math.sin(la)-Math.tan(dec)*Math.cos(la))/RAD+540)%360;
+  return{el:el/RAD,az}}
+const hhmm=ms=>ms==null?"–":new Date(ms).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+const adiff=(a,b)=>{const d=Math.abs(((a-b)%360+360)%360);return d>180?360-d:d};
+function sunDay(ds,lat,lng){if(!ds||!isFinite(lat)||!isFinite(lng))return null;const[y,m,d]=ds.split("-").map(Number);if(!y)return null;const t0=new Date(y,m-1,d).getTime(),st=2*6e4,P=[];
+  for(let t=t0;t<=t0+864e5;t+=st)P.push({t,...sunAt(t,lat,lng)});
+  const cross=(th,up)=>{for(let i=1;i<P.length;i++){const a=P[i-1],b=P[i];if(up?(a.el<th&&b.el>=th):(a.el>=th&&b.el<th)){const k=(th-a.el)/(b.el-a.el);return{t:a.t+k*(b.t-a.t),az:a.az+(((b.az-a.az+540)%360)-180)*k}}}return null};
+  let hi=P[0];P.forEach(p=>{if(p.el>hi.el)hi=p});
+  return{P,t0,lat,lng,rise:cross(-.833,1),set:cross(-.833,0),dawn:cross(-6,1),dusk:cross(-6,0),gAm:[cross(-4,1),cross(6,1)],gPm:[cross(6,0),cross(-4,0)],noon:hi,max:hi.el}}
+function windowSun(D,bearing){if(!D||bearing===""||bearing==null)return null;const b=+bearing,out=[];let s=null;
+  D.P.forEach(p=>{const on=p.el>0&&adiff(p.az,b)<80;if(on&&s==null)s=p.t;if(!on&&s!=null){out.push([s,p.t]);s=null}});if(s!=null)out.push([s,D.P[D.P.length-1].t]);return out}
+function sunSVG(D,dirs,nowMs){const c=110,R=88,pt=(az,el)=>{const r=R*(90-Math.max(el,0))/90;return[c+r*Math.sin(az*RAD),c-r*Math.cos(az*RAD)]};
+  let s=`<svg class="sunsvg" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg"><circle class="ring" cx="${c}" cy="${c}" r="${R*2/3}"/><circle class="ring" cx="${c}" cy="${c}" r="${R/3}"/><line class="ax" x1="${c}" y1="${c-R}" x2="${c}" y2="${c+R}"/><line class="ax" x1="${c-R}" y1="${c}" x2="${c+R}" y2="${c}"/><circle class="hz" cx="${c}" cy="${c}" r="${R}"/>`;
+  s+=`<text x="${c}" y="${c-R-6}" text-anchor="middle">N</text><text x="${c+R+7}" y="${c+3.5}" text-anchor="start">E</text><text x="${c}" y="${c+R+14}" text-anchor="middle">S</text><text x="${c-R-7}" y="${c+3.5}" text-anchor="end">W</text>`;
+  (dirs||[]).forEach(d=>{if(d.d===""||d.d==null)return;const a=+d.d*RAD,x=c+R*Math.sin(a),y=c-R*Math.cos(a),hx=c+(R-7)*Math.sin(a),hy=c-(R-7)*Math.cos(a),px=Math.cos(a)*4,py=Math.sin(a)*4,lx=c+(R*.62)*Math.sin(a),ly=c-(R*.62)*Math.cos(a);
+    s+=`<line class="dir" x1="${c}" y1="${c}" x2="${x}" y2="${y}"/><path class="dirh" d="M${x} ${y}L${hx+px} ${hy+py}L${hx-px} ${hy-py}Z"/><text class="dirt" x="${lx+(Math.cos(a)*8)}" y="${ly+(Math.sin(a)*8)+3}" text-anchor="middle">${esc((d.l||"").slice(0,16))}</text>`});
+  if(D){const up=D.P.filter((p,i)=>i%5===0&&p.el>0).map(p=>pt(p.az,p.el).map(v=>v.toFixed(1)).join(","));if(up.length>1)s+=`<polyline class="path" points="${up.join(" ")}"/>`;
+    for(let h=1;h<24;h++){const p=D.P[h*30];if(p&&p.el>0){const[x,y]=pt(p.az,p.el);s+=`<circle class="hr" cx="${x}" cy="${y}" r="2.1"/>`;if(h%2===0)s+=`<text class="hrt" x="${x}" y="${y-5}" text-anchor="middle">${h}</text>`}}
+    [D.rise,D.set].forEach(e=>{if(e){const[x,y]=pt(e.az,0);s+=`<circle class="rs" cx="${x}" cy="${y}" r="4"/>`}});
+    if(nowMs&&nowMs>=D.t0&&nowMs<D.t0+864e5){const p=sunAt(nowMs,D.lat,D.lng);if(p.el>0){const[x,y]=pt(p.az,p.el);s+=`<circle class="now" cx="${x}" cy="${y}" r="5"/>`}}}
+  return s+"</svg>"}
+function sunRows(D){return[["Light from (civil dawn)",hhmm(D.dawn&&D.dawn.t)],["Sunrise"+(D.rise?" · "+ptOf(D.rise.az):""),hhmm(D.rise&&D.rise.t)],["Morning golden hour",D.gAm[0]||D.gAm[1]?hhmm(D.gAm[0]&&D.gAm[0].t)+"–"+hhmm(D.gAm[1]&&D.gAm[1].t):"–"],
+  ["Sun highest ("+Math.round(D.max)+"°)",hhmm(D.noon.t)],["Evening golden hour",D.gPm[0]||D.gPm[1]?hhmm(D.gPm[0]&&D.gPm[0].t)+"–"+hhmm(D.gPm[1]&&D.gPm[1].t):"–"],["Sunset"+(D.set?" · "+ptOf(D.set.az):""),hhmm(D.set&&D.set.t)],["Dark by (civil dusk)",hhmm(D.dusk&&D.dusk.t)]]}
+const sunDate=R=>R.f.shoot?[R.f.shoot,"shoot date"]:R.f.rdate?[R.f.rdate,"recce date"]:[new Date().toISOString().slice(0,10),"today"];
+function parseLL(s){s=String(s||"");let m=s.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/)||s.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)||s.match(/[?&](?:q|query|ll)=(-?\d+\.\d+)(?:,|%2C)\s*(-?\d+\.\d+)/)||s.match(/(-?\d{1,3}\.\d+)\s*[,; ]\s*(-?\d{1,3}\.\d+)/);
+  if(!m)return null;const a=+m[1],b=+m[2];return Math.abs(a)<=90&&Math.abs(b)<=180?[a,b]:null}
+const hasLL=R=>isFinite(parseFloat(R.f.lat))&&isFinite(parseFloat(R.f.lng));
+const mapUrl=R=>hasLL(R)?"https://www.google.com/maps/search/?api=1&query="+R.f.lat+","+R.f.lng:R.f.addr?"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(R.f.addr):"";
+function km(a,b,c,d){const R=6371,x=(c-a)*RAD,y=(d-b)*RAD,h=Math.sin(x/2)**2+Math.cos(a*RAD)*Math.cos(c*RAD)*Math.sin(y/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+
+/* ───────── helpers ───────── */
+const visI=(R,ie)=>!ie||!R.f.ie||R.f.ie==="INT/EXT"||R.f.ie===ie;
+const ckKey=(s,k)=>s.id+"_"+k;
+function secProgress(R,s){let n=0,d=0;(s.f||[]).forEach(f=>{if(!visI(R,f[3]&&f[3].ie))return;n++;if(f[2]==="coords"?hasLL(R):String(R.f[f[0]]??"").trim())d++});
+  (s.c||[]).forEach(g=>g.i.forEach(i=>{if(!visI(R,i[2]))return;if(g.y==="yn"){n++;if(R.ck[ckKey(s,i[0])])d++}}));
+  if(s.c&&s.c.some(g=>g.y==="tick")){n++;if(s.c.some(g=>g.y==="tick"&&g.i.some(i=>R.ck[ckKey(s,i[0])]))||R.ck[s.id+"__none"])d++}
+  if(s.sp==="photos"){n++;if(R.photos.length)d++}
+  if(s.sp==="verdict"){n+=SCORES.length+1;SCORES.forEach(x=>{if(R.sc[x[0]])d++});if(R.f.verdict)d++}
+  return[d,n]}
+const avg=R=>{const v=SCORES.map(s=>+R.sc[s[0]]).filter(Boolean);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null};
+
+/* ───────── editor ───────── */
+const info=t=>t?`<b class="fth-info" data-tip title="What is this?">i</b>`:"";
+const INFO={coords:"Paste coordinates (54.597, -5.930) or a Google Maps link. Used offline to work out sunrise, sunset and golden hour, and to suggest the nearest A&E. On location, 'Use my location' grabs them from your phone.",
+  w3w:"A free What3Words address pinpoints the exact entrance or parking spot. It also goes onto the call sheet.",
+  setting:"The location as written in the script's scene headings. Several real places can be candidates for one script setting; Compare groups them together.",
+  status:"Idea → To recce → Recced → Shortlisted → Locked. Rejected keeps the notes in case you change your mind.",
+  noise:"1 is a silent room, 3 is a quiet street, 5 is a busy road or venue. Trust your ears, not just a phone meter.",
+  perm:"Verbal yes is a start, but get it written down (an email is better than nothing) and a signed location agreement before the shoot.",
+  hosp:"Needed for the call sheet and risk assessment. Check it's a full A&E, not a minor injuries unit, and its opening hours."};
+function fieldEd(R,f){const[k,l,t,x={}]=f;if(!visI(R,x.ie))return"";const v=R.f[k]??"",w=x.w?"w":"",lab=`<label>${esc(l)}${info(INFO[k])}</label>${INFO[k]?`<div class="tip fth-tip">${INFO[k]}</div>`:""}`;
+  if(t==="coords")return `<div class="${w}">${lab}<div class="row"><input class="fth-input" style="flex:1;min-width:180px" data-f="coords" value="${esc(v)}" placeholder="54.597, -5.930  or a Google Maps link"><button class="fth-btn sm" data-act="geo">Use my location</button></div><div class="sub" id="llState">${llState(R)}</div></div>`;
+  if(t==="area")return `<div class="${w}">${lab}<textarea class="fth-input" data-f="${k}" rows="${Math.max(2,x.ln||2)}" placeholder="${esc(x.ph||"")}">${esc(v)}</textarea></div>`;
+  if(t==="sel")return `<div class="${w}">${lab}<select class="fth-input" data-f="${k}"><option value="">–</option>${x.o.map(o=>`<option ${o===v?"selected":""}>${esc(o)}</option>`).join("")}</select></div>`;
+  if(t==="scale")return `<div class="${w}">${lab}<div class="row"><span class="sub" style="margin:0">${esc(x.lo)}</span><span class="seg">${[1,2,3,4,5].map(n=>`<button data-scale="${k}" data-v="${n}" class="${String(v)===String(n)?"on sv":""}">${n}</button>`).join("")}</span><span class="sub" style="margin:0">${esc(x.hi)}</span></div></div>`;
+  return `<div class="${w}">${lab}<input class="fth-input" type="${t==="num"?"number":t}" data-f="${k}" value="${esc(v)}" placeholder="${esc(x.ph||"")}"></div>`}
+function llState(R){if(!R.f.coords)return"No coordinates yet: the sun panel and nearest A&E need them.";if(!hasLL(R))return"<span style='color:var(--fth-bad)'>Couldn't read coordinates from that.</span>";
+  const u=mapUrl(R);return `✓ ${(+R.f.lat).toFixed(5)}, ${(+R.f.lng).toFixed(5)} · <a class="lnk" href="${u}" target="_blank" rel="noopener">Open in Maps ↗</a>`}
+function checksEd(R,s){return(s.c||[]).map(g=>{const items=g.i.filter(i=>visI(R,i[2]));if(!items.length)return"";
+  if(g.y==="tick")return `<div class="cg"><div class="cgh">${esc(g.h)}</div><div class="tks">${items.map(i=>{const k=ckKey(s,i[0]);return `<button data-tick="${k}" class="${R.ck[k]?"on":""}">${esc(i[1])}</button>`}).join("")}<button data-tick="${s.id}__none" class="${R.ck[s.id+"__none"]?"on":""}" title="Mark as checked, nothing found">None</button></div></div>`;
+  return `<div class="cg">${g.h?`<div class="cgh">${esc(g.h)}</div>`:""}<div class="ckl">${items.map(i=>{const k=ckKey(s,i[0]),v=R.ck[k]||"";return `<div class="ckr"><span>${esc(i[1])}</span><span class="seg">${[["y","Yes"],["n","No"],["na","N/A"]].map(o=>`<button data-ck="${k}" data-v="${o[0]}" class="${v===o[0]?"on":""}">${o[1]}</button>`).join("")}</span></div>`}).join("")}</div></div>`}).join("")}
+function special(R,id){
+  if(id==="sun"){const[ds,lbl]=sunDate(R),D=hasLL(R)?sunDay(ds,+R.f.lat,+R.f.lng):null;
+    const dirs=`<div class="sunh" style="margin-top:4px">Key directions ${info(1)}</div><div class="tip fth-tip">Stand at the window (or where camera points) and read your phone compass. Add the main window, a second window, and the direction camera faces for the wide.</div>
+      <div class="dirs">${R.dirs.map((d,i)=>`<div class="dr"><input class="fth-input" data-dir="${i}" data-dk="l" value="${esc(d.l)}" placeholder="e.g. Kitchen window"><select class="fth-input" data-dir="${i}" data-dk="d"><option value="">faces…</option>${PTS.map((p,j)=>`<option value="${j*22.5}" ${String(d.d)===String(j*22.5)?"selected":""}>${p} · ${j*22.5}°</option>`).join("")}</select><button class="fth-btn ghost icon x" data-act="deldir" data-i="${i}" title="Remove">✕</button></div>`).join("")}</div>
+      <div class="row" style="margin-top:8px"><button class="fth-btn sm" data-act="adddir">＋ Add direction</button></div>`;
+    if(!D)return `<div class="sunw" style="grid-template-columns:1fr"><div>${dirs}<p class="sub">Add coordinates in <b>01 Overview</b> to see the sun's path for the ${lbl==="today"?"shoot date":lbl}. The field sheet prints a blank compass to sketch on instead.</p></div></div>`;
+    const ws=R.dirs.filter(d=>d.d!==""&&d.d!=null).map(d=>{const w=windowSun(D,d.d);return `<div><b>${esc(d.l||"Direction")}</b> (faces ${ptOf(d.d)}): ${w&&w.length?"direct sun ≈ "+w.map(x=>hhmm(x[0])+"–"+hhmm(x[1])).join(", "):"no direct sun"}</div>`}).join("");
+    return `<div class="sunw"><div>${sunSVG(D,R.dirs,Date.now())}</div><div><div class="sunh">Sun on ${fmtD(ds)} <span style="text-transform:none;letter-spacing:0">(${lbl})</span></div><table class="st">${sunRows(D).map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</table>${ws?`<div class="winsun">${ws}</div>`:""}</div><div style="grid-column:1/-1">${dirs}<p class="sub">Times are in this device's time zone. Hour dots on the arc are labelled every 2 hours; the big dot is the sun right now.</p></div></div>`}
+  if(id==="hosp"){if(!hasLL(R))return `<p class="sub">Add coordinates in 01 and the nearest Northern Ireland emergency departments are suggested here.</p>`;
+    const L=HS.map(h=>({h,k:km(+R.f.lat,+R.f.lng,h[3],h[4])})).sort((a,b)=>a.k-b.k);if(L[0].k>80)return "";const ed=L.filter(x=>/24h|^Emergency/.test(x.h[2])).slice(0,3);
+    return `<div class="cg"><div class="cgh">Nearest emergency departments (straight line, check the route)</div><div class="ckl">${ed.map(x=>`<div class="ckr"><span><b>${esc(x.h[0])}</b> · ${x.k.toFixed(1)} km<br><span class="sub" style="margin:0">${esc(x.h[1])} · ${esc(x.h[2])}</span></span><button class="fth-btn sm" data-act="usehosp" data-h="${HS.indexOf(x.h)}">Use</button></div>`).join("")}</div></div>`}
+  if(id==="photos"){return `<div class="drop" id="drop">Drop photos here or <button class="fth-btn sm" data-act="addph">Add photos</button><div class="sub">They're shrunk to 1600px and kept in this browser with the project. On a phone, this opens your camera roll or camera.</div></div>
+    <div class="phs">${R.photos.map((p,i)=>`<div class="phc"><div class="im">${IMG.get(p.id)?`<img src="${IMG.get(p.id)}" alt="">`:""}<span class="n">${i+1}</span><span class="mv">${i?`<button data-act="mvph" data-i="${i}" data-d="-1" title="Move earlier">◀</button>`:""}${i<R.photos.length-1?`<button data-act="mvph" data-i="${i}" data-d="1" title="Move later">▶</button>`:""}</span><button class="del" data-act="delph" data-i="${i}" title="Remove photo">✕</button></div>
+      <div class="fl"><input class="fth-input" data-ph="${i}" data-pk="cap" value="${esc(p.cap)}" placeholder="What it shows"><div class="two"><select class="fth-input" data-ph="${i}" data-pk="tag"><option value="">Type…</option>${TAGS.map(t=>`<option ${t===p.tag?"selected":""}>${t}</option>`).join("")}</select><select class="fth-input" data-ph="${i}" data-pk="dir"><option value="">Facing…</option>${PTS.map(t=>`<option ${t===p.dir?"selected":""}>${t}</option>`).join("")}</select></div></div></div>`).join("")}</div>
+    <div class="cg"><div class="cgh">Floor plan / sketch</div><div class="sk">${R.sketch&&IMG.get(R.sketch)?`<img src="${IMG.get(R.sketch)}" alt="Floor plan"><button class="fth-btn sm danger" data-act="delsk">Remove</button>`:`<span class="sub" style="margin:0">Photograph the sketch from your field sheet, or a plan from the Blocking Planner.</span>`}<button class="fth-btn sm" data-act="addsk">${R.sketch?"Replace":"Add"} floor plan</button></div></div>`}
+  if(id==="verdict"){const a=avg(R);return `<div class="g"><div class="w"><label>Scores (1 poor · 5 great)</label><div class="ckl">${SCORES.map(s=>`<div class="ckr"><span>${s[1]}</span><span class="seg">${[1,2,3,4,5].map(n=>`<button data-sc="${s[0]}" data-v="${n}" class="${+R.sc[s[0]]===n?"on sv":""}">${n}</button>`).join("")}</span></div>`).join("")}</div>
+    <div class="avg" id="avgBox">${a?`<b>${a.toFixed(1)}</b><span>average of ${SCORES.filter(s=>R.sc[s[0]]).length} scores</span>`:`<span>Score the location to see its average.</span>`}</div></div>
+    ${fieldEd(R,["verdict","Verdict","sel",{o:VERDICTS}])}<div></div>${fieldEd(R,["pros","Pros","area",{w:1}])}${fieldEd(R,["cons","Cons & dealbreakers","area",{w:1}])}</div>
+    <div class="cg"><div class="cgh">Next steps</div><div class="acts">${R.acts.map((a,i)=>`<div class="act"><input type="checkbox" data-ac="${i}" data-ak="done" ${a.done?"checked":""}><input class="fth-input" data-ac="${i}" data-ak="t" value="${esc(a.t)}" placeholder="e.g. Send location agreement"><input class="fth-input who" data-ac="${i}" data-ak="who" value="${esc(a.who)}" placeholder="Who"><button class="fth-btn ghost icon x" data-act="delact" data-i="${i}">✕</button></div>`).join("")}</div>
+    <div class="row" style="margin-top:8px"><button class="fth-btn sm" data-act="addact">＋ Add step</button></div></div>`}
+  return""}
+function renderSpecial(id){const el=$(`[data-spbox="${id}"]`);if(el)el.innerHTML=special(cur(),id);if(id==="photos")wireDrop()}
+function secEd(R,s,i){const[d,n]=secProgress(R,s),off=R.off[s.id],shut=UI.shut[s.id];
+  return `<section class="sec${off?" off":""}${shut?" shut":""}" id="s-${s.id}"><h2 class="fth-sec sh" data-shut="${s.id}"><span class="fth-num">${String(i+1).padStart(2,"0")}</span>${esc(s.t)} <span class="pg" data-pg="${s.id}">${d}/${n}</span><button class="prt tg" data-off="${s.id}" title="Include this section when printing">${off?"Not printed":"Printed"}</button><span class="car">▼</span></h2>
+  <div class="sb"><div class="fth-tip sectip">${esc(s.tip)}</div>${s.f?`<div class="g">${s.f.map(f=>fieldEd(R,f)).join("")}</div>`:""}${s.sp?`<div data-spbox="${s.sp}">${special(R,s.sp)}</div>`:""}${checksEd(R,s)}
+  ${s.n?`<div class="cg"><label>${esc(s.n[0])}</label><textarea class="fth-input" data-f="n_${s.id}" rows="2">${esc(R.f["n_"+s.id]||"")}</textarea></div>`:""}</div></section>`}
+function locOpts(){const g={};S.locs.forEach(r=>{const k=(r.f.setting||"").trim().toUpperCase()||"No setting yet";(g[k]=g[k]||[]).push(r)});
+  return Object.keys(g).sort().map(k=>`<optgroup label="${esc(k)}">${g[k].map(r=>`<option value="${r.id}" ${r.id===S.cur?"selected":""}>${esc(r.f.name||"Untitled location")} · ${esc(r.f.status||"")}</option>`).join("")}</optgroup>`).join("")}
+function form(){const R=cur(),ed=$("#ed"),sc=ed.scrollTop,act=document.activeElement,ak=act&&act.dataset?Object.entries(act.dataset).map(([k,v])=>`[data-${k.replace(/[A-Z]/g,m=>"-"+m.toLowerCase())}="${v}"]`).join(""):"";
+  ed.innerHTML=`<p class="intro">Recce a location twice over: print a field sheet to fill in by hand, or type your notes in here afterwards. Both build the same record, and anything you fill in shows on the printed sheet.</p>
+  <div class="how"><div class="fth-card"><b><small>BEFORE</small>Going on a recce</b><p>Fill in 01 Overview (and owner details if you have them), then <b>Field sheet → Save as PDF</b>. Print it and tick, circle and sketch on location. Untick “Include what's filled in” for a blank pack.</p></div>
+  <div class="fth-card"><b><small>AFTER</small>Back from a recce</b><p>Type up your notes, add photos and score it. Switch the preview to <b>Report</b> for a tidy write-up to share, or <b>Compare</b> to weigh up candidates.</p></div></div>
+  <details class="kit"><summary>Recce kit list</summary><ul>${KIT.map(k=>`<li>${esc(k)}</li>`).join("")}</ul></details>
+  <div class="fth-card locbar"><div class="locsel"><label>Location (${S.locs.length})</label><select class="fth-input" id="locSel">${locOpts()}</select></div>
+  <div class="lbs"><button class="fth-btn sm" data-act="dup" title="Copy this recce as a starting point">Duplicate</button><button class="fth-btn sm" data-act="tocs" title="Copy address, What3Words, coordinates and A&E into the Call Sheet Builder">Send to call sheet</button><button class="fth-btn sm danger" data-act="del">Delete</button></div>
+  <div class="prod"><div><label>Production</label><input class="fth-input" data-prod="title" value="${esc(S.prod.title)}" placeholder="Film title"></div><div><label>Company / course</label><input class="fth-input" data-prod="company" value="${esc(S.prod.company)}"></div></div></div>
+  <nav class="snav" id="snav">${SEC.map((s,i)=>{const[d,n]=secProgress(R,s);return `<a href="#s-${s.id}" data-nav="${s.id}" class="${d&&d>=n?"done":""}${R.off[s.id]?" off":""}"><i>${String(i+1).padStart(2,"0")}</i>${s.nav}</a>`}).join("")}</nav>
+  ${SEC.map((s,i)=>secEd(R,s,i)).join("")}`;
+  ed.scrollTop=sc;wireDrop();if(ak){const n=$(ak,ed);if(n&&n.focus){n.focus();if(n.setSelectionRange&&/text|search|url/.test(n.type||"text")&&typeof n.value==="string")try{n.setSelectionRange(n.value.length,n.value.length)}catch(e){}}}}
+function updProgress(){const R=cur();SEC.forEach(s=>{const[d,n]=secProgress(R,s),p=$(`[data-pg="${s.id}"]`),a=$(`[data-nav="${s.id}"]`);if(p)p.textContent=d+"/"+n;if(a)a.classList.toggle("done",!!d&&d>=n)})}
+function wireDrop(){const d=$("#drop");if(!d||d._w)return;d._w=1;["dragenter","dragover"].forEach(e=>d.addEventListener(e,ev=>{ev.preventDefault();d.classList.add("over")}));["dragleave","drop"].forEach(e=>d.addEventListener(e,()=>d.classList.remove("over")));d.addEventListener("drop",ev=>{ev.preventDefault();addPhotos([...ev.dataTransfer.files])})}
+
+/* ───────── printed page ───────── */
+const BLANK={f:{},ck:{},sc:{},dirs:[],acts:[],photos:[],sketch:null,off:{}};
+const box=(on,l)=>`<span><i class="bx${on?" on":""}"></i>${l||""}</span>`;
+const lines=n=>Array(n).fill('<div class="wl"></div>').join("");
+const HEADF=new Set(["name","setting","scenes","rdate","rtime","by","status"]),REPF=new Set(["addr","w3w","ie","dn"]);
+function pField(V,f,report,keep){const[k,l,t,x={}]=f;if(!visI(V,x.ie))return"";if(!keep&&(HEADF.has(k)||(report&&REPF.has(k))))return"";let v=V.f[k];if(t==="coords")v=hasLL(V)?(+V.f.lat).toFixed(5)+", "+(+V.f.lng).toFixed(5):"";
+  const has=v!=null&&String(v).trim()!=="";if(report&&!has)return"";const w=x.w||t==="area"?"w":"";let body;
+  if(has){if(t==="scale")body=`<div class="dots">${x.lo} ${[1,2,3,4,5].map(n=>`<i class="${+v===n?"on":""}">${n}</i>`).join("")} ${x.hi}</div>`;else if(t==="date")body=`<div class="pvv">${fmtD(v)}</div>`;else body=`<div class="pvv">${nl(v)}</div>`}
+  else if(t==="sel")body=`<div class="opts">${x.o.map(o=>box(0,esc(o))).join("")}</div>`;
+  else if(t==="scale")body=`<div class="dots">${x.lo} ${[1,2,3,4,5].map(n=>`<i>${n}</i>`).join("")} ${x.hi}</div>`;
+  else body=lines(t==="area"?(x.ln||2):1);
+  return `<div class="pf ${w}"><div class="pl">${esc(l)}</div>${body}</div>`}
+function pChecks(V,s,report){let out="";(s.c||[]).forEach(g=>{const items=g.i.filter(i=>visI(V,i[2]));if(!items.length)return;
+  if(report){if(g.y==="tick"){const on=items.filter(i=>V.ck[ckKey(s,i[0])]).map(i=>i[1]);if(on.length)out+=`<div class="rt"><span>${esc(g.h.replace(/\s*\(.*\)/,""))}</span>${esc(on.join(" · "))}</div>`;else if(V.ck[s.id+"__none"])out+=`<div class="rt"><span>${esc(g.h.replace(/\s*\(.*\)/,""))}</span>None found</div>`;return}
+    items.forEach(i=>{const v=V.ck[ckKey(s,i[0])];if(v)out+=`<div class="ra ${v}"><b>${v==="y"?"✓":v==="n"?"✕":"–"}</b><span>${esc(i[1])}${v==="na"?" <i style='color:#888'>(n/a)</i>":""}</span></div>`});return}
+  if(g.y==="tick"){out+=`<div class="cgh">${esc(g.h)}</div><div class="tkg">${items.map(i=>box(V.ck[ckKey(s,i[0])],esc(i[1]))).join("")}${box(V.ck[s.id+"__none"],"None")}</div>`;return}
+  if(g.h)out+=`<div class="cgh">${esc(g.h)}</div>`;
+  out+=items.map(i=>{const v=V.ck[ckKey(s,i[0])];return `<div class="ckr"><span>${esc(i[1])}</span><span class="yn">${box(v==="y","Y")}${box(v==="n","N")}${box(v==="na","N/A")}</span></div>`}).join("")});
+  return out?`<div class="cks">${out}</div>`:""}
+function pSun(V,R,report){const[ds,lbl]=sunDate(R),D=hasLL(V)&&(V!==BLANK)?sunDay(ds,+V.f.lat,+V.f.lng):null,dirs=V.dirs.filter(d=>d.d!==""&&d.d!=null);
+  if(!D){if(report&&!dirs.length)return"";
+    return `<div class="sunp"><div>${sunSVG(null,dirs)}</div><div><div class="sunh">Directions & sun</div><div class="pf"><div class="pl">Main windows face</div>${dirs.length?`<div class="pvv">${dirs.map(d=>esc(d.l)+": "+ptOf(d.d)).join(" · ")}</div>`:lines(1)}</div>${report?"":`<div class="pf" style="margin-top:6px"><div class="pl">Sun position at recce time</div>${lines(1)}</div><div class="pf" style="margin-top:6px"><div class="pl">When sun hits set / windows</div>${lines(2)}</div><p style="font-size:9px;color:#666;margin:6px 0 0">Mark north, windows and the sun's direction on the compass with a phone compass app.</p>`}</div></div>`}
+  const ws=dirs.map(d=>{const w=windowSun(D,d.d);return `<tr><td>${esc(d.l||"Direction")} (faces ${ptOf(d.d)})</td><td>${w&&w.length?w.map(x=>hhmm(x[0])+"–"+hhmm(x[1])).join(", "):"no direct sun"}</td></tr>`}).join("");
+  return `<div class="sunp"><div>${sunSVG(D,dirs)}</div><div><div class="sunh">Sun on ${fmtD(ds)} (${lbl})</div><table class="stt">${sunRows(D).map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</table>${ws?`<div class="sunh" style="margin-top:8px">Direct sun (approx.)</div><table class="stt">${ws}</table>`:""}</div></div>`}
+function pPhotos(V,R,report){const ph=V.photos;
+  if(report){let o="";if(ph.length)o+=`<div class="phg">${ph.map((p,i)=>`<figure>${IMG.get(p.id)?`<img src="${IMG.get(p.id)}" alt="">`:""}<figcaption><small>#${i+1}${p.tag?" · "+esc(p.tag):""}${p.dir?" · facing "+esc(p.dir):""}</small>${esc(p.cap)}</figcaption></figure>`).join("")}</div>`;
+    if(V.sketch&&IMG.get(V.sketch))o+=`<div class="pl" style="margin-top:12px">Floor plan / sketch</div><img class="skimg" src="${IMG.get(V.sketch)}" alt="">`;return o}
+  const rows=ph.map((p,i)=>`<tr><td>${i+1}</td><td>${esc(p.cap)}</td><td>${esc(p.tag)}</td><td>${esc(p.dir)}</td><td></td></tr>`).join("")+Array(Math.max(4,14-ph.length)).fill(0).map((_,j)=>`<tr><td>${ph.length+j+1}</td><td></td><td></td><td></td><td></td></tr>`).join("");
+  return `<table class="tb"><tr><th style="width:26px">#</th><th>What it shows</th><th style="width:90px">Type</th><th style="width:60px">Facing</th><th style="width:34%">Notes</th></tr>${rows}</table>`}
+function pVerdict(V,report){if(report)return"";
+  return `<div class="cks" style="margin-top:0">${SCORES.map(s=>`<div class="ckr"><span>${s[1]}</span><span class="dots">${[1,2,3,4,5].map(n=>`<i class="${+V.sc[s[0]]===n?"on":""}">${n}</i>`).join("")}</span></div>`).join("")}</div>
+  <div class="pg" style="margin-top:10px">${pField(V,["verdict","Verdict","sel",{o:VERDICTS,w:1}],0,1)}${pField(V,["pros","Pros","area",{ln:3}],0,1)}${pField(V,["cons","Cons & dealbreakers","area",{ln:3}],0,1)}</div>
+  <div class="pl" style="margin-top:10px">Next steps</div><table class="tb"><tr><th style="width:22px">✓</th><th>Action</th><th style="width:28%">Who</th></tr>${V.acts.map(a=>`<tr><td>${a.done?"✓":""}</td><td>${esc(a.t)}</td><td>${esc(a.who)}</td></tr>`).join("")}${Array(Math.max(2,5-V.acts.length)).fill('<tr><td></td><td></td><td></td></tr>').join("")}</table>`}
+function verdictSummary(R){const a=avg(R),sc=SCORES.filter(s=>R.sc[s[0]]);if(!a&&!R.f.verdict&&!R.f.pros&&!R.f.cons&&!R.acts.length)return"";
+  return `<div class="vsum"><div><div class="vl">Score</div><div class="big">${a?a.toFixed(1):"–"}<small>/5</small></div>${R.f.verdict?`<div style="margin-top:6px"><span class="chip" style="background:${R.f.verdict==="No"?"#b3261e":R.f.verdict==="Strong yes"?"#1d7a45":"#555"}">${esc(R.f.verdict)}</span></div>`:""}</div>
+  <div>${sc.length?`<div class="bars">${sc.map(s=>`<span>${s[1]}</span><span class="b"><i style="width:${R.sc[s[0]]*20}%"></i></span><b>${R.sc[s[0]]}</b>`).join("")}</div>`:""}</div>
+  <div>${R.f.pros?`<div class="vl">Pros</div><div style="margin-bottom:6px">${nl(R.f.pros)}</div>`:""}${R.f.cons?`<div class="vl">Cons</div><div style="margin-bottom:6px">${nl(R.f.cons)}</div>`:""}${R.acts.length?`<div class="vl">Next steps</div>${R.acts.map(a=>`<div>${a.done?"✓":"○"} ${esc(a.t)}${a.who?" <span style='color:#666'>· "+esc(a.who)+"</span>":""}</div>`).join("")}`:""}</div></div>`}
+function pageHead(V,R,kind){const f=V.f,L=(k,fallback)=>f[k]?esc(f[k]):(fallback||"");
+  return `<div class="hd"><div><div class="kick">Location recce · ${kind}</div><div class="ln1">${f.name?esc(f.name):'<div class="wl" style="height:28px"></div>'}</div>
+    <div class="ln2">${[f.setting&&esc(f.setting),f.scenes&&"Sc. "+esc(f.scenes),f.ie,f.dn].filter(Boolean).join(" · ")||(kind==="Report"?"":'<span style="color:#888">Setting / scenes: ______________________________</span>')}</div>
+    ${f.addr?`<div class="ln2" style="color:#555">${esc(f.addr).replace(/\n/g,", ")}${f.w3w?" · "+esc(f.w3w):""}</div>`:""}</div>
+  <div class="hm">${[["Production",esc(S.prod.title)],["Recce date",(f.rdate?fmtD(f.rdate):"")+(f.rtime?" · "+esc(f.rtime):"")],["Recce team",L("by")],["Status",f.status?`<span class="chip" style="background:${stCol(f.status)}">${esc(f.status)}</span>`:""]].filter(r=>kind!=="Report"||r[1]).map(r=>`<span>${r[0]}</span><b>${r[1]}</b>`).join("")}</div></div>`}
+function paperRecce(R,mode){const report=mode==="report",V=report||UI.fill?R:{...BLANK,off:R.off,dirs:R.dirs.map(d=>({l:"",d:""})).slice(0,0)};let h=pageHead(V,R,report?"Report":"Field sheet");
+  if(report)h+=verdictSummary(R);
+  let tail="";SEC.forEach((s,i)=>{const n=String(i+1).padStart(2,"0");if(R.off[s.id])return;let body="";
+    if(s.id==="ph"){if(report){body=pPhotos(V,R,1);if(!body)return;h+=`<div class="ps"><div class="ph"><i>${n}</i>${esc(s.t)}</div>${body}</div>`}
+      else{tail+=`<div class="ps newpg"><div class="ph"><i>${n}</i>Photo log<small>${esc(V.f.name||"")}</small></div>${pPhotos(V,R,0)}</div>
+        <div class="ps newpg"><div class="ph"><i>${n}</i>Floor plan / sketch<small>${esc(V.f.name||"")}</small></div><div class="grid"><div class="na"><span>N</span></div></div><div class="key"><b>Mark:</b> windows · doors · sockets ⊕ · fuse board · camera positions · lights · power runs · exits · toilets · parking · hazards ⚠ · north</div></div>`}return}
+    if(s.id==="ver"){if(report)return;h+=`<div class="ps keep"><div class="ph"><i>${n}</i>${esc(s.t)}</div>${pVerdict(V,0)}</div>`;return}
+    const fields=(s.f||[]).map(f=>pField(V,f,report)).join(""),sp=s.sp==="sun"?pSun(V,R,report):"",cks=pChecks(V,s,report),nt=s.n?(report?(V.f["n_"+s.id]?`<div class="pf w nt"><div class="pl">${esc(s.n[0])}</div><div class="pvv">${nl(V.f["n_"+s.id])}</div></div>`:""):`<div class="pf w nt"><div class="pl">${esc(s.n[0])}</div>${V.f["n_"+s.id]?`<div class="pvv">${nl(V.f["n_"+s.id])}</div>`:lines(s.n[1])}</div>`):"";
+    if(report&&!fields&&!sp&&!cks&&!nt)return;
+    h+=`<div class="ps"><div class="ph"><i>${n}</i>${esc(s.t)}</div>${fields?`<div class="pg">${fields}</div>`:""}${sp}${cks}${nt}</div>`;
+    if(s.id==="ov"&&!report)h+=`<div class="kitb"><b>Recce kit</b><div>${KIT.map(k=>box(0,esc(k))).join("")}</div></div>`});
+  h+=tail;h+=`<div class="ft"><span>${esc(S.prod.title||"Film Tool Hub")} · Location recce</span><span>${report?"Written up "+new Date().toLocaleDateString("en-GB"):"Field sheet"}</span></div>`;return h}
+const markYN=v=>v==="y"?'<span class="mk y">✓</span>':v==="n"?'<span class="mk n">✕</span>':'<span class="mk u">·</span>';
+function cmpRows(){const g={};S.locs.forEach(r=>{const k=(r.f.setting||"").trim().toUpperCase()||"NO SETTING YET";(g[k]=g[k]||[]).push(r)});
+  return Object.keys(g).sort().map(k=>[k,g[k].slice().sort((a,b)=>(avg(b)||0)-(avg(a)||0))])}
+function paperCompare(){const G=cmpRows();if(!S.locs.some(r=>r.f.name||r.f.setting))return `<div class="emptyp">Add a few locations and score them in 12 Verdict to compare them here.</div>`;
+  return `<div class="hd" style="grid-template-columns:1fr auto"><div><div class="kick">Location recce · Comparison</div><div class="ln1">${esc(S.prod.title||"All locations")}</div><div class="ln2">${S.locs.length} location${S.locs.length>1?"s":""} across ${G.length} setting${G.length>1?"s":""}, best score first</div></div><div class="hm"><span>Printed</span><b>${new Date().toLocaleDateString("en-GB")}</b></div></div>
+  <table class="cmp" style="margin-top:12px"><tr><th>Location</th><th>Status</th><th class="c">Score</th>${SCORES.map(s=>`<th class="c" title="${s[1]}">${s[1].split(" ")[0]}</th>`).join("")}<th>Permission / fee</th><th class="c">Power</th><th class="c">Loos</th><th class="c">Noise</th><th>Verdict</th></tr>
+  ${G.map(([k,rs])=>`<tr class="grp"><td colspan="${SCORES.length+8}">${esc(k)}</td></tr>`+rs.map(r=>{const a=avg(r);return `<tr><td><b>${esc(r.f.name||"Untitled")}</b>${r.f.scenes?`<br><span style="color:#666">Sc. ${esc(r.f.scenes)}</span>`:""}</td><td><span class="chip" style="background:${stCol(r.f.status)}">${esc(r.f.status||"–")}</span></td><td class="c sc">${a?a.toFixed(1):"–"}</td>${SCORES.map(s=>`<td class="c">${r.sc[s[0]]||'<span class="mk u">·</span>'}</td>`).join("")}<td>${esc(r.f.perm||"")}${r.f.fee?"<br>"+esc(r.f.fee):""}</td><td class="c">${markYN(r.ck.pow_perm)}</td><td class="c">${markYN(r.ck.fac_wc)}</td><td class="c">${r.f.noise||'<span class="mk u">·</span>'}</td><td>${esc(r.f.verdict||"")}</td></tr>`}).join("")).join("")}</table>
+  <p style="font-size:9px;color:#666;margin-top:8px">Scores 1–5 from each recce's verdict. Power = allowed to use mains power. Loos = toilets crew can use. Noise 1 silent – 5 very loud.</p>`}
+function prev(){const m=UI.mode;$$("#mode button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));$("#optFill").hidden=m!=="field";$("#csvBtn").hidden=m!=="compare";
+  $("#mhint").textContent=m==="field"?"Print this, take it on location and write on it. Anything you've already filled in is printed; the rest gets tick boxes and lines.":m==="report"?"A tidy write-up of everything filled in, with photos and the verdict up front. Empty fields are left out.":"Every location in this project, grouped by script setting, best score first.";
+  $("#pv").innerHTML=m==="compare"?paperCompare():paperRecce(cur(),m)}
+let pT;const prevSoon=()=>{clearTimeout(pT);pT=setTimeout(prev,180)};
+
+/* ───────── links to the other tools ───────── */
+function readTool(k){try{const o=JSON.parse(localStorage.getItem(k)||"null");return o&&o.S?o:null}catch(e){return null}}
+function reloadToolFrame(title){try{if(window.parent===window)return false;let hit=false;window.parent.document.querySelectorAll("iframe").forEach(fr=>{if(fr.title===title){try{fr.contentWindow.location.reload();hit=true}catch(e){}}});return hit}catch(e){return false}}
+function importSchedule(){const o=readTool("fth-schedule-v1");if(!o||!o.S.locs||!o.S.locs.some(l=>l.name)){toast("No locations found in the Production Schedule Builder for this project yet.");return}
+  const items=[];(o.S.days||[]).forEach(d=>(d.items||[]).forEach(it=>{if(it.t==="s")items.push(it)}));let add=0,upd=0;
+  if(!S.prod.title&&o.S.title)S.prod.title=o.S.title;
+  o.S.locs.filter(l=>l.name).forEach(l=>{const nm=l.name.trim(),its=items.filter(it=>(it.loc||"").trim().toUpperCase()===nm.toUpperCase()),u=a=>[...new Set(a.filter(Boolean))];
+    const ie=u(its.map(i=>i.ie)),dn=u(its.map(i=>i.dn)),info={name:nm,addr:l.addr||"",scenes:u(its.map(i=>i.sc)).join(", "),setting:u(its.map(i=>i.hd)).join("; "),ie:ie.length>1?"INT/EXT":ie[0]||"",dn:dn.length>1?"DAY & NIGHT":dn[0]||""};
+    let r=S.locs.find(x=>(x.f.name||"").trim().toUpperCase()===nm.toUpperCase());
+    if(!r){const blank=S.locs.length===1&&!Object.keys(S.locs[0].f).some(k=>k!=="status"&&S.locs[0].f[k]);r=blank?S.locs[0]:newR();if(!blank)S.locs.push(r);add++}else upd++;
+    Object.entries(info).forEach(([k,v])=>{if(v&&!String(r.f[k]||"").trim())r.f[k]=v});if(info.scenes)r.f.scenes=info.scenes});
+  persist();form();prev();toast(`From the schedule: ${add} new location${add===1?"":"s"}${upd?`, ${upd} updated`:""}.`)}
+function sendCallSheet(){const R=cur(),o=readTool("fth-callsheet-v1")||{S:null,at:0},C=o.S||{};
+  const m={addr:R.f.addr,w3w:R.f.w3w,hosp:R.f.hosp,hospAddr:R.f.hospAddr,hospPhone:R.f.hospPhone};if(hasLL(R)){m.lat=+R.f.lat;m.lng=+R.f.lng}if(!C.title&&S.prod.title)m.title=S.prod.title;if(!C.date&&R.f.shoot)m.date=R.f.shoot;
+  const keys=Object.keys(m).filter(k=>m[k]!==undefined&&m[k]!=="");if(!keys.length){toast("Nothing to send yet. Add the address, What3Words or A&E first.");return}
+  if(!confirm(`Copy ${R.f.name||"this location"}'s address, What3Words, coordinates and A&E details into the Call Sheet Builder?\n\nThose fields on the call sheet will be replaced.`))return;
+  if(!o.S){toast("Open the Call Sheet Builder once first, then send again.");return}
+  keys.forEach(k=>C[k]=m[k]);try{localStorage.setItem("fth-callsheet-v1",JSON.stringify({S:C,at:Date.now()}))}catch(e){toast("Couldn't write to the call sheet.");return}
+  toast(reloadToolFrame("Call Sheet Builder")?"Sent to the call sheet (it's been refreshed).":"Sent. The call sheet will show it next time it's opened.")}
+function csv(){const H=["Setting","Location","Status","Scenes","Address","What3Words","Coordinates","Score",...SCORES.map(s=>s[1]),"Permission","Fee","Mains power allowed","Crew toilets","Noise (1-5)","Verdict","Pros","Cons"];
+  const q=v=>'"'+String(v??"").replace(/"/g,'""')+'"',yn=v=>v==="y"?"Yes":v==="n"?"No":v==="na"?"N/A":"";
+  const rows=cmpRows().flatMap(([k,rs])=>rs.map(r=>[k,r.f.name,r.f.status,r.f.scenes,r.f.addr,r.f.w3w,hasLL(r)?r.f.lat+", "+r.f.lng:"",avg(r)?avg(r).toFixed(1):"",...SCORES.map(s=>r.sc[s[0]]||""),r.f.perm,r.f.fee,yn(r.ck.pow_perm),yn(r.ck.fac_wc),r.f.noise,r.f.verdict,r.f.pros,r.f.cons]));
+  const b=new Blob(["﻿"+[H,...rows].map(r=>r.map(q).join(",")).join("\r\n")],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="Location_Recces"+(S.prod.title?"_"+S.prod.title.replace(/[^\w]+/g,"_"):"")+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),999)}
+
+/* ───────── events ───────── */
+const ed=$("#ed");
+ed.addEventListener("input",e=>{const t=e.target,R=cur(),d=t.dataset;
+  if(d.f){const k=d.f;R.f[k]=t.value;
+    if(k==="coords"){const ll=parseLL(t.value);if(ll){R.f.lat=ll[0];R.f.lng=ll[1]}else{delete R.f.lat;delete R.f.lng}const s=$("#llState");if(s)s.innerHTML=llState(R);renderSpecial("sun");renderSpecial("hosp")}
+    if(k==="shoot"||k==="rdate")renderSpecial("sun");
+    if(k==="name"||k==="status"||k==="setting")$("#locSel").innerHTML=locOpts();
+    if(k==="ie"){persist();form();prev();return}}
+  else if(d.prod)S.prod[d.prod]=t.value;
+  else if(d.dir!=null){R.dirs[+d.dir][d.dk]=t.value;if(d.dk==="d")renderSpecial("sun")}
+  else if(d.ph!=null)R.photos[+d.ph][d.pk]=t.value;
+  else if(d.ac!=null)R.acts[+d.ac][d.ak]=t.type==="checkbox"?t.checked:t.value;
+  else return;
+  updProgress();persist();prevSoon()});
+ed.addEventListener("change",e=>{if(e.target.dataset.dk==="l"){setTimeout(()=>renderSpecial("sun"),0);return}if(e.target.id==="locSel"){S.cur=e.target.value;persist();form();prev();$("#ed").scrollTop=0}});
+ed.addEventListener("click",e=>{const t=e.target.closest("button,[data-tip],[data-shut]");if(!t)return;const R=cur(),d=t.dataset;
+  if(d.tip!=null){e.stopPropagation();const n=t.parentNode.nextElementSibling;if(n&&n.classList.contains("tip"))n.classList.toggle("on");else{const x=t.closest(".sunh");x&&x.nextElementSibling&&x.nextElementSibling.classList.toggle("on")}return}
+  if(d.off){e.stopPropagation();R.off[d.off]=!R.off[d.off];persist();form();prev();return}
+  if(d.shut&&t.tagName!=="BUTTON"){UI.shut[d.shut]=!UI.shut[d.shut];t.closest(".sec").classList.toggle("shut",UI.shut[d.shut]);return}
+  if(d.ck){R.ck[d.ck]=R.ck[d.ck]===d.v?"":d.v;$$(`[data-ck="${d.ck}"]`).forEach(b=>b.classList.toggle("on",b.dataset.v===R.ck[d.ck]))}
+  else if(d.tick){R.ck[d.tick]=!R.ck[d.tick];t.classList.toggle("on",R.ck[d.tick]);const sid=d.tick.split("_")[0];if(R.ck[d.tick]&&!d.tick.endsWith("__none"))R.ck[sid+"__none"]=false;if(d.tick.endsWith("__none")&&R.ck[d.tick])Object.keys(R.ck).forEach(k=>{const s=SEC.find(x=>x.id===sid);if(k.startsWith(sid+"_")&&k!==d.tick&&s.c.some(g=>g.y==="tick"&&g.i.some(i=>ckKey(s,i[0])===k)))R.ck[k]=false});$$(`[data-tick^="${sid}_"]`).forEach(b=>b.classList.toggle("on",!!R.ck[b.dataset.tick]))}
+  else if(d.scale){R.f[d.scale]=String(R.f[d.scale])===d.v?"":d.v;$$(`[data-scale="${d.scale}"]`).forEach(b=>b.classList.toggle("on",b.dataset.v===String(R.f[d.scale])));$$(`[data-scale="${d.scale}"]`).forEach(b=>b.classList.toggle("sv",b.dataset.v===String(R.f[d.scale])))}
+  else if(d.sc){R.sc[d.sc]=+R.sc[d.sc]===+d.v?0:+d.v;renderSpecial("verdict")}
+  else if(d.act){const a=d.act,i=+d.i;
+    if(a==="geo"){if(!navigator.geolocation){toast("Location isn't available in this browser.");return}t.textContent="Finding…";navigator.geolocation.getCurrentPosition(p=>{R.f.lat=+p.coords.latitude.toFixed(6);R.f.lng=+p.coords.longitude.toFixed(6);R.f.coords=R.f.lat+", "+R.f.lng;persist();form();prev();toast("Location set (±"+Math.round(p.coords.accuracy)+" m)")},er=>{t.textContent="Use my location";toast("Couldn't get your location: "+(er.message||"permission denied"))},{enableHighAccuracy:true,timeout:15000});return}
+    if(a==="adddir")R.dirs.push({l:"",d:""}),renderSpecial("sun");
+    else if(a==="deldir")R.dirs.splice(i,1),renderSpecial("sun");
+    else if(a==="usehosp"){const h=HS[+d.h];R.f.hosp=h[0];R.f.hospAddr=h[1];persist();form();prev();toast("A&E set to "+h[0]);return}
+    else if(a==="addph"){$("#photoPick").click();return}
+    else if(a==="delph"){if(!confirm("Remove this photo?"))return;const[p]=R.photos.splice(i,1);delImg(p.id);renderSpecial("photos")}
+    else if(a==="mvph"){const j=i+ +d.d,[p]=R.photos.splice(i,1);R.photos.splice(j,0,p);renderSpecial("photos")}
+    else if(a==="addsk"){$("#sketchPick").click();return}
+    else if(a==="delsk"){delImg(R.sketch);R.sketch=null;renderSpecial("photos")}
+    else if(a==="addact")R.acts.push({t:"",who:"",done:false}),renderSpecial("verdict");
+    else if(a==="delact")R.acts.splice(i,1),renderSpecial("verdict");
+    else if(a==="dup"){const c=JSON.parse(JSON.stringify(R));c.id=uid();c.f.name=(R.f.name||"Location")+" (copy)";c.photos=[];c.sketch=null;c.sc={};c.f.verdict="";c.at=Date.now();S.locs.push(c);S.cur=c.id;persist();form();prev();toast("Duplicated without photos or scores.");return}
+    else if(a==="del"){if(!confirm(`Delete “${R.f.name||"this location"}” and its photos? This can't be undone (unless you restore a project backup).`))return;R.photos.forEach(p=>delImg(p.id));if(R.sketch)delImg(R.sketch);S.locs=S.locs.filter(x=>x!==R);if(!S.locs.length)S.locs.push(newR());S.cur=S.locs[0].id;persist();form();prev();return}
+    else if(a==="tocs"){sendCallSheet();return}
+    else return}
+  else return;
+  updProgress();persist();prevSoon()});
+ed.addEventListener("click",e=>{const a=e.target.closest("[data-nav]");if(!a)return;e.preventDefault();const s=$("#s-"+a.dataset.nav);if(UI.shut[a.dataset.nav]){UI.shut[a.dataset.nav]=false;s.classList.remove("shut")}s.scrollIntoView({behavior:"smooth",block:"start"})});
+$("#photoPick").addEventListener("change",e=>{addPhotos([...e.target.files]);e.target.value=""});
+$("#sketchPick").addEventListener("change",async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const R=cur();try{const b=await shrink(f,2000),id="s"+uid();if(R.sketch)delImg(R.sketch);await putImg(id,b);R.sketch=id;persist();renderSpecial("photos");prevSoon()}catch(er){toast("Couldn't read that image.")}});
+$("#mode").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;UI.mode=b.dataset.m;saveUI();prev()});
+$("#incFill").addEventListener("change",e=>{UI.fill=e.target.checked;saveUI();prev()});
+$("#csvBtn").addEventListener("click",csv);
+$("#printBtn").addEventListener("click",()=>{if(innerWidth<=900)document.body.classList.add("vpv");setTimeout(()=>print(),50)});
+$("#addBtn").addEventListener("click",()=>{const r=newR();S.locs.push(r);S.cur=r.id;persist();form();prev();$("#ed").scrollTop=0;
+  toast("New location added. Tip: Duplicate copies the setting and scenes for another candidate.");setTimeout(()=>{const n=$('[data-f="name"]');n&&n.focus()},60)});
+$("#impBtn").addEventListener("click",importSchedule);
+$$(".mswitch button").forEach(b=>b.addEventListener("click",()=>{document.body.classList.toggle("vpv",b.dataset.view==="pv");$$(".mswitch button").forEach(x=>x.classList.toggle("on",x===b));scrollTo(0,0)}));
+window.addEventListener("storage",e=>{if(e.key&&e.key.endsWith(KEY)&&e.newValue){try{const o=JSON.parse(e.newValue);if(o&&o.S&&o.at>savedAt){S=o.S;savedAt=o.at;form();prev();showSaved()}}catch(er){}}});
+/* keep the "sun right now" dot moving */
+setInterval(()=>{if(document.visibilityState==="visible"&&!document.activeElement.closest?.(".sunw"))renderSpecial("sun")},60000);
+
+$("#incFill").checked=UI.fill;
+form();prev();showSaved();
+loadImgs().then(()=>{renderSpecial("photos");prev()});
+</script></body></html>
