@@ -301,3 +301,5 @@ body.has-lockbar #workspace iframe{top:40px;height:calc(100% - 40px)}
 .linkrow input{flex:1;min-width:0;font:500 12.5px var(--mono)}
 .linkrow .btn{flex:none;height:40px}
 @media (max-width:760px){.sharebtn .t{display:none}}
+.help-admin{margin-top:16px;padding:2px 14px 6px;border:1px dashed var(--line2);border-radius:12px}
+.help-admin ul{margin:0;padding-left:18px;color:var(--muted);font-size:13.5px}

@@ -1954,17 +1954,23 @@ function addFromButton() {
 }
 
 function helpDialog() {
-  showDlg(`<div class="help"><h3>How it works</h3><p class="sub">Each tool is its own file in the site’s tools folder. The hub opens them here.</p>
+  const admin = isAdmin() ? `<div class="help-admin"><div class="psec">For the site admin (only you see this)</div>
+    <ul>
+      <li><b>Add a tool:</b> press <b>Add tool</b>, or drag an HTML file onto the page.</li>
+      <li><b>Update a tool:</b> the ⋯ menu on its card → <b>Upload new version</b>, or drag the new file onto its card. If a dropped file’s name matches an existing tool, the hub offers to update that one.</li>
+      <li><b>These are try-outs.</b> Uploads and edits are kept in this browser only, so nobody else sees them. To publish a tool for everyone, its file goes into the tools folder on GitHub.</li>
+      <li><b>Restore:</b> a tool you removed comes back with <b>Restore removed tools</b> at the bottom of the page. The ⋯ menu → <b>Undo my changes to this tool</b> puts one tool back to the published version.</li>
+      <li><b>Reset:</b> <b>Discard all changes made in this browser</b>, at the bottom of the page, removes every try-out at once.</li>
+    </ul></div>` : '';
+  showDlg(`<div class="help"><h3>How it works</h3><p class="sub">Everything you need to plan a film, in one place.</p>
     <ol>
-      <li><b>Open a tool</b> by clicking its card. It opens here as a tab, and other open tools keep their place when you switch.</li>
+      <li><b>Open a tool</b> by clicking its card. It opens here as a tab, and your other open tools keep their place when you switch.</li>
       <li><b>Open in a new browser tab</b> by right-clicking a card and choosing “Open link in new tab”, or with Ctrl/⌘-click.</li>
-      <li><b>Update a tool</b> with the ⋯ menu → Upload new version, or drag the new HTML file onto its card. Drop a file anywhere else on the page to add a new tool; if its name matches an existing tool, the hub offers to update that one.</li>
-      <li><b>Try a change.</b> Uploads here are kept in this browser only, so you can try a new version before anyone else sees it. To publish it, the tool file goes into the tools folder on GitHub.</li>
-      <li><b>Light or dark.</b> The sun/moon button in the top bar switches the hub and every tool at once, including tools open in other tabs. Each browser remembers its own choice.</li>
+      <li><b>Light or dark.</b> The sun/moon button in the top bar switches the hub and every tool at once.</li>
       <li><b>Projects.</b> Pick a project in the top bar and every tool files its work under it, so you can move between tools on the same film. Archive projects you’ve finished with.</li>
-      <li><b>Sharing with your crew.</b> Sign in, then press <b>Share</b> and type your crew’s email addresses. They open the link Google emails them and the project appears under “Shared with me”. One person edits a tool at a time; everyone else can view it and press <b>Request to edit</b>. Press Save to send your changes to the crew.</li>
-      <li><b>Saving.</b> Work saves in this browser as you go. <b>Save</b> (or Ctrl/⌘+S) stores the project’s main copy, and backups are taken automatically every few minutes while you work. Restore either from Manage projects → Backups.</li>
-    </ol></div>
+      <li><b>Saving and backups.</b> Your work saves in this browser as you go. Press <b>Save</b> (or Ctrl/⌘+S) to store the project’s main copy${driveOn() ? '; sign in with Google to keep it in your own Google Drive and carry on from any computer' : ''}. Backups are taken every few minutes while you work. Bring one back from Manage projects → Backups.</li>
+      ${driveOn() ? `<li><b>Sharing with your crew.</b> Sign in, press <b>Share</b> and type your crew’s email addresses. They open the link Google emails them, and the project appears under “Shared with me”. One person edits a tool at a time; everyone else can view it and press <b>Request to edit</b>. Press Save to send your changes to the crew.</li>` : ''}
+    </ol>${admin}</div>
     <div class="dlg-actions"><button class="btn primary" value="cancel">Got it</button></div>`);
 }
 
