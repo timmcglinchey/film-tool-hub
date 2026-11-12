@@ -13,6 +13,7 @@ The website for Film Tool Hub: 14 filmmaking tools in one place, with projects a
 | `hub/config.json` | Settings: the Google sign-in key (Client ID) and the email addresses that see the admin controls |
 | `tools/tools.json` | The list of tools: name, category, description and order |
 | `tools/<name>.html` | One file per tool |
+| `tests/sharing/` | Automatic tests for shared projects (run with `node tests/sharing/run.js`) |
 
 ## Common jobs
 

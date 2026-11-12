@@ -276,3 +276,28 @@ body:not(.admin) .foot #storeNote,body:not(.admin) #restoreBtn,body:not(.admin) 
 .gtick{display:flex;gap:12px;align-items:flex-start;margin:4px 0 14px;padding:12px 14px;border-radius:10px;border:1px solid var(--line2);background:var(--surface2);font-size:13.5px;line-height:1.45;color:var(--text)}
 .gtick .cb{flex:none;width:20px;height:20px;border-radius:4px;background:#1a73e8;color:#fff;display:grid;place-items:center;font:700 13px/1 system-ui;margin-top:1px}
 #dlg .btn svg{width:16px;height:16px}
+
+/* shared projects */
+.sharebtn.on{color:var(--text)}
+.sharebtn.on svg{color:var(--good,#5cc98a)}
+.pstrip .pmeta .shr{color:var(--text);font-weight:600}
+.pmenu .none{padding:4px 10px 8px;font-size:12.5px;color:var(--muted);line-height:1.4}
+#lockBar{position:absolute;inset:0 0 auto 0;height:40px;z-index:2;display:flex;align-items:center;gap:10px;padding:0 12px 0 14px;font-size:13px;color:var(--text);background:var(--surface2);border-bottom:1px solid var(--line2);overflow:hidden}
+#lockBar[hidden]{display:none}
+#lockBar .dot{flex:none;width:9px;height:9px;border-radius:50%;background:var(--accent)}
+#lockBar.edit .dot{background:var(--good,#5cc98a)}
+#lockBar .m{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+#lockBar .m b{color:var(--text);font-weight:650}
+#lockBar .b{display:flex;gap:6px;align-items:center;flex:none}
+#lockBar .btn.sm{height:28px}
+#lockBar .btn svg{width:14px;height:14px}
+#lockBar .wait{font-size:12.5px;color:var(--accent-ink)}
+body.has-lockbar #workspace iframe{top:40px;height:calc(100% - 40px)}
+#reqCard{position:fixed;right:18px;bottom:18px;z-index:95;width:min(360px,calc(100vw - 36px));padding:16px;border-radius:14px;background:var(--surface2);border:1px solid var(--accent);box-shadow:var(--shadow-lg);font-size:14px}
+#reqCard[hidden]{display:none}
+#reqCard p{margin:6px 0 14px;color:var(--muted);font-size:13px;line-height:1.45}
+#reqCard .ra{display:flex;gap:8px;justify-content:flex-end}
+.linkrow{display:flex;gap:8px;align-items:center}
+.linkrow input{flex:1;min-width:0;font:500 12.5px var(--mono)}
+.linkrow .btn{flex:none;height:40px}
+@media (max-width:760px){.sharebtn .t{display:none}}

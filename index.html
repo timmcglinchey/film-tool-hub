@@ -23,6 +23,7 @@
   <nav id="tabs" aria-label="Open tools"></nav>
   <div id="barActions"></div>
   <button class="ibtn savebtn" id="saveBtn" title="Save this project (Ctrl/⌘+S)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></svg><span class="t" id="saveLbl">Save</span><i class="dot"></i></button>
+  <button class="ibtn sharebtn" id="shareBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c0-3.2 2.7-5.6 6-5.6s6 2.4 6 5.6"/><path d="M18.5 8v6M15.5 11h6"/></svg><span class="t" id="shareLbl">Share</span></button>
   <button class="ibtn acct" id="acctBtn" hidden></button>
   <button class="ibtn" id="themeBtn" title="Switch light / dark theme for the hub and every tool" aria-label="Toggle light or dark theme">
     <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
@@ -72,7 +73,8 @@
   </div>
 </main>
 
-<div id="workspace" hidden></div>
+<div id="workspace" hidden><div id="lockBar" hidden></div></div>
+<div id="reqCard" role="alertdialog" aria-live="assertive" hidden></div>
 <div id="menu" role="menu" hidden></div>
 <div id="pmenu" class="pmenu" role="menu" hidden></div>
 <div id="amenu" class="pmenu amenu" role="menu" hidden></div>

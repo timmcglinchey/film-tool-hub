@@ -64,7 +64,8 @@ const UI = {
   reload: P('<path d="M20 5v5h-5"/><path d="M18.8 15A7.5 7.5 0 1 1 18 8.5L20 10"/>'),
   close:  P('<path d="M6 6l12 12M18 6L6 18"/>'),
   info:   P('<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.6" r=".5" fill="currentColor"/>'),
-  file:   P('<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 14l-1.5 1.5L9 17M13 14l1.5 1.5L13 17"/>')
+  file:   P('<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 14l-1.5 1.5L9 17M13 14l1.5 1.5L13 17"/>'),
+  share:  P('<circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c0-3.2 2.7-5.6 6-5.6s6 2.4 6 5.6"/><path d="M18.5 8v6M15.5 11h6"/>')
 };
 
 /* ───────── storage (IndexedDB, per browser) ───────── */
@@ -172,7 +173,7 @@ const BACKUP_EVERY = 5 * 60 * 1000, KEEP_RECENT = 20, KEEP_DAYS = 30;
 let projects = [], curId = null;
 const cur = () => projects.find(p => p.id === curId) || null;
 const projById = id => projects.find(p => p.id === id);
-const activeProjects = () => projects.filter(p => !p.archived && mine(p)).sort((a, b) => (b.openedAt || 0) - (a.openedAt || 0));
+const activeProjects = () => projects.filter(p => !p.archived && !p.hiddenShared && mine(p)).sort((a, b) => (b.openedAt || 0) - (a.openedAt || 0));
 const newId = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const fmtWhen = t => {
   if (!t) return 'never';
@@ -270,7 +271,7 @@ async function saveProject(quiet) {
   } catch (e) { toast('Couldn’t save in this browser: ' + (e.message || e)); return false; }
   if (!tp) { if (!quiet) toast(driveOn() ? `Saved “${p.name}” in this browser. Sign in to save it to Google Drive.` : `Saved “${p.name}”`); return; }
   if (!(await tp)) { renderAccount(); toast(`Saved “${p.name}” in this browser only. Reconnect Google Drive to save it there too.`); return; }
-  try { toast('Saving to Google Drive…'); await driveSave(p, snap); await putProject(p); renderAccount(); renderProjUI(); if (!quiet) toast(`Saved “${p.name}” to Google Drive`); }
+  try { if (!quiet) toast('Saving to Google Drive…'); const how = await driveSave(p, snap); await putProject(p); renderAccount(); renderProjUI(); renderShare(); if (!quiet) toast(how === 'nothing' ? `“${p.name}” is up to date. You have no new changes to send.` : p.shared ? `Saved “${p.name}”. Your crew will get your changes.` : `Saved “${p.name}” to Google Drive`); }
   catch (e) { renderAccount(); toast('Saved in this browser, but Google Drive didn’t accept it: ' + e.message); }
 }
 async function backupProject(p, reason) {
@@ -313,12 +314,14 @@ async function switchProject(id) {
   const next = projById(id); if (!next || id === curId) return;
   const tp = (next.needsDownload || next.remoteNewer) && account ? getToken(true).catch(() => null) : null;
   if (next.needsDownload && !(tp && await tp)) { toast('Connect Google Drive to open this project'); renderAccount(); return; }
+  await leaveShared();
   const old = cur(); if (needsBackup(old)) backupProject(old, 'auto');
-  curId = id; next.openedAt = Date.now(); putProject(next);
+  curId = id; next.openedAt = Date.now(); next.hiddenShared = false; putProject(next);
   try { localStorage.setItem(CUR_KEY, id); } catch (e) {}
   window.__fthHub.project = id;
   if (tp && await tp) { await offerPull(next); }
   reloadFrames(); renderProjUI(); render(); toast(`Project: ${next.name}`);
+  resetShare(); kickTick();
 }
 async function createProject(name) {
   const p = {id: newId(), name: name || 'Untitled project', created: Date.now(), openedAt: Date.now(), tools: {}, archived: false};
@@ -333,16 +336,17 @@ async function archiveProject(id, on) {
   if (on && id === curId) { const other = activeProjects().find(x => x.id !== id); if (other) await switchProject(other.id); else await createProject('Untitled project'); }
   renderProjUI(); render();
 }
-async function deleteProject(id) {
+async function deleteProject(id, keepMarker) {
   const p = projById(id); if (!p) return;
-  if (p.driveFileId && account) { if (await getToken(true).catch(() => null)) await driveTrash(p); }
+  if (id === curId) await leaveShared();
+  if (p.driveFileId && account && !p.sharedBy && !keepMarker) { if (await getToken(true).catch(() => null)) await driveTrash(p); }
   if (id === curId) await unloadFrames();
   await wipeProjectData(id);
   await store.gtx('saves', 'readwrite', s => s.delete(id)).catch(() => {});
   for (const b of await backupsFor(id)) await store.gtx('backups', 'readwrite', s => s.delete(b.id)).catch(() => {});
-  await store.gtx('projects', 'readwrite', s => s.delete(id)).catch(() => {});
-  projects = projects.filter(x => x.id !== id);
-  if (id === curId) { curId = null; const other = activeProjects()[0]; if (other) { curId = other.id; localStorage.setItem(CUR_KEY, other.id); window.__fthHub.project = other.id; reloadFrames(); } else await createProject('Untitled project'); }
+  if (keepMarker) { Object.assign(p, {hiddenShared: true, dirty: null, tools: {}, needsDownload: true, driveRev: null, savedAt: 0, changedAt: 0, backupAt: 0}); await putProject(p); }
+  else { await store.gtx('projects', 'readwrite', s => s.delete(id)).catch(() => {}); projects = projects.filter(x => x.id !== id); }
+  if (id === curId) { curId = null; const other = activeProjects()[0]; if (other) { curId = other.id; localStorage.setItem(CUR_KEY, other.id); window.__fthHub.project = other.id; reloadFrames(); } else await createProject('Untitled project'); resetShare(); kickTick(); }
   renderProjUI(); render();
 }
 
@@ -353,6 +357,21 @@ window.__fthHub = {
     const p = projById(pid); if (!p) return;
     const now = Date.now(); p.changedAt = now; p.tools = p.tools || {}; p.tools[tool] = now;
     persistProjectSoon(p); if (pid === curId) renderProjUI();
+  },
+  /* shared projects: note exactly which saved item a tool changed, so Save only sends this person's changes */
+  dirty(tool, pid, kind, name) {
+    const p = projById(pid); if (!p || !p.shared || !name) return;
+    const d = p.dirty || (p.dirty = {ls: {}, idb: {}}), now = Date.now();
+    const isNew = kind === 'ls' ? !d.ls[name] : !(d.idb[name] && d.idb[name][tool]);
+    if (kind === 'ls') d.ls[name] = [tool, now]; else (d.idb[name] || (d.idb[name] = {}))[tool] = now;
+    if (isNew) { p.changedAt = now; putProject(p); }   /* remembered straight away, so it survives the page being closed */
+  },
+  /* shared projects: a tool can only be changed by the one person holding it */
+  readOnly(tool, pid) { const p = projById(pid); return !!(p && p.shared) && !(pid === curId && held.has(tool)); },
+  activity(tool, pid) {
+    if (pid !== curId || !sharedCur()) return;
+    lastAct[tool] = Date.now();
+    if (!held.has(tool)) { viewTouched.add(tool); if (!lockOf(tool)) kickTick(); }
   },
   /* tools can wait on this: it resolves once the project is saved, and rejects if it couldn't be */
   save() { return saveProject().then(ok => { if (ok === false) throw new Error('not saved'); }); },
@@ -408,8 +427,8 @@ const gisReady = !driveOn() ? Promise.resolve(false) : new Promise(res => {
 });
 
 /* ask Google for access. interactive=true may open Google's sign-in popup, so call it straight from a click */
-function getToken(interactive) {
-  if (hasToken()) return Promise.resolve(token);
+function getToken(interactive, renew) {
+  if (hasToken() && !renew) return Promise.resolve(token);
   if (!interactive || !tokenClient) return Promise.reject(new Error('not connected'));
   if (tokenWait) tokenWait.rej(new Error('superseded'));
   return new Promise((res, rej) => {
@@ -427,7 +446,7 @@ async function gapi(url, opts = {}) {
     try { const j = await r.json(); why = (j.error && (j.error.message || (j.error.errors && j.error.errors[0] && j.error.errors[0].message))) || ''; } catch (e) {}
     if (r.status === 403 && /has not been used|is disabled|accessNotConfigured/i.test(why)) why = 'the Google Drive API isn’t switched on in the Google Cloud project (APIs & Services → Library → Google Drive API → Enable)';
     else if (r.status === 403 && /insufficient|scope/i.test(why)) why = 'Drive access wasn’t allowed at sign-in. Sign out, sign in again and tick the Drive box';
-    throw new Error('Google Drive error ' + r.status + (why ? ': ' + why : ''));
+    const err = new Error('Google Drive error ' + r.status + (why ? ': ' + why : '')); err.status = r.status; throw err;
   }
   return r;
 }
@@ -437,7 +456,7 @@ const qEsc = s => String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 async function findFiles(q, fields) {
   const out = []; let pageToken = '';
   do {
-    const r = await gjson(`${DRIVE_API}/files?` + qs({q: q + ' and trashed=false', spaces: 'drive', pageSize: 200, fields: `nextPageToken,files(${fields || 'id,name,modifiedTime,appProperties'})`, ...(pageToken ? {pageToken} : {})}));
+    const r = await gjson(`${DRIVE_API}/files?` + qs({q: q + ' and trashed=false', spaces: 'drive', pageSize: 200, fields: `nextPageToken,files(${fields || 'id,name,modifiedTime,appProperties,headRevisionId,ownedByMe,owners(displayName,emailAddress)'})`, ...(pageToken ? {pageToken} : {})}));
     out.push(...(r.files || [])); pageToken = r.nextPageToken || '';
   } while (pageToken);
   return out;
@@ -458,7 +477,7 @@ async function ensureFolders() {
 }
 /* upload (create when no fileId) with a resumable session, so big projects (script PDFs, stills) fit */
 async function uploadFile(meta, text, fileId) {
-  const start = await gapi(`${DRIVE_UP}/files${fileId ? '/' + fileId : ''}?uploadType=resumable&fields=id,modifiedTime`, {
+  const start = await gapi(`${DRIVE_UP}/files${fileId ? '/' + fileId : ''}?uploadType=resumable&fields=id,modifiedTime,headRevisionId`, {
     method: fileId ? 'PATCH' : 'POST', headers: {'Content-Type': 'application/json; charset=UTF-8', 'X-Upload-Content-Type': 'application/json'}, body: JSON.stringify(meta)});
   const loc = start.headers.get('Location'); if (!loc) throw new Error('upload not started');
   const r = await fetch(loc, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: new Blob([text], {type: 'application/json'})});
@@ -491,14 +510,15 @@ const projectMeta = p => ({id: p.id, name: p.name, created: p.created, archived:
 const fileName = p => `${p.name}.filmtoolhub.json`;
 
 async function driveSave(p, snap) {
+  if (p.shared && p.driveFileId) return sharedSave(p, snap);
   const f = await ensureFolders();
-  const body = JSON.stringify({app: 'film-tool-hub', v: 1, savedAt: snap.at, project: projectMeta(p), snap: await packValue(snap)});
+  const body = JSON.stringify({app: 'film-tool-hub', v: 1, savedAt: snap.at, savedBy: whoAmI(), project: projectMeta(p), snap: await packValue(snap)});
   const meta = {name: fileName(p), mimeType: 'application/json', appProperties: {fth: 'project', fthId: p.id, archived: p.archived ? '1' : '0'}};
   let r;
   try { r = await uploadFile(p.driveFileId ? meta : {...meta, parents: [f.projects]}, body, p.driveFileId); }
   catch (e) { if (!p.driveFileId) throw e; p.driveFileId = null; r = await uploadFile({...meta, parents: [f.projects]}, body); }
   p.driveFileId = r.id; p.driveSyncedAt = Date.parse(r.modifiedTime) || Date.now(); p.owner = account && account.email;
-  p.remoteNewer = 0; p.needsDownload = false;
+  p.remoteNewer = 0; p.needsDownload = false; p.driveRev = r.headRevisionId || null;
 }
 async function driveBackupFolder(p) {
   const f = await ensureFolders();
@@ -547,13 +567,15 @@ async function driveTrash(p) {
 
 /* bring a project's Drive copy into this browser */
 async function pullProject(p, fileId) {
+  const whole = !fileId || fileId === p.driveFileId;
+  const meta = whole ? await fileMeta(p).catch(() => null) : null;
   const data = await driveRead(fileId || p.driveFileId);
   const here = p.id === curId;
   if (here) await unloadFrames();
   await restoreSnapshot(p.id, data.snap);
   Object.assign(p, {name: data.project.name || p.name, tools: data.project.tools || p.tools || {}, archived: !!data.project.archived,
     savedAt: data.savedAt, changedAt: data.savedAt, backupAt: data.savedAt, needsDownload: false, remoteNewer: 0, owner: account && account.email});
-  if (!fileId || fileId === p.driveFileId) p.driveSyncedAt = Math.max(p.driveSyncedAt || 0, data.savedAt || 0);
+  if (whole) { p.driveSyncedAt = Math.max(p.driveSyncedAt || 0, data.savedAt || 0); if (meta) { p.driveRev = meta.rev; noteMeta(p, meta.f); } p.dirty = null; }
   await putProject(p);
   if (here) reloadFrames();
 }
@@ -569,13 +591,24 @@ async function driveSync(askAboutCurrent) {
       const mod = Date.parse(f.modifiedTime) || 0;
       let p = projById(id);
       if (!p) {
-        p = {id, name: f.name.replace(/\.filmtoolhub\.json$/i, ''), created: mod, openedAt: 0, tools: {}, archived: (f.appProperties || {}).archived === '1',
+        p = {id, name: f.name.replace(/\.filmtoolhub\.json$/i, ''), created: mod, openedAt: 0, tools: {}, archived: f.ownedByMe !== false && (f.appProperties || {}).archived === '1',
           owner: account.email, driveFileId: f.id, driveSyncedAt: 0, needsDownload: true, savedAt: mod};
+        noteMeta(p, f);
         projects.push(p); await putProject(p); continue;
       }
-      if (p.owner && p.owner !== account.email) continue;
+      if (p.hiddenShared) continue;
+      if (p.owner && p.owner !== account.email) {
+        /* a shared project last opened here by someone else: load this person's copy from Drive, unless unsaved work would be lost */
+        if (f.ownedByMe !== false && p.driveFileId !== f.id) continue;
+        if (dirtyTools(p).size || (p.changedAt || 0) > (p.driveSyncedAt || 0) + 3000) continue;
+        Object.assign(p, {needsDownload: true, driveRev: null, dirty: null});
+      }
+      /* two files can carry the same project (a copy made in Drive): keep to the one already in use */
+      if (p.driveFileId && p.driveFileId !== f.id && files.some(x => x.id === p.driveFileId)) continue;
       p.owner = account.email; p.driveFileId = f.id;
-      if (mod > (p.driveSyncedAt || 0) + 3000) p.remoteNewer = mod;
+      const wasShared = !!p.shared; noteMeta(p, f);
+      if (p.shared && wasShared && p.driveRev) { /* shared projects keep themselves up to date while open */ }
+      else if (mod > (p.driveSyncedAt || 0) + 3000) p.remoteNewer = mod;
       await putProject(p);
     }
     const c = cur();
@@ -583,7 +616,7 @@ async function driveSync(askAboutCurrent) {
   } catch (e) { if (e.message !== 'not connected') toastLong('Couldn’t reach Google Drive. ' + e.message); }
   driveSyncing = false;
   if (!mine(cur() || {})) { const m = activeProjects()[0]; if (m) await switchProject(m.id); }
-  renderAccount(); renderProjUI(); render();
+  renderAccount(); renderProjUI(); render(); kickTick();
 }
 async function offerPull(p) {
   if (p.needsDownload) { try { await pullProject(p); toast(`Loaded “${p.name}” from Google Drive`); } catch (e) { toast('Couldn’t load from Google Drive'); } return; }
@@ -653,6 +686,546 @@ async function signOut() {
   toast('Signed out');
 }
 
+/* ───────── shared projects ─────────
+   The owner shares a project's Drive file with the crew (they get edit access to that one file).
+   There's no server, so everything is co-ordinated through that file:
+   • Save fetches the latest copy first and lays only this person's changes on top (p.dirty lists them),
+     so nobody's work is overwritten. Other people's saves are picked up automatically every few seconds.
+   • One editor per tool. Whoever opens a tool first holds it: a small note on the Drive file
+     ("lk:<tool>" = time|email|session|name). Everyone else sees that tool view-only, with Request to edit
+     ("rq:<tool>"). A hold lapses after a few minutes without activity; the owner can always take over. */
+const API_KEY = String(CONFIG.googleApiKey || '').trim();
+const APP_ID = String(CONFIG.googleAppId || GOOGLE_ID.split('-')[0] || '').trim();
+const KV_DB = 'fth-tool-data';
+const HOLD_MS = 5 * 60e3, IDLE_MS = 4 * 60e3, BEAT_MS = 60e3, REQ_MS = 2 * 60e3, TICK_MS = 8000, FAST_MS = 1500;
+let SID = '';
+try { SID = sessionStorage.getItem('filmtoolhub-sid') || ''; } catch (e) {}
+if (!SID) { SID = Math.random().toString(36).slice(2, 8); try { sessionStorage.setItem('filmtoolhub-sid', SID); } catch (e) {} }
+const held = new Set(), pending = new Map(), viewTouched = new Set(), lastAct = {};
+let sh = {props: {}, at: 0, lost: false}, myReq = null, reqShown = null, tickBusy = null, tickT = null, saveBusy = null, inTick = false;
+
+const whoAmI = () => account ? {email: account.email, name: account.name || account.email} : null;
+const sharedCur = () => { const p = cur(); return p && p.shared && p.driveFileId && !p.needsDownload ? p : null; };
+const isOwner = p => !!p && !p.sharedBy;
+const toolName = id => (byId(id) || {}).name || id;
+const firstName = l => String((l && (l.name || l.email)) || 'Someone').split(/[\s@]/)[0];
+function dirtyTools(p) {
+  const out = new Set(), d = p && p.dirty; if (!d) return out;
+  Object.values(d.ls || {}).forEach(v => out.add(v[0]));
+  Object.values(d.idb || {}).forEach(m => Object.keys(m).forEach(t => out.add(t)));
+  return out;
+}
+function dropDirty(p, toolIds) {
+  const d = p.dirty; if (!d) return;
+  for (const k of Object.keys(d.ls || {})) if (toolIds.includes(d.ls[k][0])) delete d.ls[k];
+  for (const n of Object.keys(d.idb || {})) { toolIds.forEach(t => delete d.idb[n][t]); if (!Object.keys(d.idb[n]).length) delete d.idb[n]; }
+}
+/* what Drive says about a project's file: who owns it and whether it's shared */
+function noteMeta(p, f) {
+  const ap = f.appProperties || {};
+  if (f.ownedByMe === false) { const o = (f.owners || [])[0] || {}; p.sharedBy = {email: o.emailAddress || '', name: o.displayName || o.emailAddress || 'the owner'}; p.shared = true; p.archived = false; }
+  else if (f.ownedByMe === true) { p.sharedBy = null; p.shared = ap.shared === '1'; }
+  if (!p.shared) p.dirty = null;
+}
+async function fileMeta(p) {
+  const f = await gjson(`${DRIVE_API}/files/${p.driveFileId}?fields=id,name,headRevisionId,modifiedTime,appProperties,ownedByMe,trashed,owners(displayName,emailAddress),capabilities(canEdit)`);
+  return {rev: f.headRevisionId || f.modifiedTime, props: f.appProperties || {}, f};
+}
+async function patchProps(p, props) {
+  const f = await gjson(`${DRIVE_API}/files/${p.driveFileId}?fields=appProperties`, {method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({appProperties: props})});
+  if (p.id === curId) sh.props = f.appProperties || {};
+}
+async function rawRead(fileId, revId) {
+  const data = await gjson(`${DRIVE_API}/files/${fileId}${revId ? '/revisions/' + revId : ''}?alt=media`);
+  if (!data || data.app !== 'film-tool-hub' || !data.snap) throw new Error('not a Film Tool Hub file');
+  return data;
+}
+/* the save just before mine: if it isn't the one I built on, someone saved at the same moment */
+async function prevRev(fileId, myRev) {
+  const list = []; let pageToken = '';
+  do {
+    const r = await gjson(`${DRIVE_API}/files/${fileId}/revisions?` + qs({pageSize: 200, fields: 'nextPageToken,revisions(id,modifiedTime)', ...(pageToken ? {pageToken} : {})}));
+    list.push(...(r.revisions || [])); pageToken = r.nextPageToken || '';
+  } while (pageToken);
+  list.sort((a, b) => Date.parse(a.modifiedTime) - Date.parse(b.modifiedTime));
+  const i = list.findIndex(r => r.id === myRev);
+  return i > 0 ? list[i - 1].id : null;
+}
+
+/* ── merging: the Drive copy, with only my own changes laid on top ── */
+const packedSnapshot = async pid => packValue(await snapshot(pid));
+const kvOk = d => d && d.stores && d.stores.kv && Array.isArray(d.stores.kv.records);
+const kvMine = toolsMap => { const pf = Object.keys(toolsMap || {}).map(t => t + ':'); return k => typeof k === 'string' && pf.some(x => k.startsWith(x)); };
+function mergeSnap(remote, local, dirty) {
+  const out = {...local, ls: {...(remote.ls || {})}, idb: {...(remote.idb || {})}}, d = dirty || {};
+  for (const k of Object.keys(d.ls || {})) { if (k in local.ls) out.ls[k] = local.ls[k]; else delete out.ls[k]; }
+  for (const [n, toolsMap] of Object.entries(d.idb || {})) {
+    const mineDb = local.idb[n], theirs = out.idb[n];
+    if (n === KV_DB && kvOk(mineDb) && kvOk(theirs)) {
+      /* the small shared store holds every tool's entries, named "<tool>:<key>": swap in only my tools' entries */
+      const isMine = kvMine(toolsMap);
+      const recs = theirs.stores.kv.records.filter(r => !isMine(r[0])).concat(mineDb.stores.kv.records.filter(r => isMine(r[0])));
+      out.idb[n] = {...theirs, stores: {...theirs.stores, kv: {...theirs.stores.kv, records: recs}}};
+    } else if (mineDb) out.idb[n] = mineDb; else delete out.idb[n];
+  }
+  return out;
+}
+const dumpCount = d => Object.values((d && d.stores) || {}).reduce((n, s) => n + ((s.records || []).length), 0);
+/* refill an open tool database in place (no need to close the tools using it) */
+async function fillDB(name, dump, keep) {
+  let d; try { d = await openDB(name); } catch (e) { return false; }
+  try {
+    const names = Object.keys(dump.stores || {});
+    if (d.version !== (dump.version || 1) || names.length !== d.objectStoreNames.length || names.some(n => !d.objectStoreNames.contains(n))) return false;
+    if (!names.length) return true;
+    await new Promise((res, rej) => {
+      const t = d.transaction(names, 'readwrite');
+      for (const sn of names) {
+        const s = t.objectStore(sn), m = dump.stores[sn];
+        const put = () => { for (const [k, v] of m.records) { if (keep && keep(k)) continue; if (s.keyPath == null) s.put(v, k); else s.put(v); } };
+        if (!keep) { s.clear(); put(); }
+        else s.openCursor().onsuccess = e => { const c = e.target.result; if (c) { if (!keep(c.primaryKey)) c.delete(); c.continue(); } else put(); };
+      }
+      t.oncomplete = res; t.onerror = t.onabort = () => rej(t.error);
+    });
+    return true;
+  } catch (e) { return false; } finally { d.close(); }
+}
+/* make this browser match the merged copy, leaving alone anything I've changed in the meantime */
+async function applyLocal(p, merged, local) {
+  const pre = PFX(p.id), d = () => p.dirty || {ls: {}, idb: {}}, rebuild = []; let changed = false;
+  for (const k of new Set([...Object.keys(merged.ls), ...Object.keys(local.ls)])) {
+    if (d().ls[k] || merged.ls[k] === local.ls[k]) continue;
+    changed = true;
+    try { if (k in merged.ls) localStorage.setItem(pre + k, merged.ls[k]); else localStorage.removeItem(pre + k); } catch (e) {}
+  }
+  for (const n of new Set([...Object.keys(merged.idb), ...Object.keys(local.idb)])) {
+    const a = merged.idb[n], b = local.idb[n], mineNow = d().idb[n];
+    if (mineNow && n !== KV_DB) continue;
+    if (!a) { if (b && dumpCount(b)) rebuild.push([n, null]); continue; }
+    if (b && JSON.stringify(a) === JSON.stringify(b)) continue;
+    changed = true;
+    const dump = unpackValue(a);
+    if (!b && !(await listDBs(pre)).includes(pre + n)) { try { await loadDB(pre + n, dump); } catch (e) {} continue; }
+    if (!(b && await fillDB(pre + n, dump, mineNow ? kvMine(mineNow) : null))) rebuild.push([n, dump]);
+  }
+  if (!rebuild.length) return {changed};
+  await unloadFrames();
+  for (const [n, dump] of rebuild) { try { if (dump) await loadDB(pre + n, dump); else await delDB(pre + n); } catch (e) {} }
+  return {changed: true, all: true};
+}
+function afterApply(r) {
+  if (r.all) reloadFrames();
+  else if (r.changed) frames.forEach((f, id) => { if (!held.has(id)) reloadTool(id); });
+}
+const mergeTools = (a, b) => { const out = {...(a || {})}; for (const [k, v] of Object.entries(b || {})) out[k] = Math.max(out[k] || 0, v || 0); return out; };
+
+/* unsaved changes in a tool someone else now holds can't be sent: keep them in a backup and take the shared version */
+async function strand(p, toolIds) {
+  await backupProject(p, 'before taking the shared version');
+  dropDirty(p, toolIds);
+  toastLong(`${toolIds.map(toolName).join(', ')}: someone else has been editing, so your unsaved changes there were set aside. They’re kept under Manage projects → Backups.`);
+}
+/* which of my unsaved changes are still safe to send? Returns the tools that aren't. */
+function strandedTools(p, meta, props) {
+  const out = [];
+  for (const t of dirtyTools(p)) {
+    if (held.has(t)) continue;
+    const l = lockOf(t, props);
+    if (mineL(l)) { held.add(t); continue; }
+    if (!l && meta.rev === p.driveRev) continue;   /* nobody holds it and nobody has saved since: still mine to send */
+    out.push(t);
+  }
+  return out;
+}
+/* bring other people's saved work into this browser */
+async function syncDown(p, meta, quiet) {
+  const remote = await rawRead(p.driveFileId);
+  const local = await packedSnapshot(p.id);
+  const r = await applyLocal(p, mergeSnap(remote.snap, local, p.dirty), local);
+  p.tools = mergeTools(p.tools, (remote.project || {}).tools);
+  if (p.sharedBy && remote.project && remote.project.name) p.name = remote.project.name;
+  p.driveRev = meta.rev; p.driveSyncedAt = Date.now(); p.remoteNewer = 0;
+  if (!dirtyTools(p).size) { p.savedAt = p.changedAt = p.backupAt = Math.max(p.savedAt || 0, remote.savedAt || 0, p.changedAt || 0); }
+  await putProject(p);
+  afterApply(r);
+  const by = remote.savedBy;
+  if (!quiet && r.changed && by && account && by.email !== account.email) toast(`Updated with ${firstName(by)}’s saved changes`);
+  renderProjUI();
+}
+/* Save for a shared project */
+function sharedSave(p, snap) {
+  const run = async () => {
+    if (tickBusy && !inTick) await tickBusy.catch(() => {});
+    let meta = await fileMeta(p); noteMeta(p, meta.f);
+    if (p.id === curId) { sh.props = meta.props; sh.lost = false; }
+    for (const t of [...held]) if (p.id === curId && !mineL(lockOf(t))) held.delete(t);
+    const lostNow = strandedTools(p, meta, meta.props);
+    if (lostNow.length) await strand(p, lostNow);
+    if (!dirtyTools(p).size) {
+      if (meta.rev !== p.driveRev || lostNow.length) await syncDown(p, meta, lostNow.length);
+      return 'nothing';
+    }
+    let baseRev = meta.rev, base = (meta.rev !== p.driveRev || lostNow.length) ? await rawRead(p.driveFileId) : null;
+    const mineAll = {ls: {}, idb: {}};
+    for (let pass = 0; pass < 3; pass++) {
+      const local = pass === 0 && !lostNow.length ? await packValue(snap) : await packedSnapshot(p.id);
+      const now = JSON.parse(JSON.stringify(p.dirty || {}));
+      Object.assign(mineAll.ls, now.ls || {});
+      for (const [n, m] of Object.entries(now.idb || {})) mineAll.idb[n] = {...(mineAll.idb[n] || {}), ...m};
+      let out = local;
+      if (base) {
+        out = mergeSnap(base.snap, local, mineAll);
+        p.tools = mergeTools(p.tools, (base.project || {}).tools);
+        afterApply(await applyLocal(p, out, local));
+      }
+      const body = JSON.stringify({app: 'film-tool-hub', v: 1, savedAt: local.at, savedBy: whoAmI(), project: projectMeta(p), snap: out});
+      const fmeta = {mimeType: 'application/json', appProperties: {fth: 'project', fthId: p.id, shared: '1'}, ...(isOwner(p) ? {name: fileName(p)} : {})};
+      const r = await uploadFile(fmeta, body, p.driveFileId);
+      const myRev = r.headRevisionId || r.modifiedTime;
+      /* what went up is no longer "my unsent change" (anything changed since the copy was taken still is) */
+      const d = p.dirty || {ls: {}, idb: {}};
+      for (const k of Object.keys(now.ls || {})) if (d.ls[k] && d.ls[k][1] < local.at) delete d.ls[k];
+      for (const [n, m] of Object.entries(now.idb || {})) { for (const t of Object.keys(m)) if (d.idb[n] && d.idb[n][t] < local.at) delete d.idb[n][t]; if (d.idb[n] && !Object.keys(d.idb[n]).length) delete d.idb[n]; }
+      p.driveRev = myRev; p.driveSyncedAt = Date.now(); p.remoteNewer = 0; p.needsDownload = false; p.owner = account && account.email;
+      const prev = r.headRevisionId ? await prevRev(p.driveFileId, myRev).catch(() => null) : null;
+      if (!prev || prev === baseRev || pass === 2) break;
+      base = await rawRead(p.driveFileId, prev).catch(() => null); if (!base) break;   /* someone saved at the same moment: add their work in and save again */
+      baseRev = myRev;
+    }
+    return 'saved';
+  };
+  const job = run();
+  saveBusy = job.catch(() => {}).then(() => { saveBusy = null; });
+  return job;
+}
+
+/* ── who is editing what ── */
+const utf8len = s => new TextEncoder().encode(s).length;
+function lockVal(key, lead, who) {
+  let name = String(who.name || '').replace(/\|/g, ' ');
+  const head = `${lead}${Date.now().toString(36)}|${who.email}|${who.sid || ''}|`;
+  while (name && utf8len(key + head + name) > 120) name = name.slice(0, -1);
+  return head + name;
+}
+const myLock = t => lockVal('lk:' + t, '', {email: account.email, sid: SID, name: account.name});
+function parseLock(v) {
+  const a = String(v || '').split('|'); if (a.length < 3) return null;
+  const ts = parseInt(a[0], 36); if (!ts) return null;
+  return {ts, email: a[1], sid: a[2], name: a.slice(3).join(' ') || a[1]};
+}
+function lockOf(t, props) { const l = parseLock((props || sh.props)['lk:' + t]); return l && Date.now() - l.ts <= HOLD_MS ? l : null; }
+const mineL = l => !!l && !!account && l.email === account.email && l.sid === SID;
+function reqOf(t) {
+  const raw = sh.props['rq:' + t]; if (!raw) return null;
+  const i = raw.indexOf('|'), l = parseLock(raw.slice(i + 1)); if (!l) return null;
+  return {...l, state: raw.slice(0, i), raw, fresh: Date.now() - l.ts < REQ_MS};
+}
+function resetShare() {
+  held.clear(); pending.clear(); viewTouched.clear(); sh = {props: {}, at: 0, lost: false}; myReq = null; hideReq();
+  for (const k of Object.keys(lastAct)) delete lastAct[k];
+  if (active) lastAct[active] = Date.now();
+  renderShare();
+}
+/* leaving a shared project (switching, deleting): send unsaved work and let go of my tools */
+async function leaveShared() {
+  const p = sharedCur(); if (!p || !hasToken()) return;
+  try {
+    if (dirtyTools(p).size) await saveProject(true);
+    const patch = {}; held.forEach(t => { patch['lk:' + t] = null; });
+    if (Object.keys(patch).length) await patchProps(p, patch);
+  } catch (e) {}
+  held.clear();
+}
+function kickTick(ms) { clearTimeout(tickT); tickT = setTimeout(tick, ms == null ? 60 : ms); }
+function tick() {
+  if (tickBusy) return tickBusy;
+  if (saveBusy) { kickTick(700); return Promise.resolve(); }
+  clearTimeout(tickT);
+  tickBusy = (async () => {
+    inTick = true;
+    try { await tick1(); }
+    catch (e) { if (e && (e.status === 404 || (e.status === 403 && !/quota|rate/i.test(e.message)))) { sh.lost = true; held.clear(); } }
+    inTick = false; tickBusy = null; renderShare();
+    if (sharedCur() && !document.hidden) kickTick(pending.size || myReq || reqShown ? FAST_MS : TICK_MS);
+  })();
+  return tickBusy;
+}
+async function tick1() {
+  const p = sharedCur(); if (!p) return;
+  if (!account || !hasToken()) { held.clear(); pending.clear(); return; }
+  const meta = await fileMeta(p);
+  if (p.id !== curId) return;
+  if (meta.f.trashed || (meta.f.capabilities && meta.f.capabilities.canEdit === false)) { sh.lost = true; held.clear(); return; }
+  sh.lost = false; sh.props = meta.props; sh.at = Date.now();
+  noteMeta(p, meta.f);
+  if (!p.shared) { resetShare(); await putProject(p); renderProjUI(); return; }   /* the owner stopped sharing it */
+  /* holds I've lost (taken over, or lapsed while this computer was asleep) */
+  for (const t of [...held]) if (!mineL(lockOf(t))) { held.delete(t); viewTouched.delete(t); }
+  const lostNow = strandedTools(p, meta);
+  if (lostNow.length) await strand(p, lostNow);
+  if (meta.rev !== p.driveRev || lostNow.length) await syncDown(p, meta, lostNow.length);
+  if (p.id !== curId) return;
+
+  const now = Date.now(), patch = {}, isActive = t => openTabs.includes(t) && now - (lastAct[t] || 0) < IDLE_MS;
+  /* let go of tools I've closed or left untouched (my work is saved first); keep the rest alive */
+  const letGo = [...held].filter(t => !isActive(t));
+  if (letGo.length && letGo.some(t => dirtyTools(p).has(t))) await saveProject(true);
+  for (const t of [...held]) {
+    if (letGo.includes(t) && !dirtyTools(p).has(t)) { patch['lk:' + t] = null; held.delete(t); }
+    else if (now - (lockOf(t) || {ts: 0}).ts > BEAT_MS) patch['lk:' + t] = myLock(t);
+  }
+  /* take the tools I'm using, if nobody else has them */
+  const wanted = new Set([...openTabs.filter(isActive), ...dirtyTools(p)]);
+  for (const t of new Set([...openTabs, ...wanted])) {
+    if (held.has(t)) continue;
+    const l = lockOf(t);
+    if (mineL(l)) {   /* I asked for it and got it, or it was handed to me */
+      held.add(t); pending.delete(t);
+      if (myReq && myReq.tool === t) { myReq = null; toast(`You’re now editing ${toolName(t)}`); }
+      if (viewTouched.delete(t)) reloadTool(t);
+      continue;
+    }
+    if (l) { pending.delete(t); continue; }
+    if (wanted.has(t) && !(pending.has(t) && now - pending.get(t) < 5000)) { patch['lk:' + t] = myLock(t); pending.set(t, now); }
+  }
+  /* requests for a tool I hold */
+  for (const t of held) {
+    const r = reqOf(t);
+    if (r && (!r.fresh || r.state !== 'ask')) { if (!r.fresh) patch['rq:' + t] = null; continue; }
+    if (r && (!reqShown || reqShown.raw !== r.raw)) showReq(t, r);
+  }
+  if (reqShown && (!held.has(reqShown.tool) || sh.props['rq:' + reqShown.tool] !== reqShown.raw)) hideReq();
+  /* the answer to my own request */
+  if (myReq && !held.has(myReq.tool)) {
+    const r = reqOf(myReq.tool), l = lockOf(myReq.tool);
+    if (r && r.email === account.email && r.state === 'no') { toastLong(`${firstName(l)} is still working on ${toolName(myReq.tool)}. Try again in a little while.`); patch['rq:' + myReq.tool] = null; myReq = null; }
+    else if (now - myReq.at > REQ_MS) { toastLong('No answer yet. A hold ends on its own after a few minutes without activity.'); patch['rq:' + myReq.tool] = null; myReq = null; }
+  }
+  /* tidy away long-dead notes left by closed laptops, so the file never fills up with them */
+  for (const k of Object.keys(sh.props)) {
+    if (!/^(lk|rq):/.test(k) || k in patch) continue;
+    const l = parseLock(k[0] === 'r' ? sh.props[k].slice(sh.props[k].indexOf('|') + 1) : sh.props[k]);
+    if (!l || now - l.ts > 3 * HOLD_MS) patch[k] = null;
+  }
+  if (Object.keys(patch).length) await patchProps(p, patch);
+}
+async function requestEdit(t) {
+  const p = sharedCur(), l = lockOf(t); if (!p || !l) { kickTick(); return; }
+  try {
+    await patchProps(p, {['rq:' + t]: lockVal('rq:' + t, 'ask|', {email: account.email, sid: SID, name: account.name})});
+    myReq = {tool: t, at: Date.now()}; toast(`Asked ${firstName(l)} to hand over ${toolName(t)}`);
+  } catch (e) { toast('Couldn’t send the request: ' + e.message); }
+  renderShare(); kickTick(FAST_MS);
+}
+/* the owner (or the same person on another computer) takes a tool straight away */
+async function takeOver(t) {
+  const p = sharedCur(), l = lockOf(t); if (!p) return;
+  const same = l && account && l.email === account.email;
+  if (l && !same && !(await confirmDlg('Take over?', `${l.name} is editing ${toolName(t)}. If you take over, anything they haven’t saved yet won’t be included (it stays in a backup on their computer).`, 'Take over'))) return;
+  try { await patchProps(p, {['lk:' + t]: myLock(t), ['rq:' + t]: null}); pending.set(t, Date.now()); viewTouched.add(t); lastAct[t] = Date.now(); } catch (e) { toast('Couldn’t take over: ' + e.message); }
+  kickTick(FAST_MS);
+}
+function showReq(t, r) {
+  reqShown = {tool: t, raw: r.raw, req: r};
+  const el = $('#reqCard');
+  el.innerHTML = `<b>${esc(r.name)} would like to edit ${esc(toolName(t))}</b><p>Handing over saves your work first, then ${esc(firstName(r))} can edit and you can view.</p>
+    <div class="ra"><button class="btn sm ghost" data-rq="no">Not now</button><button class="btn sm primary" data-rq="yes">Hand over</button></div>`;
+  el.hidden = false;
+}
+function hideReq() { reqShown = null; const el = $('#reqCard'); if (el) el.hidden = true; }
+async function answerReq(yes) {
+  const q = reqShown, p = sharedCur(); if (!q || !p) return;
+  $('#reqCard').hidden = true;
+  const t = q.tool, r = q.req;
+  try {
+    if (!yes) { await patchProps(p, {['rq:' + t]: lockVal('rq:' + t, 'no|', {email: r.email, sid: r.sid, name: r.name})}); reqShown = {...q, raw: sh.props['rq:' + t]}; return; }
+    if (dirtyTools(p).size) { await saveProject(true); if (dirtyTools(p).has(t)) { toastLong('Couldn’t save your work, so nothing was handed over. Check your connection and try again.'); reqShown = null; return; } }
+    await patchProps(p, {['lk:' + t]: lockVal('lk:' + t, '', {email: r.email, sid: r.sid, name: r.name}), ['rq:' + t]: null});
+    held.delete(t); viewTouched.delete(t); reqShown = null;
+    toast(`${firstName(r)} is now editing ${toolName(t)}`);
+  } catch (e) { reqShown = null; toast('That didn’t go through: ' + e.message); }
+  renderShare(); kickTick(FAST_MS);
+}
+/* the bar above a tool, and the Share button */
+function renderShare() {
+  const p = sharedCur(), bar = $('#lockBar'), sb = $('#shareBtn');
+  if (sb) {
+    const c = cur();
+    sb.hidden = !(driveOn() && account && c && !c.sharedBy);
+    sb.classList.toggle('on', !!(c && c.shared));
+    $('#shareLbl').textContent = c && c.shared ? 'Shared' : 'Share';
+    sb.title = c && c.shared ? 'This project is shared. Click to see or change who it’s shared with' : 'Share this project with your crew';
+  }
+  if (!bar) return;
+  const show = !!(p && active);
+  document.body.classList.toggle('has-lockbar', show);
+  bar.hidden = !show; if (!show) return;
+  const t = active, l = lockOf(t), nm = esc(toolName(t));
+  let cls = 'view', msg = '', btn = '';
+  if (sh.lost) msg = `You no longer have access to this shared project, so it’s view-only here. Ask ${esc((p.sharedBy || {}).name || 'the owner')} to share it with you again.`;
+  else if (!hasToken()) { msg = 'Reconnect Google Drive to edit this shared project. Until then it’s view-only.'; btn = `<button class="btn sm primary" data-lk="reconnect">${GLOGO}Reconnect</button>`; }
+  else if (held.has(t)) {
+    cls = 'edit'; msg = `<b>You’re editing ${nm}.</b> Your crew can view it. Press Save to send them your changes.`;
+    if (tokenExp - Date.now() < 8 * 60e3) btn = '<button class="btn sm" data-lk="renew" title="Google signs this site out of Drive every hour. Click to stay connected.">Stay connected</button>';
+  }
+  else if (l && l.email === account.email) { msg = `You have ${nm} open for editing in another tab or on another computer.`; btn = '<button class="btn sm" data-lk="take">Edit here instead</button>'; }
+  else if (l) {
+    msg = `<b>${esc(l.name)} is editing ${nm}.</b> You can look, but changes you make here won’t be kept.`;
+    btn = myReq && myReq.tool === t ? `<span class="wait">Asked ${esc(firstName(l))}. Waiting for an answer…</span>` : '<button class="btn sm primary" data-lk="request">Request to edit</button>';
+    if (isOwner(p)) btn += '<button class="btn sm ghost" data-lk="take">Take over</button>';
+  }
+  else if (!sh.at || pending.has(t) || Date.now() - (lastAct[t] || 0) < IDLE_MS) msg = 'Checking who’s editing…';
+  else { msg = `Nobody is editing ${nm} right now.`; btn = '<button class="btn sm primary" data-lk="start">Start editing</button>'; }
+  const html = `<i class="dot"></i><span class="m">${msg}</span><span class="b">${btn}</span>`;
+  bar.className = cls;
+  if (bar.dataset.h !== html) { bar.innerHTML = html; bar.dataset.h = html; }
+}
+
+/* ── sharing: the owner adds crew by email ── */
+const joinUrl = p => location.origin + location.pathname + '#/join/' + encodeURIComponent(p.driveFileId);
+const parseEmails = s => [...new Set(String(s || '').split(/[\s,;]+/).map(x => x.trim().toLowerCase()).filter(Boolean))];
+async function shareList(p) {
+  const r = await gjson(`${DRIVE_API}/files/${p.driveFileId}/permissions?` + qs({pageSize: 100, fields: 'permissions(id,type,role,emailAddress,displayName)'}));
+  return (r.permissions || []).filter(x => x.role !== 'owner');
+}
+async function shareDialog() {
+  const p = cur(); if (!p || p.sharedBy) return;
+  if (!account) { signInFlow(); return; }
+  const tp = getToken(true).catch(() => null);   /* while the click still counts */
+  if (!(await tp)) { renderAccount(); toast('Connect Google Drive to share this project'); return; }
+  if (!p.driveFileId || (!p.shared && changed(p))) { await saveProject(true); if (!p.driveFileId) { toast('Save the project to Google Drive first, then share it'); return; } }
+  let people;
+  try { people = await shareList(p); } catch (e) { toastLong('Couldn’t read who this project is shared with. ' + e.message); return; }
+  const rows = people.length ? people.map(x => `<div class="prow"><div class="pi"><b>${esc(x.displayName || x.emailAddress || 'Someone')}</b><small>${esc(x.emailAddress || '')} · can edit</small></div><div class="pb"><button type="button" class="btn sm ghost danger" data-sa="remove" data-id="${esc(x.id)}" data-who="${esc(x.displayName || x.emailAddress || '')}">Remove</button></div></div>`).join('')
+    : '<div class="pnone" style="padding:14px 12px">Not shared with anyone yet.</div>';
+  showDlg(`<h3>Share project</h3><p class="sub">“${esc(p.name)}”: add your crew by email. Each person can open the project and edit it. Only one person edits a tool at a time, and everyone’s saved work is kept.</p>
+    <div class="field"><label for="f-emails">Crew email addresses <span style="text-transform:none;letter-spacing:0">(the Google accounts they sign in with; separate with commas or new lines)</span></label><textarea id="f-emails" name="emails" placeholder="sam@gmail.com, alex@gmail.com"></textarea></div>
+    ${(p.tools || {}).casting ? '<div class="warn">This project uses the Casting Tracker, which holds actors’ names, contact details and photos. Everyone you share with will be able to see them.</div>' : ''}
+    <div class="dlg-actions" style="margin-top:0"><button type="button" class="btn primary" data-sa="add">Share with these people</button></div>
+    <div class="psec">Who can open this project</div><div class="plist">${rows}</div>
+    ${p.shared ? `<div class="psec">Link for your crew</div><div class="field" style="margin:0"><div class="linkrow"><input id="f-link" readonly value="${esc(joinUrl(p))}"><button type="button" class="btn sm" data-sa="copy">Copy link</button></div></div>
+    <p class="sub" style="margin:10px 0 0;font-size:13px">Google emails each person this link. They click it, sign in with the address you typed, and choose the project when Google asks. While the site is in testing, each person also has to be on the test-user list in Google Cloud.</p>` : ''}
+    <div class="dlg-actions"><button class="btn primary" value="cancel">Done</button></div>`);
+  dlg.classList.add('wide');
+}
+async function shareAction(a, b) {
+  const p = cur(); if (!p) return;
+  if (a === 'copy') { const i = $('#f-link'); try { await navigator.clipboard.writeText(i.value); toast('Link copied'); } catch (e) { i.select(); toast('Press Ctrl/⌘+C to copy the link'); } return; }
+  if (a === 'remove') {
+    try {
+      await gapi(`${DRIVE_API}/files/${p.driveFileId}/permissions/${encodeURIComponent(b.dataset.id)}`, {method: 'DELETE'});
+      if (!(await shareList(p)).length) {   /* nobody left: it's an ordinary project again */
+        if (dirtyTools(p).size) await saveProject(true);
+        const patch = {shared: '0'}; Object.keys((await fileMeta(p)).props).forEach(k => { if (/^(lk|rq):/.test(k)) patch[k] = null; });
+        await patchProps(p, patch); p.shared = false; p.dirty = null; await putProject(p); resetShare(); renderProjUI();
+      }
+      toast(`${b.dataset.who || 'They'} can no longer open this project`);
+    } catch (e) { toastLong('Couldn’t remove them. ' + e.message); }
+    dlg.close(); shareDialog(); return;
+  }
+  if (a === 'add') {
+    const emails = parseEmails($('#f-emails').value), bad = emails.filter(e => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
+    if (!emails.length) { toast('Type at least one email address'); return; }
+    if (bad.length) { toast(`This doesn’t look like an email address: ${bad[0]}`); return; }
+    b.disabled = true; b.textContent = 'Sharing…';
+    const failed = []; let done = 0;
+    try {
+      if (!p.shared) {
+        /* everything in the project is on Drive (saved just before this dialog opened), so tracking starts clean */
+        await gapi(`${DRIVE_API}/files/${p.driveFileId}?fields=id`, {method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({writersCanShare: false, appProperties: {shared: '1'}})});
+        const meta = await fileMeta(p);
+        p.shared = true; p.sharedBy = null; p.dirty = {ls: {}, idb: {}}; p.driveRev = meta.rev; await putProject(p);
+      }
+      const msg = `${account.name} has shared the Film Tool Hub project “${p.name}” with you. To open it, go to ${joinUrl(p)} and sign in with this email address.`;
+      for (const e of emails) {
+        if (e === account.email.toLowerCase()) continue;
+        try { await gapi(`${DRIVE_API}/files/${p.driveFileId}/permissions?` + qs({sendNotificationEmail: 'true', emailMessage: msg, fields: 'id'}), {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({type: 'user', role: 'writer', emailAddress: e})}); done++; }
+        catch (er) { failed.push(e + ' (' + er.message.replace(/^Google Drive error \d+:?\s*/, '') + ')'); }
+      }
+    } catch (e) { toastLong('Couldn’t share. ' + e.message); dlg.close(); return; }
+    dlg.close(); renderProjUI(); resetShare(); kickTick();
+    await shareDialog();
+    if (failed.length) toastLong('Couldn’t share with: ' + failed.join(', '));
+    else if (done) toast(`Shared with ${done} ${done === 1 ? 'person' : 'people'}. Google has emailed them the link.`);
+  }
+}
+
+/* ── shared with me: the crew choose the project once, through Google's own file chooser ── */
+let pickerReady = null;
+function loadPicker() {
+  return pickerReady || (pickerReady = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'https://apis.google.com/js/api.js'; s.async = true;
+    s.onload = () => { try { window.gapi.load('picker', {callback: () => res(), onerror: () => rej(new Error('Google’s file chooser didn’t load'))}); } catch (e) { rej(e); } };
+    s.onerror = () => rej(new Error('Google’s file chooser didn’t load'));
+    document.head.appendChild(s);
+  }).catch(e => { pickerReady = null; throw e; }));
+}
+async function pickShared(fileId) {
+  await loadPicker();
+  const gp = window.google.picker;
+  const view = new gp.DocsView(gp.ViewId.DOCS).setMimeTypes('application/json');
+  try { view.setMode(gp.DocsViewMode.LIST); } catch (e) {}
+  if (fileId && typeof view.setFileIds === 'function') view.setFileIds(fileId);
+  else { try { view.setOwnedByMe(false); } catch (e) {} }
+  return new Promise(res => {
+    const b = new gp.PickerBuilder().addView(view).setOAuthToken(token).setTitle(fileId ? 'Choose the shared project to open it' : 'Choose a project that’s been shared with you')
+      .setCallback(d => { if (d.action === gp.Action.PICKED) res((d.docs || []).map(x => x.id)); else if (d.action === gp.Action.CANCEL) res([]); });
+    if (APP_ID) b.setAppId(APP_ID);
+    if (API_KEY) b.setDeveloperKey(API_KEY);
+    b.build().setVisible(true);
+  });
+}
+async function addShared(fileId) {
+  const f = await gjson(`${DRIVE_API}/files/${fileId}?fields=id,name,modifiedTime,appProperties,ownedByMe,trashed,owners(displayName,emailAddress)`);
+  const id = (f.appProperties || {}).fthId;
+  if ((f.appProperties || {}).fth !== 'project' || !id || f.trashed) throw new Error('That file isn’t a Film Tool Hub project');
+  let p = projById(id);
+  if (p && p.owner && p.owner !== account.email && (dirtyTools(p).size || (p.changedAt || 0) > (p.driveSyncedAt || 0) + 3000)) throw new Error('Someone else’s unsaved copy of this project is on this computer. Ask them to sign in and save it first');
+  if (!p) { p = {id, name: f.name.replace(/\.filmtoolhub\.json$/i, ''), created: Date.parse(f.modifiedTime) || Date.now(), openedAt: 0, tools: {}, archived: false, needsDownload: true}; projects.push(p); }
+  else if (p.hiddenShared || p.owner !== account.email || p.driveFileId !== f.id) Object.assign(p, {needsDownload: true, driveRev: null, dirty: null});
+  Object.assign(p, {owner: account.email, driveFileId: f.id, hiddenShared: false, archived: f.ownedByMe === false ? false : p.archived});
+  noteMeta(p, f);
+  await putProject(p);
+  return p;
+}
+/* from a click: connect, let the person choose the file if the site can't open it yet, then open it */
+async function openShared(fileId) {
+  const tp = account ? getToken(true) : signIn().then(() => { if (!hasToken()) throw new Error('cancel'); });
+  try { await tp; } catch (e) { renderAccount(); if (!/cancel|closed|superseded/i.test(e.message)) toast('Sign in with Google to open a shared project'); return; }
+  try {
+    let ids = [];
+    if (fileId) { try { await gjson(`${DRIVE_API}/files/${fileId}?fields=id`); ids = [fileId]; } catch (e) {} }
+    if (!ids.length) ids = await pickShared(fileId);
+    if (!ids.length) return;
+    let last = null;
+    for (const id of ids) last = await addShared(id);
+    if (location.hash.startsWith('#/join/')) history.replaceState(null, '', '#/');
+    if (last.id === curId) { if (last.needsDownload) await offerPull(last); resetShare(); kickTick(); } else await switchProject(last.id);
+    renderProjUI(); render();
+  } catch (e) {
+    const why = /403|404/.test(e.message) ? 'Google wouldn’t open that file. Check you’re signed in with the email address it was shared with.' : e.message;
+    toastLong('Couldn’t open the shared project. ' + why);
+  }
+}
+function joinDialog(fileId) {
+  showDlg(`<h3>Open a shared project</h3>
+    <p class="sub">Someone has shared a Film Tool Hub project with you. ${account ? `You’re signed in as <b>${esc(account.email)}</b>.` : 'Sign in with the Google account (email address) it was shared with.'}</p>
+    <p class="sub">Google will then show you the project file. <b>Click it, then click Select.</b> That’s how you let Film Tool Hub open it; it can’t see anything else in your Drive. You only do this once.</p>
+    ${account ? '' : '<div class="gtick" aria-hidden="true"><span class="cb">✓</span><span>When Google asks, tick the Google Drive box: “See, edit, create and delete only the specific Google Drive files that you use with this app”</span></div>'}
+    <div class="dlg-actions"><button class="btn ghost" value="cancel">Cancel</button><button class="btn primary" value="ok">${GLOGO}${account ? 'Open the project' : 'Sign in and open'}</button></div>`,
+    () => { openShared(fileId); });
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && sharedCur()) kickTick(); });
+window.addEventListener('beforeunload', e => { const p = sharedCur(); if (p && dirtyTools(p).size) { e.preventDefault(); e.returnValue = ''; } });
+window.addEventListener('pagehide', () => {
+  /* let go of my tools on the way out, except any with unsent changes (those stay mine for a few minutes) */
+  const p = sharedCur(); if (!p || !hasToken() || !held.size) return;
+  const patch = {}, d = dirtyTools(p); held.forEach(t => { if (!d.has(t)) patch['lk:' + t] = null; });
+  if (Object.keys(patch).length) try { fetch(`${DRIVE_API}/files/${p.driveFileId}?fields=id`, {method: 'PATCH', keepalive: true, headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + token}, body: JSON.stringify({appProperties: patch})}); } catch (e) {}
+});
+setInterval(() => { if (sharedCur()) renderShare(); }, 20 * 1000);
+
 /* account button + menu */
 const GLOGO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.3z"/><path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1-2.6 0-4.8-1.8-5.6-4.1H3.1v2.6A10 10 0 0 0 12 22z"/><path fill="#FBBC05" d="M6.4 14c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V7.4H3.1a10 10 0 0 0 0 9.2z"/><path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.8 1.5l2.9-2.9A10 10 0 0 0 3.1 7.4L6.4 10c.8-2.4 3-4.1 5.6-4.1z"/></svg>';
 function renderAccount() {
@@ -709,23 +1282,26 @@ function renderProjUI() {
   sb.classList.toggle('dirty', dirty);
   sb.title = (dirty ? 'Unsaved changes. ' : '') + 'Save “' + p.name + '”' + (account ? ' to your Google Drive' : '') + ' (Ctrl/⌘+S). Last saved: ' + fmtWhen(p.savedAt);
   $('#saveLbl').textContent = dirty ? 'Save' : 'Saved';
-  renderStrip();
+  renderStrip(); renderShare();
 }
 function renderStrip() {
   const el = $('#projStrip'), p = cur(); if (!el || !p) return;
   const used = Object.entries(p.tools || {}).map(([id, at]) => ({t: byId(id), at})).filter(x => x.t).sort((a, b) => b.at - a.at);
   el.innerHTML = `<div class="pstrip">
     <div class="pmain"><span class="plbl">Current project</span><h2>${esc(p.name)}</h2>
-      <span class="pmeta">${changed(p) ? '<b class="un">Unsaved changes</b> · ' : ''}Saved ${esc(fmtWhen(p.savedAt))}${p.backupAt ? ' · Backup ' + esc(fmtWhen(p.backupAt)) : ''}${p.driveFileId ? ' · On Google Drive' : ''}</span></div>
+      <span class="pmeta">${changed(p) ? '<b class="un">Unsaved changes</b> · ' : ''}Saved ${esc(fmtWhen(p.savedAt))}${p.backupAt ? ' · Backup ' + esc(fmtWhen(p.backupAt)) : ''}${p.driveFileId ? ' · On Google Drive' : ''}${p.sharedBy ? ' · <b class="shr">Shared by ' + esc(p.sharedBy.name) + '</b>' : p.shared ? ' · <b class="shr">Shared with your crew</b>' : ''}</span></div>
     <div class="pused">${used.length ? used.map(x => `<a class="pchip" href="#/tool/${encodeURIComponent(x.t.id)}" style="--cat:${catOf(x.t.category).color}" title="Last changed ${esc(fmtWhen(x.at))}"><span class="sw"></span>${esc(x.t.name)}<small>${esc(fmtWhen(x.at))}</small></a>`).join('') : '<span class="pnone">No tools used in this project yet. Open any tool to start; its work is filed under this project.</span>'}</div>
-    <div class="pacts"><button class="btn ghost" data-pact="manage">Manage projects</button><button class="btn" data-pact="new">New project</button></div>
+    <div class="pacts">${driveOn() && account && !p.sharedBy ? `<button class="btn ghost" data-pact="share">${UI.share}${p.shared ? 'Sharing' : 'Share'}</button>` : ''}<button class="btn ghost" data-pact="manage">Manage projects</button><button class="btn" data-pact="new">New project</button></div>
     ${driveOn() && !account ? `<div class="psignin">${GLOGO}<span><b>Sign in with Google</b> to keep your projects in your own Google Drive and carry on from any computer. <a href="privacy.html">Privacy</a></span><button class="btn primary" data-pact="signin">Sign in</button></div>` : ''}
   </div>`;
 }
 const pmenu = () => $('#pmenu');
 function openProjMenu(btn) {
   const m = pmenu();
-  m.innerHTML = `<div class="hint">Projects</div>` + activeProjects().map(p => `<button data-pm="open" data-id="${esc(p.id)}" class="${p.id === curId ? 'on' : ''}"><span class="ck">${p.id === curId ? '✓' : ''}</span><span class="nm">${esc(p.name)}</span><small>${esc(fmtWhen(p.changedAt || p.created))}</small></button>`).join('')
+  const row = p => `<button data-pm="open" data-id="${esc(p.id)}" class="${p.id === curId ? 'on' : ''}"><span class="ck">${p.id === curId ? '✓' : ''}</span><span class="nm">${esc(p.name)}</span><small>${esc(p.sharedBy ? 'from ' + firstName(p.sharedBy) : fmtWhen(p.changedAt || p.created))}</small></button>`;
+  const all = activeProjects(), own = all.filter(p => !p.sharedBy), theirs = all.filter(p => p.sharedBy);
+  m.innerHTML = `<div class="hint">Projects</div>` + own.map(row).join('')
+    + (driveOn() && account ? `<hr><div class="hint">Shared with me</div>` + (theirs.length ? theirs.map(row).join('') : '<div class="none">Nothing yet. Projects your crew share with you appear here.</div>') + `<button data-pm="shared">${UI.share}Open a shared project…</button>` : '')
     + `<hr><button data-pm="new">${P('<path d="M12 5v14M5 12h14"/>')}New project…</button><button data-pm="manage">${UI.open}Manage projects…</button>`;
   m.hidden = false;
   const r = btn.getBoundingClientRect();
@@ -747,19 +1323,23 @@ function renameDialog(id) {
 }
 function projRow(p) {
   const n = Object.keys(p.tools || {}).length;
+  if (p.sharedBy) return `<div class="prow${p.id === curId ? ' cur' : ''}">
+    <div class="pi"><b>${esc(p.name)}</b>${p.id === curId ? '<span class="tag">Open</span>' : ''}<small>Shared by ${esc(p.sharedBy.name)}${p.sharedBy.email && p.sharedBy.email !== p.sharedBy.name ? ' (' + esc(p.sharedBy.email) + ')' : ''}</small></div>
+    <div class="pb">${p.id === curId ? '' : `<button type="button" class="btn sm" data-pa="open" data-id="${esc(p.id)}">Open</button>`}<button type="button" class="btn sm ghost" data-pa="backups" data-id="${esc(p.id)}">Backups</button><button type="button" class="btn sm ghost" data-pa="unlist" data-id="${esc(p.id)}">Remove from my list</button></div></div>`;
   return `<div class="prow${p.id === curId ? ' cur' : ''}">
-    <div class="pi"><b>${esc(p.name)}</b>${p.id === curId ? '<span class="tag">Open</span>' : ''}<small>${n} tool${n === 1 ? '' : 's'} used · changed ${esc(fmtWhen(p.changedAt || p.created))} · saved ${esc(fmtWhen(p.savedAt))}</small></div>
+    <div class="pi"><b>${esc(p.name)}</b>${p.id === curId ? '<span class="tag">Open</span>' : ''}${p.shared ? '<span class="tag">Shared</span>' : ''}<small>${n} tool${n === 1 ? '' : 's'} used · changed ${esc(fmtWhen(p.changedAt || p.created))} · saved ${esc(fmtWhen(p.savedAt))}</small></div>
     <div class="pb">
       ${p.archived ? `<button type="button" class="btn sm" data-pa="unarchive" data-id="${esc(p.id)}">Restore</button><button type="button" class="btn sm danger" data-pa="delete" data-id="${esc(p.id)}">Delete…</button>`
       : `${p.id === curId ? '' : `<button type="button" class="btn sm" data-pa="open" data-id="${esc(p.id)}">Open</button>`}<button type="button" class="btn sm ghost" data-pa="rename" data-id="${esc(p.id)}">Rename</button><button type="button" class="btn sm ghost" data-pa="backups" data-id="${esc(p.id)}">Backups</button><button type="button" class="btn sm ghost" data-pa="archive" data-id="${esc(p.id)}">Archive</button>`}
     </div></div>`;
 }
 function manageDialog() {
-  const act = activeProjects(), arch = projects.filter(p => p.archived && mine(p));
+  const all = activeProjects(), act = all.filter(p => !p.sharedBy), theirs = all.filter(p => p.sharedBy), arch = projects.filter(p => p.archived && mine(p) && !p.hiddenShared);
   showDlg(`<h3>Projects</h3><p class="sub">Archive projects you've finished with to tidy the list. Archived projects keep all their work and can be restored.</p>
-    <div class="plist">${act.map(projRow).join('')}</div>
+    <div class="plist">${act.map(projRow).join('') || '<div class="pnone" style="padding:14px 12px">No projects of your own yet.</div>'}</div>
+    ${driveOn() && account ? `<div class="psec">Shared with me</div><div class="plist">${theirs.map(projRow).join('') || '<div class="pnone" style="padding:14px 12px">Nothing yet. When someone shares a project with you, click the link in Google’s email, or use “Open a shared project”.</div>'}</div>` : ''}
     ${arch.length ? `<div class="psec">Archived</div><div class="plist">${arch.map(projRow).join('')}</div>` : ''}
-    <div class="dlg-actions"><button type="button" class="btn left" data-pa="new">New project</button><button class="btn primary" value="cancel">Done</button></div>`);
+    <div class="dlg-actions"><button type="button" class="btn left" data-pa="new">New project</button>${driveOn() && account ? '<button type="button" class="btn" data-pa="shared">Open a shared project…</button>' : ''}<button class="btn primary" value="cancel">Done</button></div>`);
   dlg.classList.add('wide');
 }
 async function backupsDialog(id) {
@@ -787,6 +1367,15 @@ async function projAction(a, id, bid) {
     case 'open': dlg.close(); await switchProject(id); break;
     case 'new': dlg.close(); newProjectDialog(); break;
     case 'manage': dlg.close(); manageDialog(); break;
+    case 'shared': dlg.close(); openShared(); break;
+    case 'unlist': {
+      const p = projById(id); dlg.close();
+      if (await confirmDlg('Remove from your list?', `“${p.name}” will be taken off this computer. It stays safe with ${p.sharedBy.name}, and you can open it again from the link they sent. Anything you haven’t saved would be lost.`, 'Remove', true)) {
+        if (!activeProjects().some(x => x.id !== id)) await createProject('My first project');
+        await deleteProject(id, true); toast('Removed from your list');
+      }
+      break;
+    }
     case 'rename': dlg.close(); renameDialog(id); break;
     case 'backups': dlg.close(); backupsDialog(id); break;
     case 'archive': await archiveProject(id, true); dlg.close(); manageDialog(); break;
@@ -921,12 +1510,15 @@ function fthProjectShim(cfg) {
   W.__fthProjectId = P;
   var tT;
   function touched() { clearTimeout(tT); tT = setTimeout(function () { try { if (hub) hub.touched(tool, P); } catch (e) {} }, 250); }
+  /* shared projects: only the person holding this tool can change it; everyone else has it view-only */
+  function ro() { try { if (hub && hub.readOnly) return !!hub.readOnly(tool, P); } catch (e) {} return !!cfg.ro; }
+  function dirty(kind, name) { try { if (hub && hub.dirty) hub.dirty(tool, P, kind, name); } catch (e) {} }
   function own() { var out = []; for (var i = 0; i < realLS.length; i++) { var k = realLS.key(i); if (k && k.indexOf(pre) === 0) out.push(k.slice(pre.length)); } return out; }
   var api = {
     getItem: function (k) { k = String(k); return GLOBAL.test(k) ? realLS.getItem(k) : realLS.getItem(pre + k); },
-    setItem: function (k, v) { k = String(k); if (GLOBAL.test(k)) return realLS.setItem(k, v); realLS.setItem(pre + k, String(v)); touched(); },
-    removeItem: function (k) { k = String(k); if (GLOBAL.test(k)) return realLS.removeItem(k); realLS.removeItem(pre + k); touched(); },
-    clear: function () { own().forEach(function (k) { realLS.removeItem(pre + k); }); touched(); },
+    setItem: function (k, v) { k = String(k); if (GLOBAL.test(k)) return realLS.setItem(k, v); if (ro()) return; dirty('ls', k); realLS.setItem(pre + k, String(v)); touched(); },
+    removeItem: function (k) { k = String(k); if (GLOBAL.test(k)) return realLS.removeItem(k); if (ro()) return; dirty('ls', k); realLS.removeItem(pre + k); touched(); },
+    clear: function () { if (ro()) return; own().forEach(function (k) { dirty('ls', k); realLS.removeItem(pre + k); }); touched(); },
     key: function (i) { var o = own(); return i < o.length ? o[i] : null; }
   };
   var proxy = new Proxy(api, {
@@ -941,9 +1533,13 @@ function fthProjectShim(cfg) {
   try {
     var idb = W.indexedDB, open = idb.open.bind(idb), del = idb.deleteDatabase.bind(idb);
     idb.open = function (name, v) { return v === undefined ? open(pre + name) : open(pre + name, v); };
-    idb.deleteDatabase = function (name) { return del(pre + name); };
-    var OS = W.IDBObjectStore.prototype;
-    ['put', 'add', 'delete', 'clear'].forEach(function (m) { var f = OS[m]; OS[m] = function () { touched(); return f.apply(this, arguments); }; });
+    idb.deleteDatabase = function (name) { if (ro()) return del('fth:none:' + name); dirty('idb', String(name)); touched(); return del(pre + name); };
+    var OS = W.IDBObjectStore.prototype, count = OS.count;
+    var short = function (os) { try { var n = os.transaction.db.name; return n.indexOf(pre) === 0 ? n.slice(pre.length) : n; } catch (e) { return ''; } };
+    /* view-only: a write is swapped for a harmless read, so the tool carries on but nothing is changed */
+    ['put', 'add', 'delete', 'clear'].forEach(function (m) { var f = OS[m]; OS[m] = function () { if (ro()) return count.call(this); dirty('idb', short(this)); touched(); return f.apply(this, arguments); }; });
+    var CU = W.IDBCursor.prototype;
+    ['update', 'delete'].forEach(function (m) { var f = CU[m]; CU[m] = function () { var s = this.source && this.source.objectStore ? this.source.objectStore : this.source; if (ro()) return count.call(s); dirty('idb', short(s)); touched(); return f.apply(this, arguments); }; });
   } catch (e) {}
   /* small key/value store for tools whose work wasn't saved before */
   var dbp = null;
@@ -967,6 +1563,16 @@ function fthProjectShim(cfg) {
     W.addEventListener('pagehide', function () { clearTimeout(t); try { fn(); } catch (e) {} });
     return go;
   };
+  var aT = 0;
+  function act() { var n = Date.now(); if (n - aT < 3000) return; aT = n; try { if (hub && hub.activity) hub.activity(tool, P); } catch (e) {} }
+  ['pointerdown', 'keydown', 'wheel'].forEach(function (ev) { W.addEventListener(ev, act, true); });
+  ['beforeinput', 'paste', 'cut', 'drop'].forEach(function (ev) { W.addEventListener(ev, function (e) { if (!ro()) return; e.preventDefault(); if (ev !== 'beforeinput') e.stopImmediatePropagation(); }, true); });
+  if (cfg.ro && !hub) document.addEventListener('DOMContentLoaded', function () {
+    var n = document.createElement('div');
+    n.textContent = 'Shared project: this separate tab is view-only. To edit, open the tool inside Film Tool Hub.';
+    n.style.cssText = 'position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:2147483647;background:#1b1f26;color:#f0ece5;border:1px solid #46505e;border-radius:10px;padding:9px 14px;font:500 13px system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:calc(100vw - 24px)';
+    document.body.appendChild(n);
+  });
   W.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 's' || e.key === 'S')) {
       e.preventDefault(); e.stopImmediatePropagation();
@@ -1053,12 +1659,12 @@ function kitHead(t) {
   return KIT_FONTS + '<style data-fth-kit>' + FTH_KIT + kitAccent(catOf(t.category).color) + '</style>';
 }
 
-function themed(t) {
+function themed(t, ro) {
   const cfg = TOOL_THEME[t.id] || {};
   const c = catOf(t.category);
   const cat = JSON.stringify({num:c.num, name:c.name, color:c.color}).replace(/</g, '\\u003c');
   const boot = (cfg.kit ? kitHead(t) : '') + '<script data-fth>window.__fthCat=' + cat + ';(' + fthEngine.toString() + ')(' + JSON.stringify(cfg).replace(/</g, '\\u003c') + ');'
-    + '(' + fthProjectShim.toString() + ')(' + JSON.stringify({tool: t.id}).replace(/</g, '\\u003c') + ');<\/script>';
+    + '(' + fthProjectShim.toString() + ')(' + JSON.stringify(ro ? {tool: t.id, ro: true} : {tool: t.id}).replace(/</g, '\\u003c') + ');<\/script>';
   /* a tool file carries its own copy of the look for when it's opened on its own; inside the hub that copy is removed */
   let h = t.html.replace(/<!--fth-standalone-->[\s\S]*?<!--\/fth-standalone-->\s*/g, '');
   if (/<head[^>]*>/i.test(h)) h = h.replace(/<head[^>]*>/i, m => m + boot);
@@ -1160,13 +1766,14 @@ function activate(id) {
   if (t) {
     if (!openTabs.includes(id)) openTabs.push(id);
     frameFor(t);
-    active = id;
+    active = id; lastAct[id] = Date.now();
   } else active = null;
   frames.forEach((f, k) => f.classList.toggle('active', k === active));
   ws.hidden = !active;
   document.body.classList.toggle('tool-open', !!active);
   document.title = active ? `${t.name} · Film Tool Hub` : 'Film Tool Hub';
-  renderBar();
+  renderBar(); renderShare();
+  if (active && sharedCur() && !held.has(active)) kickTick();
 }
 
 function renderBar() {
@@ -1183,6 +1790,8 @@ function renderBar() {
 
 const go = id => { location.hash = id ? '#/tool/' + encodeURIComponent(id) : '#/'; };
 function route() {
+  const j = location.hash.match(/^#\/join\/(.+)$/);
+  if (j && driveOn()) { activate(null); joinDialog(decodeURIComponent(j[1])); return; }
   const m = location.hash.match(/^#\/tool\/(.+)$/);
   activate(m ? decodeURIComponent(m[1]) : null);
 }
@@ -1195,9 +1804,10 @@ function closeTab(id) {
     history.replaceState(null, '', next ? '#/tool/' + encodeURIComponent(next) : '#/');
     activate(next || null);
   } else renderBar();
+  if (sharedCur() && held.has(id)) kickTick();   /* closing a tool saves my work in it and frees it for the crew */
 }
 function reloadTool(id) { const t = byId(id), f = frames.get(id); if (!t || !f) return; if (t.html != null) f.srcdoc = themed(t); else loadHtml(t).then(() => { f.srcdoc = themed(byId(id)); }).catch(() => toast('Couldn’t load this tool')); }
-function newTab(id) { const t = byId(id); if (t) window.open(soloUrl(id), '_blank'); }
+function newTab(id) { const t = byId(id); if (!t) return; if (sharedCur()) toastLong('In a shared project, a tool in a separate tab is view-only. Edit it here.'); window.open(soloUrl(id), '_blank'); }
 function download(name, text, type='text/html') {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text], {type}));
@@ -1352,6 +1962,7 @@ function helpDialog() {
       <li><b>Try a change.</b> Uploads here are kept in this browser only, so you can try a new version before anyone else sees it. To publish it, the tool file goes into the tools folder on GitHub.</li>
       <li><b>Light or dark.</b> The sun/moon button in the top bar switches the hub and every tool at once, including tools open in other tabs. Each browser remembers its own choice.</li>
       <li><b>Projects.</b> Pick a project in the top bar and every tool files its work under it, so you can move between tools on the same film. Archive projects you’ve finished with.</li>
+      <li><b>Sharing with your crew.</b> Sign in, then press <b>Share</b> and type your crew’s email addresses. They open the link Google emails them and the project appears under “Shared with me”. One person edits a tool at a time; everyone else can view it and press <b>Request to edit</b>. Press Save to send your changes to the crew.</li>
       <li><b>Saving.</b> Work saves in this browser as you go. <b>Save</b> (or Ctrl/⌘+S) stores the project’s main copy, and backups are taken automatically every few minutes while you work. Restore either from Manage projects → Backups.</li>
     </ol></div>
     <div class="dlg-actions"><button class="btn primary" value="cancel">Got it</button></div>`);
@@ -1404,12 +2015,24 @@ pmenu().addEventListener('click', e => {
   if (b.dataset.pm === 'open') switchProject(b.dataset.id);
   if (b.dataset.pm === 'new') newProjectDialog();
   if (b.dataset.pm === 'manage') manageDialog();
+  if (b.dataset.pm === 'shared') openShared();
 });
 document.addEventListener('click', e => { if (!pmenu().hidden && !e.target.closest('#pmenu,#projBtn')) closeProjMenu(); });
 $('#saveBtn').onclick = () => saveProject();
 document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); saveProject(); } });
+form.addEventListener('click', e => { const b = e.target.closest('[data-sa]'); if (!b) return; e.preventDefault(); shareAction(b.dataset.sa, b); });
+$('#shareBtn').onclick = () => shareDialog();
+$('#reqCard').addEventListener('click', e => { const b = e.target.closest('[data-rq]'); if (b) answerReq(b.dataset.rq === 'yes'); });
+$('#lockBar').addEventListener('click', e => {
+  const b = e.target.closest('[data-lk]'); if (!b || !active) return;
+  const a = b.dataset.lk;
+  if (a === 'reconnect') reconnect().then(() => kickTick());
+  if (a === 'renew') getToken(true, true).then(() => { toast('Connected for another hour'); renderShare(); }).catch(() => {});
+  if (a === 'request') requestEdit(active);
+  if (a === 'take' || a === 'start') takeOver(active);
+});
 form.addEventListener('click', e => { const b = e.target.closest('[data-pa]'); if (!b) return; e.preventDefault(); projAction(b.dataset.pa, b.dataset.id, b.dataset.bid); });
-document.addEventListener('click', e => { const b = e.target.closest('[data-pact]'); if (!b) return; if (b.dataset.pact === 'signin') signInFlow(); if (b.dataset.pact === 'manage') manageDialog(); if (b.dataset.pact === 'new') newProjectDialog(); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-pact]'); if (!b) return; if (b.dataset.pact === 'signin') signInFlow(); if (b.dataset.pact === 'manage') manageDialog(); if (b.dataset.pact === 'share') shareDialog(); if (b.dataset.pact === 'new') newProjectDialog(); });
 $('#acctBtn').onclick = e => { e.stopPropagation(); if (!account) { signInFlow(); return; } const m = $('#amenu'); if (!m.hidden) closeAcctMenu(); else { closeProjMenu(); closeMenu(); openAcctMenu(); } };
 $('#amenu').addEventListener('click', e => {
   const b = e.target.closest('[data-am]'); if (!b) return;
@@ -1472,9 +2095,9 @@ window.addEventListener('drop', e => {
   await initProjects();
   const solo = location.hash.match(/^#\/solo\/(.+)$/);
   const st = solo && byId(decodeURIComponent(solo[1]));
-  if (st) { try { await loadHtml(st); } catch (e) {} const s2 = byId(st.id); if (s2 && s2.html != null) { setTimeout(() => { document.open(); document.write(themed(s2)); document.close(); }, 0); return; } }
+  if (st) { try { await loadHtml(st); } catch (e) {} const s2 = byId(st.id); if (s2 && s2.html != null) { setTimeout(() => { document.open(); document.write(themed(s2, !!(cur() && cur().shared))); document.close(); }, 0); return; } }
   renderAccount(); gisReady.then(renderAccount);
-  render(); route(); renderProjUI();
+  render(); route(); renderProjUI(); resetShare(); kickTick(500);
   setInterval(renderProjUI, 60 * 1000);
 })();
 })();

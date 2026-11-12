@@ -16,6 +16,7 @@ Tim McGlinchey is a film lecturer at Belfast Met. He isn't technical, so:
   - The app is still in **Testing** mode, so every user must be added as a test user (up to 100). Publishing the app is a later step.
   - Authorised origins: timmcglinchey.github.io, filmtoolhub.com and www.filmtoolhub.com.
 - **Admin controls:** shown only to emails listed in `adminEmails` in `hub/config.json`.
+- **Shared projects** (added 12 November 2026): see "How shared projects work" below. They need the **Google Picker API** switched on in the Google Cloud project. `hub/config.json` can also take an optional `googleApiKey` (a browser key limited to the Picker API and the site's addresses); the Picker is built without one if it's missing.
 
 ## How it's built
 - `index.html`, `hub/hub.css` and `hub/hub.js` make up the hub.
@@ -35,6 +36,14 @@ Tim McGlinchey is a film lecturer at Belfast Met. He isn't technical, so:
   - Casting Tracker reads Script Breakdown's IndexedDB (`script-breakdown`, key `last`) and Script Development's data.
   - Location Recce reads the Production Schedule Builder (`fth-schedule-v1`) and writes to the Call Sheet Builder (`fth-callsheet-v1`).
   - If a tool's saved data changes shape, check these links still work.
+- **How shared projects work** (all in `hub/hub.js`, the "shared projects" section). There is no server; everything goes through the project's one Drive file.
+  - **Share:** the owner adds crew as editors of the file (Drive permissions) and marks it `shared: '1'` in the file's `appProperties`. Crew open `#/join/<fileId>`; because the site only has the `drive.file` permission, they must choose the file once in Google Picker before the site can read it. After that it shows up in the normal Drive sync as a file they don't own (`p.sharedBy`).
+  - **Tracking changes:** the storage shim tells the hub exactly which localStorage key or IndexedDB database each tool wrote (`__fthHub.dirty`), kept in `p.dirty`.
+  - **Save** (`sharedSave`): fetch the Drive copy if it has changed (`headRevisionId` differs from `p.driveRev`), lay only the `p.dirty` items on top (`mergeSnap`), upload, then check the revision list in case someone saved at the same moment and merge again if so. `fth-tool-data` (the `fthStore` database every tool shares) is merged entry by entry, by its `<tool>:` key prefix.
+  - **Staying up to date:** while a shared project is open the hub checks the file every 8 seconds (`tick`) and pulls in other people's saves (`syncDown`).
+  - **One editor per tool:** a hold is a note on the file, `appProperties["lk:<tool>"] = time|email|session|name`; a request is `rq:<tool>`. A hold lapses 5 minutes after its last heartbeat; the hub lets go after 4 minutes without activity, saving first. Tools not held are view-only: the shim drops their writes and blocks typing (`__fthHub.readOnly`).
+  - **Unsaved changes in a tool someone else now holds** are never pushed: they're backed up locally and replaced by the shared version (`strand`).
+  - **Tests:** `node tests/sharing/run.js` runs two pretend people against a pretend Google Drive (needs Playwright). Real Google sign-in can't be tested off the live site, so check with two real accounts after any change here.
 - **No HTML exports.** Tools must not offer to download a copy of the page. PDF, CSV, Excel and .json data exports are fine.
 
 ## Adding or updating a tool (Tim sends a file)
@@ -53,7 +62,7 @@ Tim McGlinchey is a film lecturer at Belfast Met. He isn't technical, so:
 `python3 scripts/build_offline.py` builds `Film Tool Hub (offline).html`, a file you can double-click with everything embedded. Google sign-in is off in it and the admin controls are on. It was used while GitHub was suspended (9 to 12 November 2026), and is handy for sending Tim a preview.
 
 ## Testing tips
-- Playwright with Chrome works well.
+- Playwright with Chrome works well. `node tests/sharing/run.js` runs the shared-project tests.
 - The workspace can't reach the font, pdf.js or jsPDF CDNs, so block or stub those requests.
 - PDF tools: inject a local copy of pdf.js into the tool's frame. The npm package `pdfjs-dist@3.11.174` is the same version the tools use.
 
