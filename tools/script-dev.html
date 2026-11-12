@@ -461,7 +461,6 @@ details.disc[open]>summary::before{transform:rotate(90deg)}
 .mbreak::before{content:"";display:block}
 .mcard.jtop{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-width:0}
 .mcard.jbot{border-top-left-radius:0;border-top-right-radius:0;border-top:2px dashed color-mix(in srgb,var(--c) 45%,var(--line))}
-.mpair.jtop .mcard{background:color-mix(in srgb,var(--pr) 7%,var(--card))}
 .mconn{height:44px;color:var(--ink3)}
 .mconn>div{display:flex;justify-content:center;align-items:center}
 .marrow svg{display:block;width:22px;height:32px}
@@ -726,20 +725,27 @@ const IC = {
    ===================================================================== */
 const BEATS = [
   {id:'cs1', fam:'cs', name:'Character & Setting', sub:'Opening', s:0,    e:12.5, pair:'cs2'},
-  {id:'p1',  fam:'pr', name:'Problem',             sub:'1st',     s:12.5, e:25,   pair:'p2', cx:15.6},
-  {id:'c1',  fam:'ch', name:'Choice',              sub:'1st',     s:12.5, e:25,   pair:'c2', cx:21.9},
+  {id:'p1',  fam:'pr', name:'Problem',             sub:'1st',     s:12.5, e:12.5, pair:'p2', m:true},
+  {id:'c1',  fam:'ch', name:'Choice',              sub:'1st',     s:25,   e:25,   pair:'c2', m:true},
   {id:'a2a', fam:'a2', name:'1st Half of Act 2',   sub:'',        s:25,   e:50,   pair:'a2b'},
   {id:'mid', fam:'mid',name:'Midpoint',            sub:'',        s:50,   e:50,   m:true},
   {id:'a2b', fam:'a2', name:'2nd Half of Act 2',   sub:'',        s:50,   e:75,   pair:'a2a'},
-  {id:'p2',  fam:'pr', name:'Problem',             sub:'2nd',     s:75,   e:87.5, pair:'p1', cx:78.1},
-  {id:'c2',  fam:'ch', name:'Choice',              sub:'2nd',     s:75,   e:87.5, pair:'c1', cx:84.4},
+  {id:'p2',  fam:'pr', name:'Problem',             sub:'2nd',     s:75,   e:75,   pair:'p1', m:true},
+  {id:'c2',  fam:'ch', name:'Choice',              sub:'2nd',     s:87.5, e:87.5, pair:'c1', m:true},
   {id:'cs2', fam:'cs', name:'Character & Setting', sub:'Closing', s:87.5, e:100,  pair:'cs1'}
 ];
 const BEAT = Object.fromEntries(BEATS.map(b => [b.id, b]));
 const BEAT_IDS = BEATS.map(b => b.id);
 const PAYOFF = new Set(['a2b','p2','c2','cs2']);
 /* stretches of story time: Problem and Choice share theirs (Problem › Choice) */
-const SPANS = [['cs1'],['p1','c1'],['a2a'],['a2b'],['p2','c2'],['cs2']].map(ids => ({ids, s:BEAT[ids[0]].s, e:BEAT[ids[0]].e, fam:BEAT[ids[0]].fam, grp: ids.length > 1}));
+const SPANS = [
+  {ids:['cs1'], s:0, e:12.5, fam:'cs'},
+  {ids:['p1','c1'], s:12.5, e:25, fam:'pr', grp:true, desc:'The stretch between the Problem and the Choice. The character wrestles with what has disrupted their norm: resisting, weighing it up, trying to carry on as before, until the Choice commits them.'},
+  {ids:['a2a'], s:25, e:50, fam:'a2'},
+  {ids:['a2b'], s:50, e:75, fam:'a2'},
+  {ids:['p2','c2'], s:75, e:87.5, fam:'pr', grp:true, desc:'The stretch between the second Problem and the second Choice. Reeling from the blow, the character wrestles with what it means, until the final Choice.'},
+  {ids:['cs2'], s:87.5, e:100, fam:'cs'}
+];
 const spanLabel = sp => sp.grp ? `${BEAT[sp.ids[0]].sub} Problem › Choice` : beatLabel(sp.ids[0]);
 const beatLabel = b => (typeof b === 'string' ? BEAT[b] : b).sub && !['Opening','Closing'].includes((typeof b==='string'?BEAT[b]:b).sub) ? (typeof b==='string'?BEAT[b]:b).sub + ' ' + (typeof b==='string'?BEAT[b]:b).name : (typeof b==='string'?BEAT[b]:b).name;
 const beatFull = id => { const b = BEAT[id]; return b.sub === 'Opening' || b.sub === 'Closing' ? `${b.name} (${b.sub.toLowerCase()})` : beatLabel(b); };
@@ -748,12 +754,12 @@ const beatPos = b => b.cx != null ? b.cx : b.m ? b.s : (b.s + b.e) / 2;
 
 const BEAT_DESC = {
   cs1: 'Establish the norm: who your character is and the world they live in. Show the flaw in action, and let us see how this setting has allowed the Lie to fester. This is the "before" picture that the closing Character & Setting will mirror.',
-  p1:  'Something disrupts the norm: a problem or an opportunity (the inciting incident). It is the first real challenge to the Lie, an invitation to adopt the Truth instead, and it should matter to this character specifically because of their flaw. Problem and Choice share this stretch of the story.',
-  c1:  'The problem forces a decision. Somewhere in this same stretch your character makes a defining choice that commits them and crosses a path of no return, usually in line with the Lie. The conflict of the story begins with this choice: all layers of conflict (philosophical, emotional and external) are activated.',
+  p1:  'Something disrupts the norm: a problem or an opportunity (the inciting incident). It is the first real challenge to the Lie, an invitation to adopt the Truth instead, and it should matter to this character specifically because of their flaw. This is the moment the norm is disrupted.',
+  c1:  'The problem forces a decision. At this point your character makes a defining choice that commits them and crosses a path of no return, usually in line with the Lie. The conflict of the story begins with this choice: all layers of conflict (philosophical, emotional and external) are activated.',
   a2a: 'Living with the consequences of the first choice. The character pursues their goal, still operating by what they believe. Complications build, and the Lie may even seem to be working, but its cost is quietly mounting.',
   mid: 'The hinge of the whole story: a False Victory, Turning Point or Realisation. Something shifts the character\'s understanding: they glimpse the Truth, or seem to win by the Lie. Everything before this is setup; everything after is payoff.',
   a2b: 'The fallout of the midpoint. Pressure mounts and the gap between Lie and Truth becomes impossible to ignore. Events here often mirror the first half of Act 2, now seen in a new light.',
-  p2:  'A second, greater problem that mirrors the first, often the moment where everything falls apart. The character is tested again, but this time the true cost of the Lie is unavoidable. Problem and Choice share this stretch of the story.',
+  p2:  'A second, greater problem that mirrors the first, often the moment where everything falls apart. The character is tested again, but this time the true cost of the Lie is unavoidable.',
   c2:  'The decisive choice, mirroring the first, and the moment the conflict of the story ends. This is where theme is proven through character decision: does the character finally embrace the Truth, or cling to the Lie?',
   cs2: 'The new norm. Return to the character and their world, mirroring the opening, so the audience can measure the change (or the lack of it). The final image expresses the philosophy your story communicates.'
 };
@@ -857,8 +863,8 @@ const STRUCTS = {
 };
 STRUCTS.three.sections = STRUCTS.three.bands;
 STRUCTS.scaffold.beats = BEATS.map(b => ({id:b.id, name:beatFull(b.id), s:b.s, e:b.e, fam:b.fam, desc:BEAT_DESC[b.id], m:!!b.m}));
-STRUCTS.scaffold.bands = SPANS.map(sp => ({s:sp.s, e:sp.e, fam:sp.fam, label:spanLabel(sp), ids:sp.ids, grp:sp.grp}));
-STRUCTS.scaffold.momentIds = ['mid'];
+STRUCTS.scaffold.bands = SPANS.map(sp => ({s:sp.s, e:sp.e, fam:sp.fam, label:spanLabel(sp), ids: sp.grp ? [] : sp.ids, grp:sp.grp, desc:sp.desc, tag: sp.grp ? 'Between the Problem and the Choice' : ''}));
+STRUCTS.scaffold.momentIds = ['p1','c1','mid','p2','c2'];
 for (const st of Object.values(STRUCTS)){ st.beat = Object.fromEntries(st.beats.map(b => [b.id, b])); st.moments = st.momentIds.map(id => st.beat[id]); }
 const curStruct = () => STRUCTS[S.outline.structure] || STRUCTS.scaffold;
 function beatStore(key){
@@ -888,7 +894,7 @@ const GLOSS = {
   cycle: ['Stimulus › Emotion › Belief › Reaction','Story is life. We experience change (stimulus), process it emotionally, and that informs and is informed by what we believe, which drives how we react back into the world. e.g. New assignment › Apathy › "Testing is pointless" › Don\'t submit.'],
   history: ['History','The Lie should be specifically justifiable given the character\'s personal context and history. What happened to them that makes the Lie make sense?'],
   want: ['Want','What your character is consciously trying to get. Often the Lie shapes how they go about getting it, and the Truth shows them what they really need.'],
-  structure: ['Story structure','• Character & Setting: 0–12.5%<br>• 1st Problem › Choice: 12.5–25%<br>• 1st Half of Act 2: 25–50%<br>• Midpoint: 50%<br>• 2nd Half of Act 2: 50–75%<br>• 2nd Problem › Choice: 75–87.5%<br>• Character & Setting: 87.5–100%<br><br>The conflict of the story begins and ends with a Choice. Each Problem and its Choice share the same stretch of story. Notice the symmetry: every beat in the first half has a partner in the second, hinged on the Midpoint.'],
+  structure: ['Story structure','• Character & Setting: 0–12.5%<br>• 1st Problem: 12.5%<br>• 1st Choice: 25%<br>• 1st Half of Act 2: 25–50%<br>• Midpoint: 50%<br>• 2nd Half of Act 2: 50–75%<br>• 2nd Problem: 75%<br>• 2nd Choice: 87.5%<br>• Character & Setting: 87.5–100%<br><br>Problems and Choices are moments: the conflict of the story begins and ends with a Choice, and each Choice answers the Problem before it. Notice the symmetry: every beat in the first half has a partner in the second, hinged on the Midpoint.'],
   chiasmus: ['Chiastic structure','Mirroring in the plot events of a story (A B C … C′ B′ A′). It creates a sense of completeness and intention, so each element "earns its place" when it returns. It helps the audience draw meaning by reaffirming or transforming what an earlier moment meant, and it gives the Midpoint its significance as the hinge between setup and payoff.'],
   midpoint: ['Midpoint','Also known as a False Victory, Turning Point or Realisation. It is the hinge between the setup half and the payoff half of your story.'],
   live: ['Live Outline','Shows where each stage of your structure should roughly fall, based on your target length (or on the current length if you haven\'t set one). It doesn\'t judge. It lets you see for yourself whether, say, your first Problem is arriving late or your Midpoint is missing.'],
@@ -1516,7 +1522,7 @@ const OSTEPS = [
     intro1:'Character decision is instigated by plot. What problem or opportunity disrupts the norm and challenges the Lie?',
     intro2:'The second Problem mirrors the first, but the stakes are higher and the true cost of the Lie is now unavoidable.'},
   {k:'ch',  title:'The Choices', beats:['c1','c2'],
-    intro1:'Theme is expressed through character decision. The conflict of your story begins with this Choice, made in the same stretch of story as the Problem that forces it.',
+    intro1:'Theme is expressed through character decision. The conflict of your story begins with this Choice, the decision the Problem forces.',
     intro2:'The conflict of your story ends with this Choice. It answers the first: which belief wins out?'},
   {k:'a2',  title:'Act 2', beats:['a2a','a2b'],
     intro1:'Living with the first Choice: what happens in the first half of Act 2 as your character pursues their goal?',
@@ -1617,7 +1623,7 @@ function renderOutline(v){
     h('div', {class:'glance-head'}, h('h2', null, 'Your story at a glance'), infoBtn('structure'), h('span', {class:'spacer'}),
       h('span', {class:'pill'}, ARCS[S.develop.arc].from + ' → ' + ARCS[S.develop.arc].to), h('button', {class:'btn sm', onclick: () => go('write')}, 'Ready to write? Go to Write ', svgIcon(IC.right))),
     arcChart(), arcLegend(),
-    timeline(id => { const i = OSTEPS.findIndex(s => s.beats.includes(id)); setStep(i >= 0 ? i : SI('det'), PAYOFF.has(id) ? 2 : 1, id); }, selBeats));
+    altTimeline(STRUCTS.scaffold, S.outline.beats, id => { if (!id) return; const i = OSTEPS.findIndex(s => s.beats.includes(id)); setStep(i >= 0 ? i : SI('det'), PAYOFF.has(id) ? 2 : 1, id); }));
   derived.push(() => { const p = glance.querySelector('.glance-head .pill'); if (p) p.textContent = ARCS[S.develop.arc].from + ' → ' + ARCS[S.develop.arc].to; });
   root.append(structPicker(v), glance, stepsEl, body);
 
@@ -1803,7 +1809,8 @@ function mirrorView(redraw){
   const conn = (dl, dr, depth, final) => h('div', {class:'mconn' + (final ? ' final' : '')},
     h('div', {style: final ? '' : `padding-left:${depth * IND}px`}, mirrorArrow(dl)), h('div'),
     h('div', {style: final ? '' : `padding-right:${depth * IND}px`}, mirrorArrow(dr)));
-  const units = [[['cs1','cs2']], [['p1','p2'],['c1','c2']], [['a2a','a2b']]];
+  /* the payoff side reads upwards, so the 2nd Choice sits above the 2nd Problem: 1st Problem ↔ 2nd Choice, 1st Choice ↔ 2nd Problem */
+  const units = [[['cs1','cs2']], [['p1','c2'],['c1','p2']], [['a2a','a2b']]];
   const flat = [];
   units.forEach((u, depth) => u.forEach((pr, k) => flat.push({pr, depth, join: u.length > 1 ? (k === 0 ? 'jtop' : 'jbot') : '', first: k === 0})));
   flat.forEach(({pr: [l, r], depth, join, first}) => {
@@ -2495,7 +2502,8 @@ function renderWrite(v){
         const y0 = yAt(sp.s / 100 * R), y1 = yAt(sp.e / 100 * R);
         frag.append(h('div', {class:`band fam-${sp.fam}` + (sp.grp ? ' grp' : ''), style:`top:${edTop + y0}px;height:${Math.max(2, y1 - y0)}px`}, h('div', {class:'strip'}), (y1 - y0) > 36 ? h('div', {class:'blab'}, sp.label) : null));
       });
-      st.moments.forEach((m, k) => frag.append(h('div', {class:`moment fam-${m.fam}` + (k % 2 && st.moments.length > 2 ? ' alt' : ''), style:`top:${edTop + yAt(Math.min(m.s, 99.6) / 100 * R)}px`}, h('span', {class:'mlab'}, m.name))));
+      /* on a nearly empty script the markers would all land on the same spot, so they wait until there's room to tell them apart */
+      if (yAt(R) - yAt(0) >= st.moments.length * 24) st.moments.forEach((m, k) => frag.append(h('div', {class:`moment fam-${m.fam}` + (k % 2 && st.moments.length > 2 ? ' alt' : ''), style:`top:${edTop + yAt(Math.min(m.s, 99.6) / 100 * R)}px`}, h('span', {class:'mlab'}, m.name))));
       if (tp && total > R) frag.append(h('div', {class:'overband', style:`top:${edTop + yAt(R)}px;height:${yAt(total) - yAt(R)}px`}, h('span', null, 'Over target')));
     }
     ovl.replaceChildren(frag);

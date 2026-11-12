@@ -21,4 +21,3 @@ GitHub access came back on 12 November 2026. Everything built offline is now pub
    - add a logo;
    - remove timmcglinchey.github.io from the authorised domains;
    - publish the Google app and get it verified.
-5. **Script Development Tool, small fix:** with Save the Cat or Three-Act selected and an empty script, the beat markers on the Write page pile up in one spot.
