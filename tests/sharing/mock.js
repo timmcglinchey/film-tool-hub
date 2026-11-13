@@ -17,7 +17,10 @@ function matchQ(f, q) {
   if (/trashed=false/.test(q) && f.trashed) return false;
   return true;
 }
-function setProps(f, ap) { for (const [k, v] of Object.entries(ap || {})) { if (v === null) delete f.appProperties[k]; else { if (Buffer.byteLength(k + v) > 124) throw Object.assign(new Error('property too long'), { code: 400 }); f.appProperties[k] = String(v); } }
+function setProps(f, ap) { for (const [k, v] of Object.entries(ap || {})) {
+  /* real Drive refuses other characters in a note's name (a colon, for one) */
+  if (!/^[A-Za-z0-9.!@$%^&*()\-_\/]+$/.test(k)) throw Object.assign(new Error('Property and app property keys may contain only the letters a-z and A-Z, the numbers 0-9, and the characters .!@$%^&*()-_/'), { code: 403 });
+  if (v === null) delete f.appProperties[k]; else { if (Buffer.byteLength(k + v) > 124) throw Object.assign(new Error('property too long'), { code: 400 }); f.appProperties[k] = String(v); } }
   if (Object.keys(f.appProperties).length > 30) throw Object.assign(new Error('too many properties'), { code: 400 }); }
 async function handle(route) {
   const req = route.request(), u = new URL(req.url()), m = req.method();

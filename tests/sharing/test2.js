@@ -37,7 +37,7 @@ const BUMP = process.argv.includes('bump');
   step('Idle: after 4 minutes untouched, Alice’s unsaved work is saved and the tool is freed');
   await mkdb(A, 'breakdown', 'bd-a3-unsaved');
   await ff(4 * 60e3 + 20e3, A, B);
-  await until(() => !pf.appProperties['lk:breakdown'] && content().snap.idb.toolbase.stores.docs.records[0][1].text === 'bd-a3-unsaved', 'auto-saved and released');
+  await until(() => !pf.appProperties['lk.breakdown'] && content().snap.idb.toolbase.stores.docs.records[0][1].text === 'bd-a3-unsaved', 'auto-saved and released');
   await until(async () => /Nobody is editing/.test(await H.bar(A)), 'Alice bar says nobody');
   await until(async () => (await rddb(B, 'breakdown')) === 'bd-a3-unsaved:123', 'Bob has it');
   await B.page.click('[data-lk=start]'); await H.editing(B, 'breakdown');
@@ -70,7 +70,7 @@ const BUMP = process.argv.includes('bump');
   await H.save(A); assert.equal(content().snap.ls.cs, 'b-new', 'stale work was not pushed');
 
   step('Same, but nobody else touched it: Alice’s unsaved work is kept and can still be saved');
-  await B.page.click('#tabs [data-close=callsheet]'); await until(() => !pf.appProperties['lk:callsheet'], 'Bob released');
+  await B.page.click('#tabs [data-close=callsheet]'); await until(() => !pf.appProperties['lk.callsheet'], 'Bob released');
   await H.act(A, 'callsheet'); await H.editing(A, 'callsheet'); await H.set(A, 'callsheet', 'cs', 'a-kept');
   await A.ctx.route('https://www.googleapis.com/**', r => r.abort());
   await ff(5 * 60e3 + 30e3, A, B);

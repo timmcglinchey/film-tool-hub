@@ -45,7 +45,7 @@ const { assert, sleep, until, H } = require('./lib');
   pf.trashed = false;
   await H.act(A, 'shotlist'); await H.editing(A, 'shotlist');
   await A.page.click('#tabs [data-close=shotlist]');
-  await until(() => !pf.appProperties['lk:shotlist'], 'Alice lets go');
+  await until(() => !pf.appProperties['lk.shotlist'], 'Alice lets go');
 
   step('Crew: Bob joins; when his sign-in can no longer see the file he can choose it again');
   await B.page.goto(base + '#/join/' + pf.id);

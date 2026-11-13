@@ -800,8 +800,8 @@ window.addEventListener('focus', () => { if (Date.now() - pinSyncAt > 60e3) sync
    • Save fetches the latest copy first and lays only this person's changes on top (p.dirty lists them),
      so nobody's work is overwritten. Other people's saves are picked up automatically every few seconds.
    • One editor per tool. Whoever opens a tool first holds it: a small note on the Drive file
-     ("lk:<tool>" = time|email|session|name). Everyone else sees that tool view-only, with Request to edit
-     ("rq:<tool>"). A hold lapses after a few minutes without activity; the owner can always take over. */
+     ("lk.<tool>" = time|email|session|name). Everyone else sees that tool view-only, with Request to edit
+     ("rq.<tool>"). A hold lapses after a few minutes without activity; the owner can always take over. */
 const API_KEY = String(CONFIG.googleApiKey || '').trim();
 const APP_ID = String(CONFIG.googleAppId || GOOGLE_ID.split('-')[0] || '').trim();
 const KV_DB = 'fth-tool-data';
@@ -1021,16 +1021,16 @@ function lockVal(key, lead, who) {
   while (name && utf8len(key + head + name) > 120) name = name.slice(0, -1);
   return head + name;
 }
-const myLock = t => lockVal('lk:' + t, '', {email: account.email, sid: SID, name: account.name});
+const myLock = t => lockVal('lk.' + t, '', {email: account.email, sid: SID, name: account.name});
 function parseLock(v) {
   const a = String(v || '').split('|'); if (a.length < 3) return null;
   const ts = parseInt(a[0], 36); if (!ts) return null;
   return {ts, email: a[1], sid: a[2], name: a.slice(3).join(' ') || a[1]};
 }
-function lockOf(t, props) { const l = parseLock((props || sh.props)['lk:' + t]); return l && Date.now() - l.ts <= HOLD_MS ? l : null; }
+function lockOf(t, props) { const l = parseLock((props || sh.props)['lk.' + t]); return l && Date.now() - l.ts <= HOLD_MS ? l : null; }
 const mineL = l => !!l && !!account && l.email === account.email && l.sid === SID;
 function reqOf(t) {
-  const raw = sh.props['rq:' + t]; if (!raw) return null;
+  const raw = sh.props['rq.' + t]; if (!raw) return null;
   const i = raw.indexOf('|'), l = parseLock(raw.slice(i + 1)); if (!l) return null;
   return {...l, state: raw.slice(0, i), raw, fresh: Date.now() - l.ts < REQ_MS};
 }
@@ -1045,7 +1045,7 @@ async function leaveShared() {
   const p = sharedCur(); if (!p || !hasToken()) return;
   try {
     if (dirtyTools(p).size) await saveProject(true);
-    const patch = {}; held.forEach(t => { patch['lk:' + t] = null; });
+    const patch = {}; held.forEach(t => { patch['lk.' + t] = null; });
     if (Object.keys(patch).length) await patchProps(p, patch);
   } catch (e) {}
   held.clear();
@@ -1091,8 +1091,8 @@ async function tick1() {
   const letGo = [...held].filter(t => !isActive(t));
   if (letGo.length && letGo.some(t => dirtyTools(p).has(t))) await saveProject(true);
   for (const t of [...held]) {
-    if (letGo.includes(t) && !dirtyTools(p).has(t)) { patch['lk:' + t] = null; held.delete(t); }
-    else if (now - (lockOf(t) || {ts: 0}).ts > BEAT_MS) patch['lk:' + t] = myLock(t);
+    if (letGo.includes(t) && !dirtyTools(p).has(t)) { patch['lk.' + t] = null; held.delete(t); }
+    else if (now - (lockOf(t) || {ts: 0}).ts > BEAT_MS) patch['lk.' + t] = myLock(t);
   }
   /* take the tools I'm using, if nobody else has them */
   const wanted = new Set([...openTabs.filter(isActive), ...dirtyTools(p)]);
@@ -1106,24 +1106,24 @@ async function tick1() {
       continue;
     }
     if (l) { pending.delete(t); continue; }
-    if (wanted.has(t) && !(pending.has(t) && now - pending.get(t) < 5000)) { patch['lk:' + t] = myLock(t); pending.set(t, now); }
+    if (wanted.has(t) && !(pending.has(t) && now - pending.get(t) < 5000)) { patch['lk.' + t] = myLock(t); pending.set(t, now); }
   }
   /* requests for a tool I hold */
   for (const t of held) {
     const r = reqOf(t);
-    if (r && (!r.fresh || r.state !== 'ask')) { if (!r.fresh) patch['rq:' + t] = null; continue; }
+    if (r && (!r.fresh || r.state !== 'ask')) { if (!r.fresh) patch['rq.' + t] = null; continue; }
     if (r && (!reqShown || reqShown.raw !== r.raw)) showReq(t, r);
   }
-  if (reqShown && (!held.has(reqShown.tool) || sh.props['rq:' + reqShown.tool] !== reqShown.raw)) hideReq();
+  if (reqShown && (!held.has(reqShown.tool) || sh.props['rq.' + reqShown.tool] !== reqShown.raw)) hideReq();
   /* the answer to my own request */
   if (myReq && !held.has(myReq.tool)) {
     const r = reqOf(myReq.tool), l = lockOf(myReq.tool);
-    if (r && r.email === account.email && r.state === 'no') { toastLong(`${firstName(l)} is still working on ${toolName(myReq.tool)}. Try again in a little while.`); patch['rq:' + myReq.tool] = null; myReq = null; }
-    else if (now - myReq.at > REQ_MS) { toastLong('No answer yet. A hold ends on its own after a few minutes without activity.'); patch['rq:' + myReq.tool] = null; myReq = null; }
+    if (r && r.email === account.email && r.state === 'no') { toastLong(`${firstName(l)} is still working on ${toolName(myReq.tool)}. Try again in a little while.`); patch['rq.' + myReq.tool] = null; myReq = null; }
+    else if (now - myReq.at > REQ_MS) { toastLong('No answer yet. A hold ends on its own after a few minutes without activity.'); patch['rq.' + myReq.tool] = null; myReq = null; }
   }
   /* tidy away long-dead notes left by closed laptops, so the file never fills up with them */
   for (const k of Object.keys(sh.props)) {
-    if (!/^(lk|rq):/.test(k) || k in patch) continue;
+    if (!/^(lk|rq)\./.test(k) || k in patch) continue;
     const l = parseLock(k[0] === 'r' ? sh.props[k].slice(sh.props[k].indexOf('|') + 1) : sh.props[k]);
     if (!l || now - l.ts > 3 * HOLD_MS) patch[k] = null;
   }
@@ -1133,7 +1133,7 @@ async function tick1() {
 async function requestEdit(t) {
   const p = sharedCur(), l = lockOf(t); if (!p || !l) { kickTick(); return; }
   try {
-    await patchProps(p, {['rq:' + t]: lockVal('rq:' + t, 'ask|', {email: account.email, sid: SID, name: account.name})});
+    await patchProps(p, {['rq.' + t]: lockVal('rq.' + t, 'ask|', {email: account.email, sid: SID, name: account.name})});
     myReq = {tool: t, at: Date.now()}; toast(`Asked ${firstName(l)} to hand over ${toolName(t)}`);
   } catch (e) { toast('Couldn’t send the request: ' + e.message); }
   renderShare(); kickTick(FAST_MS);
@@ -1143,7 +1143,7 @@ async function takeOver(t) {
   const p = sharedCur(), l = lockOf(t); if (!p) return;
   const same = l && account && l.email === account.email;
   if (l && !same && !(await confirmDlg('Take over?', `${l.name} is editing ${toolName(t)}. If you take over, anything they haven’t saved yet won’t be included (it stays in a backup on their computer).`, 'Take over'))) return;
-  try { await patchProps(p, {['lk:' + t]: myLock(t), ['rq:' + t]: null}); pending.set(t, Date.now()); viewTouched.add(t); lastAct[t] = Date.now(); } catch (e) { toast('Couldn’t take over: ' + e.message); }
+  try { await patchProps(p, {['lk.' + t]: myLock(t), ['rq.' + t]: null}); pending.set(t, Date.now()); viewTouched.add(t); lastAct[t] = Date.now(); } catch (e) { toast('Couldn’t take over: ' + e.message); }
   kickTick(FAST_MS);
 }
 function showReq(t, r) {
@@ -1159,9 +1159,9 @@ async function answerReq(yes) {
   $('#reqCard').hidden = true;
   const t = q.tool, r = q.req;
   try {
-    if (!yes) { await patchProps(p, {['rq:' + t]: lockVal('rq:' + t, 'no|', {email: r.email, sid: r.sid, name: r.name})}); reqShown = {...q, raw: sh.props['rq:' + t]}; return; }
+    if (!yes) { await patchProps(p, {['rq.' + t]: lockVal('rq.' + t, 'no|', {email: r.email, sid: r.sid, name: r.name})}); reqShown = {...q, raw: sh.props['rq.' + t]}; return; }
     if (dirtyTools(p).size) { await saveProject(true); if (dirtyTools(p).has(t)) { toastLong('Couldn’t save your work, so nothing was handed over. Check your connection and try again.'); reqShown = null; return; } }
-    await patchProps(p, {['lk:' + t]: lockVal('lk:' + t, '', {email: r.email, sid: r.sid, name: r.name}), ['rq:' + t]: null});
+    await patchProps(p, {['lk.' + t]: lockVal('lk.' + t, '', {email: r.email, sid: r.sid, name: r.name}), ['rq.' + t]: null});
     held.delete(t); viewTouched.delete(t); reqShown = null;
     toast(`${firstName(r)} is now editing ${toolName(t)}`);
   } catch (e) { reqShown = null; toast('That didn’t go through: ' + e.message); }
@@ -1246,7 +1246,7 @@ async function shareAction(a, b) {
       await gapi(`${DRIVE_API}/files/${p.driveFileId}/permissions/${encodeURIComponent(b.dataset.id)}`, {method: 'DELETE'});
       if (!(await shareList(p)).length) {   /* nobody left: it's an ordinary project again */
         if (dirtyTools(p).size) await saveProject(true);
-        const patch = {shared: '0'}; Object.keys((await fileMeta(p)).props).forEach(k => { if (/^(lk|rq):/.test(k)) patch[k] = null; });
+        const patch = {shared: '0'}; Object.keys((await fileMeta(p)).props).forEach(k => { if (/^(lk|rq)\./.test(k)) patch[k] = null; });
         await patchProps(p, patch); p.shared = false; p.dirty = null; await putProject(p); resetShare(); renderProjUI();
       }
       toast(`${b.dataset.who || 'They'} can no longer open this project`);
@@ -1351,7 +1351,7 @@ window.addEventListener('beforeunload', e => { const p = sharedCur(); if (p && d
 window.addEventListener('pagehide', () => {
   /* let go of my tools on the way out, except any with unsent changes (those stay mine for a few minutes) */
   const p = sharedCur(); if (!p || !hasToken() || !held.size) return;
-  const patch = {}, d = dirtyTools(p); held.forEach(t => { if (!d.has(t)) patch['lk:' + t] = null; });
+  const patch = {}, d = dirtyTools(p); held.forEach(t => { if (!d.has(t)) patch['lk.' + t] = null; });
   if (Object.keys(patch).length) try { fetch(`${DRIVE_API}/files/${p.driveFileId}?fields=id`, {method: 'PATCH', keepalive: true, headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + token}, body: JSON.stringify({appProperties: patch})}); } catch (e) {}
 });
 setInterval(() => { if (sharedCur()) renderShare(); }, 20 * 1000);
