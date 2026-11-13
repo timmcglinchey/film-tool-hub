@@ -379,7 +379,8 @@ function saveData(data) {               /* call after every change; it waits a m
    so the tool should also let people type names (and remember the ones typed). ═════ */
 async function getProjectPeople() {
   try {
-    const hub = window.__fthHub;
+    let hub = window.__fthHub;
+    if (!hub) { try { if (window.parent !== window) hub = window.parent.__fthHub; } catch (e) {} }   /* inside the hub, the hub is the page around this tool */
     if (hub && typeof hub.people === 'function') {
       const list = await hub.people();
       if (Array.isArray(list)) return list.filter(p => p && p.name).map(p => ({name: String(p.name), email: p.email || '', role: p.role || ''}));

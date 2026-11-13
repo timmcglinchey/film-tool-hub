@@ -313,6 +313,14 @@ body.has-lockbar #workspace iframe{top:40px;height:calc(100% - 40px)}
 #reqCard[hidden]{display:none}
 #reqCard p{margin:6px 0 14px;color:var(--muted);font-size:13px;line-height:1.45}
 #reqCard .ra{display:flex;gap:8px;justify-content:flex-end}
+.crewrow{display:flex;gap:8px;margin-top:8px}
+.crewrow:first-child{margin-top:0}
+.crewrow .cn{flex:2;min-width:0}
+.crewrow .ce{flex:3;min-width:0}
+@media (max-width:560px){.crewrow{flex-direction:column;gap:6px}}
+.prow .crewpi .crewnm{flex:1;min-width:0;font:inherit;font-size:14.5px;font-weight:700;color:inherit;background:transparent;border:1px solid transparent;border-radius:6px;padding:3px 6px;margin:-4px -7px;outline:none}
+.prow .crewpi .crewnm:hover{border-color:var(--line2)}
+.prow .crewpi .crewnm:focus{border-color:var(--accent);background:var(--bg2)}
 .linkrow{display:flex;gap:8px;align-items:center}
 .linkrow input{flex:1;min-width:0;font:500 12.5px var(--mono)}
 .linkrow .btn{flex:none;height:40px}

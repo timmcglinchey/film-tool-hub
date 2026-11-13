@@ -17,6 +17,8 @@ const fs = require('fs');
   const pf = [...D.files.values()].find(f => f.appProperties.fth === 'project');
   // an ordinary project on a second computer still loads, and a newer save is still picked up the old way
   const A2 = await person(browser, base, 'alice@example.com', 'Alice Adams'); await A2.page.goto(base); await H.signIn(A2);
+  /* wait for the project to finish arriving from Drive: it reloads the tools when it lands */
+  await until(async () => /On Google Drive/.test(await A2.page.textContent('#projStrip')) && !(await A2.page.evaluate(() => document.querySelector('#acctBtn').classList.contains('busy'))), 'second computer has the project');
   await H.open(A2, 'callsheet'); await H.set(A2, 'callsheet', 'cs', 'from-second'); await sleep(3500); await H.save(A2);
   await A.page.click('#acctBtn'); await A.page.click('[data-am=sync]');
   await until(async () => { const b = await A.page.$('#dlg[open] button[value=ok]'); if (b) await b.click(); return (await H.get(A, 'callsheet', 'cs')) === 'from-second'; }, 'ordinary sync between two computers');

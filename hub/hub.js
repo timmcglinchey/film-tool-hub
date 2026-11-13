@@ -385,6 +385,8 @@ window.__fthHub = {
   /* save, and also keep a dated backup (used before a tool replaces a lot of work at once) */
   async saveWithBackup(why) { await this.save(); await backupProject(cur(), why || 'before a big change'); },
   projectInfo() { const p = cur(); return p ? {id: p.id, name: p.name} : null; },
+  /* shared projects: everyone on the project, owner first, as {name, email, role, me}. [] when it isn't shared */
+  people() { return projectPeople(cur()); },
   /* Documentation: every tool hands its exports to this one helper (through window.fthDocs in the tool) */
   saveDoc(tool, pid, o) { return saveDoc(tool, pid, o || {}); }
 };
@@ -542,7 +544,14 @@ function unpackValue(v) {
   if (v.__fth === 'date') return new Date(v.v);
   const o = {}; for (const k of Object.keys(v)) o[k] = unpackValue(v[k]); return o;
 }
-const projectMeta = p => ({id: p.id, name: p.name, created: p.created, archived: !!p.archived, tools: p.tools || {}});
+const projectMeta = p => ({id: p.id, name: p.name, created: p.created, archived: !!p.archived, tools: p.tools || {}, ...(p.crew && p.crew.length || p.crewAt ? {crew: p.crew || [], crewAt: p.crewAt || 0} : {})});
+/* the crew list (who a shared project is shared with, and the name the owner gave each person) travels in
+   the project file. Only the owner changes it; everyone takes the newest one they see. */
+const cleanCrew = l => (Array.isArray(l) ? l : []).filter(c => c && c.email).map(c => ({email: String(c.email).toLowerCase(), name: String(c.name || '').trim().slice(0, 60)}));
+function takeCrew(p, proj) {
+  if (!proj || !((proj.crewAt || 0) > (p.crewAt || 0))) return;
+  p.crew = cleanCrew(proj.crew); p.crewAt = proj.crewAt;
+}
 const fileName = p => `${p.name}.filmtoolhub.json`;
 
 async function driveSave(p, snap) {
@@ -615,6 +624,7 @@ async function pullProject(p, fileId) {
   await docsMergeIn(p, data.snap.docs, data.snap.docFiles);
   Object.assign(p, {name: data.project.name || p.name, tools: data.project.tools || p.tools || {}, archived: !!data.project.archived,
     savedAt: data.savedAt, changedAt: data.savedAt, backupAt: data.savedAt, needsDownload: false, remoteNewer: 0, owner: account && account.email});
+  if (whole) takeCrew(p, data.project);
   if (whole) { p.driveSyncedAt = Math.max(p.driveSyncedAt || 0, data.savedAt || 0); if (meta) { p.driveRev = meta.rev; noteMeta(p, meta.f); } p.dirty = null; }
   await putProject(p);
   if (here) reloadFrames();
@@ -954,6 +964,7 @@ async function syncDown(p, meta, quiet) {
   const r = await applyLocal(p, mergeSnap(remote.snap, local, p.dirty), local);
   p.tools = mergeTools(p.tools, (remote.project || {}).tools);
   if (p.sharedBy && remote.project && remote.project.name) p.name = remote.project.name;
+  takeCrew(p, remote.project);
   p.driveRev = meta.rev; p.driveSyncedAt = Date.now(); p.remoteNewer = 0;
   if (!dirtyTools(p).size && !p.docsDirty) { p.savedAt = p.changedAt = p.backupAt = Math.max(p.savedAt || 0, remote.savedAt || 0, p.changedAt || 0); }
   await putProject(p);
@@ -987,6 +998,7 @@ function sharedSave(p, snap) {
       if (base) {
         out = mergeSnap(base.snap, local, mineAll);
         p.tools = mergeTools(p.tools, (base.project || {}).tools);
+        takeCrew(p, base.project);
         afterApply(await applyLocal(p, out, local));
       }
       /* Documentation travels inside the shared file too (list and files), because it's the one file the whole crew can open */
@@ -1211,6 +1223,35 @@ function renderShare() {
   if (bar.dataset.h !== html) { bar.innerHTML = html; bar.dataset.h = html; }
 }
 
+/* ── the crew list: names for the people a project is shared with ── */
+const mailName = e => String(e || '').split('@')[0];
+function projectPeople(p) {
+  if (!p || !p.shared) return [];
+  const mineE = account ? account.email.toLowerCase() : '', out = [], seen = new Set();
+  const add = (email, name, role) => {
+    const e = String(email || '').toLowerCase(); if (!e || seen.has(e)) return;
+    seen.add(e); out.push({name: name || mailName(e), email: e, role: role || '', me: e === mineE});
+  };
+  const named = e => ((p.crew || []).find(c => c.email === String(e || '').toLowerCase()) || {}).name;
+  if (p.sharedBy) add(p.sharedBy.email, named(p.sharedBy.email) || p.sharedBy.name, 'Owner');
+  else if (account) add(account.email, named(account.email) || account.name, 'Owner');
+  (p.crew || []).forEach(c => add(c.email, c.name));
+  return out;
+}
+/* the owner changed the list: remember it and send it to the crew with a save */
+async function crewChanged(p) {
+  p.crewAt = Date.now(); p.changedAt = p.crewAt;
+  if (p.shared && p.driveFileId) { p.docsDirty = p.crewAt; docsSendSoon(p, 300); }   /* docsDirty makes Save send the project file even when no tool has changed */
+  await putProject(p);
+}
+/* keep the list in step with who Drive says can open the file. A typed name stays; otherwise Google's name is used */
+async function crewFromDrive(p, people) {
+  const old = cleanCrew(p.crew), by = new Map(old.map(c => [c.email, c]));
+  const next = people.filter(x => x.emailAddress).map(x => { const e = x.emailAddress.toLowerCase(), c = by.get(e); return {email: e, name: (c && c.name) || (x.displayName && x.displayName.toLowerCase() !== e ? x.displayName : '') || mailName(e)}; });
+  if (JSON.stringify(next) === JSON.stringify(old)) return;
+  p.crew = next; await crewChanged(p);
+}
+
 /* ── sharing: the owner adds crew by email ── */
 const joinUrl = p => location.origin + location.pathname + '#/join/' + encodeURIComponent(p.driveFileId);
 const parseEmails = s => [...new Set(String(s || '').split(/[\s,;]+/).map(x => x.trim().toLowerCase()).filter(Boolean))];
@@ -1226,20 +1267,35 @@ async function shareDialog() {
   if (!p.driveFileId || (!p.shared && changed(p))) { await saveProject(true); if (!p.driveFileId) { toast('Save the project to Google Drive first, then share it'); return; } }
   let people;
   try { people = await shareList(p); } catch (e) { toastLong('Couldn’t read who this project is shared with. ' + e.message); return; }
-  const rows = people.length ? people.map(x => `<div class="prow"><div class="pi"><b>${esc(x.displayName || x.emailAddress || 'Someone')}</b><small>${esc(x.emailAddress || '')} · can edit</small></div><div class="pb"><button type="button" class="btn sm ghost danger" data-sa="remove" data-id="${esc(x.id)}" data-who="${esc(x.displayName || x.emailAddress || '')}">Remove</button></div></div>`).join('')
+  if (p.shared || people.length) await crewFromDrive(p, people);
+  const nameOf = x => ((p.crew || []).find(c => c.email === String(x.emailAddress || '').toLowerCase()) || {}).name || x.displayName || x.emailAddress || 'Someone';
+  const rows = people.length ? people.map(x => `<div class="prow"><div class="pi crewpi">${x.emailAddress ? `<input class="crewnm" data-crew="${esc(x.emailAddress.toLowerCase())}" value="${esc(nameOf(x))}" maxlength="60" aria-label="Name for ${esc(x.emailAddress)}" title="The name your crew see for this person. Click to change it">` : `<b>${esc(nameOf(x))}</b>`}<small>${esc(x.emailAddress || '')} · can edit</small></div><div class="pb"><button type="button" class="btn sm ghost danger" data-sa="remove" data-id="${esc(x.id)}" data-email="${esc((x.emailAddress || '').toLowerCase())}" data-who="${esc(nameOf(x))}">Remove</button></div></div>`).join('')
     : '<div class="pnone" style="padding:14px 12px">Not shared with anyone yet.</div>';
   showDlg(`<h3>Share project</h3><p class="sub">“${esc(p.name)}”: add your crew by email. Each person can open the project and edit it. Only one person edits a tool at a time, and everyone’s saved work is kept.</p>
-    <div class="field"><label for="f-emails">Crew email addresses <span style="text-transform:none;letter-spacing:0">(the Google accounts they sign in with; separate with commas or new lines)</span></label><textarea id="f-emails" name="emails" placeholder="sam@gmail.com, alex@gmail.com"></textarea></div>
+    <div class="field"><label for="f-emails">Add crew <span style="text-transform:none;letter-spacing:0">(their name, and the Google account email they sign in with)</span></label>
+      <div id="crewRows">${crewRow(true)}</div>
+      <button type="button" class="btn sm ghost" data-sa="row" style="align-self:flex-start;margin-top:8px">+ Add another person</button></div>
     ${(p.tools || {}).casting ? '<div class="warn">This project uses the Casting Tracker, which holds actors’ names, contact details and photos. Everyone you share with will be able to see them.</div>' : ''}
     <div class="dlg-actions" style="margin-top:0"><button type="button" class="btn primary" data-sa="add">Share with these people</button></div>
-    <div class="psec">Who can open this project</div><div class="plist">${rows}</div>
+    <div class="psec">Who can open this project${people.some(x => x.emailAddress) ? ' <span style="text-transform:none;letter-spacing:0">(click a name to change it)</span>' : ''}</div><div class="plist">${rows}</div>
     ${p.shared ? `<div class="psec">Link for your crew</div><div class="field" style="margin:0"><div class="linkrow"><input id="f-link" readonly value="${esc(joinUrl(p))}"><button type="button" class="btn sm" data-sa="copy">Copy link</button></div></div>
     <p class="sub" style="margin:10px 0 0;font-size:13px">Google emails each person this link. They click it, sign in with the address you typed, and choose the project when Google asks. While the site is in testing, each person also has to be on the test-user list in Google Cloud.</p>` : ''}
     <div class="dlg-actions"><button class="btn primary" value="cancel">Done</button></div>`);
   dlg.classList.add('wide');
 }
+const crewRow = first => `<div class="crewrow"><input class="cn" maxlength="60" placeholder="Name, e.g. Sam Lee" aria-label="Name" autocomplete="off"><input class="ce"${first ? ' id="f-emails"' : ''} placeholder="sam@gmail.com" aria-label="Email address" autocomplete="off" inputmode="email"></div>`;
+async function crewRename(input) {
+  const p = cur(); if (!p || p.sharedBy) return;
+  const e = input.dataset.crew, name = input.value.trim().slice(0, 60), c = (p.crew || []).find(x => x.email === e);
+  if (!name) { input.value = (c && c.name) || mailName(e); return; }
+  if (c && c.name === name) return;
+  if (c) c.name = name; else (p.crew || (p.crew = [])).push({email: e, name});
+  const rm = input.closest('.prow').querySelector('[data-sa=remove]'); if (rm) rm.dataset.who = name;
+  await crewChanged(p); toast(`Your crew will see this person as ${name}`);
+}
 async function shareAction(a, b) {
   const p = cur(); if (!p) return;
+  if (a === 'row') { $('#crewRows').insertAdjacentHTML('beforeend', crewRow()); $('#crewRows').lastElementChild.querySelector('.cn').focus(); return; }
   if (a === 'copy') { const i = $('#f-link'); try { await navigator.clipboard.writeText(i.value); toast('Link copied'); } catch (e) { i.select(); toast('Press Ctrl/⌘+C to copy the link'); } return; }
   if (a === 'remove') {
     try {
@@ -1247,14 +1303,22 @@ async function shareAction(a, b) {
       if (!(await shareList(p)).length) {   /* nobody left: it's an ordinary project again */
         if (dirtyTools(p).size) await saveProject(true);
         const patch = {shared: '0'}; Object.keys((await fileMeta(p)).props).forEach(k => { if (/^(lk|rq)\./.test(k)) patch[k] = null; });
-        await patchProps(p, patch); p.shared = false; p.dirty = null; await putProject(p); resetShare(); renderProjUI();
+        await patchProps(p, patch); p.shared = false; p.dirty = null; p.crew = []; p.crewAt = Date.now(); await putProject(p); resetShare(); renderProjUI();
       }
+      else if (b.dataset.email && (p.crew || []).some(c => c.email === b.dataset.email)) { p.crew = p.crew.filter(c => c.email !== b.dataset.email); await crewChanged(p); }
       toast(`${b.dataset.who || 'They'} can no longer open this project`);
     } catch (e) { toastLong('Couldn’t remove them. ' + e.message); }
     dlg.close(); shareDialog(); return;
   }
   if (a === 'add') {
-    const emails = parseEmails($('#f-emails').value), bad = emails.filter(e => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
+    /* one person per row; a row may also hold several addresses pasted together (then Google's names are used) */
+    const typed = new Map(), emails = [];
+    document.querySelectorAll('#crewRows .crewrow').forEach(r => {
+      const list = parseEmails(r.querySelector('.ce').value), nm = r.querySelector('.cn').value.trim().slice(0, 60);
+      list.forEach(e => { if (!emails.includes(e)) emails.push(e); });
+      if (nm && list.length === 1) typed.set(list[0], nm);
+    });
+    const bad = emails.filter(e => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
     if (!emails.length) { toast('Type at least one email address'); return; }
     if (bad.length) { toast(`This doesn’t look like an email address: ${bad[0]}`); return; }
     b.disabled = true; b.textContent = 'Sharing…';
@@ -1270,7 +1334,12 @@ async function shareAction(a, b) {
       for (const e of emails) {
         if (e === account.email.toLowerCase()) continue;
         try { await gapi(`${DRIVE_API}/files/${p.driveFileId}/permissions?` + qs({sendNotificationEmail: 'true', emailMessage: msg, fields: 'id'}), {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({type: 'user', role: 'writer', emailAddress: e})}); done++; }
-        catch (er) { failed.push(e + ' (' + er.message.replace(/^Google Drive error \d+:?\s*/, '') + ')'); }
+        catch (er) { failed.push(e + ' (' + er.message.replace(/^Google Drive error \d+:?\s*/, '') + ')'); typed.delete(e); }
+      }
+      if (typed.size) {
+        p.crew = cleanCrew(p.crew);
+        typed.forEach((name, e) => { const c = p.crew.find(x => x.email === e); if (c) c.name = name; else p.crew.push({email: e, name}); });
+        await crewChanged(p);
       }
     } catch (e) { toastLong('Couldn’t share. ' + e.message); dlg.close(); return; }
     dlg.close(); renderProjUI(); resetShare(); kickTick();
@@ -2704,6 +2773,8 @@ pmenu().addEventListener('click', e => {
 document.addEventListener('click', e => { if (!pmenu().hidden && !e.target.closest('#pmenu,#projBtn')) closeProjMenu(); });
 $('#saveBtn').onclick = () => saveProject();
 document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); saveProject(); } });
+form.addEventListener('change', e => { if (e.target.matches && e.target.matches('[data-crew]')) crewRename(e.target); });
+form.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches && e.target.matches('[data-crew], .crewrow input')) { e.preventDefault(); e.target.blur(); } });
 form.addEventListener('click', e => { const b = e.target.closest('[data-sa]'); if (!b) return; e.preventDefault(); shareAction(b.dataset.sa, b); });
 $('#shareBtn').onclick = () => shareDialog();
 $('#reqCard').addEventListener('click', e => { const b = e.target.closest('[data-rq]'); if (b) answerReq(b.dataset.rq === 'yes'); });

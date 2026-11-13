@@ -24,7 +24,7 @@ const { assert, sleep, until, H } = require('./lib');
   assert.equal(pf.appProperties.shared, '1'); assert.equal(pf.writersCanShare, false);
   const link = await A.page.inputValue('#f-link'); assert(link.endsWith('#/join/' + pf.id), link);
   assert(D.log.find(l => l[0] === 'share')[3].includes(link), 'email message carries the link');
-  assert(/Bob Brown/.test(await A.page.textContent('#dlg .plist')));
+  assert.deepEqual(await A.page.$$eval('#dlg .plist [data-crew]', l => l.map(i => i.value)), ['Bob Brown']);
   await A.page.click('#dlg button[value=cancel]');
   assert.equal(await A.page.textContent('#shareLbl'), 'Shared');
 
