@@ -597,6 +597,7 @@ details.disc[open]>summary::before{transform:rotate(90deg)}
 .plist .pi{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .plist .pi.cur{border-color:var(--accent);background:var(--accent2)}
 #print{display:none}
+#printdoc{display:none}
 
 @media (max-width:1250px){
   .wgrid{grid-template-columns:1fr;justify-items:center}
@@ -614,10 +615,9 @@ details.disc[open]>summary::before{transform:rotate(90deg)}
 
 /* ---------- print ---------- */
 @media print{
-  @page{size:letter;margin:1in 1in 1in 1.5in;counter-increment:page;@top-right{content:counter(page) ".";font:12pt "Courier Prime","Courier New",monospace}}
-  @page :first{counter-reset:page -1;@top-right{content:none}}
+  /* page size and margins are added per print job (see PAGE_CSS) */
   html,body{height:auto;overflow:visible;background:#fff;color:#000}
-  #app,#layer>*:not(#print){display:none!important}
+  #app,#layer>*:not(#print):not(#printdoc){display:none!important}
   #layer{display:block}
   #print{display:block!important;font:12pt/1 "Courier Prime","Courier New",Courier,monospace;color:#000;width:6in}
   #print .tp{height:8.9in;display:flex;flex-direction:column;justify-content:space-between;break-after:page;text-align:center}
@@ -639,6 +639,99 @@ details.disc[open]>summary::before{transform:rotate(90deg)}
   #print .dual .chr{margin:0 0 0 1in}
   #print .dual .dlg,#print .dual .par{margin:0 0 0 .1in}
   #print .blank{height:1em}
+}
+/* ---------- print: Develop & Outline document ---------- */
+@media print{
+  #printdoc{display:block!important;--lie:#a8475a;--truth:#a87408;--tragic:#5d6a7e;--cs:#23806e;--pr:#b56f14;--ch:#c24d30;--a2:#4a6fb5;--mid:#8a5cc2;--pk:#1d1b18;--pm:#6b655d;--pl:#d9d3c7;
+    font:10pt/1.45 var(--ui);color:var(--pk);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #printdoc *{box-sizing:border-box}
+  #printdoc p{margin:0}
+  #printdoc .pd-top{border-bottom:2pt solid var(--pk);padding-bottom:10pt;margin-bottom:14pt}
+  #printdoc .pd-eye{font:700 7.5pt/1.2 var(--ui);letter-spacing:.14em;text-transform:uppercase;color:var(--pm)}
+  #printdoc h1{font:800 26pt/1.1 var(--ui);margin:4pt 0 6pt;letter-spacing:-.01em;color:var(--pk)}
+  #printdoc .pd-meta{display:flex;flex-wrap:wrap;gap:2pt 16pt;font-size:9pt;color:var(--pm)}
+  #printdoc .pd-meta b{color:var(--pk);font-weight:600}
+  #printdoc .pd-log{margin-top:12pt;padding-left:10pt;border-left:3pt solid var(--pk)}
+  #printdoc .pd-log p{font:500 13pt/1.4 var(--ui);white-space:pre-wrap}
+  #printdoc .pd-part{break-before:page}
+  #printdoc .pd-part:first-of-type{break-before:auto}
+  #printdoc h2{font:800 15pt/1.2 var(--ui);margin:0 0 2pt;display:flex;align-items:baseline;gap:8pt;break-after:avoid;color:var(--pk)}
+  #printdoc h2 small{font:500 9pt var(--ui);color:var(--pm)}
+  #printdoc .pd-sec{margin-top:14pt}
+  #printdoc h3{font:700 8pt/1.2 var(--ui);letter-spacing:.12em;text-transform:uppercase;color:var(--pm);margin:0 0 6pt;padding-bottom:3pt;border-bottom:.75pt solid var(--pl);break-after:avoid}
+  #printdoc .pd-body{white-space:pre-wrap}
+  #printdoc .pd-k{font:700 7pt/1.3 var(--ui);letter-spacing:.09em;text-transform:uppercase;color:var(--pm)}
+  #printdoc .pd-empty{color:var(--pm);font-style:italic}
+  #printdoc .pd-tag{display:inline-block;font:600 7.5pt/1 var(--ui);padding:2.5pt 6pt;border:.75pt solid var(--pl);border-radius:99pt;color:var(--pm);white-space:nowrap}
+  #printdoc .pd-tag.solid{background:var(--pk);border-color:var(--pk);color:#fff}
+  /* story seeds */
+  #printdoc .pd-seeds{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:0;margin-top:8pt;border:.75pt solid var(--pl);border-radius:4pt;break-inside:avoid}
+  #printdoc .pd-seed{padding:6pt 8pt;border-left:.75pt solid var(--pl);white-space:pre-wrap;font-size:9pt}
+  #printdoc .pd-seed:first-child{border-left:0}
+  #printdoc .pd-seed .pd-k{margin-bottom:2pt}
+  /* lie / truth */
+  #printdoc .pd-lt{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8pt;break-inside:avoid}
+  #printdoc .pd-belief{border:.75pt solid var(--pl);border-top:3pt solid var(--c);border-radius:3pt;padding:6pt 9pt 7pt;white-space:pre-wrap;font:500 10.5pt/1.4 var(--ui)}
+  #printdoc .pd-belief .pd-k{color:var(--c);margin-bottom:2pt}
+  #printdoc .b-lie{--c:var(--lie)} #printdoc .b-truth{--c:var(--truth)} #printdoc .b-tragic{--c:var(--tragic)}
+  #printdoc .pd-arcline{margin-top:8pt;font-size:9.5pt}
+  #printdoc .pd-arcline span{color:var(--pm)}
+  #printdoc .pd-checks{margin-top:8pt;columns:2;column-gap:14pt;font-size:8.5pt;color:var(--pm);break-inside:avoid}
+  #printdoc .pd-checks div{break-inside:avoid;padding-left:12pt;text-indent:-12pt;margin-bottom:1.5pt}
+  #printdoc .pd-checks .on{color:var(--pk)}
+  /* label / value rows */
+  #printdoc .pd-row{display:grid;grid-template-columns:27mm 1fr;gap:8pt;padding:3.5pt 0;border-top:.5pt solid #ebe6dc}
+  #printdoc .pd-row:first-child{border-top:0}
+  #printdoc .pd-row .pd-k{padding-top:2pt}
+  #printdoc .pd-v{white-space:pre-wrap}
+  #printdoc .pd-card{border:.75pt solid var(--pl);border-radius:4pt;padding:8pt 10pt 5pt;margin-top:8pt;break-inside:avoid}
+  #printdoc .pd-card.prot{border-left:3pt solid var(--pk)}
+  #printdoc .pd-ch{display:flex;align-items:center;flex-wrap:wrap;gap:6pt;margin-bottom:4pt}
+  #printdoc .pd-ch b{font:700 12pt/1.2 var(--ui);margin-right:2pt}
+  #printdoc .pd-ch .yr{color:var(--pm);font-weight:500}
+  #printdoc .pd-cycle{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+  #printdoc .pd-cycle>div{padding:0 8pt 0 10pt;border-left:.75pt solid var(--pl);font-size:9pt}
+  #printdoc .pd-cycle>div:first-child{padding-left:0;border-left:0}
+  #printdoc .pd-cycle .pd-k{font-size:6.5pt}
+  #printdoc .pd-set{display:grid;grid-template-columns:52mm 1fr;gap:8pt;padding:5pt 0;border-top:.5pt solid #ebe6dc;break-inside:avoid}
+  #printdoc .pd-set:first-of-type{border-top:0}
+  #printdoc .pd-set b{font:700 9.5pt/1.4 var(--mono);text-transform:uppercase}
+  /* outline: arc chart + structure strip */
+  #printdoc .pd-fig{margin-top:10pt;break-inside:avoid}
+  #printdoc .pd-fig svg{display:block;width:100%;height:auto;border:.75pt solid var(--pl);border-radius:3pt}
+  #printdoc .pd-ticks{position:relative;height:25pt;margin-top:3pt}
+  #printdoc .pd-ticks span{position:absolute;top:0;width:17mm;margin-left:-8.5mm;text-align:center;font:600 6.5pt/1.2 var(--ui);color:var(--pk)}
+  #printdoc .pd-ticks i{display:block;font-style:normal;font-weight:500;color:var(--pm)}
+  #printdoc .pd-strip{display:flex;gap:1.5pt}
+  #printdoc .pd-strip div{border-top:3pt solid var(--c);background:color-mix(in srgb,var(--c) 9%,#fff);padding:3pt 4pt 4pt;font:600 7pt/1.2 var(--ui);color:var(--pk);min-height:22pt;overflow:hidden}
+  #printdoc .pd-legend{display:flex;flex-wrap:wrap;gap:3pt 14pt;margin-top:7pt;font-size:8.5pt;color:var(--pm)}
+  #printdoc .pd-legend b{color:var(--pk);font-weight:600}
+  #printdoc .pd-legend svg{display:inline-block;width:22pt;height:6pt;border:0;vertical-align:middle;margin-right:4pt}
+  #printdoc .fam-cs{--c:var(--cs)} #printdoc .fam-pr{--c:var(--pr)} #printdoc .fam-ch{--c:var(--ch)} #printdoc .fam-a2{--c:var(--a2)} #printdoc .fam-mid{--c:var(--mid)}
+  /* outline: beats */
+  #printdoc .pd-act{margin:12pt 0 0;font:700 10pt/1.3 var(--ui);break-after:avoid}
+  #printdoc .pd-act span{font-weight:500;color:var(--pm);margin-left:6pt;font-size:8.5pt}
+  #printdoc .pd-beat{display:grid;grid-template-columns:36mm 1fr;gap:10pt;padding:8pt 0 8pt 9pt;border-left:3pt solid var(--c);border-bottom:.5pt solid var(--pl);margin-top:6pt;break-inside:avoid}
+  #printdoc .pd-bh{break-inside:avoid}
+  #printdoc .pd-bh b{display:block;font:700 10.5pt/1.25 var(--ui);color:var(--c)}
+  #printdoc .pd-bh span{display:block;font:500 8pt/1.4 var(--ui);color:var(--pm);margin-top:2pt}
+  #printdoc .pd-guide{font-size:8.5pt;color:var(--pm);margin-bottom:5pt!important;break-inside:avoid}
+  #printdoc .pd-sum{white-space:pre-wrap;orphans:2;widows:2}
+  #printdoc .pd-pts{margin-top:5pt}
+  #printdoc .pd-pt{display:grid;grid-template-columns:18pt 1fr;padding:2pt 0;break-inside:avoid}
+  #printdoc .pd-pt>b{font:700 8pt/1.7 var(--ui);color:var(--c)}
+  #printdoc .pd-pt p{white-space:pre-wrap}
+  #printdoc .pd-pt p+p{font-size:9pt;color:var(--pm)}
+  /* outline: mirror */
+  #printdoc .pd-mirror{width:100%;border-collapse:collapse;margin-top:4pt;font-size:9.5pt}
+  #printdoc .pd-mirror th{font:700 7pt/1.3 var(--ui);letter-spacing:.09em;text-transform:uppercase;color:var(--pm);text-align:left;padding:3pt 6pt;width:50%}
+  #printdoc .pd-mirror td{padding:4pt 6pt;vertical-align:top;border-top:.5pt solid #ebe6dc;white-space:pre-wrap}
+  #printdoc .pd-mirror td b{font:700 8pt var(--ui);margin-right:5pt;color:var(--c)}
+  #printdoc .pd-mirror tr{break-inside:avoid}
+  #printdoc .pd-mirror tr.grp td{border-top:.75pt solid var(--pl);font:700 8.5pt/1.3 var(--ui);color:var(--c);padding-top:7pt}
+  #printdoc .pd-mirror tr.grp+tr td{border-top:0}
+  #printdoc .pd-mirror tr.hinge td{text-align:center;border-top:.75pt solid var(--pl)}
+  #printdoc .pd-cap{font-size:8.5pt;color:var(--pm);margin-bottom:4pt!important}
 }
 
 /* ═════ Film Tool Hub kit mapping ═════ */
@@ -1126,6 +1219,7 @@ function renderShell(){
     {label:'Export script as Fountain', sub:'.fountain', icon:'file', fn: exportFountain},
     {label:'Export script for Final Draft', sub:'.fdx', icon:'file', fn: exportFDX},
     {label:'Print / save script as PDF', icon:'print', fn: printScript},
+    {label:'Export Develop & Outline as PDF…', icon:'print', fn: exportDocModal},
     {label:'Script drafts…', icon:'folder', fn: () => draftsModal()},
     {label:'Import a Fountain script…', icon:'upload', fn: importFountain},
     '-',
@@ -1214,6 +1308,11 @@ function renderAll(){ applyTips(); renderShell(); renderView(); }
 /* =====================================================================
    DEVELOP TAB
    ===================================================================== */
+const THEME_CHECKS = [
+  ['Both', ['A specific moral assessment of an idea or concept','Philosophically universal, not situation dependent','Distinct from, and deeper than, social or political commentary','Not exclusive to the story world; as relevant to the audience as to the characters']],
+  ['The Lie', ['Is a direct negation of the Truth','Is not totally unreasonable or inherently evil','Is specifically justifiable given the character\'s context and history']],
+  ['The Truth', ['Is the specific solution to the Lie','Is not obvious, self-evident or universally accepted','Though positive once accepted, is at first deeply unappealing to the character']]
+];
 function isStatement(s){ return words(s).length >= 3; }
 function lieTruthMsgs(kind){
   return () => {
@@ -1230,6 +1329,15 @@ function charThreshold(p){ return Math.floor(p/2) + 2; }
 function locThreshold(p){ return Math.floor(p/3) + 2; }
 function namedChars(){ return S.develop.characters.filter(c => c.name.trim()); }
 
+const lbClean = v => v.trim().replace(/[.,]$/, '');
+const LB_DET = /^(a|an|the|his|her|their|its|my|our|two|three|one)\s/i;
+function plainLogline(mode){
+  const d = S.develop, c = lbClean, art = p => !p ? '' : LB_DET.test(p) ? p : (/^[aeiou]/i.test(p) ? 'an ' : 'a ') + p;
+  const v = mode === 'after' ? d.lb2 : d.lb;
+  return (mode === 'after'
+    ? `After ${c(v.incident)}, ${art(c(v.protagonist))} ${c(v.action)} ${c(v.antagonist)}.`
+    : `When ${c(v.incident)}, ${art(c(v.protagonist))} must ${c(v.goal)} ${d.lbConn || 'or else'} ${c(v.stakes)}.`).replace(/\s+/g, ' ');
+}
 function renderDevelop(v){
   const d = S.develop;
   const secs = [['idea','The Idea'],['logline','Logline'],['theme','Theme'],['characters','Characters'],['settings','Settings'],['refs','References'],['notes','Notes']];
@@ -1296,9 +1404,7 @@ function renderDevelop(v){
       fields:[['incident','After… (inciting incident)','being rescued by a German bounty hunter','the inciting incident'],['protagonist','a… (protagonist)','freed slave','the protagonist'],['action','(action)','sets out to rescue his wife from','the action'],['antagonist','(antagonist)','a brutal Mississippi plantation owner','the antagonist']],
       example:'After being rescued by a German bounty hunter, a freed slave sets out to rescue his wife from a brutal Mississippi plantation owner.', exampleFilm:'Django Unchained'}
   };
-  const clean = v => v.trim().replace(/[.,]$/, '');
-  const DET = /^(a|an|the|his|her|their|its|my|our|two|three|one)\s/i;
-  const withArt = p => !p ? '' : DET.test(p) ? p : (/^[aeiou]/i.test(p) ? 'an ' : 'a ') + p;
+  const clean = lbClean, DET = LB_DET;
   const slot = (v, ph) => v.trim() ? `<span class="slot">${esc(clean(v))}</span>` : `<span class="slot empty">${ph}</span>`;
   const artSlot = (v, ph) => { const p = clean(v); if (!p) return 'a ' + slot('', ph); const m = p.match(DET); return m ? esc(m[1]) + ' ' + slot(p.slice(m[0].length), ph) : (/^[aeiou]/i.test(p) ? 'an ' : 'a ') + slot(p, ph); };
   const build = (mode, html) => {
@@ -1306,10 +1412,10 @@ function renderDevelop(v){
     if (mode === 'when'){
       const conn = d.lbConn || 'or else';
       if (html) return `When ${slot(v.incident,'[inciting incident]')}, ${artSlot(v.protagonist,'[specific protagonist]')} must ${slot(v.goal,'[objective]')} ${conn} ${slot(v.stakes,'[stakes]')}.`;
-      return `When ${clean(v.incident)}, ${withArt(clean(v.protagonist))} must ${clean(v.goal)} ${conn} ${clean(v.stakes)}.`.replace(/\s+/g, ' ');
+      return plainLogline(mode);
     }
     if (html) return `After ${slot(v.incident,'[inciting incident]')}, ${artSlot(v.protagonist,'[protagonist]')} ${slot(v.action,'[action]')} ${slot(v.antagonist,'[antagonist]')}.`;
-    return `After ${clean(v.incident)}, ${withArt(clean(v.protagonist))} ${clean(v.action)} ${clean(v.antagonist)}.`.replace(/\s+/g, ' ');
+    return plainLogline(mode);
   };
   const prev = h('div', {class:'logline-preview'});
   derived.push(() => { prev.innerHTML = build(d.lbMode, true); });
@@ -1367,11 +1473,7 @@ function renderDevelop(v){
   const topicChips = h('div', {class:'chips'});
   const drawTopics = () => topicChips.replaceChildren(...TOPICS.map(t => h('button', {class:'chip' + (d.topic.toUpperCase() === t ? ' on' : ''), type:'button', onclick: () => { d.topic = d.topic.toUpperCase() === t ? '' : t.charAt(0) + t.slice(1).toLowerCase(); touch(); drawTopics(); runDerived(); }}, t.toLowerCase())));
   drawTopics();
-  const checkGroups = [
-    ['Both', ['A specific moral assessment of an idea or concept','Philosophically universal, not situation dependent','Distinct from, and deeper than, social or political commentary','Not exclusive to the story world; as relevant to the audience as to the characters']],
-    ['The Lie', ['Is a direct negation of the Truth','Is not totally unreasonable or inherently evil','Is specifically justifiable given the character\'s context and history']],
-    ['The Truth', ['Is the specific solution to the Lie','Is not obvious, self-evident or universally accepted','Though positive once accepted, is at first deeply unappealing to the character']]];
-  const checks = h('div', {class:'checks'}, checkGroups.map(([g, items], gi) => h('div', null, h('h4', null, g), items.map((t, i) => { const k = gi + '.' + i; const cb = h('input', {type:'checkbox', checked: !!d.checks[k], onchange: () => { d.checks[k] = cb.checked; touch(); }}); return h('label', null, cb, t); }))));
+  const checks = h('div', {class:'checks'}, THEME_CHECKS.map(([g, items], gi) => h('div', null, h('h4', null, g), items.map((t, i) => { const k = gi + '.' + i; const cb = h('input', {type:'checkbox', checked: !!d.checks[k], onchange: () => { d.checks[k] = cb.checked; touch(); }}); return h('label', null, cb, t); }))));
   main.append(h('section', {class:'card sec', id:'dev-theme'},
     h('div', {class:'sec-head'}, h('div', {class:'sec-num'}, '3'), h('h2', null, 'Theme'), infoBtn('theme')),
     h('p', {class:'lede'}, 'Story is about theme, the specific philosophy your story communicates. Your protagonist begins believing a misaligned philosophy (the Lie) and the story tests it against the Truth.'),
@@ -2784,11 +2886,184 @@ function printScript(){
   }
   // collapse consecutive actions spacing: action lines directly following action get no top margin
   $$('p.act', root).forEach(p => { const prev = p.previousElementSibling; if (prev && prev.classList.contains('act')) p.style.marginTop = '0'; });
-  $('#print')?.remove();
-  $('#layer').append(root);
-  const done = () => { root.remove(); window.removeEventListener('afterprint', done); };
+  runPrint(root, PAGE_CSS.script);
+}
+/* =====================================================================
+   DEVELOP & OUTLINE → PDF
+   A reading document built from what the writer has filled in: empty
+   fields, placeholders and teaching tips are left out.
+   ===================================================================== */
+const pdTxt = v => String(v ?? '').trim();
+const pdRow = (label, value) => pdTxt(value) ? h('div', {class:'pd-row'}, h('div', {class:'pd-k'}, label), h('div', {class:'pd-v'}, pdTxt(value))) : null;
+const pdSec = (title, ...kids) => { kids = kids.flat(Infinity).filter(Boolean); return kids.length ? h('section', {class:'pd-sec'}, h('h3', null, title), kids) : null; };
+const pdBelief = (kind, label, text) => h('div', {class:'pd-belief b-' + kind}, h('div', {class:'pd-k'}, label), pdTxt(text));
+const PD_COL = {lie:'#a8475a', truth:'#a87408', tragic:'#5d6a7e'};
+function pdMix(a, b, t){ const c = x => [1, 3, 5].map(i => parseInt(x.slice(i, i + 2), 16)); const A = c(a), B = c(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); }
+function pdPages(b){
+  const N = targetPages(); if (!N) return '';
+  if (b.s === b.e) return 'around page ' + Math.max(1, Math.ceil(b.s / 100 * N));
+  const a = Math.min(Math.ceil(N), Math.floor(b.s / 100 * N) + 1), z = Math.max(a, Math.ceil(b.e / 100 * N));
+  return a === z ? 'page ' + a : `pages ${a}–${z}`;
+}
+
+function pdDevelop(){
+  const d = S.develop, p = protagonist();
+  const seeds = [['Flaw', p && p.flaw], ['Norm', d.norm], ['Problem', S.outline.beats.p1.summary], ['Choice', S.outline.beats.c1.summary]].filter(x => pdTxt(x[1]));
+  const idea = pdSec('The idea',
+    pdTxt(d.idea) ? h('p', {class:'pd-body'}, pdTxt(d.idea)) : null,
+    seeds.length ? h('div', {class:'pd-seeds'}, seeds.map(([k, v]) => h('div', {class:'pd-seed'}, h('div', {class:'pd-k'}, k), pdTxt(v)))) : null);
+
+  const A = ARCS[d.arc], tragicOn = d.arc === 'disillusionment' && pdTxt(d.tragic);
+  const beliefs = [pdTxt(d.lie) ? pdBelief('lie', 'The Lie', d.lie) : null, pdTxt(d.truth) ? pdBelief('truth', 'The Truth', d.truth) : null, tragicOn ? pdBelief('tragic', 'Tragic Truth', d.tragic) : null].filter(Boolean);
+  const ticked = THEME_CHECKS.some((g, gi) => g[1].some((t, i) => d.checks[gi + '.' + i]));
+  const themed = pdTxt(d.topic) || beliefs.length || pdTxt(d.themeNotes);
+  const theme = themed ? pdSec('Theme',
+    pdTxt(d.topic) ? h('div', {style:'margin-bottom:7pt'}, h('span', {class:'pd-k'}, 'Thematic topic  '), h('span', {class:'pd-tag solid'}, pdTxt(d.topic))) : null,
+    beliefs.length ? h('div', {class:'pd-lt'}, beliefs) : null,
+    h('p', {class:'pd-arcline'}, h('b', null, 'Protagonist\'s arc: ' + A.name), h('span', null, `  ${A.from} → ${A.to}  ·  ${A.states.join(' › ')}`)),
+    ticked ? h('div', {class:'pd-checks'}, THEME_CHECKS.flatMap(([g, items], gi) => items.map((t, i) => { const on = !!d.checks[gi + '.' + i]; return h('div', {class: on ? 'on' : ''}, (on ? '☑ ' : '☐ ') + (g === 'Both' ? 'Both: ' : g + ': ') + t); }))) : null,
+    pdTxt(d.themeNotes) ? h('div', {style:'margin-top:8pt'}, pdRow('Theme notes', d.themeNotes)) : null) : null;
+
+  const chars = d.characters.filter(c => [c.name, c.desc, c.flaw, c.want, c.history, c.cycle.s, c.cycle.e, c.cycle.b, c.cycle.r].some(pdTxt));
+  const charCards = chars.map(c => {
+    const isP = c.role === 'Protagonist', arc = isP ? d.arc : (c.arcOn ? c.arc : null);
+    const cyc = [['Stimulus', c.cycle.s], ['Emotion', c.cycle.e], ['Belief', c.cycle.b], ['Reaction', c.cycle.r]];
+    return h('div', {class:'pd-card' + (isP ? ' prot' : '')},
+      h('div', {class:'pd-ch'}, h('b', null, pdTxt(c.name) || 'Unnamed character'), h('span', {class:'pd-tag' + (isP ? ' solid' : '')}, c.role), arc ? h('span', {class:'pd-tag'}, `${ARCS[arc].name} arc · ${ARCS[arc].from} → ${ARCS[arc].to}`) : null),
+      pdRow('Description', c.desc), pdRow('Flaw', c.flaw), pdRow('Want', c.want), pdRow('History', c.history),
+      cyc.some(x => pdTxt(x[1])) ? h('div', {class:'pd-row'}, h('div', {class:'pd-k'}, 'Belief cycle'), h('div', {class:'pd-cycle'}, cyc.map(([k, v]) => h('div', null, h('div', {class:'pd-k'}, k), pdTxt(v) || '–')))) : null,
+      !isP && c.arcOn ? [pdRow('Their Lie', c.lie), pdRow('Their Truth', c.truth)] : null);
+  });
+
+  const sets = d.settings.filter(s => pdTxt(s.name) || pdTxt(s.desc));
+  const refs = d.refs.filter(r => [r.title, r.note, r.lie, r.truth].some(pdTxt) || r.takes.length);
+  const secs = [idea, theme,
+    pdSec('Characters', charCards),
+    pdSec('Settings', sets.map(s => h('div', {class:'pd-set'}, h('b', null, `${s.ie} ${pdTxt(s.name) || 'Unnamed'}`), h('div', {class:'pd-v'}, pdTxt(s.desc))))),
+    pdSec('References', refs.map(r => h('div', {class:'pd-card'},
+      h('div', {class:'pd-ch'}, h('b', null, pdTxt(r.title) || 'Untitled film', pdTxt(r.year) ? h('span', {class:'yr'}, ` (${pdTxt(r.year)})`) : null), r.takes.map(t => h('span', {class:'pd-tag'}, t))),
+      pdRow('Taking from it', r.note), pdRow('Its Lie', r.lie), pdRow('Its Truth', r.truth)))),
+    pdSec('Notes', pdTxt(d.notes) ? h('p', {class:'pd-body'}, pdTxt(d.notes)) : null)].filter(Boolean);
+  return h('section', {class:'pd-part'}, h('h2', null, 'Develop'), secs.length ? secs : h('p', {class:'pd-empty', style:'margin-top:8pt'}, 'Nothing has been filled in on the Develop page yet.'));
+}
+
+/* the belief line, drawn for paper: labels are printed, since there is no hovering on a page */
+function pdArcFigure(st){
+  const d = S.develop, arc = d.arc, top = arc === 'disillusionment' ? PD_COL.tragic : PD_COL.truth;
+  const W = 1000, H = 230, Y = b => 196 - b * 162, X = x => x * 10;
+  const curve = pts => { let s = `M${X(pts[0][0])},${pts[0][1]}`; for (let i = 0; i < pts.length - 1; i++){ const p0 = pts[i-1] || pts[i], p1 = pts[i], p2 = pts[i+1], p3 = pts[i+2] || p2, t = 6; s += ` C${X(p1[0] + (p2[0]-p0[0])/t)},${p1[1] + (p2[1]-p0[1])/t} ${X(p2[0] - (p3[0]-p1[0])/t)},${p2[1] - (p3[1]-p1[1])/t} ${X(p2[0])},${p2[1]}`; } return s; };
+  const ptsOf = a => ARC_BEATS[a].map((b, i) => [beatPos(BEATS[i]), Y(b[0])]);
+  const DASH = ['7 5', '2 4', '11 4 2 4', '1 6'];
+  const others = d.characters.filter(c => c.role !== 'Protagonist' && c.arcOn && pdTxt(c.name));
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"><rect width="${W}" height="58" fill="${top}" opacity=".09"/><rect y="${H - 58}" width="${W}" height="58" fill="${PD_COL.lie}" opacity=".09"/>`;
+  st.grid.forEach(x => { svg += `<line x1="${X(x)}" y1="0" x2="${X(x)}" y2="${H}" stroke="#cfc8ba" stroke-width="1" ${x === 50 ? '' : 'stroke-dasharray="3 4"'}/>`; });
+  svg += `<text x="10" y="20" font-size="13" font-weight="700" letter-spacing="1.4" fill="${top}">${arc === 'disillusionment' ? 'TRAGIC TRUTH' : 'TRUTH'}</text><text x="10" y="${H - 9}" font-size="13" font-weight="700" letter-spacing="1.4" fill="${PD_COL.lie}">LIE</text>`;
+  others.forEach((c, k) => { svg += `<path d="${curve(ptsOf(c.arc))}" fill="none" stroke="#8b847a" stroke-width="2" stroke-dasharray="${DASH[k % 4]}"/>`; });
+  const main = ptsOf(arc);
+  svg += `<path d="${curve(main)}" fill="none" stroke="#1d1b18" stroke-width="3" stroke-linecap="round"/>`;
+  main.forEach(([x, y], i) => { svg += `<circle cx="${X(x)}" cy="${y}" r="6.5" fill="${pdMix(PD_COL.lie, top, ARC_BEATS[arc][i][0])}" stroke="#fff" stroke-width="2"/>`; });
+  svg += '</svg>';
+  const key = dash => `<svg viewBox="0 0 22 6"><line x1="0" y1="3" x2="22" y2="3" stroke="${dash ? '#8b847a' : '#1d1b18'}" stroke-width="${dash ? 2 : 3}" ${dash ? `stroke-dasharray="${dash}"` : ''}/></svg>`;
+  const p = protagonist();
+  return h('div', {class:'pd-fig'},
+    h('div', {html: svg}),
+    h('div', {class:'pd-ticks'}, st.grid.map(x => { const m = st.moments.find(b => b.s === x); return h('span', {style:`left:${x}%`}, m ? m.name.replace(/ \(.*\)$/, '') : '', h('i', null, x + '%')); })),
+    h('div', {class:'pd-strip'}, st.bands.map(b => h('div', {class:'fam-' + b.fam, style:`width:${b.e - b.s}%`}, b.e - b.s >= 6 ? b.label : ''))),
+    h('div', {class:'pd-legend'},
+      h('span', {html: key('') + `<b>${esc((p && pdTxt(p.name)) || 'Protagonist')}</b> · ${ARCS[arc].name} (${ARCS[arc].from} → ${ARCS[arc].to})`}),
+      others.map((c, k) => h('span', {html: key(DASH[k % 4]) + `<b>${esc(pdTxt(c.name))}</b> · ${ARCS[c.arc].name}`}))));
+}
+
+function pdOutline(guide){
+  const st = curStruct(), store = beatStore(), d = S.develop, N = targetPages(), scaffold = st.key === 'scaffold';
+  const items = id => store[id].items.filter(it => pdTxt(it.title) || pdTxt(it.notes));
+  /* mirror letters, as in Mirror view: A ↔ A′, and inside each pair the payoff side runs in reverse */
+  const PAIRS = [['cs1','cs2'],['p1','c2'],['c1','p2'],['a2a','a2b']], letter = {};
+  const AZ = n => { let s = ''; n++; while (n > 0){ const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+  let base = 0; const pairRows = [];
+  if (scaffold) PAIRS.forEach(([l, r]) => {
+    const LI = items(l), RI = items(r).slice().reverse(), n = Math.max(LI.length, RI.length), rows = [];
+    for (let i = 0; i < n; i++){ if (LI[i]) letter[LI[i].id] = AZ(base + i); if (RI[i]) letter[RI[i].id] = AZ(base + i) + '′'; rows.push([AZ(base + i), LI[i], RI[i]]); }
+    if (n) pairRows.push({l, r, rows}); base += n;
+  });
+  const beat = b => {
+    const B = store[b.id], its = items(b.id), sum = pdTxt(B.summary);
+    const note = scaffold ? ARC_BEATS[d.arc][BEAT_IDS.indexOf(b.id)] : arcNoteAt((b.s + b.e) / 2);
+    return h('div', {class:'pd-beat fam-' + b.fam},
+      h('div', {class:'pd-bh'}, h('b', null, b.name), h('span', null, rangeOf(b).replace('≈ ', 'at ') + ' of the story'), N ? h('span', null, pdPages(b)) : null),
+      h('div', null,
+        guide ? h('p', {class:'pd-guide'}, b.desc + ' ', h('b', null, ARCS[d.arc].name + ' arc: '), note[1]) : null,
+        sum ? h('p', {class:'pd-sum'}, sum) : (its.length ? null : h('p', {class:'pd-empty'}, 'Not outlined yet')),
+        its.length ? h('div', {class:'pd-pts'}, its.map((it, i) => h('div', {class:'pd-pt'}, h('b', null, letter[it.id] || (i + 1) + '.'), h('div', null, h('p', null, pdTxt(it.title) || '…'), pdTxt(it.notes) ? h('p', null, pdTxt(it.notes)) : null)))) : null));
+  };
+  let body;
+  if (scaffold) body = st.beats.map(beat);
+  else body = st.sections.map((sec, i) => {
+    const last = i === st.sections.length - 1;
+    const bs = st.beats.filter(b => b.s >= sec.s && (b.s < sec.e || (last && b.s <= sec.e))).sort((x, y) => x.s - y.s || (x.m ? -1 : 1));
+    return bs.length ? [h('div', {class:'pd-act'}, sec.label, h('span', null, `${sec.s}–${sec.e}%`)), bs.map(beat)] : null;
+  });
+  const side = (it, mark) => it ? [h('b', null, mark), pdTxt(it.title) || '…'] : h('span', {class:'pd-empty'}, '–');
+  const mid = scaffold ? store.mid : null;
+  const mirror = pairRows.length ? pdSec('Mirror: setup and payoff',
+    h('p', {class:'pd-cap'}, 'The story folds at the Midpoint. Each setup sits opposite its payoff (A ↔ A′), and the first thing set up is the last thing paid off.'),
+    h('table', {class:'pd-mirror'},
+      h('thead', null, h('tr', null, h('th', null, 'Setup'), h('th', null, 'Payoff'))),
+      h('tbody', null, pairRows.map(({l, r, rows}) => [
+        h('tr', {class:'grp fam-' + BEAT[l].fam}, h('td', null, beatFull(l)), h('td', null, beatFull(r))),
+        rows.map(([L, a, b]) => h('tr', {class:'fam-' + BEAT[l].fam}, h('td', null, side(a, L)), h('td', null, side(b, L + '′'))))]),
+        pdTxt(mid.summary) ? h('tr', {class:'hinge fam-mid'}, h('td', {colspan:2}, h('b', null, 'Midpoint · the hinge'), pdTxt(mid.summary))) : null))) : null;
+  return h('section', {class:'pd-part'},
+    h('h2', null, 'Outline', h('small', null, st.name + (N ? ` · ${N}-page target` : ''))),
+    pdSec('The arc', pdArcFigure(st),
+      (pdTxt(d.lie) || pdTxt(d.truth)) ? h('div', {class:'pd-legend'}, pdTxt(d.lie) ? h('span', null, h('b', {style:'color:var(--lie)'}, 'Lie: '), pdTxt(d.lie)) : null, pdTxt(truthTxt()) && truthTxt() !== 'the Truth' ? h('span', null, h('b', {style:`color:var(--${d.arc === 'disillusionment' && pdTxt(d.tragic) ? 'tragic' : 'truth'})`}, (d.arc === 'disillusionment' && pdTxt(d.tragic) ? 'Tragic Truth: ' : 'Truth: ')), truthTxt()) : null) : null),
+    pdSec('Beat by beat', body),
+    mirror);
+}
+
+function buildDoc(o){
+  const d = S.develop, N = targetPages();
+  const what = o.develop && o.outline ? 'Development & outline' : o.develop ? 'Development' : 'Outline';
+  const log = pdTxt(d.logline) || (Object.values(d.lbMode === 'after' ? d.lb2 : d.lb).every(pdTxt) ? plainLogline(d.lbMode) : '');
+  const meta = [['Written by', S.author], ['Genre / tone', d.genre], ['Target length', N ? `${N} page${N === 1 ? '' : 's'} (about ${N} min)` : ''], ['Exported', new Date().toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'})]].filter(x => pdTxt(x[1]));
+  return h('div', {id:'printdoc'},
+    h('header', {class:'pd-top'},
+      h('div', {class:'pd-eye'}, what),
+      h('h1', null, pdTxt(S.title) || 'Untitled script'),
+      h('div', {class:'pd-meta'}, meta.map(([k, v]) => h('span', null, k + ' ', h('b', null, pdTxt(v))))),
+      log ? h('div', {class:'pd-log'}, h('div', {class:'pd-k'}, 'Logline'), h('p', null, log)) : null),
+    o.develop ? pdDevelop() : null,
+    o.outline ? pdOutline(o.guide) : null);
+}
+const PAGE_CSS = {
+  script: '@page{size:letter;margin:1in 1in 1in 1.5in;counter-increment:page;@top-right{content:counter(page) ".";font:12pt "Courier Prime","Courier New",monospace}}@page :first{counter-reset:page -1;@top-right{content:none}}',
+  doc: label => `@page{size:A4;margin:16mm 17mm 19mm;@bottom-left{content:"${label.replace(/[\\"\n\r]/g, ' ')}";font:500 7.5pt Archivo,Arial,sans-serif;color:#6b655d}@bottom-right{content:counter(page) " / " counter(pages);font:500 7.5pt Archivo,Arial,sans-serif;color:#6b655d}}`
+};
+/* one print job at a time: the page size and margins belong to the job, not the stylesheet */
+function runPrint(root, pageCss, docTitle){
+  $$('#print,#printdoc,#print-page').forEach(x => x.remove());
+  const page = h('style', {id:'print-page'}, '@media print{' + pageCss + '}');
+  document.head.append(page); $('#layer').append(root);
+  const old = document.title; if (docTitle) document.title = docTitle;
+  const done = () => { root.remove(); page.remove(); document.title = old; window.removeEventListener('afterprint', done); };
   window.addEventListener('afterprint', done);
   setTimeout(() => window.print(), 50);
+}
+function printDoc(o){
+  const what = o.develop && o.outline ? 'Development and outline' : o.develop ? 'Development' : 'Outline';
+  const t = pdTxt(S.title) || 'Untitled script';
+  runPrint(buildDoc(o), PAGE_CSS.doc(`${t}  ·  ${what}`), `${t} - ${what}`);
+}
+function exportDocModal(){
+  const o = {develop:true, outline:true, guide:false};
+  const sw = (key, label, sub) => { const cb = h('input', {type:'checkbox', checked:o[key], onchange: () => { o[key] = cb.checked; }}); return h('div', {style:'margin-top:12px'}, h('label', {class:'switch'}, cb, label), sub ? h('div', {class:'small muted', style:'margin:3px 0 0 42px'}, sub) : null); };
+  modal('Export Develop & Outline as PDF', h('div', null,
+    h('p', null, 'Makes a tidy document of what you\'ve filled in. Empty boxes and teaching tips are left out.'),
+    sw('develop', 'Develop', 'Idea, logline, theme, characters, settings, references and notes.'),
+    sw('outline', 'Outline', `Your arc and every beat of the ${curStruct().name}, with plot points${curStruct().key === 'scaffold' ? ' and the mirror' : ''}.`),
+    sw('guide', 'Add the guidance for each beat', 'Prints what each beat is for above your own words. Handy for a reader who doesn\'t know the structure.'),
+    h('p', {class:'small muted', style:'margin-top:16px'}, 'In the print window, choose “Save as PDF” as the printer.')),
+    [{label:'Cancel'}, {label:'Print / save as PDF', primary:true, fn: () => { if (!o.develop && !o.outline){ toast('Choose Develop, Outline or both.'); return false; } printDoc(o); }}]);
 }
 function importFountain(){
   const inp = h('input', {type:'file', accept:'.fountain,.txt,.spmd,text/plain', style:'display:none'});
