@@ -422,10 +422,19 @@ const gisReady = !driveOn() ? Promise.resolve(false) : new Promise(res => {
           /* Google lets people untick the Drive permission on the sign-in screen */
           let driveOk = true;
           try { driveOk = google.accounts.oauth2.hasGrantedAllScopes(r, 'https://www.googleapis.com/auth/drive.file'); } catch (e) {}
-          token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000;
           if (!driveOk) { token = null; w.rej(new Error('Google Drive access wasn’t allowed, so your projects can’t be saved to your Drive. Click Sign in again and tick the Google Drive box.')); return; }
-          w.res(token);
-          setTimeout(syncPins, 0);   /* pinned tools follow the person between devices */
+          /* with two Google accounts in one browser, Google can connect the other one: its Drive doesn't hold this person's projects */
+          tokenIsFor(r.access_token, w.want).then(other => {
+            if (other) {
+              pickAcct = true; token = null; tokenExp = 0; renderAccount();
+              setTimeout(() => toastLong(`Google connected ${other}, but you’re signed in here as ${w.want}. Reconnect and choose ${w.want}, or sign out here to switch accounts.`), 80);
+              w.rej(new Error('wrong account')); return;
+            }
+            pickAcct = false;
+            token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000;
+            w.res(token);
+            setTimeout(syncPins, 0);   /* pinned tools follow the person between devices */
+          });
         },
         error_callback: e => { const w = tokenWait; tokenWait = null; if (w) w.rej(new Error((e && e.type) || 'sign-in cancelled')); }
       });
@@ -437,13 +446,23 @@ const gisReady = !driveOn() ? Promise.resolve(false) : new Promise(res => {
 });
 
 /* ask Google for access. interactive=true may open Google's sign-in popup, so call it straight from a click */
+let pickAcct = false;
+/* whose Drive did Google connect? Returns the email when it isn't the person signed in here */
+async function tokenIsFor(t, want) {
+  if (!want) return '';
+  try {
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {headers: {Authorization: 'Bearer ' + t}});
+    const me = r.ok ? await r.json() : null;
+    return me && me.email && me.email.toLowerCase() !== want.toLowerCase() ? me.email : '';
+  } catch (e) { return ''; }
+}
 function getToken(interactive, renew) {
   if (hasToken() && !renew) return Promise.resolve(token);
   if (!interactive || !tokenClient) return Promise.reject(new Error('not connected'));
   if (tokenWait) tokenWait.rej(new Error('superseded'));
   return new Promise((res, rej) => {
-    tokenWait = {res, rej};
-    try { tokenClient.requestAccessToken(account ? {prompt: '', login_hint: account.email} : {prompt: 'consent'}); }
+    tokenWait = {res, rej, want: account && account.email};
+    try { tokenClient.requestAccessToken(account ? {prompt: pickAcct ? 'select_account' : '', login_hint: account.email} : {prompt: 'consent'}); }
     catch (e) { tokenWait = null; rej(e); }
   });
 }
@@ -670,7 +689,7 @@ async function signIn() {
       if (keep && empties.some(e => e.id === curId)) await switchProject(keep.id);
       for (const e of empties) await deleteProject(e.id);
     }
-  } catch (e) { if (!/cancel|closed|superseded/i.test(e.message)) toastLong('Couldn’t sign in. ' + e.message); renderAccount(); }
+  } catch (e) { if (!/cancel|closed|superseded|wrong account/i.test(e.message)) toastLong('Couldn’t sign in. ' + e.message); renderAccount(); }
 }
 /* before Google's screen: point out the Drive tick box, because saving depends on it */
 function signInFlow() {
@@ -1039,7 +1058,7 @@ function tick() {
   tickBusy = (async () => {
     inTick = true;
     try { await tick1(); }
-    catch (e) { if (e && (e.status === 404 || (e.status === 403 && !/quota|rate/i.test(e.message)))) { sh.lost = true; held.clear(); } }
+    catch (e) {}
     inTick = false; tickBusy = null; renderShare();
     if (sharedCur() && !document.hidden) kickTick(pending.size || myReq || reqShown ? FAST_MS : TICK_MS);
   })();
@@ -1048,9 +1067,15 @@ function tick() {
 async function tick1() {
   const p = sharedCur(); if (!p) return;
   if (!account || !hasToken()) { held.clear(); pending.clear(); return; }
-  const meta = await fileMeta(p);
+  let meta;
+  try { meta = await fileMeta(p); }
+  catch (e) {
+    /* Drive won't show this sign-in the file: deleted, no longer shared with them, or (for crew) not chosen yet */
+    if (p.id === curId && e && (e.status === 404 || (e.status === 403 && !/quota|rate/i.test(e.message)))) { sh.lost = 'gone'; sh.why = e.message; held.clear(); return; }
+    throw e;
+  }
   if (p.id !== curId) return;
-  if (meta.f.trashed || (meta.f.capabilities && meta.f.capabilities.canEdit === false)) { sh.lost = true; held.clear(); return; }
+  if (meta.f.trashed || (meta.f.capabilities && meta.f.capabilities.canEdit === false)) { sh.lost = meta.f.trashed ? 'binned' : 'readonly'; sh.why = ''; held.clear(); return; }
   sh.lost = false; sh.props = meta.props; sh.at = Date.now();
   noteMeta(p, meta.f);
   if (!p.shared) { resetShare(); await putProject(p); renderProjUI(); return; }   /* the owner stopped sharing it */
@@ -1158,8 +1183,16 @@ function renderShare() {
   bar.hidden = !show; if (!show) return;
   const t = active, l = lockOf(t), nm = esc(toolName(t));
   let cls = 'view', msg = '', btn = '';
-  if (sh.lost) msg = `You no longer have access to this shared project, so it’s view-only here. Ask ${esc((p.sharedBy || {}).name || 'the owner')} to share it with you again.`;
-  else if (!hasToken()) { msg = 'Reconnect Google Drive to edit this shared project. Until then it’s view-only.'; btn = `<button class="btn sm primary" data-lk="reconnect">${GLOGO}Reconnect</button>`; }
+  if (!hasToken()) { msg = 'Reconnect Google Drive to edit this shared project. Until then it’s view-only.'; btn = `<button class="btn sm primary" data-lk="reconnect">${GLOGO}Reconnect</button>`; }
+  else if (sh.lost && isOwner(p)) {
+    /* the owner can't "lose access": their file is in the bin, deleted, or out of this sign-in's reach */
+    if (sh.lost === 'binned') msg = 'This project’s file is in the bin in your Google Drive, so it’s view-only here. Restore it in Google Drive to carry on.';
+    else { msg = `Film Tool Hub can’t open this project’s file in the Google Drive of ${esc((account || {}).email || 'this account')}, so it’s view-only for now. Check Google is connected as you, and that the file hasn’t been deleted from Drive.`; btn = '<button class="btn sm primary" data-lk="retry">Reconnect and check again</button>'; }
+  }
+  else if (sh.lost) {
+    msg = `You no longer have access to this shared project, so it’s view-only here. Ask ${esc((p.sharedBy || {}).name || 'the owner')} to share it with you again.`;
+    if (sh.lost === 'gone') btn = '<button class="btn sm" data-lk="reopen" title="If it’s still shared with you, choose it again in Google’s file chooser">Open it again</button>';
+  }
   else if (held.has(t)) {
     cls = 'edit'; msg = `<b>You’re editing ${nm}.</b> Your crew can view it. Press Save to send them your changes.`;
     if (tokenExp - Date.now() < 8 * 60e3) btn = '<button class="btn sm" data-lk="renew" title="Google signs this site out of Drive every hour. Click to stay connected.">Stay connected</button>';
@@ -1172,7 +1205,7 @@ function renderShare() {
   }
   else if (!sh.at || pending.has(t) || Date.now() - (lastAct[t] || 0) < IDLE_MS) msg = 'Checking who’s editing…';
   else { msg = `Nobody is editing ${nm} right now.`; btn = '<button class="btn sm primary" data-lk="start">Start editing</button>'; }
-  const html = `<i class="dot"></i><span class="m">${msg}</span><span class="b">${btn}</span>`;
+  const html = `<i class="dot"></i><span class="m"${sh.lost && sh.why ? ` title="${esc(sh.why)}"` : ''}>${msg}</span><span class="b">${btn}</span>`;
   bar.className = cls;
   if (bar.dataset.h !== html) { bar.innerHTML = html; bar.dataset.h = html; }
 }
@@ -1288,7 +1321,7 @@ async function addShared(fileId) {
 /* from a click: connect, let the person choose the file if the site can't open it yet, then open it */
 async function openShared(fileId) {
   const tp = account ? getToken(true) : signIn().then(() => { if (!hasToken()) throw new Error('cancel'); });
-  try { await tp; } catch (e) { renderAccount(); if (!/cancel|closed|superseded/i.test(e.message)) toast('Sign in with Google to open a shared project'); return; }
+  try { await tp; } catch (e) { renderAccount(); if (!/cancel|closed|superseded|wrong account/i.test(e.message)) toast('Sign in with Google to open a shared project'); return; }
   try {
     let ids = [];
     if (fileId) { try { await gjson(`${DRIVE_API}/files/${fileId}?fields=id`); ids = [fileId]; } catch (e) {} }
@@ -2677,6 +2710,8 @@ $('#lockBar').addEventListener('click', e => {
   const b = e.target.closest('[data-lk]'); if (!b || !active) return;
   const a = b.dataset.lk;
   if (a === 'reconnect') reconnect().then(() => kickTick());
+  if (a === 'retry') getToken(true, true).then(() => { resetShare(); kickTick(); }).catch(() => renderAccount());
+  if (a === 'reopen') { const p = sharedCur(); if (p) openShared(p.driveFileId); }
   if (a === 'renew') getToken(true, true).then(() => { toast('Connected for another hour'); renderShare(); }).catch(() => {});
   if (a === 'request') requestEdit(active);
   if (a === 'take' || a === 'start') takeOver(active);
