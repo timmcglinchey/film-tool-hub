@@ -6,7 +6,8 @@ const tick = () => new Date(clock = Math.max(clock + 1, Date.now())).toISOString
 const D = { files: new Map(), access: new Map(), sessions: new Map(), log: [], delayPut: null, names: {} };
 const acc = e => { if (!D.access.has(e)) D.access.set(e, new Set()); return D.access.get(e); };
 const can = (e, f) => f && acc(e).has(f.id) && (f.owner === e || f.perms.some(p => p.emailAddress === e));
-const view = (f, e) => ({ id: f.id, name: f.name, mimeType: f.mimeType, parents: f.parents, appProperties: { ...f.appProperties }, modifiedTime: f.modifiedTime, trashed: !!f.trashed,
+const isJson = f => !f.mimeType || /json/.test(f.mimeType);
+const view = (f, e) => ({ id: f.id, name: f.name, mimeType: f.mimeType, description: f.description, size: f.revs && f.revs.length ? String(Buffer.byteLength(f.revs[f.revs.length - 1].content)) : undefined, parents: f.parents, appProperties: { ...f.appProperties }, modifiedTime: f.modifiedTime, trashed: !!f.trashed,
   headRevisionId: f.revs.length ? f.revs[f.revs.length - 1].id : undefined, ownedByMe: f.owner === e, owners: [{ emailAddress: f.owner, displayName: D.names[f.owner] || f.owner }],
   capabilities: { canEdit: f.owner === e || f.perms.some(p => p.emailAddress === e && p.role === 'writer') } });
 function matchQ(f, q) {
@@ -30,12 +31,13 @@ async function handle(route) {
     if (P.startsWith('/mockput/')) {   // resumable upload body
       const s = D.sessions.get(P.slice(9)); if (!s) return fail(404, 'no session');
       if (D.delayPut) await D.delayPut(s);
-      const body = req.postData() || ''; let f;
+      const raw = req.postDataBuffer() || Buffer.alloc(0); let f;
       if (s.fileId) { f = D.files.get(s.fileId); if (!can(s.email, f) || f.trashed) return fail(404, 'File not found'); }
       else { f = { id: 'f' + seq++, owner: s.email, perms: [], revs: [], appProperties: {}, parents: [], mimeType: 'application/json' }; D.files.set(f.id, f); acc(s.email).add(f.id); }
       const { appProperties, ...rest } = s.meta; if (f.owner !== s.email) delete rest.name;
       Object.assign(f, rest); setProps(f, appProperties);
-      f.modifiedTime = tick(); f.revs.push({ id: 'r' + seq++, modifiedTime: f.modifiedTime, content: body, by: s.email });
+      /* project files are kept as text; documents (PDFs, pictures…) as the bytes that were sent */
+      f.modifiedTime = tick(); f.revs.push({ id: 'r' + seq++, modifiedTime: f.modifiedTime, content: isJson(f) ? raw.toString('utf8') : raw, by: s.email });
       D.log.push(['upload', s.email, f.id]);
       return json(view(f, s.email));
     }
@@ -54,7 +56,7 @@ async function handle(route) {
     }
     if (!parts.length && m === 'POST') {
       const meta = JSON.parse(req.postData());
-      const f = { id: 'f' + seq++, owner: e, perms: [], revs: [], appProperties: {}, parents: meta.parents || [], mimeType: meta.mimeType, name: meta.name, modifiedTime: tick() };
+      const f = { id: 'f' + seq++, owner: e, perms: [], revs: [], appProperties: {}, parents: meta.parents || [], mimeType: meta.mimeType, name: meta.name, description: meta.description, modifiedTime: tick() };
       setProps(f, meta.appProperties); D.files.set(f.id, f); acc(e).add(f.id); return json(view(f, e));
     }
     const f = D.files.get(parts[0]);
@@ -72,13 +74,13 @@ async function handle(route) {
       return json({ revisions: f.revs.map(r => ({ id: r.id, modifiedTime: r.modifiedTime })) });
     }
     if (m === 'GET') {
-      if (u.searchParams.get('alt') === 'media') { if (f.trashed) return fail(404, 'gone'); return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: f.revs[f.revs.length - 1].content }); }
+      if (u.searchParams.get('alt') === 'media') { if (f.trashed) return fail(404, 'gone'); return route.fulfill({ status: 200, contentType: isJson(f) ? 'application/json' : f.mimeType, headers: { 'access-control-allow-origin': '*' }, body: f.revs[f.revs.length - 1].content }); }
       return json(view(f, e));
     }
     if (m === 'PATCH') {
       const b = JSON.parse(req.postData() || '{}');
       if ('writersCanShare' in b || 'trashed' in b) { if (f.owner !== e) return fail(403, 'owner only'); }
-      setProps(f, b.appProperties); if (b.name && f.owner === e) f.name = b.name; if ('trashed' in b) f.trashed = b.trashed; if ('writersCanShare' in b) f.writersCanShare = b.writersCanShare;
+      setProps(f, b.appProperties); if (b.name && f.owner === e) f.name = b.name; if ('description' in b) f.description = b.description; if ('trashed' in b) f.trashed = b.trashed; if ('writersCanShare' in b) f.writersCanShare = b.writersCanShare;
       if (D.bumpOnMeta) f.modifiedTime = tick();
       D.log.push(['patch', e, f.id, b.appProperties || {}]);
       return json(view(f, e));
@@ -116,6 +118,8 @@ async function person(browser, base, email, name, opts = {}) {
     if (u.startsWith('https://accounts.google.com/gsi/client')) return route.fulfill({ contentType: 'text/javascript', body: GIS });
     if (u.startsWith('https://apis.google.com/js/api.js')) return route.fulfill({ contentType: 'text/javascript', body: PICKER });
     if (u.startsWith('https://www.googleapis.com/')) return handle(route);
+    /* the PDF and Excel libraries the tools load: served from a local folder when a test gives one (opts.libs) */
+    if (opts.libs && u.startsWith('https://cdnjs.cloudflare.com/')) { const f = path.join(opts.libs, path.basename(new URL(u).pathname)); if (fs.existsSync(f)) return route.fulfill({ contentType: 'text/javascript', body: fs.readFileSync(f) }); }
     return route.abort();
   });
   const page = await ctx.newPage();

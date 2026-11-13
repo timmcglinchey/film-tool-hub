@@ -22,6 +22,7 @@
   <div class="sep"></div>
   <nav id="tabs" aria-label="Open tools"></nav>
   <div id="barActions"></div>
+  <button class="ibtn docsbtn" id="docsBtn" aria-pressed="false" title="Documentation: every export and draft saved in this project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M8 13h8M8 16h5"/></svg><span class="t">Documentation</span></button>
   <button class="ibtn savebtn" id="saveBtn" title="Save this project (Ctrl/⌘+S)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></svg><span class="t" id="saveLbl">Save</span><i class="dot"></i></button>
   <button class="ibtn sharebtn" id="shareBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c0-3.2 2.7-5.6 6-5.6s6 2.4 6 5.6"/><path d="M18.5 8v6M15.5 11h6"/></svg><span class="t" id="shareLbl">Share</span></button>
   <button class="ibtn acct" id="acctBtn" hidden></button>
@@ -73,6 +74,8 @@
   </div>
 </main>
 
+<main id="docsPage" hidden><div class="wrap" id="docsWrap"></div></main>
+
 <div id="workspace" hidden><div id="lockBar" hidden></div></div>
 <div id="reqCard" role="alertdialog" aria-live="assertive" hidden></div>
 <div id="menu" role="menu" hidden></div>
@@ -83,6 +86,11 @@
 <input type="file" id="filePick" accept=".html,.htm,text/html" hidden>
 
 <dialog id="dlg"><form method="dialog" class="dlg" id="dlgForm"></form></dialog>
+
+<dialog id="docView" class="dview" aria-labelledby="dvTitle">
+  <div class="dv-head"><div class="dv-t"><b id="dvTitle"></b><small id="dvSub"></small></div><button type="button" class="btn sm" id="dvDown"></button><button type="button" class="btn sm primary" id="dvClose">Close</button></div>
+  <div class="dv-body" id="dvBody"></div>
+</dialog>
 
 <script src="hub/hub.js"></script>
 </body>

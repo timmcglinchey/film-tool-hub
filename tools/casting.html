@@ -115,6 +115,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#4fc7b5;--fth-accent:#4fc7b5;--fth-accent-ink:#4fc7b5;--fth-accent-soft:rgba(79,199,181,0.14);--fth-accent-line:rgba(79,199,181,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#2e7369;--fth-accent-ink:#2e7369;--fth-accent-soft:rgba(79,199,181,0.16);--fth-accent-line:rgba(79,199,181,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -798,6 +801,10 @@ function renderMenu() {
     <button data-act="printBreakdowns">${IC.print}<span>Print casting breakdowns<small>One page per role, ready to send out or save as PDF</small></span></button>
     <button data-act="printSheet">${IC.img}<span>Print contact sheet<small>Headshots and scores, grouped by role</small></span></button>
     <button data-act="csv">${IC.csv}<span>Download auditionees (CSV)<small>Opens in Excel, Numbers or Google Sheets</small></span></button>
+    ${window.fthDocs ? `<hr>
+    <button data-act="docBreakdowns">${IC.save}<span>Save casting breakdowns to Documentation<small>A draft in this project’s Documentation, without printing</small></span></button>
+    <button data-act="docSheet">${IC.save}<span>Save contact sheet to Documentation</span></button>
+    <button data-act="docCsv">${IC.save}<span>Save auditionees (CSV) to Documentation</span></button>` : ''}
     <hr>
     <button data-act="backup">${IC.save}<span>Download a backup<small>Everything, headshots included, in one file</small></span></button>
     <button data-act="restore">${IC.open}<span>Restore from a backup</span></button>
@@ -1438,6 +1445,9 @@ const A = {
   printRole(el) { printBreakdowns([role(el.dataset.id)]); },
   printSheet() { printSheet(); },
   csv() { downloadCSV(); },
+  docBreakdowns() { window.fthDocs.run(() => printBreakdowns(S.roles)); },
+  docSheet() { window.fthDocs.run(() => printSheet()); },
+  docCsv() { window.fthDocs.run(() => downloadCSV()); },
   backup() { backup(); },
   restore() { $('#bkPick').click(); },
   async example() { if ((S.roles.length || S.actors.length) && !await confirmDlg('Load the example?', 'This replaces everything in the Casting Tracker for this project. Download a backup first if you want to keep it.', 'Load example')) return; await loadExample(); },
@@ -1661,6 +1671,11 @@ function printHead(sub) {
   const p = S.prod;
   return `<div class="ph"><div><b>${esc(p.title || 'Untitled production')}</b>${p.company ? ' · ' + esc(p.company) : ''}</div><div>${esc(sub)}</div></div>`;
 }
+/* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
+   window.fthDocs only exists inside the hub. Both helpers return true when the person chose
+   "Save to Documentation", which means: don't download / don't open the print window. */
+const fthDoc = (type, filename, blob, group) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob, group}));
+const fthPage = (type, name, group) => !!(window.fthDocs && window.fthDocs.page({type, name, group}));
 function printBreakdowns(rs) {
   if (!rs.length) { toast('Add a role first'); return; }
   const p = S.prod, row = (k, v) => v ? `<tr><th>${k}</th><td class="txt">${esc(v)}</td></tr>` : '';
@@ -1674,14 +1689,15 @@ function printBreakdowns(rs) {
     <table>${row('Audition', r.format)}${row('Sides', r.sides)}${row('Self-tape instructions', r.tapeInstr)}${row('Submission deadline', p.deadline ? fmtDY(p.deadline) : '')}
     ${row('Director', p.director)}${row('Producer', p.producer)}${row('Casting', p.cd)}</table>
     ${p.notes ? `<p class="txt" style="font-size:9.5pt">${esc(p.notes)}</p>` : ''}</div>`).join('');
-  window.print();
+  const one = rs.length === 1 && S.roles.length > 1 ? rs[0].name || 'Unnamed role' : '';
+  if (!fthPage('Casting Breakdowns PDF', fileBase() + ' - Casting breakdown' + (one ? ' - ' + one : 's'), one && 'Casting Breakdowns PDF · ' + one)) window.print();
 }
 function printSheet() {
   const rs = S.roles.filter(r => actorsOf(r.id).some(a => !a.passed));
   if (!rs.length) { toast('Add some auditionees first'); return; }
   $('#print').innerHTML = rs.map(r => `<div class="pp">${printHead('Contact sheet · ' + new Date().toLocaleDateString())}<h1>${esc(r.name || 'Unnamed role')}</h1><h2>${esc([r.type, ageTxt(r.ageMin, r.ageMax) && 'Playing ' + ageTxt(r.ageMin, r.ageMax)].filter(Boolean).join(' · '))}</h2>
     <div class="sheet">${actorsOf(r.id).filter(a => !a.passed).sort((x, y) => (SIDX[y.stage] - SIDX[x.stage]) || (y.shortlist - x.shortlist) || ((dirAvg(y) || 0) - (dirAvg(x) || 0))).map(a => { const src = a.img && IMG.get(a.id); return `<div class="tile"><div class="im">${src ? `<img src="${src}">` : esc(initials(a.name))}</div><div class="tx"><b>${esc(a.name || 'Unnamed')}${a.shortlist ? ' ★' : ''}</b>${esc(stName(a.stage))}${dirAvg(a) ? ' · ' + f1(dirAvg(a)) + '/5' : ''}<br>${esc([ageTxt(a.ageMin, a.ageMax), a.base].filter(Boolean).join(' · '))}<br>${esc(a.rep === 'self' ? a.email || a.phone || 'Self-represented' : a.agency || a.agentName || '')}</div></div>`; }).join('')}</div></div>`).join('');
-  window.print();
+  if (!fthPage('Contact Sheet PDF', fileBase() + ' - Contact sheet')) window.print();
 }
 function csvCell(v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 function download(name, text, type) { const b = new Blob([text], {type}), u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); }
@@ -1690,7 +1706,9 @@ function downloadCSV() {
   if (!S.actors.length) { toast('No auditionees to export yet'); return; }
   const head = ['Role', 'Name', 'Stage', 'Passed', 'Shortlist', 'Pronouns', 'Playing age', 'Based in', 'Height', 'Union', 'Accents & skills', 'Representation', 'Agent / manager', 'Agency', 'Agent email', 'Agent phone', 'Actor email', 'Actor phone', 'Profile', 'Showreel', 'Self-tapes', 'Fee', 'Fee unit', 'Fee notes', 'Shoot days available', 'Shoot days unavailable', 'Availability notes', ...DIR_RATES.map(r => r[1]), 'Overall', 'Recommendation', ...ROUNDS.map(r => r[1] + ' score'), ...ROUNDS.map(r => r[1] + ' verdict'), 'Director notes', 'Concerns', 'Submitted'];
   const rows = S.actors.map(a => { const r = role(a.roleId) || {}, av = availSum(a); return [r.name, a.name, stName(a.stage), a.passed ? 'Yes' : '', a.shortlist ? 'Yes' : '', a.pronouns, ageTxt(a.ageMin, a.ageMax), a.base, a.height, a.union, a.skills, a.rep, a.agentName, a.agency, a.agentEmail, a.agentPhone, a.email, a.phone, a.profile, a.reel, a.tapes.map(t => [t.label, t.url].filter(Boolean).join(': ')).join(' | '), a.fee.amount, a.fee.unit, a.fee.notes, av.total ? av.a + '/' + av.total : '', av.u || '', a.avail.notes, ...DIR_RATES.map(([k]) => a.dir[k] || ''), dirAvg(a) ? f1(dirAvg(a)) : '', a.dir.rec, ...ROUNDS.map(([k]) => { const x = audAvg(aud(a.id, k)); return x ? f1(x) : ''; }), ...ROUNDS.map(([k]) => (aud(a.id, k) || {}).verdict || ''), a.dir.notes, a.dir.concerns, a.submitted]; });
-  download(fileBase() + ' - Auditionees.csv', '﻿' + [head, ...rows].map(r => r.map(csvCell).join(',')).join('\r\n'), 'text/csv;charset=utf-8');
+  const csvText = '﻿' + [head, ...rows].map(r => r.map(csvCell).join(',')).join('\r\n');
+  if (fthDoc('Auditionees CSV', fileBase() + ' - Auditionees.csv', new Blob([csvText], {type: 'text/csv;charset=utf-8'}))) return;
+  download(fileBase() + ' - Auditionees.csv', csvText, 'text/csv;charset=utf-8');
 }
 function backup() { download(fileBase() + ' - Casting backup.json', JSON.stringify({app: 'fth-casting', v: 1, at: Date.now(), S, img: Object.fromEntries(IMG)}), 'application/json'); toast('Backup downloaded'); }
 $('#bkPick').addEventListener('change', async e => {

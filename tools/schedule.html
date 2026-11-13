@@ -115,6 +115,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#4fc7b5;--fth-accent:#4fc7b5;--fth-accent-ink:#4fc7b5;--fth-accent-soft:rgba(79,199,181,0.14);--fth-accent-line:rgba(79,199,181,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#2e7369;--fth-accent-ink:#2e7369;--fth-accent-soft:rgba(79,199,181,0.16);--fth-accent-line:rgba(79,199,181,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -284,8 +287,9 @@ table.ds tr.cur td:first-child{color:var(--fth-accent-ink)!important}
     <button class="fth-btn ghost" onclick="loadEx()">Load example</button>
     <button class="fth-btn ghost" onclick="clearAll()">Start again</button>
     <span class="fth-vsep"></span>
+    <button class="fth-btn" id="docBtn" data-fth-doc hidden></button>
     <button class="fth-btn" onclick="xl()">Download Excel</button>
-    <button class="fth-btn primary" onclick="print()">Save as PDF</button>
+    <button class="fth-btn primary" onclick="pdf()">Save as PDF</button>
   </div>
 </header>
 <div class="app"><div class="ed" id="ed"></div><div class="pvw"><div class="pvlabel" id="pvlabel"><span class="fth-label">Preview</span></div><div id="pv"></div></div></div>
@@ -542,6 +546,12 @@ else if(q.ldel){S[q.ldel].splice(+q.i,1)}else ch=0;
 if(ch){closeCP();form();prev()}});
 function loadEx(){if(!confirm("Replace everything with the example schedule?"))return;S=JSON.parse(JSON.stringify(EXAMPLE));form();prev()}
 function clearAll(){if(!confirm("Clear everything and start a blank schedule?"))return;S=blank();form();prev()}
+/* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
+   window.fthDocs only exists inside the hub. Both helpers return true when the person chose
+   "Save to Documentation", which means: don't download / don't open the print window. */
+const fthDoc = (type, filename, blob, group) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob, group}));
+const fthPage = (type, name, group) => !!(window.fthDocs && window.fthDocs.page({type, name, group}));
+function pdf(){if(!fthPage("Schedule PDF","Production_Schedule_"+fname()))print()}
 function dl(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
 const fname=()=>(S.title||"Production").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"_")||"Production";
 function saveProg(){closeCP();const s=document.getElementById("sv"),z=$("#pv").style.zoom;s.textContent=JSON.stringify(S).replace(/</g,"\\u003c");
@@ -609,7 +619,9 @@ p.cells.forEach((c,i)=>{const x=row.getCell(5+i);x.value=c||null;if(CF[c])x.fill
 const fc=lg.getColumn(5).letter,lc=lg.getColumn(4+n).letter,rg=`${fc}${row.number}:${lc}${row.number}`;row.getCell(5+n).value={formula:`COUNTIF(${rg},"S")+COUNTIF(${rg},"W")+COUNTIF(${rg},"F")+COUNTIF(${rg},"SWF")`,result:p.tot};
 for(let c=2;c<=5+n;c++){const x=row.getCell(c);x.font=font("#4B5A6B",{size:10,bold:c==5+n});x.border={bottom:line,right:c>=5?line:undefined};if(c!=3&&c!=4)x.alignment={horizontal:"center"}}});
 for(let i=0;i<=n;i++)lg.getColumn(5+i).width=10}
-const buf=await wb.xlsx.writeBuffer();dl(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),"Production_Schedule_"+fname()+".xlsx")}
+const buf=await wb.xlsx.writeBuffer(),xb=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),xn="Production_Schedule_"+fname()+".xlsx";
+if(!fthDoc("Schedule Excel",xn,xb))dl(xb,xn)}
+if(window.fthDocs)fthDocs.attach($("#docBtn"),[{label:"Schedule PDF",fn:pdf},{label:"Schedule Excel",fn:xl}]);
 {const p0=prev;prev=function(){p0.apply(this,arguments);fthPersist()}}
 form();prev();fthShow();
 </script></body></html>

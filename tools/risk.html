@@ -115,6 +115,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#ff7152;--fth-accent:#ff7152;--fth-accent-ink:#ff7152;--fth-accent-soft:rgba(255,113,82,0.14);--fth-accent-line:rgba(255,113,82,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#944230;--fth-accent-ink:#944230;--fth-accent-soft:rgba(255,113,82,0.16);--fth-accent-line:rgba(255,113,82,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -205,8 +208,9 @@ canvas{border:1px dashed var(--fth-line3)!important;background:#fff!important;bo
   <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>06 · Shoot-Day Paperwork</span><h1 class="fth-title">Risk Assessment Builder</h1></div>
   <div class="fth-actions">
     <span class="status" id="saveState"></span>
+    <button class="fth-btn" id="docBtn" data-fth-doc hidden></button>
     <button class="fth-btn" id="xlb" onclick="xl()">Download Excel</button>
-    <button class="fth-btn primary" onclick="print()">Save as PDF</button>
+    <button class="fth-btn primary" onclick="pdf()">Save as PDF</button>
   </div>
 </header>
 <div class="app"><div class="ed" id="ed"></div><div class="pvw"><div class="pvlabel" id="pvlabel"><span class="fth-label">Preview</span></div><div id="pv"></div></div></div>
@@ -517,12 +521,21 @@ document.addEventListener("input",e=>{const t=e.target,d=t.dataset;
  if(d.k!==undefined)S[d.k]=t.value;else if(d.q){S.sel=S.sel.filter(x=>x!=d.q);if(t.checked)S.sel.push(d.q)}
  else if(d.wf){S.wf=S.wf.filter(x=>x!=d.wf);if(t.checked)S.wf.push(d.wf)}else if(d.dc!==undefined)S.dc[+d.dc]=t.checked;else if(d.dcx!==undefined)S.dcx[d.dcx]=t.checked;else if(d.scr){S.scr=S.scr.filter(x=>x!=d.scr);if(t.checked)S.scr.push(d.scr)}else if(d.ci!==undefined)S.cust[+d.ci][d.ck]=t.value;else return;prev()});
 document.addEventListener("click",e=>{const dd=e.target.dataset||{};if(dd.delc!==undefined){S.cust.splice(+dd.delc,1);renderCust();prev();return}if(e.target.id=="addc"&&S.cust.length<8){S.cust.push({});renderCust();prev();return}const k=e.target.dataset&&e.target.dataset.t;if(k){const t=$("#t_"+k);t&&t.classList.toggle("on")}});
+/* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
+   window.fthDocs only exists inside the hub. Both helpers return true when the person chose
+   "Save to Documentation", which means: don't download / don't open the print window. */
+const fthDoc = (type, filename, blob, group) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob, group}));
+const fthPage = (type, name, group) => !!(window.fthDocs && window.fthDocs.page({type, name, group}));
+const rname=()=>(S.tit||"Shoot").replace(/[^\w]+/g,"_");
+function pdf(){if(!fthPage("Risk Assessment PDF","Risk_Assessment_"+rname()))print()}
 function dl(b,n){const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),999)}
 function saveProg(){const s=document.getElementById("sv");s.textContent=JSON.stringify(S).replace(/</g,"\\u003c");
  dl(new Blob(["<!DOCTYPE html>\n"+document.documentElement.outerHTML],{type:"text/html"}),"Risk_Assessment_Builder_"+(S.tit||"progress").replace(/[^\w]+/g,"_")+".html");s.textContent=""}
 async function xl(){if(typeof ExcelJS=="undefined")return alert("The Excel library couldn't load. Check your internet connection and try again.");
  const b=$("#xlb");b.disabled=true;try{const D=dat();D.signed=new Date().toLocaleString("en-GB");const buf=await RA.build(D);
- dl(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),"Risk_Assessment_"+(S.tit||"Shoot").replace(/[^\w]+/g,"_")+".xlsx")}catch(e){alert("Something went wrong: "+e.message)}b.disabled=false}
+ const xb=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),xn="Risk_Assessment_"+rname()+".xlsx";
+ if(!fthDoc("Risk Assessment Excel",xn,xb))dl(xb,xn)}catch(e){alert("Something went wrong: "+e.message)}b.disabled=false}
 {const p0=prev;prev=function(){p0.apply(this,arguments);fthPersist()}}
 renderCust();prev();fthShow();
+if(window.fthDocs)fthDocs.attach($("#docBtn"),[{label:"Risk Assessment PDF",fn:pdf},{label:"Risk Assessment Excel",fn:()=>signedOk()?xl():alert("The Excel version unlocks when every declaration statement is ticked and the declaration is named and signed.")}]);
 </script></body></html>

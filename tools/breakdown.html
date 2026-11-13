@@ -116,6 +116,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#f5b14c;--fth-accent:#f5b14c;--fth-accent-ink:#f5b14c;--fth-accent-soft:rgba(245,177,76,0.14);--fth-accent-line:rgba(245,177,76,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#8e672c;--fth-accent-ink:#8e672c;--fth-accent-soft:rgba(245,177,76,0.16);--fth-accent-line:rgba(245,177,76,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -407,6 +410,7 @@ select.fi{padding:0 6px}
     <button class="fth-btn" id="openBtn" title="Open a screenplay PDF or a saved breakdown (.json)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5V18a1.5 1.5 0 0 0 1.5 1.5h15A1.5 1.5 0 0 0 21 18V9a1.5 1.5 0 0 0-1.5-1.5H12L10 5H4.5A1.5 1.5 0 0 0 3 6.5z"/></svg>Open</button>
     <button class="fth-btn" id="saveBtn" disabled title="Save the script and every tag as a .json project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M4.5 19.5h15"/></svg>Download .json</button>
     <button class="fth-btn" id="csvBtn" disabled title="Every tagged mention as a spreadsheet (.csv)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M3.5 9.5h17M3.5 14.5h17M9.5 4.5v15"/></svg>CSV</button>
+    <button class="fth-btn" id="docBtn" data-fth-doc hidden></button>
     <button class="fth-btn primary" id="pdfBtn" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 13h6M9 16.5h4"/></svg>Export PDF</button>
   </div>
 </header>
@@ -1446,6 +1450,14 @@ $('#proj').addEventListener('input', autosave);
 
 /* ═════════════ save / csv ═════════════ */
 const slug = s => (s || '').trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-').slice(0, 60) || 'script-breakdown';
+/* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
+   window.fthDocs only exists inside the hub. Both helpers return true when the person chose
+   "Save to Documentation", which means: don't download / don't open the print window. */
+const fthDoc = (type, filename, blob, group) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob, group}));
+const fthPage = (type, name, group) => !!(window.fthDocs && window.fthDocs.page({type, name, group}));
+/* docMode: the export dialogs were opened from "Save to Documentation", so they file a draft and don't download */
+let docMode = false;
+const docRun = fn => { const m = docMode; docMode = false; return m && window.fthDocs ? window.fthDocs.run(fn) : fn(); };
 function download(name, blob) { const u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 5000); }
 function b64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
 $('#saveBtn').onclick = () => {
@@ -1455,7 +1467,7 @@ $('#saveBtn').onclick = () => {
   toast('Project saved (includes the script PDF)');
 };
 const csvQ = v => { v = String(v ?? ''); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-const csvSave = (suffix, rows) => download(slug($('#proj').value || 'script') + suffix + '.csv', new Blob(['﻿' + rows.map(r => r.map(csvQ).join(',')).join('\r\n')], { type: 'text/csv' }));
+const csvSave = (suffix, rows) => { const n = slug($('#proj').value || 'script') + suffix + '.csv', b = new Blob(['﻿' + rows.map(r => r.map(csvQ).join(',')).join('\r\n')], { type: 'text/csv' }); if (!fthDoc('Breakdown CSV', n, b, 'Breakdown CSV · ' + suffix.slice(1))) download(n, b); };
 function csvMentions() {
   const rows = [['Category', 'Item', 'As written', 'Scene', 'Scene heading', 'Page', 'Item note']];
   for (const { cat, items } of byCat()) for (const g of items) for (const t of g.tags) { const sc = sceneOfWord(t.a); rows.push([cat.name, g.name, cleanText(t.text) || t.text, sc ? sc.n : '', sc ? sc.heading : '', S.words[t.a].p + 1, S.notes[g.key] || '']); }
@@ -1479,47 +1491,50 @@ function csvCont() {
   csvSave('-continuity', rows);
 }
 $('#csvBtn').onclick = () => {
-  if (!S.adv) { if (!S.tags.length) { toast('Tag something first.'); return; } csvMentions(); toast('CSV exported'); return; }
-  const m = $('#modal');
-  m.innerHTML = `<div class="m" role="dialog" aria-modal="true"><h3>Export CSV</h3><p>Each one downloads as its own spreadsheet.</p>
+  if (!S.adv) { if (!S.tags.length) { docMode = false; toast('Tag something first.'); return; } const dm = docMode; docRun(csvMentions); if (!dm) toast('CSV exported'); return; }
+  const m = $('#modal'), dm = docMode;
+  m.innerHTML = `<div class="m" role="dialog" aria-modal="true"><h3>${dm ? 'Save CSV to Documentation' : 'Export CSV'}</h3><p>${dm ? 'Each one is filed as its own spreadsheet in this project’s Documentation.' : 'Each one downloads as its own spreadsheet.'}</p>
     <label class="opt"><input type="checkbox" id="cM" ${S.tags.length ? 'checked' : 'disabled'}><div><b>Tagged mentions</b><small>Every tagged mention with its category, scene and page.</small></div></label>
     <label class="opt"><input type="checkbox" id="cS" ${S.scenes.length ? 'checked' : 'disabled'}><div><b>Scenes &amp; story timeline</b><small>One row per scene: story day, time of day, run times and open continuity checks.</small></div></label>
     <label class="opt"><input type="checkbox" id="cC" ${S.cont.length ? 'checked' : 'disabled'}><div><b>Continuity checks</b><small>One row per check, with its status.</small></div></label>
-    <div class="row"><button class="btn" id="mC">Cancel</button><button class="btn primary" id="mGo">Export</button></div></div>`;
-  m.hidden = false; $('#mC').onclick = closeModal; m.onclick = e => { if (e.target === m) closeModal(); };
+    <div class="row"><button class="btn" id="mC">Cancel</button><button class="btn primary" id="mGo">${dm ? 'Save to Documentation' : 'Export'}</button></div></div>`;
+  m.hidden = false; $('#mC').onclick = () => { docMode = false; closeModal(); }; m.onclick = e => { if (e.target === m) { docMode = false; closeModal(); } };
   $('#mGo').onclick = () => {
     const jobs = [$('#cM').checked && csvMentions, $('#cS').checked && csvScenes, $('#cC').checked && csvCont].filter(Boolean);
-    closeModal(); if (!jobs.length) return;
-    jobs.forEach((f, i) => setTimeout(f, i * 400)); toast(`Exported ${jobs.length} CSV file${jobs.length > 1 ? 's' : ''}`);
+    closeModal(); if (!jobs.length) { docMode = false; return; }
+    docRun(() => jobs.forEach((f, i) => setTimeout(f, i * 400))); if (!dm) toast(`Exported ${jobs.length} CSV file${jobs.length > 1 ? 's' : ''}`);
   };
 };
 
 /* ═════════════ PDF export ═════════════ */
 function closeModal() { $('#modal').hidden = true; }
 $('#pdfBtn').onclick = () => {
-  if (!S.pdf) return;
-  if (!S.tags.length && !S.adv) { toast('Tag something first — the export is built from your tags.'); return; }
-  const m = $('#modal');
-  m.innerHTML = `<div class="m" role="dialog" aria-modal="true"><h3>Export breakdown PDF</h3><p>A summary page comes first, then the sections you choose, in this order.</p>
+  if (!S.pdf) { docMode = false; return; }
+  if (!S.tags.length && !S.adv) { docMode = false; toast('Tag something first — the export is built from your tags.'); return; }
+  const m = $('#modal'), dm = docMode;
+  m.innerHTML = `<div class="m" role="dialog" aria-modal="true"><h3>${dm ? 'Save breakdown PDF to Documentation' : 'Export breakdown PDF'}</h3><p>A summary page comes first, then the sections you choose, in this order.</p>
     <label class="opt"><input type="checkbox" id="oL" checked><div><b>Category lists</b><small>Every item grouped by category, with each mention, its scene and page. Only categories you used.</small></div></label>
     <label class="opt"><input type="checkbox" id="oS" checked><div><b>Scene breakdowns</b><small>One block per scene: heading, pages, length in eighths, and everything tagged in it.${S.adv ? ' Plus story day, time of day, run time and continuity checks.' : ''}</small></div></label>
     ${S.adv ? `<label class="opt sub"><input type="checkbox" id="oSO"><div><b>In story order</b><small>Group scenes under their story days instead of script order.</small></div></label>
     <label class="opt"><input type="checkbox" id="oC" ${S.cont.length ? 'checked' : 'disabled'}><div><b>Continuity checklist</b><small>Each note with every scene it carries into and its status.</small></div></label>` : ''}
     <label class="opt"><input type="checkbox" id="oX" checked><div><b>Highlighted script</b><small>The original pages with your colour highlights.</small></div></label>
     <label class="opt sub"><input type="checkbox" id="oM" ${S.labels ? 'checked' : ''}><div><b>Margin labels</b><small>Small category tags beside each highlighted line.</small></div></label>
-    <div class="row"><button class="btn" id="mC">Cancel</button><button class="btn primary" id="mGo">Export PDF</button></div></div>`;
+    <div class="row"><button class="btn" id="mC">Cancel</button><button class="btn primary" id="mGo">${dm ? 'Save to Documentation' : 'Export PDF'}</button></div></div>`;
   m.hidden = false;
   $('#oX').onchange = e => $('#oM').disabled = !e.target.checked;
   if ($('#oSO')) $('#oS').addEventListener('change', e => $('#oSO').disabled = !e.target.checked);
-  $('#mC').onclick = closeModal;
-  m.onclick = e => { if (e.target === m) closeModal(); };
-  $('#mGo').onclick = async () => {
+  $('#mC').onclick = () => { docMode = false; closeModal(); };
+  m.onclick = e => { if (e.target === m) { docMode = false; closeModal(); } };
+  $('#mGo').onclick = () => docRun(async () => {
     const o = { lists: $('#oL').checked, scenes: $('#oS').checked, script: $('#oX').checked, labels: $('#oM').checked, story: S.adv && $('#oSO').checked, cont: S.adv && $('#oC').checked };
     closeModal(); toast('Building PDF…', 60000);
-    try { await exportPdf(o); toast('PDF exported'); }
+    try { await exportPdf(o); toast(dm ? 'PDF built' : 'PDF exported', dm ? 800 : undefined); }
     catch (err) { console.error(err); toast(err && err.message === 'load' ? 'Couldn’t load the PDF library — check your internet connection.' : 'Export failed: ' + (err && err.message || err), 6000); }
-  };
+  });
 };
+if (window.fthDocs) window.fthDocs.attach($('#docBtn'), [
+  {label: 'Breakdown PDF…', fn: () => { if (!S.pdf) { toast('Open a script first.'); return; } docMode = true; $('#pdfBtn').onclick(); }},
+  {label: 'Breakdown CSV…', fn: () => { if (!S.pdf) { toast('Open a script first.'); return; } docMode = true; $('#csvBtn').onclick(); }}]);
 
 const WIN = new Set([0x152, 0x153, 0x160, 0x161, 0x178, 0x17D, 0x17E, 0x192, 0x2C6, 0x2DC, 0x2013, 0x2014, 0x2018, 0x2019, 0x201A, 0x201C, 0x201D, 0x201E, 0x2020, 0x2021, 0x2022, 0x2026, 0x2030, 0x2039, 0x203A, 0x20AC, 0x2122]);
 const safe = s => [...String(s ?? '')].map(ch => { const c = ch.codePointAt(0); if ((c >= 32 && c <= 126) || (c >= 160 && c <= 255) || WIN.has(c)) return ch; if (c === 9 || c === 10) return ' '; const n = ch.normalize('NFKD').replace(/[̀-ͯ]/g, ''); return n && [...n].every(x => x.charCodeAt(0) < 256) ? n : '?'; }).join('');
@@ -1723,7 +1738,8 @@ async function exportPdf(o) {
     const r = `Page ${i + 1} of ${total}`; pg.drawText(r, { x: PW - M - F.widthOfTextAtSize(r, 7.5), y: 24, size: 7.5, font: F, color: MUT });
   });
   const bytes = await out.save();
-  download(slug(title) + '-breakdown.pdf', new Blob([bytes], { type: 'application/pdf' }));
+  const pdfBlob = new Blob([bytes], { type: 'application/pdf' }), pdfName = slug(title) + '-breakdown.pdf';
+  if (!fthDoc(S.adv ? 'Advanced Breakdown PDF' : 'Breakdown PDF', pdfName, pdfBlob)) download(pdfName, pdfBlob);
 }
 
 /* ═════════════ boot ═════════════ */

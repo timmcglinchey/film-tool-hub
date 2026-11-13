@@ -116,6 +116,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#f5b14c;--fth-accent:#f5b14c;--fth-accent-ink:#f5b14c;--fth-accent-soft:rgba(245,177,76,0.14);--fth-accent-line:rgba(245,177,76,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#8e672c;--fth-accent-ink:#8e672c;--fth-accent-soft:rgba(245,177,76,0.16);--fth-accent-line:rgba(245,177,76,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -521,6 +524,7 @@ table.cmp td.n{font-family:var(--fth-mono);font-size:12px;white-space:nowrap}
     <button class="fth-btn" id="uploadBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><path d="m7 14 5-5 5 5"/><path d="M5 3h14"/></svg>Upload script PDF</button>
     <button class="fth-btn icon ghost" id="settingsBtn" title="Script settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
     <span class="fth-vsep"></span>
+    <button class="fth-btn" id="docBtn" data-fth-doc hidden></button>
     <button class="fth-btn" id="printBtn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v7H7z"/></svg>Print / PDF</button>
   </div>
 </header>
@@ -1927,6 +1931,12 @@ function checkHint(k){
    ===================================================================== */
 const printEl = $('#print');
 const P = s => esc(s || '').replace(/\n/g, '<br>');
+/* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
+   window.fthDocs only exists inside the hub. Both helpers return true when the person chose
+   "Save to Documentation", which means: don't download / don't open the print window. */
+const fthDoc = (type, filename, blob, group) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob, group}));
+const fthPage = (type, name, group) => !!(window.fthDocs && window.fthDocs.page({type, name, group}));
+const DOC_KIND = {coverage:['Coverage Report PDF', 'Coverage report'], feedback:['Feedback PDF', 'Feedback'], timeline:['Timeline PDF', 'Timeline']};
 function doPrint(kind){
   const d = C().details, title = d.title || pdfName.replace(/\.pdf$/i, '') || 'Untitled script';
   let o = '<div class="pr">';
@@ -1967,7 +1977,7 @@ function doPrint(kind){
     if (!sts.length && !cs.length) o += '<p class="muted">Nothing to print yet: add comments, page summaries or plot beats first.</p>';
   }
   printEl.innerHTML = o + '</div>';
-  setTimeout(() => window.print(), 60);
+  setTimeout(() => { if (!fthPage(DOC_KIND[kind][0], title + ' - ' + DOC_KIND[kind][1])) window.print(); }, 60);
 }
 
 /* =====================================================================
@@ -2006,6 +2016,7 @@ $('#uploadBtn').addEventListener('click', () => fileIn.click());
 $('#projIn').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) importProject(f); });
 $('#dropBtn').addEventListener('click', () => fileIn.click());
 $('#printBtn').addEventListener('click', () => doPrint(S.mode === 'coverage' ? 'coverage' : 'feedback'));
+if (window.fthDocs) window.fthDocs.attach($('#docBtn'), ['coverage', 'feedback', 'timeline'].map(k => ({label: DOC_KIND[k][0], fn: () => doPrint(k)})));
 $('#openLeft').addEventListener('click', () => togglePanel('left'));
 $('#openRight').addEventListener('click', () => togglePanel('right'));
 $('#zIn').addEventListener('click', () => { S.ui.zoom = clamp(+(S.ui.zoom + 0.1).toFixed(2), 0.5, 2.5); save(); applyZoom(); });

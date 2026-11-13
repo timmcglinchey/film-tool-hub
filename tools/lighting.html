@@ -115,6 +115,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#97a3ff;--fth-accent:#97a3ff;--fth-accent-ink:#97a3ff;--fth-accent-soft:rgba(151,163,255,0.14);--fth-accent-line:rgba(151,163,255,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#585f94;--fth-accent-ink:#585f94;--fth-accent-soft:rgba(151,163,255,0.16);--fth-accent-line:rgba(151,163,255,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -1896,7 +1899,14 @@ function buildExport(Sx,o){
 }
 function svgToCanvas(svgStr,W,H,scale=1){return new Promise((res,rej)=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=Math.round(W*scale);c.height=Math.round(H*scale);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);res(c)};img.onerror=()=>rej(new Error('render'));img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgStr)})}
 let downloads=null;
+/* Documentation (Film Tool Hub): exports are also filed in the project's Documentation folder (window.fthDocs only
+   exists inside the hub). save() returns true when "Save to Documentation" was chosen, so nothing is downloaded.
+   Project (.json) files are working copies, so they stay as downloads only. */
+const DOC_KIND={pdf:['Lighting Plan PDF','application/pdf'],png:['Lighting Plan PNG','image/png'],svg:['Lighting Plan SVG','image/svg+xml'],csv:['Kit List CSV','text/csv']};
 async function saveFile(filename,data,kind){
+  const dk=DOC_KIND[(filename.match(/\.([a-z]+)$/i)||[])[1]];
+  if(dk&&window.fthDocs){const blob=data instanceof Blob?data:new Blob([data],{type:dk[1]});
+    if(window.fthDocs.save({type:dk[0],filename,blob,group:/png|svg/.test(dk[1])?dk[0]+' · '+filename.replace(/\.[a-z]+$/i,''):undefined}))return true}
   try{if(!downloads&&window.claude?.use)downloads=await window.claude.use('downloads')}catch(e){}
   if(downloads){try{const r=await downloads.save({filename,data});if(r&&r.status==='saved')toast('Saved '+filename);return true}catch(err){if(err&&err.code==='declined')return false;if(err&&err.code==='rate_limited'){toast('A save prompt is already open.');return false}}}
   // standalone file opened in a normal browser: plain download
@@ -1916,7 +1926,9 @@ function openExport(){
   openModal(`${mh('Save &amp; export')}<div class="modal-b"><div class="grid2"><div><div class="sec-h" style="margin-top:0">Format</div>
   ${r('fmt','pdf','PDF','Plan pages plus kit list, ready to send round')}${r('fmt','png','PNG image','One setup as a high-res picture')}${r('fmt','svg','SVG','Vector drawing for editing elsewhere')}${r('fmt','csv','Kit list (CSV)','Opens in Excel, Numbers or Sheets')}${r('fmt','json','Project file (.json)','Full backup you can re-open with Projects')}</div>
   <div><div class="sec-h" style="margin-top:0">Options</div><div id="exOpts"></div></div></div></div>
-  <div class="modal-f"><button class="btn" data-close>Cancel</button><button class="btn pri" id="exGo">Export</button></div>`);
+  <div class="modal-f"><button class="btn" data-close>Cancel</button><button class="btn" id="exDoc" data-fth-doc hidden>Save to Documentation</button><button class="btn pri" id="exGo">Export</button></div>`);
+  if(window.fthDocs){$('#exDoc').hidden=false;$('#exDoc').onclick=()=>{if(exState.fmt==='json'){toast('Project files aren’t kept in Documentation. Choose PDF, PNG, SVG or the kit list.',4200);return}
+    closeModal();window.fthDocs.run(()=>runExport().catch(err=>{console.error(err);toast('Export failed: '+(err.message||'unknown error'))}))}}
   const opts=()=>{const f=exState.fmt;let h='';
     if(f==='pdf')h+=`<div class="hint" style="margin:0 0 4px">Setups to include</div><div class="exsetups">${P.setups.map(x=>`<label><input type="checkbox" data-exs="${x.id}" ${exState.setups.has(x.id)?'checked':''}>${esc(x.name)}${x.sample?' <span class="tag">Sample</span>':''}</label>`).join('')}</div>`+c('kit','Add kit list page')+c('photos','Add location photos')+`<div class="fld" style="margin-top:8px"><label>Paper</label><select data-ex="paper"><option value="a4" ${exState.paper==='a4'?'selected':''}>A4 landscape</option><option value="a3" ${exState.paper==='a3'?'selected':''}>A3 landscape</option><option value="letter" ${exState.paper==='letter'?'selected':''}>US Letter landscape</option></select></div>`;
     if(f==='png'||f==='svg')h+=fld('Setup',`<select data-ex="one">${P.setups.map(x=>`<option value="${x.id}" ${exState.one===x.id?'selected':''}>${esc(x.name)}${x.sample?' (sample)':''}</option>`).join('')}</select>`);

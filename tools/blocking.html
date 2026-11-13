@@ -116,6 +116,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#97a3ff;--fth-accent:#97a3ff;--fth-accent-ink:#97a3ff;--fth-accent-soft:rgba(151,163,255,0.14);--fth-accent-line:rgba(151,163,255,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#585f94;--fth-accent-ink:#585f94;--fth-accent-soft:rgba(151,163,255,0.16);--fth-accent-line:rgba(151,163,255,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -357,6 +360,7 @@ header.fth-head{height:auto;box-shadow:none;flex-wrap:wrap}
     <button class="btn" id="btnUndo">&#8617; Undo</button>
     <button class="btn" id="btnKeys">&#9000; Keys</button>
     <button class="btn dan" id="btnClear">&#10005; Clear</button>
+    <button class="btn" id="btnDoc" data-fth-doc hidden></button>
     <button class="btn pri" id="btnExport">&#11015; Export JPG</button>
   </div>
 </header>
@@ -1526,6 +1530,7 @@ document.getElementById('btnClear').addEventListener('click',()=>{if(!confirm('C
 document.getElementById('btnKeys').addEventListener('click',ev=>{document.getElementById('shPanel').classList.toggle('show');ev.stopPropagation();});
 document.addEventListener('click',()=>document.getElementById('shPanel').classList.remove('show'));
 document.getElementById('scaleVal').addEventListener('input',e=>{document.getElementById('scaleLbl').textContent=e.target.value;render();});
+if(window.fthDocs)window.fthDocs.attach(document.getElementById('btnDoc'),[{label:'Blocking Plan JPG',fn:()=>document.getElementById('btnExport').click()}]);
 document.getElementById('btnExport').addEventListener('click',()=>{
   const prev=selId;selId=null;render();
   const ec=document.createElement('canvas');ec.width=cv.width;ec.height=cv.height;
@@ -1535,7 +1540,11 @@ document.getElementById('btnExport').addEventListener('click',()=>{
   e2.fillStyle='#59616D';e2.font='11px JetBrains Mono,ui-monospace,monospace';e2.fillText(S().name,190,19);
   if(kfs[aScene]&&kfs[aScene].length)e2.fillText(' · KF '+(aKf+1)+'/'+kfs[aScene].length,360,19);
   e2.textAlign='right';e2.fillText(new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),ec.width-14,19);
-  ec.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='blocking_'+S().name.replace(/[^a-z0-9]/gi,'_').toLowerCase()+'.jpg';a.click();URL.revokeObjectURL(a.href);},'image/jpeg',.95);
+  /* Documentation (Film Tool Hub): the export is also filed in the project's Documentation folder (window.fthDocs only
+     exists inside the hub). save() returns true when "Save to Documentation" was chosen, so nothing is downloaded. */
+  const scene=S().name,fn='blocking_'+scene.replace(/[^a-z0-9]/gi,'_').toLowerCase()+'.jpg';
+  ec.toBlob(b=>{if(window.fthDocs&&window.fthDocs.save({type:'Blocking Plan JPG',filename:fn,blob:b,group:'Blocking Plan JPG · '+scene}))return;
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();URL.revokeObjectURL(a.href);},'image/jpeg',.95);
   selId=prev;render();
 });
 

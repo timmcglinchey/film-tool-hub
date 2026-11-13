@@ -116,6 +116,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#97a3ff;--fth-accent:#97a3ff;--fth-accent-ink:#97a3ff;--fth-accent-soft:rgba(151,163,255,0.14);--fth-accent-line:rgba(151,163,255,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#585f94;--fth-accent-ink:#585f94;--fth-accent-soft:rgba(151,163,255,0.16);--fth-accent-line:rgba(151,163,255,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -307,6 +310,7 @@ kbd{font:500 11px var(--mono);border:1px solid var(--line2);border-bottom-width:
   <div class="fth-actions">
       <button class="fth-btn" id="openBtn" title="Open a saved .json project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5V18a1.5 1.5 0 0 0 1.5 1.5h15A1.5 1.5 0 0 0 21 18V9a1.5 1.5 0 0 0-1.5-1.5H12L10 5H4.5A1.5 1.5 0 0 0 3 6.5z"/></svg>Open .json</button>
       <button class="fth-btn" id="saveBtn" title="Save stills and settings as a .json project file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M4.5 19.5h15"/></svg>Download .json</button>
+      <button class="fth-btn" id="docBtn" data-fth-doc hidden></button>
       <button class="fth-btn primary" id="pdfBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 13h6M9 16.5h4"/></svg><span id="pdfLbl">Export PDF</span></button>
     </div>
 </header>
@@ -786,6 +790,14 @@ function pdfStillPage(doc, it, title, sub, page) {
   pdfRatio(doc, it.ratio, sx, y + 4, sw);
 }
 const subLine = () => `${state.k} colours · picked by ${state.method} · ${new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}`;
+/* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
+   window.fthDocs only exists inside the hub. Both helpers return true when the person chose
+   "Save to Documentation", which means: don't download / don't open the print window. */
+const fthDoc = (type, filename, blob, group) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob, group}));
+const fthPage = (type, name, group) => !!(window.fthDocs && window.fthDocs.page({type, name, group}));
+/* a jsPDF document: file it, and download it unless "Save to Documentation" was chosen */
+const docSave = (doc, type, name) => { if (!fthDoc(type, name, doc.output('blob'))) doc.save(name); };
+if (window.fthDocs) window.fthDocs.attach($('#docBtn'), () => [{label: state.mode === 'single' ? 'Palette PDF' : 'Palette Deck PDF', fn: () => $('#pdfBtn').onclick()}]);
 $('#pdfBtn').onclick = async () => {
   const title = $('#proj').value.trim();
   if (state.mode === 'single' && !state.single) { toast('Add a still first.'); return; }
@@ -797,7 +809,7 @@ $('#pdfBtn').onclick = async () => {
     const it = state.single;
     doc.setProperties({ title: title || it.name });
     pdfStillPage(doc, it, title || it.name, (title ? it.name + '  ·  ' : '') + subLine());
-    doc.save(slug(title || it.name.replace(/\.[^.]+$/, '')) + '-palette.pdf');
+    docSave(doc, 'Palette PDF', slug(title || it.name.replace(/\.[^.]+$/, '')) + '-palette.pdf');
   } else {
     const inc = deckIncluded(), total = inc.length + 1, T = title || 'Reference deck';
     doc.setProperties({ title: T });
@@ -826,7 +838,7 @@ $('#pdfBtn').onclick = async () => {
     const y = pdfStrip(doc, palette(pts, state.k, state.method), PM, top + usedH + 5, gw);
     pdfRatio(doc, ratio(pts), PM, y + 4, gw);
     inc.forEach((it, i) => { doc.addPage(); pdfStillPage(doc, it, it.name, `Still ${i + 1} of ${inc.length}  ·  ${T}  ·  ${subLine()}`, `Page ${i + 2} of ${total}`); });
-    doc.save(slug(T) + '-deck.pdf');
+    docSave(doc, 'Palette Deck PDF', slug(T) + '-deck.pdf');
   }
   toast('PDF exported');
 };

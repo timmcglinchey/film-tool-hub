@@ -75,13 +75,15 @@ const store = (() => {
   const mem = new Map(); let db = null, ok = false;
   const ready = new Promise(res => {
     try {
-      const r = indexedDB.open('film-tool-hub', 2);
+      const r = indexedDB.open('film-tool-hub', 3);
       r.onupgradeneeded = () => {
         const d = r.result, have = n => d.objectStoreNames.contains(n);
         if (!have('tools')) d.createObjectStore('tools', {keyPath: 'id'});
         if (!have('projects')) d.createObjectStore('projects', {keyPath: 'id'});
         if (!have('saves')) d.createObjectStore('saves', {keyPath: 'id'});
         if (!have('backups')) d.createObjectStore('backups', {keyPath: 'id', autoIncrement: true}).createIndex('projectId', 'projectId');
+        if (!have('docs')) d.createObjectStore('docs', {keyPath: 'id'}).createIndex('projectId', 'projectId');   /* Documentation: one entry per saved document */
+        if (!have('docfiles')) d.createObjectStore('docfiles');                                                    /* …and the file itself, by the same id */
       };
       r.onsuccess = () => { db = r.result; ok = true; res(); };
       r.onerror = r.onblocked = () => res();
@@ -240,6 +242,7 @@ async function snapshot(pid) {
   const pre = PFX(pid), snap = {v: 1, at: Date.now(), project: (projById(pid) || {}).name || '', ls: {}, idb: {}};
   for (const k of lsKeys(pre)) snap.ls[k.slice(pre.length)] = localStorage.getItem(k);
   for (const n of await listDBs(pre)) { try { snap.idb[n.slice(pre.length)] = await dumpDB(n); } catch (e) {} }
+  snap.docs = (await docsAll(pid)).map(docPublic);   /* the Documentation list (the files themselves are kept once, not in every snapshot) */
   return snap;
 }
 async function wipeProjectData(pid) {
@@ -275,6 +278,7 @@ async function saveProject(quiet) {
   if (!(await tp)) { renderAccount(); toast(`Saved “${p.name}” in this browser only. Reconnect Google Drive to save it there too.`); return; }
   try { if (!quiet) toast('Saving to Google Drive…'); const how = await driveSave(p, snap); await putProject(p); renderAccount(); renderProjUI(); renderShare(); if (!quiet) toast(how === 'nothing' ? `“${p.name}” is up to date. You have no new changes to send.` : p.shared ? `Saved “${p.name}”. Your crew will get your changes.` : `Saved “${p.name}” to Google Drive`); }
   catch (e) { renderAccount(); toast('Saved in this browser, but Google Drive didn’t accept it: ' + e.message); }
+  docsSendSoon(p, 400);
 }
 async function backupProject(p, reason) {
   if (!p) return;
@@ -308,6 +312,7 @@ async function restoreFrom(snap, label) {
   await backupProject(p, 'before restore');
   await unloadFrames();
   await restoreSnapshot(p.id, snap);
+  await docsRestore(p, snap.docs);
   p.changedAt = Date.now(); await putProject(p);
   reloadFrames(); renderProjUI(); toast(`Restored ${label}`);
 }
@@ -323,7 +328,7 @@ async function switchProject(id) {
   window.__fthHub.project = id;
   if (tp && await tp) { await offerPull(next); }
   reloadFrames(); renderProjUI(); render(); toast(`Project: ${next.name}`);
-  resetShare(); kickTick();
+  resetShare(); kickTick(); docsRefresh();
 }
 async function createProject(name) {
   const p = {id: newId(), name: name || 'Untitled project', created: Date.now(), openedAt: Date.now(), tools: {}, archived: false};
@@ -343,12 +348,12 @@ async function deleteProject(id, keepMarker) {
   if (id === curId) await leaveShared();
   if (p.driveFileId && account && !p.sharedBy && !keepMarker) { if (await getToken(true).catch(() => null)) await driveTrash(p); }
   if (id === curId) await unloadFrames();
-  await wipeProjectData(id);
+  await wipeProjectData(id); await docsWipe(id);
   await store.gtx('saves', 'readwrite', s => s.delete(id)).catch(() => {});
   for (const b of await backupsFor(id)) await store.gtx('backups', 'readwrite', s => s.delete(b.id)).catch(() => {});
   if (keepMarker) { Object.assign(p, {hiddenShared: true, dirty: null, tools: {}, needsDownload: true, driveRev: null, savedAt: 0, changedAt: 0, backupAt: 0}); await putProject(p); }
   else { await store.gtx('projects', 'readwrite', s => s.delete(id)).catch(() => {}); projects = projects.filter(x => x.id !== id); }
-  if (id === curId) { curId = null; const other = activeProjects()[0]; if (other) { curId = other.id; localStorage.setItem(CUR_KEY, other.id); window.__fthHub.project = other.id; reloadFrames(); } else await createProject('Untitled project'); resetShare(); kickTick(); }
+  if (id === curId) { curId = null; const other = activeProjects()[0]; if (other) { curId = other.id; localStorage.setItem(CUR_KEY, other.id); window.__fthHub.project = other.id; reloadFrames(); } else await createProject('Untitled project'); resetShare(); kickTick(); docsRefresh(); }
   renderProjUI(); render();
 }
 
@@ -379,7 +384,9 @@ window.__fthHub = {
   save() { return saveProject().then(ok => { if (ok === false) throw new Error('not saved'); }); },
   /* save, and also keep a dated backup (used before a tool replaces a lot of work at once) */
   async saveWithBackup(why) { await this.save(); await backupProject(cur(), why || 'before a big change'); },
-  projectInfo() { const p = cur(); return p ? {id: p.id, name: p.name} : null; }
+  projectInfo() { const p = cur(); return p ? {id: p.id, name: p.name} : null; },
+  /* Documentation: every tool hands its exports to this one helper (through window.fthDocs in the tool) */
+  saveDoc(tool, pid, o) { return saveDoc(tool, pid, o || {}); }
 };
 
 
@@ -486,10 +493,11 @@ function ensureFolders() {
 }
 /* upload (create when no fileId) with a resumable session, so big projects (script PDFs, stills) fit */
 async function uploadFile(meta, text, fileId) {
+  const type = meta.mimeType || 'application/json';
   const start = await gapi(`${DRIVE_UP}/files${fileId ? '/' + fileId : ''}?uploadType=resumable&fields=id,modifiedTime,headRevisionId`, {
-    method: fileId ? 'PATCH' : 'POST', headers: {'Content-Type': 'application/json; charset=UTF-8', 'X-Upload-Content-Type': 'application/json'}, body: JSON.stringify(meta)});
+    method: fileId ? 'PATCH' : 'POST', headers: {'Content-Type': 'application/json; charset=UTF-8', 'X-Upload-Content-Type': type}, body: JSON.stringify(meta)});
   const loc = start.headers.get('Location'); if (!loc) throw new Error('upload not started');
-  const r = await fetch(loc, {method: 'PUT', headers: {'Content-Type': 'application/json'}, body: new Blob([text], {type: 'application/json'})});
+  const r = await fetch(loc, {method: 'PUT', headers: {'Content-Type': type}, body: new Blob([text], {type})});
   if (!r.ok) throw new Error('upload failed ' + r.status);
   return r.json();
 }
@@ -564,6 +572,8 @@ async function driveMeta(p) {   /* rename / archive without a full save */
   try {
     await gapi(`${DRIVE_API}/files/${p.driveFileId}?fields=id`, {method: 'PATCH', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({name: fileName(p), appProperties: {archived: p.archived ? '1' : '0'}})});
+    const df = (docDirs.get(p.id) || {}).root;
+    if (df) await gapi(`${DRIVE_API}/files/${df}?fields=id`, {method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: p.name})});
   } catch (e) {}
 }
 async function driveTrash(p) {
@@ -571,6 +581,7 @@ async function driveTrash(p) {
   const ids = [];
   if (p.driveFileId) ids.push(p.driveFileId);
   try { (await findFiles(byProp('fth', 'pbackups') + ' and ' + byProp('fthId', p.id))).forEach(f => ids.push(f.id)); } catch (e) {}
+  try { (await findFiles(byProp('fth', 'docs') + ' and ' + byProp('fthId', p.id))).forEach(f => ids.push(f.id)); } catch (e) {}
   for (const id of ids) await gapi(`${DRIVE_API}/files/${id}?fields=id`, {method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({trashed: true})}).catch(() => {});
 }
 
@@ -582,6 +593,7 @@ async function pullProject(p, fileId) {
   const here = p.id === curId;
   if (here) await unloadFrames();
   await restoreSnapshot(p.id, data.snap);
+  await docsMergeIn(p, data.snap.docs, data.snap.docFiles);
   Object.assign(p, {name: data.project.name || p.name, tools: data.project.tools || p.tools || {}, archived: !!data.project.archived,
     savedAt: data.savedAt, changedAt: data.savedAt, backupAt: data.savedAt, needsDownload: false, remoteNewer: 0, owner: account && account.email});
   if (whole) { p.driveSyncedAt = Math.max(p.driveSyncedAt || 0, data.savedAt || 0); if (meta) { p.driveRev = meta.rev; noteMeta(p, meta.f); } p.dirty = null; }
@@ -626,7 +638,7 @@ async function driveSync(askAboutCurrent) {
   } catch (e) { if (e.message !== 'not connected') toastLong('Couldn’t reach Google Drive. ' + e.message); }
   driveSyncing = false;
   if (!mine(cur() || {})) { const m = activeProjects()[0]; if (m) await switchProject(m.id); }
-  renderAccount(); renderProjUI(); render(); kickTick();
+  renderAccount(); renderProjUI(); render(); kickTick(); docsSendSoon(cur(), 200);
 }
 async function offerPull(p) {
   if (p.needsDownload) { try { await pullProject(p); toast(`Loaded “${p.name}” from Google Drive`); } catch (e) { toast('Couldn’t load from Google Drive'); } return; }
@@ -686,7 +698,7 @@ async function signOut() {
   if (clear) {
     await unloadFrames();
     for (const p of projects.filter(p => p.owner === email || !p.owner)) {
-      await wipeProjectData(p.id);
+      await wipeProjectData(p.id); await docsWipe(p.id);
       await store.gtx('saves', 'readwrite', s => s.delete(p.id)).catch(() => {});
       for (const b of await backupsFor(p.id)) await store.gtx('backups', 'readwrite', s => s.delete(b.id)).catch(() => {});
       await store.gtx('projects', 'readwrite', s => s.delete(p.id)).catch(() => {});
@@ -695,7 +707,7 @@ async function signOut() {
   }
   if (!activeProjects().length) { curId = null; await createProject('My first project'); }
   else if (!mine(cur() || {})) { curId = null; await switchProject(activeProjects()[0].id); }
-  reloadFrames(); renderAccount(); renderProjUI(); render();
+  reloadFrames(); renderAccount(); renderProjUI(); render(); docsRefresh();
   toast('Signed out');
 }
 
@@ -918,12 +930,13 @@ function strandedTools(p, meta, props) {
 /* bring other people's saved work into this browser */
 async function syncDown(p, meta, quiet) {
   const remote = await rawRead(p.driveFileId);
+  await docsMergeIn(p, remote.snap.docs, remote.snap.docFiles);
   const local = await packedSnapshot(p.id);
   const r = await applyLocal(p, mergeSnap(remote.snap, local, p.dirty), local);
   p.tools = mergeTools(p.tools, (remote.project || {}).tools);
   if (p.sharedBy && remote.project && remote.project.name) p.name = remote.project.name;
   p.driveRev = meta.rev; p.driveSyncedAt = Date.now(); p.remoteNewer = 0;
-  if (!dirtyTools(p).size) { p.savedAt = p.changedAt = p.backupAt = Math.max(p.savedAt || 0, remote.savedAt || 0, p.changedAt || 0); }
+  if (!dirtyTools(p).size && !p.docsDirty) { p.savedAt = p.changedAt = p.backupAt = Math.max(p.savedAt || 0, remote.savedAt || 0, p.changedAt || 0); }
   await putProject(p);
   afterApply(r);
   const by = remote.savedBy;
@@ -939,10 +952,11 @@ function sharedSave(p, snap) {
     for (const t of [...held]) if (p.id === curId && !mineL(lockOf(t))) held.delete(t);
     const lostNow = strandedTools(p, meta, meta.props);
     if (lostNow.length) await strand(p, lostNow);
-    if (!dirtyTools(p).size) {
+    if (!dirtyTools(p).size && !p.docsDirty) {
       if (meta.rev !== p.driveRev || lostNow.length) await syncDown(p, meta, lostNow.length);
       return 'nothing';
     }
+    const docsWere = p.docsDirty;
     let baseRev = meta.rev, base = (meta.rev !== p.driveRev || lostNow.length) ? await rawRead(p.driveFileId) : null;
     const mineAll = {ls: {}, idb: {}};
     for (let pass = 0; pass < 3; pass++) {
@@ -956,6 +970,8 @@ function sharedSave(p, snap) {
         p.tools = mergeTools(p.tools, (base.project || {}).tools);
         afterApply(await applyLocal(p, out, local));
       }
+      /* Documentation travels inside the shared file too (list and files), because it's the one file the whole crew can open */
+      out = await docsIntoSnap(p, out, base && base.snap);
       const body = JSON.stringify({app: 'film-tool-hub', v: 1, savedAt: local.at, savedBy: whoAmI(), project: projectMeta(p), snap: out});
       const fmeta = {mimeType: 'application/json', appProperties: {fth: 'project', fthId: p.id, shared: '1'}, ...(isOwner(p) ? {name: fileName(p)} : {})};
       const r = await uploadFile(fmeta, body, p.driveFileId);
@@ -965,6 +981,7 @@ function sharedSave(p, snap) {
       for (const k of Object.keys(now.ls || {})) if (d.ls[k] && d.ls[k][1] < local.at) delete d.ls[k];
       for (const [n, m] of Object.entries(now.idb || {})) { for (const t of Object.keys(m)) if (d.idb[n] && d.idb[n][t] < local.at) delete d.idb[n][t]; if (d.idb[n] && !Object.keys(d.idb[n]).length) delete d.idb[n]; }
       p.driveRev = myRev; p.driveSyncedAt = Date.now(); p.remoteNewer = 0; p.needsDownload = false; p.owner = account && account.email;
+      if (p.docsDirty === docsWere) p.docsDirty = 0;
       const prev = r.headRevisionId ? await prevRev(p.driveFileId, myRev).catch(() => null) : null;
       if (!prev || prev === baseRev || pass === 2) break;
       base = await rawRead(p.driveFileId, prev).catch(() => null); if (!base) break;   /* someone saved at the same moment: add their work in and save again */
@@ -1086,6 +1103,7 @@ async function tick1() {
     if (!l || now - l.ts > 3 * HOLD_MS) patch[k] = null;
   }
   if (Object.keys(patch).length) await patchProps(p, patch);
+  if (p.docsDirty) docsSendSoon(p, 300);   /* documents saved while Drive was out of reach go to the crew now */
 }
 async function requestEdit(t) {
   const p = sharedCur(), l = lockOf(t); if (!p || !l) { kickTick(); return; }
@@ -1222,6 +1240,7 @@ async function shareAction(a, b) {
       }
     } catch (e) { toastLong('Couldn’t share. ' + e.message); dlg.close(); return; }
     dlg.close(); renderProjUI(); resetShare(); kickTick();
+    if ((await docsAll(p.id)).some(d => !d.deleted)) { p.docsDirty = Date.now(); await putProject(p); docsSendSoon(p, 300); }   /* the crew need the documents saved so far */
     await shareDialog();
     if (failed.length) toastLong('Couldn’t share with: ' + failed.join(', '));
     else if (done) toast(`Shared with ${done} ${done === 1 ? 'person' : 'people'}. Google has emailed them the link.`);
@@ -1640,6 +1659,139 @@ function fthProjectShim(cfg) {
     W.addEventListener('pagehide', function () { clearTimeout(t); try { fn(); } catch (e) {} });
     return go;
   };
+  /* Documentation: a tool hands each export to the hub with window.fthDocs, and the hub files it under
+     the current project. It only exists inside the hub: a tool opened on its own never sees it.
+       fthDocs.save({type, filename, blob})   a real file (PDF, CSV, Excel, image…)
+       fthDocs.page({type, name})             the page exactly as it would print (for tools that use the print window)
+     Both return true when the person chose "Save to Documentation", meaning: skip the download / print window. */
+  if (hub && hub.saveDoc) (function () {
+    var D, onlyT = 0, busy = false;
+    function off() { clearTimeout(onlyT); D.only = false; busy = false; }
+    /* any fresh click means the person has moved on: the next export is an ordinary one again */
+    W.addEventListener('pointerdown', function (e) { if (D && D.only && !busy && e.isTrusted) off(); }, true);
+    function send(o) { try { return Promise.resolve(hub.saveDoc(tool, P, o)); } catch (e) { return Promise.resolve(false); } }
+    /* the page as it prints: print-only styles made permanent, screen-only styles and scripts left out */
+    function sheet(list) {
+      var out = '';
+      for (var i = 0; i < list.length; i++) {
+        var r = list[i];
+        if (r.media && r.cssRules && typeof r.media.mediaText === 'string' && r.type === 4) {
+          var mt = r.media.mediaText.toLowerCase();
+          if (/not\s+(print|all)/.test(mt)) continue;
+          if (/\bprint\b/.test(mt)) out += sheet(r.cssRules);
+          else if (/\bscreen\b/.test(mt)) continue;
+          else out += '@media ' + r.media.mediaText + '{' + sheet(r.cssRules) + '}\n';
+        } else out += r.cssText + '\n';
+      }
+      return out;
+    }
+    function capture() {
+      var d = document, mode = W.__fthMode, flip = mode === 'dark' && typeof W.__fthApply === 'function', i;
+      if (flip) { try { W.__fthApply('light'); } catch (e) {} }
+      var css = '', links = '', root;
+      try {
+        for (i = 0; i < d.styleSheets.length; i++) {
+          var sh = d.styleSheets[i];
+          try { css += sheet(sh.cssRules); } catch (e) { if (sh.href) links += '<link rel="stylesheet" href="' + String(sh.href).replace(/"/g, '&quot;') + '">'; }
+        }
+        root = d.documentElement.cloneNode(true);
+      } finally { if (flip) { try { W.__fthApply(mode); } catch (e) {} } }
+      var src = d.querySelectorAll('input,textarea,select'), dst = root.querySelectorAll('input,textarea,select');
+      for (i = 0; i < src.length && i < dst.length; i++) {
+        var s = src[i], t = dst[i];
+        if (s.tagName === 'TEXTAREA') t.textContent = s.value;
+        else if (s.tagName === 'SELECT') { for (var j = 0; j < s.options.length && j < t.options.length; j++) { if (s.options[j].selected) t.options[j].setAttribute('selected', ''); else t.options[j].removeAttribute('selected'); } }
+        else if (s.type === 'checkbox' || s.type === 'radio') { if (s.checked) t.setAttribute('checked', ''); else t.removeAttribute('checked'); }
+        else if (s.type !== 'file' && s.type !== 'password') t.setAttribute('value', s.value);
+      }
+      var sc = d.querySelectorAll('canvas'), dc = root.querySelectorAll('canvas');
+      for (i = 0; i < sc.length && i < dc.length; i++) {
+        try {
+          if (!sc[i].width || !sc[i].height || sc[i].width * sc[i].height > 6e6) continue;
+          var im = d.createElement('img'); im.src = sc[i].toDataURL('image/png');
+          ['id', 'class', 'style', 'width', 'height'].forEach(function (a) { if (sc[i].hasAttribute(a)) im.setAttribute(a, sc[i].getAttribute(a)); });
+          dc[i].parentNode.replaceChild(im, dc[i]);
+        } catch (e) {}
+      }
+      var junk = root.querySelectorAll('script,noscript,iframe,template,style,link[rel~="stylesheet"],link[rel="preconnect"],[data-fth-docmenu]');
+      for (i = 0; i < junk.length; i++) junk[i].parentNode.removeChild(junk[i]);
+      var all = root.querySelectorAll('*');
+      for (i = 0; i < all.length; i++) { var at = all[i].attributes; for (var k = at.length - 1; k >= 0; k--) if (/^on/i.test(at[k].name) || /^\s*javascript:/i.test(at[k].value)) all[i].removeAttribute(at[k].name); }
+      root.classList.remove('fth-invert');
+      var head = root.querySelector('head');
+      if (!head) { head = d.createElement('head'); root.insertBefore(head, root.firstChild); }
+      head.insertAdjacentHTML('afterbegin', '<meta charset="utf-8">' + links + '<style>' + css.replace(/<\/style/gi, '<\\/style') + '</style>');
+      return '<!doctype html>' + root.outerHTML;
+    }
+    /* pictures held in memory (blob: addresses) are written into the page, so it still shows them later */
+    function inlineBlobs(html) {
+      var urls = html.match(/blob:[^"'()\s<>&]+/g) || [], seen = {}, jobs = [];
+      urls.forEach(function (u) {
+        if (seen[u]) return; seen[u] = 1;
+        jobs.push(fetch(u).then(function (r) { return r.blob(); }).then(function (b) {
+          return new Promise(function (res) { var fr = new FileReader(); fr.onload = function () { html = html.split(u).join(fr.result); res(); }; fr.onerror = function () { res(); }; fr.readAsDataURL(b); });
+        }).catch(function () {}));
+      });
+      return Promise.all(jobs).then(function () { return html; });
+    }
+    var ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M12 11v5.2M9.6 13.8 12 16.2l2.4-2.4"/></svg>';
+    var pop = null;
+    function closeMenu() { if (pop) { pop.remove(); pop = null; document.removeEventListener('pointerdown', away, true); document.removeEventListener('keydown', esc, true); } }
+    function away(e) { if (pop && !pop.contains(e.target)) closeMenu(); }
+    function esc(e) { if (e.key === 'Escape') { e.stopPropagation(); closeMenu(); } }
+    function menu(btn, list) {
+      closeMenu();
+      pop = document.createElement('div'); pop.setAttribute('data-fth-docmenu', ''); pop.setAttribute('role', 'menu');
+      pop.style.cssText = 'position:fixed;z-index:2147483600;min-width:230px;max-width:calc(100vw - 16px);padding:6px;border-radius:12px;border:1px solid var(--fth-line2,#333a45);background:var(--fth-surface,#15181d);color:var(--fth-text,#f0ece5);box-shadow:0 18px 50px -12px rgba(0,0,0,.6);font:500 13.5px/1.3 var(--fth-display,system-ui,sans-serif)';
+      var h = document.createElement('div'); h.textContent = 'Save to Documentation';
+      h.style.cssText = 'padding:6px 10px 7px;font:500 10.5px var(--fth-mono,ui-monospace,monospace);letter-spacing:.1em;text-transform:uppercase;color:var(--fth-muted,#9aa0aa)';
+      pop.appendChild(h);
+      list.forEach(function (it) {
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = it.label; b.setAttribute('role', 'menuitem');
+        b.style.cssText = 'all:unset;box-sizing:border-box;display:block;width:100%;padding:9px 10px;border-radius:8px;cursor:pointer;font:inherit;color:inherit';
+        b.onmouseenter = b.onfocus = function () { b.style.background = 'var(--fth-surface3,#232831)'; };
+        b.onmouseleave = b.onblur = function () { b.style.background = ''; };
+        b.onclick = function () { closeMenu(); D.run(it.fn); };
+        pop.appendChild(b);
+      });
+      document.body.appendChild(pop);
+      var r = btn.getBoundingClientRect(), w = pop.offsetWidth, ht = pop.offsetHeight;
+      pop.style.left = Math.max(8, Math.min(r.right - w, innerWidth - w - 8)) + 'px';
+      pop.style.top = (r.bottom + 6 + ht > innerHeight - 8 ? Math.max(8, r.top - ht - 6) : r.bottom + 6) + 'px';
+      setTimeout(function () { document.addEventListener('pointerdown', away, true); document.addEventListener('keydown', esc, true); }, 0);
+    }
+    D = W.fthDocs = {
+      only: false, icon: ICON,
+      save: function (o) { var skip = D.only; send(o); return skip; },
+      page: function (o) {
+        var skip = D.only, html;
+        try { html = capture(); } catch (e) { return skip; }
+        inlineBlobs(html).then(function (h) { send({type: o.type, name: o.name, group: o.group, page: h}); });
+        return skip;
+      },
+      /* run an export with the download / print window switched off */
+      run: function (fn) {
+        off(); D.only = true;
+        var r; try { r = fn(); } catch (e) { off(); throw e; }
+        /* an export that reports when it's finished stays switched off until then; otherwise allow a moment for it to run */
+        if (r && typeof r.then === 'function') { busy = true; onlyT = setTimeout(off, 120000); r.then(off, off); } else onlyT = setTimeout(off, 1500);
+        return r;
+      },
+      /* turn a (hidden) button into "Save to Documentation": one export saves straight away, several open a small menu */
+      attach: function (btn, items, label) {
+        if (!btn || !items) return;
+        if (!btn.innerHTML.trim()) btn.innerHTML = ICON + '<span>' + (label || 'Save to Documentation') + '</span>';
+        if (!btn.title) btn.title = 'Save a draft to this project’s Documentation, without downloading it';
+        btn.hidden = false;
+        btn.addEventListener('click', function (e) {
+          e.preventDefault(); e.stopPropagation();
+          var list = typeof items === 'function' ? items() : items;
+          if (!list || !list.length) return;
+          if (list.length === 1) D.run(list[0].fn); else if (pop) closeMenu(); else menu(btn, list);
+        });
+      }
+    };
+  })();
   var aT = 0;
   function act() { var n = Date.now(); if (n - aT < 3000) return; aT = n; try { if (hub && hub.activity) hub.activity(tool, P); } catch (e) {} }
   ['pointerdown', 'keydown', 'wheel'].forEach(function (ev) { W.addEventListener(ev, act, true); });
@@ -1879,7 +2031,9 @@ function route() {
   const j = location.hash.match(/^#\/join\/(.+)$/);
   if (j && driveOn()) { activate(null); joinDialog(decodeURIComponent(j[1])); return; }
   const m = location.hash.match(/^#\/tool\/(.+)$/);
+  const dm = location.hash.match(/^#\/docs(?:\/(.+))?$/);
   activate(m ? decodeURIComponent(m[1]) : null);
+  showDocs(!!dm, dm && dm[1] ? decodeURIComponent(dm[1]) : null);
 }
 function closeTab(id) {
   const i = openTabs.indexOf(id); if (i < 0) return;
@@ -2057,6 +2211,7 @@ function helpDialog() {
       <li><b>Pin the tools you use most.</b> Click the pin on a tool’s card or on its tab. Pinned tools stay at the left of the top bar, so you can jump between them in one click. Click the pin again to unpin${driveOn() ? '. When you’re signed in, your pins follow you to any computer' : ''}.</li>
       <li><b>Light or dark.</b> The sun/moon button in the top bar switches the hub and every tool at once.</li>
       <li><b>Projects.</b> Pick a project in the top bar and every tool files its work under it, so you can move between tools on the same film. Archive projects you’ve finished with.</li>
+      <li><b>Documentation.</b> The <b>Documentation</b> button in the top bar opens a folder for each tool. Whenever you export from a tool (a PDF, spreadsheet or picture), a copy is filed there as a new draft, so the whole project’s paperwork is in one place. Each tool also has a <b>Save to Documentation</b> button, for saving a draft without downloading it.</li>
       <li><b>Saving and backups.</b> Your work saves in this browser as you go. Press <b>Save</b> (or Ctrl/⌘+S) to store the project’s main copy${driveOn() ? '; sign in with Google to keep it in your own Google Drive and carry on from any computer' : ''}. Backups are taken every few minutes while you work. Bring one back from Manage projects → Backups.</li>
       ${driveOn() ? `<li><b>Sharing with your crew.</b> Sign in, press <b>Share</b> and type your crew’s email addresses. They open the link Google emails them, and the project appears under “Shared with me”. One person edits a tool at a time; everyone else can view it and press <b>Request to edit</b>. Press Save to send your changes to the crew.</li>` : ''}
     </ol>${admin}</div>
@@ -2077,6 +2232,403 @@ function refreshAfterChange(id, reloadFrame) {
 }
 
 /* ───────── export ───────── */
+
+/* ───────── Documentation ─────────
+   A bank of folders, one per tool, holding the exports and drafts made in the current project.
+   Tools never store these themselves: each export goes to window.__fthHub.saveDoc (tools reach it as
+   window.fthDocs, see the shim). Saving again never overwrites: it adds the next draft of that kind.
+   Where it lives:
+   • always in this browser (the "docs" list and the "docfiles" store), filed under the project;
+   • signed in, your own project: each file is also uploaded to Film Tool Hub → Documentation →
+     <project> → <tool> in your Google Drive (docsPush), and files found there appear here (docsPull);
+   • shared project: the list AND the files travel inside the shared project file (snap.docs,
+     snap.docFiles), because that is the one file every crew member's sign-in can open;
+   • the list (not the files) is part of every save and backup; a deleted document's file is kept for
+     30 days so restoring a backup can bring it back. */
+const DOC_TYPES = {
+  'script-dev': ['Script PDF', 'Develop PDF', 'Outline PDF', 'Script (Fountain)', 'Script (Final Draft)'],
+  coverage: ['Coverage Report PDF', 'Feedback PDF', 'Timeline PDF'],
+  'script-lining': ['Lined Script PDF'],
+  breakdown: ['Breakdown PDF', 'Advanced Breakdown PDF', 'Breakdown CSV'],
+  schedule: ['Schedule PDF', 'Schedule Excel'],
+  recce: ['Recce Field Sheet PDF', 'Recce Report PDF', 'Recce Comparison PDF', 'Recce CSV'],
+  casting: ['Casting Breakdowns PDF', 'Contact Sheet PDF', 'Auditionees CSV'],
+  tasks: ['Task List PDF'],
+  moodboard: ['Mood Board PDF'],
+  shotlist: ['Shot List PDF', 'Shot List CSV'],
+  blocking: ['Blocking Plan JPG'],
+  lighting: ['Lighting Plan PDF', 'Lighting Plan PNG', 'Lighting Plan SVG', 'Kit List CSV'],
+  falsecolour: ['False Colour PDF', 'Comparison PDF', 'Ratios PDF'],
+  palette: ['Palette PDF', 'Palette Deck PDF'],
+  callsheet: ['Call Sheet PDF', 'Call Sheet Excel'],
+  risk: ['Risk Assessment PDF', 'Risk Assessment Excel']
+};
+const DOC_KEEP_MS = 30 * 864e5, SHARED_DOC_CAP = 200 * 1024 * 1024;
+const DOC_PUBLIC = ['id', 'tool', 'type', 'group', 'name', 'ext', 'mime', 'size', 'at', 'mod', 'draft', 'page', 'by', 'deleted'];
+const docPublic = d => { const o = {}; DOC_PUBLIC.forEach(k => { if (d[k] !== undefined) o[k] = d[k]; }); return o; };
+let docCache = [], docsOpen = false, docsTool = null, docDirs = new Map();
+const docsOlder = new Set();
+
+const docsAll = async pid => (pid && await store.gtx('docs', 'readonly', s => s.index('projectId').getAll(pid)).catch(() => [])) || [];
+const putDoc = rec => store.gtx('docs', 'readwrite', s => s.put(rec));
+/* change one entry in a single step, so two things changing it at once can't undo each other */
+const patchDoc = (id, patch) => store.gtx('docs', 'readwrite', s => { const q = s.get(id); q.onsuccess = () => { if (q.result) s.put(Object.assign(q.result, patch)); }; return q; }).catch(() => null);
+const getBytes = id => store.gtx('docfiles', 'readonly', s => s.get(id)).catch(() => null);
+const hasBytes = async id => !!(await store.gtx('docfiles', 'readonly', s => s.count(id)).catch(() => 0));
+const putBytes = (id, blob) => store.gtx('docfiles', 'readwrite', s => s.put(blob, id));
+const delBytes = id => store.gtx('docfiles', 'readwrite', s => s.delete(id)).catch(() => {});
+const liveDocs = () => docCache.filter(d => !d.deleted);
+async function docsLoad() {
+  const pid = curId, list = await docsAll(pid);
+  if (pid !== curId) return docCache;
+  /* a deleted document's file is dropped after 30 days (its entry stays, so it can't creep back from an old copy) */
+  for (const d of list) if (d.deleted && !d.purged && Date.now() - d.deleted > DOC_KEEP_MS) { await delBytes(d.id); d.purged = true; await patchDoc(d.id, {purged: true}); }
+  return (docCache = list);
+}
+async function docsRefresh() { docsOlder.clear(); await docsLoad(); if (docsOpen) { if (docsTool && !byId(docsTool)) docsTool = null; renderDocs(); docsSendSoon(cur(), 200, true); } }
+async function docsWipe(pid) { for (const d of await docsAll(pid)) { await delBytes(d.id); await store.gtx('docs', 'readwrite', s => s.delete(d.id)).catch(() => {}); } docDirs.delete(pid); }
+const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(n >= 10485760 ? 0 : 1) + ' MB' : n >= 1024 ? Math.round(n / 1024) + ' KB' : (n || 0) + ' B';
+const fmtStamp = t => new Date(t).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'}) + ', ' + new Date(t).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+const isBlob = b => !!b && typeof b === 'object' && typeof b.arrayBuffer === 'function' && typeof b.size === 'number';
+const DOC_MIME = {pdf: 'application/pdf', csv: 'text/csv', json: 'application/json', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', svg: 'image/svg+xml', html: 'text/html', txt: 'text/plain', fountain: 'text/plain', fdx: 'application/xml',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'};
+
+/* a print-ready page arrives with the whole tool in it; keep only what actually prints */
+function prunePage(html) {
+  return new Promise(res => {
+    const f = document.createElement('iframe'); let done = false;
+    const finish = out => { if (done) return; done = true; f.remove(); res(out); };
+    f.setAttribute('sandbox', 'allow-same-origin'); f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1;
+    f.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;visibility:hidden';
+    f.onload = () => {
+      try {
+        const d = f.contentDocument, w = f.contentWindow;
+        if (!d || !d.body || !d.body.children.length) return finish(html);
+        const kill = [], walk = el => { for (const c of [...el.children]) { if (w.getComputedStyle(c).display === 'none') kill.push(c); else walk(c); } };
+        walk(d.body);
+        if (kill.length) { kill.forEach(c => c.remove()); if (d.body.children.length) return finish('<!doctype html>' + d.documentElement.outerHTML); }
+        finish(html);
+      } catch (e) { finish(html); }
+    };
+    setTimeout(() => finish(html), 5000);
+    f.srcdoc = html; document.body.appendChild(f);
+  });
+}
+
+let persistAsked = false;
+async function storageUse() { try { const e = await navigator.storage.estimate(); return e && e.quota ? {used: e.usage || 0, quota: e.quota, pct: (e.usage || 0) / e.quota} : null; } catch (e) { return null; } }
+async function saveDoc(tool, pid, o) {
+  const p = projById(pid) || cur();
+  if (!p || !byId(tool)) return false;
+  try {
+    if (!store.persistent) throw new Error('This browser is blocking storage, so documents can’t be kept');
+    let blob, page = false;
+    if (o.page != null) { blob = new Blob([await prunePage(String(o.page))], {type: 'text/html'}); page = true; }
+    else if (isBlob(o.blob)) blob = new Blob([await o.blob.arrayBuffer()], {type: o.blob.type || o.mime || ''});   /* a copy of our own: the tool that made it may close */
+    else if (o.data != null) blob = new Blob([o.data], {type: o.mime || ''});
+    else throw new Error('There was nothing to save');
+    const fn = String(o.filename || ''), m = fn.match(/\.([a-z0-9]{1,8})$/i);
+    const ext = page ? 'html' : String(o.ext || (m ? m[1] : '')).toLowerCase();
+    const name = String(o.name || (m ? fn.slice(0, -m[0].length) : fn) || toolName(tool)).replace(/\s+/g, ' ').trim().slice(0, 120) || toolName(tool);
+    const type = String(o.type || 'Document').slice(0, 60), group = String(o.group || type).slice(0, 140);
+    const mime = page ? 'text/html' : (DOC_MIME[ext] || blob.type || o.mime || 'application/octet-stream');
+    const all = await docsAll(p.id);
+    if (p.shared) {
+      const total = all.filter(d => !d.deleted).reduce((n, d) => n + (d.size || 0), 0);
+      if (total + blob.size > SHARED_DOC_CAP) throw new Error('This shared project’s Documentation is full (about 200 MB, so saving stays quick for your crew). Delete some older drafts, then save again');
+    }
+    const draft = 1 + all.filter(d => d.tool === tool && d.group === group).reduce((n, d) => Math.max(n, d.draft || 0), 0), now = Date.now();
+    const rec = {id: 'd' + now.toString(36) + Math.random().toString(36).slice(2, 7), projectId: p.id, tool, type, group, name, ext, mime, size: blob.size, at: now, mod: now, draft, page, by: whoAmI(), deleted: 0};
+    await putBytes(rec.id, blob); await putDoc(rec);
+    if (!persistAsked) { persistAsked = true; try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {} }
+    await docsChanged(p);
+    if (!o.quiet) toast('Saved to Documentation');
+    storageUse().then(u => { if (u && u.pct > .8 && !(driveOn() && account)) toastLong(`Saved to Documentation, but this browser’s storage is ${Math.round(u.pct * 100)}% full. Open Documentation, download what you need to keep and delete older drafts.`); });
+    return true;
+  } catch (e) {
+    const full = e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''));
+    toastLong(full ? 'Couldn’t save to Documentation: this browser’s storage is full. Open Documentation and delete older drafts to make room.' : 'Couldn’t save to Documentation. ' + ((e && e.message) || e) + '.');
+    return false;
+  }
+}
+/* after any change to the documents: refresh the page, mark the project changed, and send it where it's kept */
+async function docsChanged(p) {
+  p.changedAt = Date.now(); if (p.shared) p.docsDirty = p.changedAt;
+  await putProject(p);
+  if (p.id === curId) { await docsLoad(); renderDocs(); renderProjUI(); }
+  docsSendSoon(p, 1200);
+}
+
+/* ── Google Drive: your own projects keep each document as a real file in a Documentation folder ── */
+const driveDocName = d => `${d.name} (Draft ${d.draft})${d.ext ? '.' + d.ext : ''}`;
+async function docFolder(p, tool) {
+  let c = docDirs.get(p.id); if (!c) docDirs.set(p.id, c = {root: null, tools: {}});
+  if (!c.root) { const f = await ensureFolders(); if (!f.docs) f.docs = await folder('Documentation', {fth: 'docsroot'}, f.root); c.root = await folder(p.name, {fth: 'docs', fthId: p.id}, f.docs); }
+  if (!tool) return c.root;
+  return c.tools[tool] || (c.tools[tool] = await folder(toolName(tool), {fth: 'doctool', fthId: p.id, tool}, c.root));
+}
+const drivePatch = (id, body) => gapi(`${DRIVE_API}/files/${id}?fields=id`, {method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+async function docsPush(p) {
+  for (const d of await docsAll(p.id)) {
+    try {
+      if (d.deleted) { if (d.driveId && !d.driveTrashed) { await drivePatch(d.driveId, {trashed: true}).catch(e => { if (e.status !== 404) throw e; }); await patchDoc(d.id, {driveTrashed: true}); } continue; }
+      if (d.driveId && d.driveTrashed) { await drivePatch(d.driveId, {trashed: false}); await patchDoc(d.id, {driveTrashed: false}); }
+      if (d.driveId) { const n = driveDocName(d); if (d.driveName !== n) { await drivePatch(d.driveId, {name: n, description: JSON.stringify(docPublic(d))}); await patchDoc(d.id, {driveName: n}); } continue; }
+      const blob = await getBytes(d.id); if (!blob) continue;
+      const dir = await docFolder(p, d.tool), n = driveDocName(d);
+      const r = await uploadFile({name: n, parents: [dir], mimeType: d.mime || 'application/octet-stream', description: JSON.stringify(docPublic(d)), appProperties: {fth: 'doc', fthId: p.id, doc: d.id}}, blob);
+      await patchDoc(d.id, {driveId: r.id, driveName: n, driveAt: Date.now()});
+    } catch (e) { if (e.message === 'not connected') throw e; if (e.status === 404 && d.driveId) await patchDoc(d.id, {driveId: null, driveName: null, driveTrashed: false}); }
+  }
+}
+/* documents saved from another computer: they're in the Drive folder, so list them here */
+async function docsPull(p) {
+  const files = await findFiles(byProp('fth', 'doc') + ' and ' + byProp('fthId', p.id), 'id,name,size,mimeType,description,appProperties,modifiedTime');
+  const list = await docsAll(p.id), by = new Map(list.map(d => [d.id, d])), seen = new Set(files.map(f => f.id)), now = Date.now();
+  for (const f of files) {
+    const id = (f.appProperties || {}).doc; if (!id) continue;
+    const d = by.get(id);
+    if (d) { if (!d.driveId) await patchDoc(id, {driveId: f.id, driveName: f.name, driveAt: now}); continue; }
+    let m = {}; try { m = JSON.parse(f.description || '{}') || {}; } catch (e) {}
+    const ext = (f.name.match(/\.([a-z0-9]{1,8})$/i) || [])[1] || '', at = Date.parse(f.modifiedTime) || now;
+    await putDoc({tool: 'other', type: 'Document', group: 'Document', name: f.name, ext: ext.toLowerCase(), mime: f.mimeType, at, mod: at, draft: 1, page: false, by: null, ...docPublic(m),
+      id, projectId: p.id, size: +f.size || m.size || 0, deleted: 0, driveId: f.id, driveName: f.name, driveAt: now});
+  }
+  /* gone from Drive (deleted on another computer, or binned in Drive itself)? Ask about each one before believing it */
+  for (const d of list) {
+    if (!d.driveId || d.deleted || d.driveTrashed || seen.has(d.driveId) || now - (d.driveAt || 0) < 120e3) continue;
+    try { const f = await gjson(`${DRIVE_API}/files/${d.driveId}?fields=id,trashed`); if (f.trashed) await patchDoc(d.id, {deleted: now, mod: now, driveTrashed: true}); else await patchDoc(d.id, {driveAt: now}); }
+    catch (e) { if (e.status === 404) await patchDoc(d.id, (await hasBytes(d.id)) ? {driveId: null, driveName: null} : {deleted: now, mod: now, driveTrashed: true}); }
+  }
+}
+/* a document's file: from this browser, or fetched from the Drive folder the first time it's opened here */
+async function docBytes(d) {
+  let b = await getBytes(d.id); if (b) return b;
+  if (!d.driveId && hasToken() && !(projById(d.projectId) || {}).sharedBy) {   /* listed from a save made elsewhere: find its file in the Drive folder */
+    try { const f = (await findFiles(byProp('fth', 'doc') + ' and ' + byProp('doc', d.id), 'id,name'))[0]; if (f) { d.driveId = f.id; await patchDoc(d.id, {driveId: f.id, driveName: f.name, driveAt: Date.now()}); } } catch (e) {}
+  }
+  if (d.driveId && hasToken()) {
+    try { b = await (await gapi(`${DRIVE_API}/files/${d.driveId}?alt=media`)).blob(); b = new Blob([b], {type: d.mime || b.type}); await putBytes(d.id, b).catch(() => {}); return b; } catch (e) {}
+  }
+  return null;
+}
+let docsSendT = null, docsSendBusy = null;
+function docsSendSoon(p, ms, pull) { if (!p) return; clearTimeout(docsSendT); docsSendT = setTimeout(() => docsSend(p, pull), ms == null ? 800 : ms); }
+async function docsSend(p, pull) {
+  if (!driveOn() || !account || !hasToken() || !mine(p) || !projById(p.id)) return;
+  if (docsSendBusy) { await docsSendBusy; }
+  docsSendBusy = (async () => {
+    try {
+      if (p.shared && p.driveFileId && p.docsDirty && p.id === curId && !p.needsDownload) await saveProject(true);   /* shared: the crew get documents through the project file */
+      if (!p.sharedBy) { if (pull) await docsPull(p); await docsPush(p); }
+      if (p.id === curId) { await docsLoad(); renderDocs(); }
+    } catch (e) {}
+  })();
+  await docsSendBusy; docsSendBusy = null;
+}
+
+/* ── shared projects and saves: the list (and, when shared, the files) inside the project file ── */
+async function docsMergeIn(p, list, files) {
+  if (!Array.isArray(list)) return;
+  const have = new Map((await docsAll(p.id)).map(d => [d.id, d])); let ch = false;
+  for (const r of list) {
+    if (!r || !r.id) continue;
+    const d = have.get(r.id);
+    if (!d || (r.mod || 0) > (d.mod || 0)) { await putDoc({...(d || {}), ...docPublic(r), projectId: p.id}); ch = true; }
+    const f = files && files[r.id];
+    if (f && !r.deleted && !(await hasBytes(r.id))) { try { await putBytes(r.id, f.__fth ? unpackValue(f) : f); ch = true; } catch (e) {} }
+  }
+  if (ch && p.id === curId) { await docsLoad(); renderDocs(); }
+}
+async function docsIntoSnap(p, out, remote) {
+  const list = await docsAll(p.id), files = {}, theirs = (remote && remote.docFiles) || {};
+  for (const d of list) {
+    if (d.deleted) continue;
+    const b = await docBytes(d);
+    if (b) files[d.id] = await packValue(b); else if (theirs[d.id]) files[d.id] = theirs[d.id];
+  }
+  return {...out, docs: list.map(docPublic), docFiles: files};
+}
+/* restoring a backup puts the Documentation list back as it was then */
+async function docsRestore(p, list) {
+  if (!Array.isArray(list)) return;   /* a backup from before Documentation existed: leave the documents alone */
+  const then = new Map(list.map(d => [d.id, d])), now = Date.now();
+  for (const d of await docsAll(p.id)) {
+    const s = then.get(d.id);
+    if (!s) { if (!d.deleted) await patchDoc(d.id, {deleted: now, mod: now}); continue; }
+    if (!!s.deleted === !!d.deleted && s.name === d.name) continue;
+    if (!s.deleted && d.deleted && !(await hasBytes(d.id)) && !d.driveId) continue;   /* its file is long gone */
+    await patchDoc(d.id, {deleted: s.deleted ? now : 0, name: s.name, mod: now});
+  }
+  if (p.shared) p.docsDirty = now;
+  if (p.id === curId) { await docsLoad(); renderDocs(); }
+  docsSendSoon(p, 1500);
+}
+
+/* ── the Documentation page ── */
+const DOCI = {
+  folder: P('<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>'),
+  back: P('<path d="M19 12H5M11 6l-6 6 6 6"/>'),
+  eye: P('<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>'),
+  print: P('<path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v6H7z"/>')
+};
+const docTools = () => tools().filter(t => DOC_TYPES[t.id] || liveDocs().some(d => d.tool === t.id));
+const docCount = n => `${n} document${n === 1 ? '' : 's'}`;
+function showDocs(on, tool) {
+  docsOpen = on; docsTool = on && tool && byId(tool) ? tool : null;
+  document.body.classList.toggle('docs-open', on);
+  $('#docsPage').hidden = !on; $('#docsBtn').classList.toggle('on', on); $('#docsBtn').setAttribute('aria-pressed', on);
+  if (!on) return;
+  document.title = 'Documentation · Film Tool Hub'; window.scrollTo(0, 0);
+  renderDocs(); docsLoad().then(() => { renderDocs(); docsSendSoon(cur(), 100, true); });
+}
+function docRow(d, latest, older) {
+  const p = cur(), kind = d.page ? 'PRINT' : (d.ext || 'file').toUpperCase().slice(0, 5);
+  const waiting = driveOn() && account && p && !p.sharedBy && !d.driveId;
+  return `<div class="drow${older ? ' old' : ''}" data-doc="${esc(d.id)}">
+    <span class="dkind${d.page ? ' pg' : ''}" title="${d.page ? 'Print-ready page: open it here, or use Save as PDF' : esc((d.ext || 'file').toUpperCase() + ' file')}">${esc(kind)}</span>
+    <div class="dname"><b title="${esc(d.name)}">${esc(d.name)}</b><small><span class="dx">${esc(d.type)} · ${esc(fmtStamp(d.at))} · </span>${esc(fmtSize(d.size))}${d.by && d.by.name && p && p.shared ? ' · saved by ' + esc(firstName(d.by)) : ''}${waiting ? ' · <i title="It will be sent to your Google Drive once Drive is connected">not in Drive yet</i>' : ''}</small></div>
+    <span class="dtype">${esc(d.type)}</span>
+    <span class="dwhen">${esc(fmtStamp(d.at))}</span>
+    <span class="ddraft">Draft ${d.draft}${latest ? '<em>Latest</em>' : ''}</span>
+    <div class="dacts">
+      <button type="button" class="btn sm" data-da="open">${DOCI.eye}Open</button>
+      <button type="button" class="btn sm" data-da="down" title="${d.page ? 'Opens the print window: choose “Save as PDF”' : 'Download a copy to this computer'}">${d.page ? DOCI.print + 'Save as PDF' : UI.down + 'Download'}</button>
+      <button type="button" class="btn sm ghost" data-da="rename" title="Rename">${UI.edit}<span class="sr">Rename</span></button>
+      <button type="button" class="btn sm ghost danger" data-da="delete" title="Delete">${UI.trash}<span class="sr">Delete</span></button>
+    </div></div>`;
+}
+function renderDocs() {
+  if (!docsOpen) return;
+  const p = cur(), el = $('#docsWrap'); if (!p) return;
+  const live = liveDocs(), tl = docTools(), of = id => live.filter(d => d.tool === id);
+  const done = tl.filter(t => of(t.id).length).length, last = live.reduce((m, d) => Math.max(m, d.at), 0), bytes = live.reduce((n, d) => n + (d.size || 0), 0);
+  const dir = (docDirs.get(p.id) || {}).root;
+  let where;
+  if (p.sharedBy) where = `Shared project: everyone on the crew sees the same documents. New ones arrive a few seconds after they’re saved.`;
+  else if (driveOn() && account) where = (hasToken() ? `Kept in your Google Drive: Film Tool Hub → Documentation → ${esc(p.name)}.` : `Kept in your Google Drive, in Film Tool Hub → Documentation. <b>Reconnect Google Drive</b> (account button, top right) to send new documents there.`)
+    + (dir && hasToken() ? ` <a href="https://drive.google.com/drive/folders/${esc(dir)}" target="_blank" rel="noopener">Open the folder</a>` : '') + (p.shared ? ' Your crew see the same documents here.' : '');
+  else where = `Kept in this browser, with this project (${esc(fmtSize(bytes))} so far).` + (driveOn() ? ' Sign in with Google to keep them in your own Google Drive.' : '') + '<span id="docsQuota"></span>';
+  const strip = `<div class="dstrip">
+      <div class="dsum"><b>${done}</b><span>of ${tl.length} tools have documents</span></div>
+      <div class="dbar" role="img" aria-label="${done} of ${tl.length} tools have documents">${tl.map(t => `<i class="${of(t.id).length ? 'on' : ''}" style="--cat:${catOf(t.category).color}" title="${esc(t.name)}: ${of(t.id).length ? docCount(of(t.id).length) : 'nothing saved yet'}"></i>`).join('')}</div>
+      <div class="dmeta">${docCount(live.length)}${last ? ' · last updated ' + esc(fmtWhen(last)) : ''}</div>
+      <p class="dwhere">${where}</p></div>`;
+  const head = `<section class="dhero"><p class="eyebrow"><span>Project</span><span>${esc(p.name)}</span></p><h1>Documen<em>tation</em></h1>
+      <p class="lede">Every export and draft saved from the tools in this project, one folder per tool. Faded folders are still empty.</p></section>`;
+  let body = '';
+  if (docsTool) {
+    const t = byId(docsTool), c = catOf(t.category), mine = of(t.id), groups = new Map();
+    mine.forEach(d => { if (!groups.has(d.group)) groups.set(d.group, []); groups.get(d.group).push(d); });
+    const gs = [...groups.values()].map(g => g.sort((a, b) => b.draft - a.draft || b.at - a.at)).sort((a, b) => b[0].at - a[0].at);
+    const tlast = mine.reduce((m, d) => Math.max(m, d.at), 0);
+    body = `<a class="dback" href="#/docs">${DOCI.back}All folders</a>
+      <section class="section dfolder" style="--cat:${c.color}">
+        <div class="sec-head"><div class="sec-num">${esc(c.num)}</div><h2>${esc(t.name)}</h2>
+          <p>${mine.length ? docCount(mine.length) + ' · last updated ' + esc(fmtWhen(tlast)) : 'Nothing saved here yet.'}</p></div>
+        <div class="dtop"><a class="btn" href="#/tool/${encodeURIComponent(t.id)}">${UI.open}Open ${esc(t.name)}</a></div>
+        ${gs.length ? `<div class="dlist"><div class="drow dcols" aria-hidden="true"><span></span><span>Name</span><span>Type</span><span>Saved</span><span>Draft</span><span></span></div>${gs.map(g => {
+            const key = t.id + '|' + g[0].group, open = docsOlder.has(key), rest = g.slice(1);
+            return `<div class="dgroup">${docRow(g[0], true)}${rest.length ? `<button type="button" class="dmore" data-da="older" data-key="${esc(key)}" aria-expanded="${open}">${open ? 'Hide' : 'Show'} ${rest.length} older draft${rest.length === 1 ? '' : 's'}</button>${open ? rest.map(d => docRow(d, false, true)).join('') : ''}` : ''}</div>`;
+          }).join('')}</div>`
+        : `<div class="empty">No documents in this folder yet.<br>Export from ${esc(t.name)}, or use its <b>Save to Documentation</b> button, and they appear here${DOC_TYPES[t.id] ? ':<br><span class="dcan">' + DOC_TYPES[t.id].map(esc).join(' · ') + '</span>' : '.'}</div>`}
+      </section>`;
+  } else {
+    for (const c of CATS) {
+      const list = tl.filter(t => catOf(t.category).id === c.id); if (!list.length) continue;
+      body += `<section class="section" style="--cat:${c.color}"><div class="sec-head"><div class="sec-num">${esc(c.num)}</div><h2>${esc(c.name)}</h2><p>${list.filter(t => of(t.id).length).length} of ${list.length} folders have documents</p></div>
+        <div class="grid dgrid">${list.map(t => {
+          const m = of(t.id), at = m.reduce((x, d) => Math.max(x, d.at), 0);
+          return `<a class="dfold${m.length ? '' : ' none'}" href="#/docs/${encodeURIComponent(t.id)}" style="--cat:${c.color}" title="${esc(t.name)}: ${m.length ? docCount(m.length) : 'nothing saved yet'}">
+            <span class="dtab"></span><div class="dfi">${ICONS[t.icon] || ICONS.generic}</div><h3>${esc(t.name)}</h3>
+            <div class="dfm">${m.length ? `<b>${docCount(m.length)}</b><span>Updated ${esc(fmtWhen(at))}</span>` : '<b>Empty</b><span>Nothing saved yet</span>'}</div></a>`;
+        }).join('')}</div></section>`;
+    }
+  }
+  el.innerHTML = head + strip + body;
+  if ($('#docsQuota')) storageUse().then(u => { const q = $('#docsQuota'); if (!q || !u) return; q.innerHTML = u.pct > .8 ? ` <b class="dfull">This browser’s storage is ${Math.round(u.pct * 100)}% full.</b> Download what you need to keep and delete older drafts.` : ` This browser’s storage is ${Math.max(1, Math.round(u.pct * 100))}% full.`; });
+}
+const docFileName = d => (d.name.replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'document') + (d.ext ? '.' + d.ext : '');
+function saveBlob(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 30000); }
+/* print-ready pages go through the browser's print window, where "Save as PDF" makes the PDF */
+function printPage(html) {
+  const f = document.createElement('iframe');
+  f.setAttribute('sandbox', 'allow-same-origin allow-modals'); f.setAttribute('aria-hidden', 'true');
+  f.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0';
+  f.onload = () => setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('Couldn’t open the print window'); } setTimeout(() => f.remove(), 60000); }, 250);
+  f.srcdoc = html; document.body.appendChild(f);
+}
+async function docDownload(d) {
+  const b = await docBytes(d);
+  if (!b) { toastLong(driveOn() && account && !hasToken() ? 'Reconnect Google Drive (account button, top right) to fetch this document.' : 'This document’s file isn’t on this computer.'); return; }
+  if (d.page) { toast('In the print window, choose “Save as PDF”'); printPage(await b.text()); } else saveBlob(b, docFileName(d));
+}
+function csvRows(text, max) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length && rows.length < max; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+    else if (ch === '"') q = true; else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+let viewUrl = null;
+async function docOpen(d) {
+  const b = await docBytes(d);
+  if (!b) { toastLong(driveOn() && account && !hasToken() ? 'Reconnect Google Drive (account button, top right) to open this document.' : 'This document’s file isn’t on this computer.'); return; }
+  const v = $('#docView'), body = $('#dvBody');
+  $('#dvTitle').textContent = d.name; $('#dvSub').textContent = `${d.type} · Draft ${d.draft} · ${fmtStamp(d.at)}`;
+  $('#dvDown').innerHTML = d.page ? DOCI.print + 'Save as PDF' : UI.down + 'Download'; $('#dvDown').onclick = () => docDownload(d);
+  body.className = 'dv-body'; body.innerHTML = '';
+  if (viewUrl) { URL.revokeObjectURL(viewUrl); viewUrl = null; }
+  const ext = d.ext, url = () => (viewUrl = URL.createObjectURL(b));
+  if (d.page) {
+    const html = await b.text(), wide = /@page[^}]*landscape/i.test(html), big = /@page[^}]*\bA3\b/i.test(html);
+    const w = Math.round((wide ? 1123 : 794) * (big ? 1.414 : 1));
+    body.classList.add('paper');
+    const f = document.createElement('iframe'); f.setAttribute('sandbox', 'allow-same-origin'); f.title = d.name; f.style.width = w + 'px'; f.srcdoc = html;
+    body.appendChild(f);
+    const fit = () => { const z = Math.min(1, (body.clientWidth - 32) / w); f.style.zoom = z; f.style.height = Math.max(200, (body.clientHeight - 32) / z) + 'px'; };
+    v.showModal(); fit(); v._fit = fit;
+    return;
+  }
+  if (ext === 'pdf') { const f = document.createElement('iframe'); f.title = d.name; f.src = url(); body.classList.add('fill'); body.appendChild(f); }
+  else if (/^(png|jpe?g|gif|webp|svg)$/.test(ext)) { const im = document.createElement('img'); im.alt = d.name; im.src = url(); body.classList.add('pic'); body.appendChild(im); }
+  else if (ext === 'csv') {
+    const rows = csvRows((await b.text()).replace(/^﻿/, ''), 501);
+    body.classList.add('sheet');
+    body.innerHTML = `<table>${rows.slice(0, 500).map((r, i) => `<tr>${r.map(c => i ? `<td>${esc(c)}</td>` : `<th>${esc(c)}</th>`).join('')}</tr>`).join('')}</table>${rows.length > 500 ? '<p class="dv-note">Showing the first 500 rows. Download the file to see them all.</p>' : ''}`;
+  }
+  else if (/^(txt|fountain|fdx|json|xml|md)$/.test(ext) || /^text\//.test(d.mime || '')) { const pre = document.createElement('pre'); pre.textContent = (await b.text()).slice(0, 400000); body.classList.add('text'); body.appendChild(pre); }
+  else body.innerHTML = `<div class="dv-none">${UI.file}<p><b>${esc((ext || 'This').toUpperCase())} files can’t be previewed here.</b><br>Download it to open it${ext === 'xlsx' ? ' in Excel, Numbers or Google Sheets' : ''}.</p></div>`;
+  v._fit = null; v.showModal();
+}
+$('#docView').addEventListener('close', () => { $('#dvBody').innerHTML = ''; if (viewUrl) { URL.revokeObjectURL(viewUrl); viewUrl = null; } });
+$('#dvClose').onclick = () => $('#docView').close();
+window.addEventListener('resize', () => { const v = $('#docView'); if (v.open && v._fit) v._fit(); });
+$('#docsPage').addEventListener('click', async e => {
+  const b = e.target.closest('[data-da]'); if (!b) return;
+  const a = b.dataset.da;
+  if (a === 'older') { const k = b.dataset.key; if (docsOlder.has(k)) docsOlder.delete(k); else docsOlder.add(k); renderDocs(); return; }
+  const row = b.closest('[data-doc]'), d = row && docCache.find(x => x.id === row.dataset.doc), p = cur(); if (!d || !p) return;
+  if (a === 'open') docOpen(d);
+  if (a === 'down') docDownload(d);
+  if (a === 'rename') {
+    showDlg(`<h3>Rename document</h3><p class="sub">${esc(d.type)} · Draft ${d.draft}</p>
+      <div class="field"><label for="f-dname">Name</label><input id="f-dname" name="name" required value="${esc(d.name)}" maxlength="120"></div>
+      <div class="dlg-actions"><button class="btn ghost" value="cancel">Cancel</button><button class="btn primary" value="ok">Rename</button></div>`,
+      fd => { const n = String(fd.get('name') || '').replace(/\s+/g, ' ').trim(); if (!n) return false; if (n !== d.name) patchDoc(d.id, {name: n, mod: Date.now()}).then(() => docsChanged(p)).then(() => toast('Renamed')); });
+    const i = $('#f-dname'); if (i) i.select();
+  }
+  if (a === 'delete') {
+    if (await confirmDlg('Delete this document?', `“${d.name}” (${d.type}, Draft ${d.draft}) will be removed from Documentation${p.shared ? ' for everyone on this project' : ''}. Are you sure?`, 'Delete', true)) {
+      await patchDoc(d.id, {deleted: Date.now(), mod: Date.now()}); await docsChanged(p); toast('Document deleted');
+    }
+  }
+});
 
 /* ───────── toast ───────── */
 let toastT;
@@ -2106,6 +2658,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('auxclick', e => { const x = e.target.closest('[data-tab]'); if (e.button === 1 && x) { e.preventDefault(); closeTab(x.dataset.tab); } });
 $('#homeBtn').onclick = () => go(null);
+$('#docsBtn').onclick = () => { location.hash = location.hash.startsWith('#/docs') ? '#/' : '#/docs'; };
 $('#projBtn').onclick = e => { e.stopPropagation(); if (!pmenu().hidden) closeProjMenu(); else { closeMenu(); openProjMenu($('#projBtn')); } };
 pmenu().addEventListener('click', e => {
   const b = e.target.closest('[data-pm]'); if (!b) return; closeProjMenu();
@@ -2194,6 +2747,7 @@ window.addEventListener('drop', e => {
   const st = solo && byId(decodeURIComponent(solo[1]));
   if (st) { try { await loadHtml(st); } catch (e) {} const s2 = byId(st.id); if (s2 && s2.html != null) { setTimeout(() => { document.open(); document.write(themed(s2, !!(cur() && cur().shared))); document.close(); }, 0); return; } }
   renderAccount(); gisReady.then(renderAccount);
+  await docsLoad();
   render(); route(); renderProjUI(); resetShare(); kickTick(500);
   setInterval(renderProjUI, 60 * 1000);
 })();

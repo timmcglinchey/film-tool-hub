@@ -116,6 +116,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#97a3ff;--fth-accent:#97a3ff;--fth-accent-ink:#97a3ff;--fth-accent-soft:rgba(151,163,255,0.14);--fth-accent-line:rgba(151,163,255,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#585f94;--fth-accent-ink:#585f94;--fth-accent-soft:rgba(151,163,255,0.16);--fth-accent-line:rgba(151,163,255,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -485,6 +488,7 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
     <span class="sp"></span>
     <button class="fth-btn ghost" id="pxReset" title="Back to the default settings">Reset</button>
     <button class="fth-btn" id="pxCancel">Cancel</button>
+    <button class="fth-btn" id="pxDoc" data-fth-doc hidden></button>
     <button class="fth-btn primary" id="pxGo">Download PDF</button>
   </div>
   <div class="pxbody">
@@ -1593,6 +1597,14 @@ $('#pxOpts').addEventListener('input', e => {
 $('#pxOpts').addEventListener('submit', e => e.preventDefault());
 new ResizeObserver(() => { if (!px.hidden) schedulePreview(); }).observe($('#pxPrev'));
 
+/* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
+   window.fthDocs only exists inside the hub. Both helpers return true when the person chose
+   "Save to Documentation", which means: don't download / don't open the print window. */
+const fthDoc = (type, filename, blob, group) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob, group}));
+const fthPage = (type, name, group) => !!(window.fthDocs && window.fthDocs.page({type, name, group}));
+/* a jsPDF document: file it, and download it unless "Save to Documentation" was chosen */
+const docSave = (doc, type, name) => { if (!fthDoc(type, name, doc.output('blob'))) doc.save(name); };
+if (window.fthDocs) window.fthDocs.attach($('#pxDoc'), [{label: 'Mood Board PDF', fn: () => $('#pxGo').onclick()}]);
 $('#pxGo').onclick = async () => {
   const btn = $('#pxGo'), lbl = btn.textContent; btn.disabled = true; btn.textContent = 'Building…';
   try {
@@ -1641,7 +1653,7 @@ $('#pxGo').onclick = async () => {
         if (op.a != null) alpha(1);
       }
     }
-    doc.save(slug(state.title) + '-moodboard.pdf'); toast('PDF exported'); closeExport();
+    docSave(doc, 'Mood Board PDF', slug(state.title) + '-moodboard.pdf'); toast('PDF exported'); closeExport();
   } catch (e) { console.error(e); toast(window.jspdf ? 'Something went wrong building the PDF' : "Couldn't load the PDF tools. Check your connection.", 4000); }
   btn.disabled = false; btn.textContent = lbl;
 };

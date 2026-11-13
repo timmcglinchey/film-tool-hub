@@ -115,6 +115,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#4fc7b5;--fth-accent:#4fc7b5;--fth-accent-ink:#4fc7b5;--fth-accent-soft:rgba(79,199,181,0.14);--fth-accent-line:rgba(79,199,181,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#2e7369;--fth-accent-ink:#2e7369;--fth-accent-soft:rgba(79,199,181,0.16);--fth-accent-line:rgba(79,199,181,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -366,6 +369,7 @@ textarea.fth-input{min-height:60px}
     <button class="fth-btn ghost" id="impBtn" title="Create a recce for each location in your Production Schedule">Import from schedule</button>
     <button class="fth-btn" id="addBtn">＋ New location</button>
     <span class="fth-vsep"></span>
+    <button class="fth-btn" id="docBtn" data-fth-doc hidden></button>
     <button class="fth-btn primary" id="printBtn">Save as PDF</button>
   </div>
 </header>
@@ -684,10 +688,17 @@ function sendCallSheet(){const R=cur(),o=readTool("fth-callsheet-v1")||{S:null,a
   if(!o.S){toast("Open the Call Sheet Builder once first, then send again.");return}
   keys.forEach(k=>C[k]=m[k]);try{localStorage.setItem("fth-callsheet-v1",JSON.stringify({S:C,at:Date.now()}))}catch(e){toast("Couldn't write to the call sheet.");return}
   toast(reloadToolFrame("Call Sheet Builder")?"Sent to the call sheet (it's been refreshed).":"Sent. The call sheet will show it next time it's opened.")}
+/* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
+   window.fthDocs only exists inside the hub. Both helpers return true when the person chose
+   "Save to Documentation", which means: don't download / don't open the print window. */
+const fthDoc = (type, filename, blob, group) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob, group}));
+const fthPage = (type, name, group) => !!(window.fthDocs && window.fthDocs.page({type, name, group}));
+const rfile=()=>"Location_Recces"+(S.prod.title?"_"+S.prod.title.replace(/[^\w]+/g,"_"):"");
 function csv(){const H=["Setting","Location","Status","Scenes","Address","What3Words","Coordinates","Score",...SCORES.map(s=>s[1]),"Permission","Fee","Mains power allowed","Crew toilets","Noise (1-5)","Verdict","Pros","Cons"];
   const q=v=>'"'+String(v??"").replace(/"/g,'""')+'"',yn=v=>v==="y"?"Yes":v==="n"?"No":v==="na"?"N/A":"";
   const rows=cmpRows().flatMap(([k,rs])=>rs.map(r=>[k,r.f.name,r.f.status,r.f.scenes,r.f.addr,r.f.w3w,hasLL(r)?r.f.lat+", "+r.f.lng:"",avg(r)?avg(r).toFixed(1):"",...SCORES.map(s=>r.sc[s[0]]||""),r.f.perm,r.f.fee,yn(r.ck.pow_perm),yn(r.ck.fac_wc),r.f.noise,r.f.verdict,r.f.pros,r.f.cons]));
-  const b=new Blob(["﻿"+[H,...rows].map(r=>r.map(q).join(",")).join("\r\n")],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="Location_Recces"+(S.prod.title?"_"+S.prod.title.replace(/[^\w]+/g,"_"):"")+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),999)}
+  const b=new Blob(["﻿"+[H,...rows].map(r=>r.map(q).join(",")).join("\r\n")],{type:"text/csv"});if(fthDoc("Recce CSV",rfile()+".csv",b))return;
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=rfile()+".csv";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),999)}
 
 /* ───────── events ───────── */
 const ed=$("#ed");
@@ -736,7 +747,9 @@ $("#sketchPick").addEventListener("change",async e=>{const f=e.target.files[0];e
 $("#mode").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;UI.mode=b.dataset.m;saveUI();prev()});
 $("#incFill").addEventListener("change",e=>{UI.fill=e.target.checked;saveUI();prev()});
 $("#csvBtn").addEventListener("click",csv);
-$("#printBtn").addEventListener("click",()=>{if(innerWidth<=900)document.body.classList.add("vpv");setTimeout(()=>print(),50)});
+const pdfKind=()=>({field:"Recce Field Sheet PDF",report:"Recce Report PDF",compare:"Recce Comparison PDF"})[UI.mode]||"Recce PDF";
+$("#printBtn").addEventListener("click",()=>{if(innerWidth<=900)document.body.classList.add("vpv");setTimeout(()=>{if(!fthPage(pdfKind(),rfile()))print()},50)});
+if(window.fthDocs)fthDocs.attach($("#docBtn"),()=>[{label:pdfKind().replace("Recce ",""),fn:()=>$("#printBtn").click()},{label:"Comparison spreadsheet (CSV)",fn:csv}]);
 $("#addBtn").addEventListener("click",()=>{const r=newR();S.locs.push(r);S.cur=r.id;persist();form();prev();$("#ed").scrollTop=0;
   toast("New location added. Tip: Duplicate copies the setting and scenes for another candidate.");setTimeout(()=>{const n=$('[data-f="name"]');n&&n.focus()},60)});
 $("#impBtn").addEventListener("click",importSchedule);

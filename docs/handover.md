@@ -49,6 +49,20 @@ Tim McGlinchey is a film lecturer at Belfast Met. He isn't technical, so:
   - Once signed in, they're also kept in a small file, `Settings.filmtoolhub.json`, in the person's Film Tool Hub folder on Drive (marked `fth: 'settings'`). `syncPins` compares the two and the most recent change wins. It runs whenever Google is connected, after a pin changes, and when the person comes back to the page.
   - Pins made on a device before signing in are added to the person's own pins, not swapped for them.
   - `tests/sharing/test4.js` covers this.
+- **Documentation** (added 13 November 2026; in `hub/hub.js`, the "Documentation" section, plus the `fthDocs` part of the storage shim). A page (`#/docs`, button in the top bar) with one folder per tool, holding a copy of every export made in the current project.
+  - **One helper.** Tools never store documents themselves. They call `window.fthDocs.save({type, filename, blob})` for a real file, or `window.fthDocs.page({type, name})` for a tool that uses the print window. Both end up at `window.__fthHub.saveDoc`. `fthDocs` doesn't exist when a tool is opened on its own, and every tool checks for it. `docs/tool-guide.md` rule 6 shows the pattern.
+  - **Print-window tools** (Script Development, Coverage, Casting, Task Board, Shot List, Call Sheet, Risk Assessment, Schedule, Recce) can't hand over a PDF, so the hub keeps a "print-ready page": the page as it prints, with print-only styles made permanent and everything that doesn't print removed (`capture` in the shim, `prunePage` in the hub). In Documentation, Open shows it and "Save as PDF" opens the print window.
+  - **Drafts.** Saving never overwrites. Each save gets the next draft number for that tool and `group` (the document type, or type + subject such as a scene name). The highest live draft is "Latest". A deleted draft's number isn't reused.
+  - **Which tools have folders:** the `DOC_TYPES` list in `hub/hub.js` (16 tools). The three pipelines and the three labs have no exports, so no folder.
+  - **Where it's kept:**
+    - Always in this browser: the hub's own database gained two stores, `docs` (the list) and `docfiles` (the files), both filed by project id.
+    - Signed in, your own project: each file is also uploaded to **Film Tool Hub → Documentation → project name → tool name** in the person's Drive (`docsPush`), marked `fth: 'doc'`. Files found there are added to the list (`docsPull`), which is how a second computer gets them; the file itself is fetched the first time it's opened.
+    - Shared project: the list **and the files** travel inside the shared project file (`snap.docs`, `snap.docFiles`). This is deliberate: Google only lets each crew member's sign-in open files they picked, and the project file is the one file everyone has picked. Saving a document in a shared project therefore saves the project straight away. The owner's hub also copies everyone's documents into the owner's Drive folder. Shared Documentation is capped at about 200 MB so saving stays quick.
+  - **Backups** hold the list, not the files. Restoring a backup puts the list back as it was (`docsRestore`). A deleted document's file is kept for 30 days (in the browser and in Drive's bin) so a restore can bring it back.
+  - **Storage warning:** without sign-in, a message appears when the browser's storage is over 80% full.
+  - **Not saved to Documentation:** `.json` project and backup files.
+  - **Tests:** `node tests/docs/run.js` (three files: the tools, the page, Drive and sharing). Set `FTH_TEST_LIBS` to a folder with local copies of the PDF and Excel libraries to include those steps; the top of `tests/docs/test1.js` lists the file names.
+  - **Still needs a real-world check:** Drive upload and sharing were only tested against the pretend Google Drive. Check on the live site with two real accounts.
 - **No HTML exports.** Tools must not offer to download a copy of the page. PDF, CSV, Excel and .json data exports are fine.
 
 ## Adding or updating a tool (Tim sends a file)

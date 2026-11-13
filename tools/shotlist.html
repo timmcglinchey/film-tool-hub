@@ -116,6 +116,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#97a3ff;--fth-accent:#97a3ff;--fth-accent-ink:#97a3ff;--fth-accent-soft:rgba(151,163,255,0.14);--fth-accent-line:rgba(151,163,255,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#585f94;--fth-accent-ink:#585f94;--fth-accent-soft:rgba(151,163,255,0.16);--fth-accent-line:rgba(151,163,255,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -329,6 +332,7 @@ dialog.dlg::backdrop{background:rgba(5,6,8,.6);backdrop-filter:blur(3px)}
     <button class="fth-btn" id="btnCSV">Export CSV</button>
     <span class="fth-vsep"></span>
     <button class="fth-btn ghost" id="btnNew">New</button>
+    <button class="fth-btn" id="btnDoc" data-fth-doc hidden></button>
     <button class="fth-btn primary" id="btnPDF">Export PDF</button>
   </div>
 </header>
@@ -1021,10 +1025,17 @@ window.addEventListener('beforeprint',buildPrint);
 function exampleOK(){if(!day().example||state.settings.exportExample)return true;return confirm('You’re on the example day (The Bet). It’s normally left out of exports.\n\nExport the example anyway?')}
 $('#btnPDF').onclick=()=>{if(state.settings.printDays!=='all'&&!exampleOK())return;if(state.settings.printDays==='all'&&!expDays().length){toast('No shoot days to export');return}const f=buildPrint(),n=state.columns.filter(c=>c.print).length;
  if(f.small&&!confirm(`Heads up: with ${n} columns set to print, the text will shrink to about ${f.size}pt to fit the page, which may be hard to read.\n\nYou can reduce print columns in Columns, or switch to A3 in Settings.\n\nPrint anyway?`))return;
- toast('In the print window, choose “Save as PDF” as the destination.',5000);setTimeout(()=>window.print(),150)};
+ const only=!!(window.fthDocs&&window.fthDocs.only);if(!only)toast('In the print window, choose “Save as PDF” as the destination.',5000);
+ setTimeout(()=>{if(!fthPage('Shot List PDF',fileBase()+(state.settings.printDays==='all'?'':' - '+day().name)))window.print()},150)};
+if(window.fthDocs)window.fthDocs.attach($('#btnDoc'),[{label:'Shot List PDF',fn:()=>$('#btnPDF').click()},{label:'Shot List CSV (this day)',fn:()=>$('#btnCSV').click()}]);
 
 /* ---------- files ---------- */
 const fileBase=()=>(state.project.title||'Shot list').replace(/[\\/:*?"<>|]+/g,'').trim()||'Shot list';
+/* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
+   window.fthDocs only exists inside the hub. Both helpers return true when the person chose
+   "Save to Documentation", which means: don't download / don't open the print window. */
+const fthDoc = (type, filename, blob, group) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob, group}));
+const fthPage = (type, name, group) => !!(window.fthDocs && window.fthDocs.page({type, name, group}));
 function download(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 $('#btnSave').onclick=()=>{const days=expDays();if(!days.length){toast('No shoot days to save');return}const out={...state,days,activeDay:days.some(d=>d.id===state.activeDay)?state.activeDay:days[0].id};download(JSON.stringify(out,(k,v)=>k==='_sunNote'?undefined:v,1),`${fileBase()}.shotlist.json`,'application/json');toast('Saved. Open it later with “Open”.')};
 $('#btnOpen').onclick=()=>{$('#fileOpen').value='';$('#fileOpen').click()};
@@ -1037,7 +1048,8 @@ $('#btnCSV').onclick=()=>{
  d.rows.forEach(r=>{const o=C.res[r.id]||{};
   if(r.type!=='shot'){lines.push(cols.map((c,i)=>i===0?`${KINDS[kindOf(r)].name.toUpperCase()}: ${r.label||''} (${num(r.duration)} mins)`:c.key==='start'?plainVal(c,{},o,C):c.key==='end'?plainVal(c,{},o,C):''));return}
   lines.push(cols.map(c=>plainVal(c,r,o,C)));});
- download('﻿'+lines.map(l=>l.map(csvEsc).join(',')).join('\r\n'),`${fileBase()} - ${d.name}.csv`,'text/csv');
+ const csvText='﻿'+lines.map(l=>l.map(csvEsc).join(',')).join('\r\n'),csvName=`${fileBase()} - ${d.name}.csv`;
+ if(!fthDoc('Shot List CSV',csvName,new Blob([csvText],{type:'text/csv'}),'Shot List CSV · '+d.name))download(csvText,csvName,'text/csv');
 };
 $('#btnNew').onclick=()=>{
  if(!confirm('Start a new, empty project? Save a file first if you want to keep this one. Your columns, dropdowns, settings and the example day are kept.'))return;

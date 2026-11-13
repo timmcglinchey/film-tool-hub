@@ -115,6 +115,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#ff7152;--fth-accent:#ff7152;--fth-accent-ink:#ff7152;--fth-accent-soft:rgba(255,113,82,0.14);--fth-accent-line:rgba(255,113,82,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#944230;--fth-accent-ink:#944230;--fth-accent-soft:rgba(255,113,82,0.16);--fth-accent-line:rgba(255,113,82,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -170,8 +173,9 @@ table.t{border-collapse:collapse;min-width:100%}
     <span class="status" id="saveState"></span>
     <button class="fth-btn ghost" onclick="newSheet()">New sheet</button>
     <span class="fth-vsep"></span>
+    <button class="fth-btn" id="docBtn" data-fth-doc hidden></button>
     <button class="fth-btn" onclick="xl()">Download Excel</button>
-    <button class="fth-btn primary" onclick="print()">Save as PDF</button>
+    <button class="fth-btn primary" onclick="pdf()">Save as PDF</button>
   </div>
 </header>
 <div class="app"><div class="ed" id="ed"></div><div class="pvw fth-paper-wrap"><div class="pvlabel"><span class="fth-label">Preview · A4</span><span class="fth-label" id="pvPages"></span></div><div id="pv" class="fth-paper"></div></div></div>
@@ -261,6 +265,11 @@ if(t.dataset.a)S[t.dataset.a][+t.dataset.i][k]=v;else S[k]=v;prev();persist()});
 document.addEventListener("change",e=>{if(e.target.dataset.k)prev()});
 document.addEventListener("click",e=>{const t=e.target;if(t.dataset.add){S[t.dataset.add].push({});form();prev();persist()}
 if(t.dataset.del&&confirm("Remove this row?")){S[t.dataset.del].splice(+t.dataset.i,1);form();prev();persist()}});
+/* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
+   window.fthDocs only exists inside the hub. Both helpers return true when the person chose
+   "Save to Documentation", which means: don't download / don't open the print window. */
+const fthDoc = (type, filename, blob, group) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob, group}));
+const fthPage = (type, name, group) => !!(window.fthDocs && window.fthDocs.page({type, name, group}));
 function dl(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),999)}
 let saveT;function persist(){clearTimeout(saveT);saveT=setTimeout(()=>{try{savedAt=Date.now();localStorage.setItem(KEY,JSON.stringify({S,at:savedAt}));showSaved()}catch(e){$("#saveState").textContent="Couldn’t save in this browser"}},400)}
 function showSaved(){$("#saveState").textContent=savedAt?"Saved in this browser · "+new Date(savedAt).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""}
@@ -274,6 +283,9 @@ const[sr,ss]=sun(S.date,+S.lat,+S.lng),e=[""],R=[[S.title,"",S.place,"",S.date,"
 ["#","CAST","CHARACTER","SWHF","MU","SET","MINOR?","SPECIAL INSTRUCTIONS"],...S.cast.map((r,i)=>[i+1,r.name,r.ch,r.sw,r.mu,r.set,r.minor,r.si]),e,
 ["SHOT INFORMATION"],["First shot",S.first],["Last shot",S.last],e,["POSITION","NAME","PHONE","SET"],...S.crew.map(r=>[r.pos,r.name,r.ph,r.set])];
 const ws=XLSX.utils.aoa_to_sheet(R);ws["!cols"]=[{wch:22},{wch:28},{wch:36},{wch:16},{wch:16},{wch:18},{wch:12},{wch:12},{wch:24}];
-const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Call Sheet");XLSX.writeFile(wb,"Call_Sheet_"+(S.date||"draft")+".xlsx")}
+const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Call Sheet");const xn="Call_Sheet_"+(S.date||"draft")+".xlsx";
+if(!fthDoc("Call Sheet Excel",xn,new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"})))XLSX.writeFile(wb,xn)}
+function pdf(){if(!fthPage("Call Sheet PDF","Call Sheet "+(S.date||"draft")))print()}
+if(window.fthDocs)fthDocs.attach($("#docBtn"),[{label:"Call Sheet PDF",fn:pdf},{label:"Call Sheet Excel",fn:xl}]);
 form();prev();showSaved();
 </script></body></html>

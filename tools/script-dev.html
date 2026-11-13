@@ -116,6 +116,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#f5b14c;--fth-accent:#f5b14c;--fth-accent-ink:#f5b14c;--fth-accent-soft:rgba(245,177,76,0.14);--fth-accent-line:rgba(245,177,76,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#8e672c;--fth-accent-ink:#8e672c;--fth-accent-soft:rgba(245,177,76,0.16);--fth-accent-line:rgba(245,177,76,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -1085,8 +1088,14 @@ let flushEditor = null;
 
 function stamp(d){ const p = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`; }
 function slug(s){ return (String(s||'').trim().replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_').slice(0,50)) || 'Untitled_Script'; }
-function download(name, content, type){
+/* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
+   window.fthDocs only exists inside the hub. Both helpers return true when the person chose
+   "Save to Documentation", which means: don't download / don't open the print window. */
+const fthDoc = (type, filename, blob, group) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob, group}));
+const fthPage = (type, name, group) => !!(window.fthDocs && window.fthDocs.page({type, name, group}));
+function download(name, content, type, docType){
   const blob = new Blob([content], {type});
+  if (docType && fthDoc(docType, name, blob)) return;
   const a = h('a', {href: URL.createObjectURL(blob), download: name});
   document.body.append(a); a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
@@ -1220,6 +1229,7 @@ function renderShell(){
     {label:'Export script for Final Draft', sub:'.fdx', icon:'file', fn: exportFDX},
     {label:'Print / save script as PDF', icon:'print', fn: printScript},
     {label:'Export Develop & Outline as PDF…', icon:'print', fn: exportDocModal},
+    ...(window.fthDocs ? [{label:'Save to Documentation…', icon:'folder', fn: docsModal}] : []),
     {label:'Script drafts…', icon:'folder', fn: () => draftsModal()},
     {label:'Import a Fountain script…', icon:'upload', fn: importFountain},
     '-',
@@ -2842,7 +2852,7 @@ function exportFountain(){
   const tp = [`Title: ${S.title || 'Untitled'}`, 'Credit: Written by', `Author: ${S.author || ''}`];
   if (S.contact) tp.push(`Contact: ${S.contact}`);
   tp.push(`Draft date: ${new Date().toLocaleDateString('en-GB')}`);
-  download(`${slug(S.title)}_${stamp(new Date())}.fountain`, tp.join('\n') + '\n\n' + P.lines.join('\n') + '\n', 'text/plain');
+  download(`${slug(S.title)}_${stamp(new Date())}.fountain`, tp.join('\n') + '\n\n' + P.lines.join('\n') + '\n', 'text/plain', 'Script (Fountain)');
 }
 function exportFDX(){
   const P = currentScript();
@@ -2851,7 +2861,7 @@ function exportFDX(){
   let body = '';
   P.lines.forEach((l, i) => { const t = P.types[i]; if (!map[t]) return; const tx = cleanText(l, t); if (t === 'dialogue' && !tx) return; body += `    <Paragraph Type="${map[t]}"${t === 'centered' ? ' Alignment="Center"' : ''}><Text>${X(t === 'scene' || t === 'transition' ? tx.toUpperCase() : tx)}</Text></Paragraph>\n`; });
   const xml = `<?xml version="1.0" encoding="UTF-8" standalone="no" ?>\n<FinalDraft DocumentType="Script" Template="No" Version="5">\n  <Content>\n${body}  </Content>\n  <TitlePage>\n    <Content>\n      <Paragraph Alignment="Center"><Text>${X((S.title || 'Untitled').toUpperCase())}</Text></Paragraph>\n      <Paragraph Alignment="Center"><Text>Written by</Text></Paragraph>\n      <Paragraph Alignment="Center"><Text>${X(S.author || '')}</Text></Paragraph>\n    </Content>\n  </TitlePage>\n</FinalDraft>\n`;
-  download(`${slug(S.title)}_${stamp(new Date())}.fdx`, xml, 'application/xml');
+  download(`${slug(S.title)}_${stamp(new Date())}.fdx`, xml, 'application/xml', 'Script (Final Draft)');
 }
 function emph(s){ return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\*(.+?)\*/g, '<i>$1</i>').replace(/(^|\W)_(.+?)_(?=\W|$)/g, '$1<u>$2</u>'); }
 function printScript(){
@@ -2886,6 +2896,7 @@ function printScript(){
   }
   // collapse consecutive actions spacing: action lines directly following action get no top margin
   $$('p.act', root).forEach(p => { const prev = p.previousElementSibling; if (prev && prev.classList.contains('act')) p.style.marginTop = '0'; });
+  if (fileDoc(root, PAGE_CSS.script, 'Script PDF', (pdTxt(S.title) || 'Untitled script') + ' - Script')) return;
   runPrint(root, PAGE_CSS.script);
 }
 /* =====================================================================
@@ -3049,9 +3060,24 @@ function runPrint(root, pageCss, docTitle){
   window.addEventListener('afterprint', done);
   setTimeout(() => window.print(), 50);
 }
+/* Documentation: file the page as it prints (see fthPage). True means "Save to Documentation" was chosen, so no print window. */
+function fileDoc(root, pageCss, type, name){
+  if (!window.fthDocs) return false;
+  $$('#print,#printdoc,#print-page').forEach(x => x.remove());
+  const page = h('style', {id:'print-page'}, '@media print{' + pageCss + '}');
+  document.head.append(page); $('#layer').append(root);
+  const only = fthPage(type, name);
+  root.remove(); page.remove();
+  return only;
+}
 function printDoc(o){
   const what = o.develop && o.outline ? 'Development and outline' : o.develop ? 'Development' : 'Outline';
   const t = pdTxt(S.title) || 'Untitled script';
+  /* Develop and Outline are filed as two separate documents */
+  let only = false;
+  if (o.develop) only = fileDoc(buildDoc({...o, outline:false}), PAGE_CSS.doc(`${t}  ·  Development`), 'Develop PDF', `${t} - Development`) || only;
+  if (o.outline) only = fileDoc(buildDoc({...o, develop:false}), PAGE_CSS.doc(`${t}  ·  Outline`), 'Outline PDF', `${t} - Outline`) || only;
+  if (only) return;
   runPrint(buildDoc(o), PAGE_CSS.doc(`${t}  ·  ${what}`), `${t} - ${what}`);
 }
 function exportDocModal(){
@@ -3063,7 +3089,19 @@ function exportDocModal(){
     sw('outline', 'Outline', `Your arc and every beat of the ${curStruct().name}, with plot points${curStruct().key === 'scaffold' ? ' and the mirror' : ''}.`),
     sw('guide', 'Add the guidance for each beat', 'Prints what each beat is for above your own words. Handy for a reader who doesn\'t know the structure.'),
     h('p', {class:'small muted', style:'margin-top:16px'}, 'In the print window, choose “Save as PDF” as the printer.')),
-    [{label:'Cancel'}, {label:'Print / save as PDF', primary:true, fn: () => { if (!o.develop && !o.outline){ toast('Choose Develop, Outline or both.'); return false; } printDoc(o); }}]);
+    [{label:'Cancel'}, ...(window.fthDocs ? [{label:'Save to Documentation', fn: () => { if (!o.develop && !o.outline){ toast('Choose Develop, Outline or both.'); return false; } window.fthDocs.run(() => printDoc(o)); }}] : []),
+     {label:'Print / save as PDF', primary:true, fn: () => { if (!o.develop && !o.outline){ toast('Choose Develop, Outline or both.'); return false; } printDoc(o); }}]);
+}
+/* Save a draft of any export to the project's Documentation without downloading or printing it (hub only) */
+function docsModal(){
+  const D = window.fthDocs, row = (label, sub, fn) => h('button', {class:'btn', style:'display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;height:auto;padding:10px 14px;margin-top:8px;text-align:left', onclick: () => { close(); fn(); }}, h('b', null, label), h('span', {class:'small muted'}, sub));
+  const close = modal('Save to Documentation', h('div', null,
+    h('p', null, 'Files a draft in this project\'s Documentation folder, without downloading or printing it.'),
+    row('Script PDF', 'The screenplay as it prints.', () => D.run(printScript)),
+    row('Develop & Outline PDF…', 'Choose Develop, Outline or both.', exportDocModal),
+    row('Script as Fountain', '.fountain', () => D.run(exportFountain)),
+    row('Script for Final Draft', '.fdx', () => D.run(exportFDX))),
+    [{label:'Close'}]);
 }
 function importFountain(){
   const inp = h('input', {type:'file', accept:'.fountain,.txt,.spmd,text/plain', style:'display:none'});

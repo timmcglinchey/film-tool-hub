@@ -116,6 +116,9 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 @media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
 @media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
 
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
 :root{--fth-cat:#4fc7b5;--fth-accent:#4fc7b5;--fth-accent-ink:#4fc7b5;--fth-accent-soft:rgba(79,199,181,0.14);--fth-accent-line:rgba(79,199,181,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#2e7369;--fth-accent-ink:#2e7369;--fth-accent-soft:rgba(79,199,181,0.16);--fth-accent-line:rgba(79,199,181,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
@@ -306,6 +309,7 @@ button.tb-chip[aria-pressed="true"]{background:var(--fth-accent-soft);border-col
     <select class="fth-input tb-filter" id="deptSel" aria-label="Filter by department"></select>
     <button class="fth-btn tb-toggle" id="btnHide" type="button" aria-pressed="false">Hide done</button>
     <span class="fth-vsep"></span>
+    <button class="fth-btn" id="btnDoc" type="button" data-fth-doc hidden></button>
     <button class="fth-btn" id="btnPrint" type="button">Print list</button>
     <button class="fth-btn primary" id="btnNew" type="button">+ New task</button>
   </div>
@@ -803,6 +807,11 @@ $('confirmYes').onclick = () => {
 };
 
 /* ── printable task list (use the print window's “Save as PDF” for a PDF) ── */
+/* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
+   window.fthDocs only exists inside the hub. Both helpers return true when the person chose
+   "Save to Documentation", which means: don't download / don't open the print window. */
+const fthDoc = (type, filename, blob, group) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob, group}));
+const fthPage = (type, name, group) => !!(window.fthDocs && window.fthDocs.page({type, name, group}));
 function printList() {
   const tasks = data.tasks.filter(t => matchesFilter(t) && !(data.hideDone && t.status === 'done')).sort((a, b) => (a.due || '9999') < (b.due || '9999') ? -1 : (a.due || '9999') > (b.due || '9999') ? 1 : 0);
   if (!tasks.length) { toast('There are no tasks to print.'); return; }
@@ -820,12 +829,13 @@ function printList() {
         h('td', null, t.depts.join(', ') || '—'),
         h('td', {class: isOverdue(t) ? 'late' : null}, t.due ? fmt(fromIso(t.due), {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'}) + (isOverdue(t) ? ' (overdue)' : '') : '—'),
         h('td', null, statusLabel(t.status)))))));
-  window.print();
+  if (!fthPage('Task List PDF', 'Task list' + (filter === '' ? '' : ' - ' + (filter === NONE ? 'Unassigned' : filter)))) window.print();
 }
 
 /* ── header buttons ── */
 $('btnNew').onclick = () => openTask(null, data.view === 'calendar' ? {} : {});
 $('btnPrint').onclick = printList;
+if (window.fthDocs) window.fthDocs.attach($('btnDoc'), [{label: 'Task List PDF', fn: printList}]);
 $('filterSel').onchange = e => { filter = e.target.value; render(); };
 $('deptSel').onchange = e => { deptFilter = e.target.value; render(); };
 $('btnHide').onclick = () => { data.hideDone = !data.hideDone; commit(); };
