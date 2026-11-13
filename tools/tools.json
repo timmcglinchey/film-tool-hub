@@ -299,6 +299,25 @@
       "file": "tools/casting.html"
     },
     {
+      "id": "tasks",
+      "name": "Task Board",
+      "desc": "Keep on top of pre-production: what needs doing, who's doing it and when it's due, as a board, a calendar or a timeline.",
+      "category": "plan",
+      "tags": [
+        "All crew",
+        "Producer",
+        "1st AD"
+      ],
+      "icon": "tasks",
+      "fileName": "Task Board.html",
+      "origTitle": "Task Board",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611130900,
+      "file": "tools/tasks.html"
+    },
+    {
       "id": "moodboard",
       "name": "Mood Board",
       "desc": "Collect stills, clips and music for the film's look and sound, tick which department each one is for, and export a PDF.",
