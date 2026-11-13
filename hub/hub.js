@@ -1057,8 +1057,8 @@ function tick() {
   clearTimeout(tickT);
   tickBusy = (async () => {
     inTick = true;
-    try { await tick1(); }
-    catch (e) {}
+    try { await tick1(); sh.err = ''; }
+    catch (e) { const m = String((e && e.message) || e); sh.err = /not connected|Failed to fetch|NetworkError|Load failed/i.test(m) ? '' : m; }   /* shown in the bar, so a refusal from Google isn't a mystery */
     inTick = false; tickBusy = null; renderShare();
     if (sharedCur() && !document.hidden) kickTick(pending.size || myReq || reqShown ? FAST_MS : TICK_MS);
   })();
@@ -1187,7 +1187,7 @@ function renderShare() {
   else if (sh.lost && isOwner(p)) {
     /* the owner can't "lose access": their file is in the bin, deleted, or out of this sign-in's reach */
     if (sh.lost === 'binned') msg = 'This project’s file is in the bin in your Google Drive, so it’s view-only here. Restore it in Google Drive to carry on.';
-    else { msg = `Film Tool Hub can’t open this project’s file in the Google Drive of ${esc((account || {}).email || 'this account')}, so it’s view-only for now. Check Google is connected as you, and that the file hasn’t been deleted from Drive.`; btn = '<button class="btn sm primary" data-lk="retry">Reconnect and check again</button>'; }
+    else { msg = `Film Tool Hub can’t open this project’s file in the Google Drive of ${esc((account || {}).email || 'this account')}, so it’s view-only for now. Check Google is connected as you, and that the file hasn’t been deleted from Drive.${sh.why ? ' <small>(' + esc(sh.why) + ')</small>' : ''}`; btn = '<button class="btn sm primary" data-lk="retry">Reconnect and check again</button>'; }
   }
   else if (sh.lost) {
     msg = `You no longer have access to this shared project, so it’s view-only here. Ask ${esc((p.sharedBy || {}).name || 'the owner')} to share it with you again.`;
@@ -1203,6 +1203,7 @@ function renderShare() {
     btn = myReq && myReq.tool === t ? `<span class="wait">Asked ${esc(firstName(l))}. Waiting for an answer…</span>` : '<button class="btn sm primary" data-lk="request">Request to edit</button>';
     if (isOwner(p)) btn += '<button class="btn sm ghost" data-lk="take">Take over</button>';
   }
+  else if (sh.err) msg = `Google Drive didn’t accept the check on who’s editing, so ${nm} is view-only for now. <small>(${esc(sh.err)})</small>`;
   else if (!sh.at || pending.has(t) || Date.now() - (lastAct[t] || 0) < IDLE_MS) msg = 'Checking who’s editing…';
   else { msg = `Nobody is editing ${nm} right now.`; btn = '<button class="btn sm primary" data-lk="start">Start editing</button>'; }
   const html = `<i class="dot"></i><span class="m"${sh.lost && sh.why ? ` title="${esc(sh.why)}"` : ''}>${msg}</span><span class="b">${btn}</span>`;
