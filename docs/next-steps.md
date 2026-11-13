@@ -9,7 +9,7 @@ GitHub access came back on 12 November 2026. Everything built offline is now pub
    - Possible later improvement: save shared projects automatically every few minutes, so crew see each other's work without anyone pressing Save.
    - **Documentation** (built 13 November 2026) also needs this check: save a document signed in and look for it in Drive under Film Tool Hub → Documentation; then, in a shared project, check a second account sees it and can open it.
 2. **Crew, roles and progress** (build after sharing):
-   - **Crew list:** name and email are in (13 November 2026, see `docs/handover.md`) and feed the Task Board. Still to add: a role for each person (`people()` already has a `role` field; only the owner's is filled in).
+   - **Done 13 November 2026** (see `docs/handover.md`): crew list with names and roles; Conversations in every tool with tagging; the My work page; crew names offered in the Call Sheet, Risk Assessment and Location Recce; Script Coverage reader and comment names; sign-off in Documentation. All of it needs the same real-world check with two accounts.
    - **Default owners:** each document defaults to who completes it and who signs it off, worked out from the roles. These can be changed per project.
    - **Statuses:** Not started → In progress → Ready for review → Signed off. "Changes requested" is also possible. A document edited after sign-off is flagged as "changed since sign-off".
    - **Project board:** shows every document with who's doing it, its status and its due date.

@@ -220,7 +220,7 @@ ${F("AM temp (°C)","amT","number")}${F("PM temp (°C)","pmT","number")}${F("Hum
 <h2 class="fth-sec"><span class="fth-num">06</span>Craft services &amp; notes</h2><div class="g">${F("Craft services","craft","text","craft",1)}${F("Notes","notes","area","notes",1)}</div>
 <h2 class="fth-sec"><span class="fth-num">07</span>Scenes &amp; schedule ${info("scenes")}</h2>${tip("scenes")}${tbl("scenes",[["sc","Scenes"],["part","Partial","chk"],["set","Set"],["desc","Description"],["ch","Char #"],["dn","D/N","sel",["D","N"]],["pg","Pages"],["st","Start","time"],["en","End","time"],["nt","Notes"]])}
 <h2 class="fth-sec"><span class="fth-num">08</span>Cast ${info("cast")}</h2>${tip("cast")}${tbl("cast",[["name","Cast"],["ch","Character"],["sw","SWHF","sel",["S","W","H","F","SW","WF","SWF"]],["mu","MU","time"],["set","Set","time"],["minor","Minor?","sel",["Y","N"]],["si","Special instructions"]])}
-<h2 class="fth-sec"><span class="fth-num">09</span>Crew ${info("crew")}</h2>${tip("crew")}${tbl("crew",[["pos","Position"],["name","Name"],["ph","Phone"],["set","Set (time)"]])}`;
+<h2 class="fth-sec"><span class="fth-num">09</span>Crew ${info("crew")}</h2>${tip("crew")}${tbl("crew",[["pos","Position"],["name","Name"],["ph","Phone"],["set","Set (time)"]])}${window.fthPeople&&window.fthPeople().length?`<div class="bar"><button class="fth-btn sm" data-crewfill="1" title="Adds everyone this project is shared with, by the name and role in the project's crew list. You can still type over any of it.">＋ Add project crew</button></div>`:""}`;
 if(act&&act.dataset&&act.dataset.k){const q=`[data-k="${act.dataset.k}"]`+(act.dataset.a?`[data-a="${act.dataset.a}"][data-i="${act.dataset.i}"]`:":not([data-a])");const n=$(q);n&&n.focus()}}
 // maths
 const pv=v=>{const m=String(v||"").trim().match(/^(?:(\d+)\s+)?(?:(\d+)\/(\d+))?$|^(\d+)$/);if(!m||!String(v).trim())return 0;return m[4]?+m[4]:(+m[1]||0)+(m[2]?m[2]/m[3]:0)};
@@ -263,7 +263,12 @@ const w=warns();$("#warn").innerHTML=w.length?`<div class="fth-warn"><b>Sense ch
 document.addEventListener("input",e=>{const t=e.target,k=t.dataset.k;if(!k)return;const v=t.type=="checkbox"?t.checked:t.value;
 if(t.dataset.a)S[t.dataset.a][+t.dataset.i][k]=v;else S[k]=v;prev();persist()});
 document.addEventListener("change",e=>{if(e.target.dataset.k)prev()});
-document.addEventListener("click",e=>{const t=e.target;if(t.dataset.add){S[t.dataset.add].push({});form();prev();persist()}
+/* in a shared project: bring the project's crew list into the crew table (names already there are left alone) */
+function crewFill(){const same=(a,b)=>String(a||"").trim().toLowerCase()===String(b||"").trim().toLowerCase();let n=0;
+(window.fthPeople?window.fthPeople():[]).forEach(p=>{if(S.crew.some(r=>same(r.name,p.name)))return;
+const r=(p.role&&S.crew.find(r=>same(r.pos,p.role)&&!String(r.name||"").trim()))||S.crew.find(r=>!String(r.pos||"").trim()&&!String(r.name||"").trim());
+if(r){r.name=p.name;if(p.role&&!String(r.pos||"").trim())r.pos=p.role}else S.crew.push({pos:p.role||"",name:p.name});n++});return n}
+document.addEventListener("click",e=>{const t=e.target;if(t.dataset.crewfill){crewFill();form();prev();persist();return}if(t.dataset.add){S[t.dataset.add].push({});form();prev();persist()}
 if(t.dataset.del&&confirm("Remove this row?")){S[t.dataset.del].splice(+t.dataset.i,1);form();prev();persist()}});
 /* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
    window.fthDocs only exists inside the hub. Both helpers return true when the person chose

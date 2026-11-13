@@ -2,7 +2,7 @@
    Needs Playwright with Chromium. Run from the site folder:  node tests/sharing/run.js */
 const { spawnSync } = require('child_process'), path = require('path');
 let failed = 0;
-for (const [file, ...args] of [['test1.js'], ['test2.js'], ['test2.js', 'bump'], ['test3.js'], ['test4.js'], ['test5.js'], ['test6.js']]) {
+for (const [file, ...args] of [['test1.js'], ['test2.js'], ['test2.js', 'bump'], ['test3.js'], ['test4.js'], ['test5.js'], ['test6.js'], ['test7.js']]) {
   const r = spawnSync(process.execPath, [path.join(__dirname, file), ...args], { stdio: 'inherit' });
   if (r.status !== 0) failed++;
 }

@@ -75,7 +75,7 @@ const store = (() => {
   const mem = new Map(); let db = null, ok = false;
   const ready = new Promise(res => {
     try {
-      const r = indexedDB.open('film-tool-hub', 3);
+      const r = indexedDB.open('film-tool-hub', 4);
       r.onupgradeneeded = () => {
         const d = r.result, have = n => d.objectStoreNames.contains(n);
         if (!have('tools')) d.createObjectStore('tools', {keyPath: 'id'});
@@ -83,6 +83,7 @@ const store = (() => {
         if (!have('saves')) d.createObjectStore('saves', {keyPath: 'id'});
         if (!have('backups')) d.createObjectStore('backups', {keyPath: 'id', autoIncrement: true}).createIndex('projectId', 'projectId');
         if (!have('docs')) d.createObjectStore('docs', {keyPath: 'id'}).createIndex('projectId', 'projectId');   /* Documentation: one entry per saved document */
+        if (!have('msgs')) d.createObjectStore('msgs', {keyPath: 'id'}).createIndex('projectId', 'projectId');   /* Conversations: one entry per comment */
         if (!have('docfiles')) d.createObjectStore('docfiles');                                                    /* …and the file itself, by the same id */
       };
       r.onsuccess = () => { db = r.result; ok = true; res(); };
@@ -242,6 +243,7 @@ async function snapshot(pid) {
   const pre = PFX(pid), snap = {v: 1, at: Date.now(), project: (projById(pid) || {}).name || '', ls: {}, idb: {}};
   for (const k of lsKeys(pre)) snap.ls[k.slice(pre.length)] = localStorage.getItem(k);
   for (const n of await listDBs(pre)) { try { snap.idb[n.slice(pre.length)] = await dumpDB(n); } catch (e) {} }
+  snap.msgs = (await msgsAll(pid)).map(msgPublic);   /* Conversations */
   snap.docs = (await docsAll(pid)).map(docPublic);   /* the Documentation list (the files themselves are kept once, not in every snapshot) */
   return snap;
 }
@@ -348,7 +350,7 @@ async function deleteProject(id, keepMarker) {
   if (id === curId) await leaveShared();
   if (p.driveFileId && account && !p.sharedBy && !keepMarker) { if (await getToken(true).catch(() => null)) await driveTrash(p); }
   if (id === curId) await unloadFrames();
-  await wipeProjectData(id); await docsWipe(id);
+  await wipeProjectData(id); await docsWipe(id); await msgsWipe(id);
   await store.gtx('saves', 'readwrite', s => s.delete(id)).catch(() => {});
   for (const b of await backupsFor(id)) await store.gtx('backups', 'readwrite', s => s.delete(b.id)).catch(() => {});
   if (keepMarker) { Object.assign(p, {hiddenShared: true, dirty: null, tools: {}, needsDownload: true, driveRev: null, savedAt: 0, changedAt: 0, backupAt: 0}); await putProject(p); }
@@ -363,7 +365,7 @@ window.__fthHub = {
   touched(tool, pid) {
     const p = projById(pid); if (!p) return;
     const now = Date.now(); p.changedAt = now; p.tools = p.tools || {}; p.tools[tool] = now;
-    persistProjectSoon(p); if (pid === curId) renderProjUI();
+    persistProjectSoon(p); if (pid === curId) { renderProjUI(); if (tool === 'tasks') setTimeout(() => { renderBar(); renderMe(); }, 600); }
   },
   /* shared projects: note exactly which saved item a tool changed, so Save only sends this person's changes */
   dirty(tool, pid, kind, name) {
@@ -547,7 +549,7 @@ function unpackValue(v) {
 const projectMeta = p => ({id: p.id, name: p.name, created: p.created, archived: !!p.archived, tools: p.tools || {}, ...(p.crew && p.crew.length || p.crewAt ? {crew: p.crew || [], crewAt: p.crewAt || 0} : {})});
 /* the crew list (who a shared project is shared with, and the name the owner gave each person) travels in
    the project file. Only the owner changes it; everyone takes the newest one they see. */
-const cleanCrew = l => (Array.isArray(l) ? l : []).filter(c => c && c.email).map(c => ({email: String(c.email).toLowerCase(), name: String(c.name || '').trim().slice(0, 60)}));
+const cleanCrew = l => (Array.isArray(l) ? l : []).filter(c => c && c.email).map(c => ({email: String(c.email).toLowerCase(), name: String(c.name || '').trim().slice(0, 60), ...(c.role ? {role: String(c.role).trim().slice(0, 40)} : {}), ...(Array.isArray(c.aka) && c.aka.length ? {aka: c.aka.map(String).slice(-5)} : {})}));
 function takeCrew(p, proj) {
   if (!proj || !((proj.crewAt || 0) > (p.crewAt || 0))) return;
   p.crew = cleanCrew(proj.crew); p.crewAt = proj.crewAt;
@@ -621,7 +623,7 @@ async function pullProject(p, fileId) {
   const here = p.id === curId;
   if (here) await unloadFrames();
   await restoreSnapshot(p.id, data.snap);
-  await docsMergeIn(p, data.snap.docs, data.snap.docFiles);
+  await docsMergeIn(p, data.snap.docs, data.snap.docFiles); await msgsMergeIn(p, data.snap.msgs);
   Object.assign(p, {name: data.project.name || p.name, tools: data.project.tools || p.tools || {}, archived: !!data.project.archived,
     savedAt: data.savedAt, changedAt: data.savedAt, backupAt: data.savedAt, needsDownload: false, remoteNewer: 0, owner: account && account.email});
   if (whole) takeCrew(p, data.project);
@@ -727,7 +729,7 @@ async function signOut() {
   if (clear) {
     await unloadFrames();
     for (const p of projects.filter(p => p.owner === email || !p.owner)) {
-      await wipeProjectData(p.id); await docsWipe(p.id);
+      await wipeProjectData(p.id); await docsWipe(p.id); await msgsWipe(p.id);
       await store.gtx('saves', 'readwrite', s => s.delete(p.id)).catch(() => {});
       for (const b of await backupsFor(p.id)) await store.gtx('backups', 'readwrite', s => s.delete(b.id)).catch(() => {});
       await store.gtx('projects', 'readwrite', s => s.delete(p.id)).catch(() => {});
@@ -959,7 +961,7 @@ function strandedTools(p, meta, props) {
 /* bring other people's saved work into this browser */
 async function syncDown(p, meta, quiet) {
   const remote = await rawRead(p.driveFileId);
-  await docsMergeIn(p, remote.snap.docs, remote.snap.docFiles);
+  await docsMergeIn(p, remote.snap.docs, remote.snap.docFiles); await msgsMergeIn(p, remote.snap.msgs);
   const local = await packedSnapshot(p.id);
   const r = await applyLocal(p, mergeSnap(remote.snap, local, p.dirty), local);
   p.tools = mergeTools(p.tools, (remote.project || {}).tools);
@@ -1003,6 +1005,8 @@ function sharedSave(p, snap) {
       }
       /* Documentation travels inside the shared file too (list and files), because it's the one file the whole crew can open */
       out = await docsIntoSnap(p, out, base && base.snap);
+      if (base) await msgsMergeIn(p, base.snap.msgs);   /* comments are kept one by one, so nobody's is lost */
+      out.msgs = (await msgsAll(p.id)).map(msgPublic);
       const body = JSON.stringify({app: 'film-tool-hub', v: 1, savedAt: local.at, savedBy: whoAmI(), project: projectMeta(p), snap: out});
       const fmeta = {mimeType: 'application/json', appProperties: {fth: 'project', fthId: p.id, shared: '1'}, ...(isOwner(p) ? {name: fileName(p)} : {})};
       const r = await uploadFile(fmeta, body, p.driveFileId);
@@ -1047,6 +1051,7 @@ function reqOf(t) {
   return {...l, state: raw.slice(0, i), raw, fresh: Date.now() - l.ts < REQ_MS};
 }
 function resetShare() {
+  if (convTool != null && !convOn()) closeConv();
   held.clear(); pending.clear(); viewTouched.clear(); sh = {props: {}, at: 0, lost: false}; myReq = null; hideReq();
   for (const k of Object.keys(lastAct)) delete lastAct[k];
   if (active) lastAct[active] = Date.now();
@@ -1228,14 +1233,14 @@ const mailName = e => String(e || '').split('@')[0];
 function projectPeople(p) {
   if (!p || !p.shared) return [];
   const mineE = account ? account.email.toLowerCase() : '', out = [], seen = new Set();
-  const add = (email, name, role) => {
+  const add = (email, name, role, owner) => {
     const e = String(email || '').toLowerCase(); if (!e || seen.has(e)) return;
-    seen.add(e); out.push({name: name || mailName(e), email: e, role: role || '', me: e === mineE});
+    seen.add(e); out.push({name: name || mailName(e), email: e, role: role || '', me: e === mineE, owner: !!owner, aka: rec(e).aka || []});
   };
-  const named = e => ((p.crew || []).find(c => c.email === String(e || '').toLowerCase()) || {}).name;
-  if (p.sharedBy) add(p.sharedBy.email, named(p.sharedBy.email) || p.sharedBy.name, 'Owner');
-  else if (account) add(account.email, named(account.email) || account.name, 'Owner');
-  (p.crew || []).forEach(c => add(c.email, c.name));
+  const rec = e => (p.crew || []).find(c => c.email === String(e || '').toLowerCase()) || {};
+  if (p.sharedBy) add(p.sharedBy.email, rec(p.sharedBy.email).name || p.sharedBy.name, rec(p.sharedBy.email).role, true);
+  else if (account) add(account.email, rec(account.email).name || account.name, rec(account.email).role, true);
+  (p.crew || []).forEach(c => add(c.email, c.name, c.role));
   return out;
 }
 /* the owner changed the list: remember it and send it to the crew with a save */
@@ -1247,7 +1252,8 @@ async function crewChanged(p) {
 /* keep the list in step with who Drive says can open the file. A typed name stays; otherwise Google's name is used */
 async function crewFromDrive(p, people) {
   const old = cleanCrew(p.crew), by = new Map(old.map(c => [c.email, c]));
-  const next = people.filter(x => x.emailAddress).map(x => { const e = x.emailAddress.toLowerCase(), c = by.get(e); return {email: e, name: (c && c.name) || (x.displayName && x.displayName.toLowerCase() !== e ? x.displayName : '') || mailName(e)}; });
+  const next = people.filter(x => x.emailAddress).map(x => { const e = x.emailAddress.toLowerCase(), c = by.get(e); return {email: e, name: (c && c.name) || (x.displayName && x.displayName.toLowerCase() !== e ? x.displayName : '') || mailName(e), ...(c && c.role ? {role: c.role} : {}), ...(c && c.aka ? {aka: c.aka} : {})}; });
+  const me = account && by.get(account.email.toLowerCase()); if (me) next.unshift(me);   /* the owner's own name and role */
   if (JSON.stringify(next) === JSON.stringify(old)) return;
   p.crew = next; await crewChanged(p);
 }
@@ -1268,28 +1274,45 @@ async function shareDialog() {
   let people;
   try { people = await shareList(p); } catch (e) { toastLong('Couldn’t read who this project is shared with. ' + e.message); return; }
   if (p.shared || people.length) await crewFromDrive(p, people);
-  const nameOf = x => ((p.crew || []).find(c => c.email === String(x.emailAddress || '').toLowerCase()) || {}).name || x.displayName || x.emailAddress || 'Someone';
-  const rows = people.length ? people.map(x => `<div class="prow"><div class="pi crewpi">${x.emailAddress ? `<input class="crewnm" data-crew="${esc(x.emailAddress.toLowerCase())}" value="${esc(nameOf(x))}" maxlength="60" aria-label="Name for ${esc(x.emailAddress)}" title="The name your crew see for this person. Click to change it">` : `<b>${esc(nameOf(x))}</b>`}<small>${esc(x.emailAddress || '')} · can edit</small></div><div class="pb"><button type="button" class="btn sm ghost danger" data-sa="remove" data-id="${esc(x.id)}" data-email="${esc((x.emailAddress || '').toLowerCase())}" data-who="${esc(nameOf(x))}">Remove</button></div></div>`).join('')
+  const crewOf = e => (p.crew || []).find(c => c.email === String(e || '').toLowerCase()) || {};
+  const nameOf = x => crewOf(x.emailAddress).name || x.displayName || x.emailAddress || 'Someone';
+  const roleIn = e => `<input class="crewrl" data-crewrole="${esc(e)}" value="${esc(crewOf(e).role || '')}" maxlength="40" list="roleList" placeholder="Role" aria-label="Role for ${esc(e)}" title="Their job on this film, e.g. Director. Click to change it">`;
+  const meE = account.email.toLowerCase();
+  const meRow = p.shared || people.length ? `<div class="prow"><div class="pi crewpi"><input class="crewnm" data-crew="${esc(meE)}" value="${esc(crewOf(meE).name || account.name || mailName(meE))}" maxlength="60" aria-label="Your name" title="The name your crew see for you. Click to change it">${roleIn(meE)}<small>${esc(meE)} · you (owner)</small></div></div>` : '';
+  const rows = people.length ? meRow + people.map(x => `<div class="prow"><div class="pi crewpi">${x.emailAddress ? `<input class="crewnm" data-crew="${esc(x.emailAddress.toLowerCase())}" value="${esc(nameOf(x))}" maxlength="60" aria-label="Name for ${esc(x.emailAddress)}" title="The name your crew see for this person. Click to change it">${roleIn(x.emailAddress.toLowerCase())}` : `<b>${esc(nameOf(x))}</b>`}<small>${esc(x.emailAddress || '')} · can edit</small></div><div class="pb"><button type="button" class="btn sm ghost danger" data-sa="remove" data-id="${esc(x.id)}" data-email="${esc((x.emailAddress || '').toLowerCase())}" data-who="${esc(nameOf(x))}">Remove</button></div></div>`).join('')
     : '<div class="pnone" style="padding:14px 12px">Not shared with anyone yet.</div>';
   showDlg(`<h3>Share project</h3><p class="sub">“${esc(p.name)}”: add your crew by email. Each person can open the project and edit it. Only one person edits a tool at a time, and everyone’s saved work is kept.</p>
-    <div class="field"><label for="f-emails">Add crew <span style="text-transform:none;letter-spacing:0">(their name, and the Google account email they sign in with)</span></label>
+    <div class="field"><label for="f-emails">Add crew <span style="text-transform:none;letter-spacing:0">(their name, their role if you like, and the Google account email they sign in with)</span></label>
+      <datalist id="roleList">${ROLES.map(r => `<option value="${esc(r)}">`).join('')}</datalist>
       <div id="crewRows">${crewRow(true)}</div>
       <button type="button" class="btn sm ghost" data-sa="row" style="align-self:flex-start;margin-top:8px">+ Add another person</button></div>
     ${(p.tools || {}).casting ? '<div class="warn">This project uses the Casting Tracker, which holds actors’ names, contact details and photos. Everyone you share with will be able to see them.</div>' : ''}
     <div class="dlg-actions" style="margin-top:0"><button type="button" class="btn primary" data-sa="add">Share with these people</button></div>
-    <div class="psec">Who can open this project${people.some(x => x.emailAddress) ? ' <span style="text-transform:none;letter-spacing:0">(click a name to change it)</span>' : ''}</div><div class="plist">${rows}</div>
+    <div class="psec">Who can open this project${people.some(x => x.emailAddress) ? ' <span style="text-transform:none;letter-spacing:0">(click a name or role to change it)</span>' : ''}</div><div class="plist">${rows}</div>
     ${p.shared ? `<div class="psec">Link for your crew</div><div class="field" style="margin:0"><div class="linkrow"><input id="f-link" readonly value="${esc(joinUrl(p))}"><button type="button" class="btn sm" data-sa="copy">Copy link</button></div></div>
     <p class="sub" style="margin:10px 0 0;font-size:13px">Google emails each person this link. They click it, sign in with the address you typed, and choose the project when Google asks. While the site is in testing, each person also has to be on the test-user list in Google Cloud.</p>` : ''}
     <div class="dlg-actions"><button class="btn primary" value="cancel">Done</button></div>`);
   dlg.classList.add('wide');
 }
-const crewRow = first => `<div class="crewrow"><input class="cn" maxlength="60" placeholder="Name, e.g. Sam Lee" aria-label="Name" autocomplete="off"><input class="ce"${first ? ' id="f-emails"' : ''} placeholder="sam@gmail.com" aria-label="Email address" autocomplete="off" inputmode="email"></div>`;
+const ROLES = ['Director', 'Producer', 'Writer', '1st AD', 'Director of Photography', 'Camera Operator', 'Camera Assistant', 'Gaffer', 'Sound Recordist', 'Boom Operator', 'Production Designer', 'Costume & Make-up', 'Script Supervisor', 'Editor', 'Runner', 'Tutor'];
+const crewRow = first => `<div class="crewrow"><input class="cn" maxlength="60" placeholder="Name, e.g. Sam Lee" aria-label="Name" autocomplete="off"><input class="cr" maxlength="40" list="roleList" placeholder="Role" aria-label="Role" autocomplete="off"><input class="ce"${first ? ' id="f-emails"' : ''} placeholder="sam@gmail.com" aria-label="Email address" autocomplete="off" inputmode="email"></div>`;
+async function crewRole(input) {
+  const p = cur(); if (!p || p.sharedBy) return;
+  const e = input.dataset.crewrole, role = input.value.trim().slice(0, 40);
+  p.crew = cleanCrew(p.crew); let c = p.crew.find(x => x.email === e);
+  if (!c) { const nm = input.closest('.prow').querySelector('[data-crew]'); p.crew.push(c = {email: e, name: (nm && nm.value.trim()) || mailName(e)}); }
+  if ((c.role || '') === role) return;
+  if (role) c.role = role; else delete c.role;
+  await crewChanged(p); toast(role ? `${c.name}: ${role}` : `${c.name} has no role now`);
+}
 async function crewRename(input) {
   const p = cur(); if (!p || p.sharedBy) return;
   const e = input.dataset.crew, name = input.value.trim().slice(0, 60), c = (p.crew || []).find(x => x.email === e);
   if (!name) { input.value = (c && c.name) || mailName(e); return; }
   if (c && c.name === name) return;
-  if (c) c.name = name; else (p.crew || (p.crew = [])).push({email: e, name});
+  if (!c && account && e === account.email.toLowerCase() && name === account.name) return;
+  /* tasks and the like are filed under a person's name, so their earlier names are remembered and still count as them */
+  if (c) { if (c.name) c.aka = [...(c.aka || []).filter(n => n !== name), c.name].slice(-5); c.name = name; } else (p.crew || (p.crew = [])).push({email: e, name});
   const rm = input.closest('.prow').querySelector('[data-sa=remove]'); if (rm) rm.dataset.who = name;
   await crewChanged(p); toast(`Your crew will see this person as ${name}`);
 }
@@ -1312,11 +1335,12 @@ async function shareAction(a, b) {
   }
   if (a === 'add') {
     /* one person per row; a row may also hold several addresses pasted together (then Google's names are used) */
-    const typed = new Map(), emails = [];
+    const typed = new Map(), roles = new Map(), emails = [];
     document.querySelectorAll('#crewRows .crewrow').forEach(r => {
       const list = parseEmails(r.querySelector('.ce').value), nm = r.querySelector('.cn').value.trim().slice(0, 60);
       list.forEach(e => { if (!emails.includes(e)) emails.push(e); });
       if (nm && list.length === 1) typed.set(list[0], nm);
+      const rl = r.querySelector('.cr').value.trim().slice(0, 40); if (rl && list.length === 1) roles.set(list[0], rl);
     });
     const bad = emails.filter(e => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
     if (!emails.length) { toast('Type at least one email address'); return; }
@@ -1334,11 +1358,14 @@ async function shareAction(a, b) {
       for (const e of emails) {
         if (e === account.email.toLowerCase()) continue;
         try { await gapi(`${DRIVE_API}/files/${p.driveFileId}/permissions?` + qs({sendNotificationEmail: 'true', emailMessage: msg, fields: 'id'}), {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({type: 'user', role: 'writer', emailAddress: e})}); done++; }
-        catch (er) { failed.push(e + ' (' + er.message.replace(/^Google Drive error \d+:?\s*/, '') + ')'); typed.delete(e); }
+        catch (er) { failed.push(e + ' (' + er.message.replace(/^Google Drive error \d+:?\s*/, '') + ')'); typed.delete(e); roles.delete(e); }
       }
-      if (typed.size) {
+      if (typed.size || roles.size) {
         p.crew = cleanCrew(p.crew);
-        typed.forEach((name, e) => { const c = p.crew.find(x => x.email === e); if (c) c.name = name; else p.crew.push({email: e, name}); });
+        new Set([...typed.keys(), ...roles.keys()]).forEach(e => {
+          let c = p.crew.find(x => x.email === e); if (!c) p.crew.push(c = {email: e, name: ''});
+          if (typed.has(e)) c.name = typed.get(e); if (roles.has(e)) c.role = roles.get(e);
+        });
         await crewChanged(p);
       }
     } catch (e) { toastLong('Couldn’t share. ' + e.message); dlg.close(); return; }
@@ -1762,6 +1789,30 @@ function fthProjectShim(cfg) {
     W.addEventListener('pagehide', function () { clearTimeout(t); try { fn(); } catch (e) {} });
     return go;
   };
+  /* People: in a shared project, tools can ask who is on it (window.fthPeople() gives [{name, email, role, me}]),
+     and the name fields listed for this tool (cfg.people) offer those names while still taking any text. */
+  W.fthPeople = function () { try { return (hub && hub.people && hub.people()) || []; } catch (e) { return []; } };
+  if (hub && cfg.people) (function () {
+    var pt = 0;
+    function sync() {
+      var d = document; if (!d.body) return;
+      var list = W.fthPeople(), dl = d.getElementById('fth-people'), i;
+      if (!list.length) { if (dl) dl.parentNode.removeChild(dl); return; }
+      if (!dl) { dl = d.createElement('datalist'); dl.id = 'fth-people'; d.body.appendChild(dl); }
+      var sig = list.map(function (p) { return p.name + '|' + p.role; }).join('\n');
+      if (dl.getAttribute('data-sig') !== sig) {
+        dl.textContent = '';
+        for (i = 0; i < list.length; i++) { var o = d.createElement('option'); o.value = list[i].name; if (list[i].role) o.textContent = list[i].role; dl.appendChild(o); }
+        dl.setAttribute('data-sig', sig);
+      }
+      var els = d.querySelectorAll(cfg.people);
+      for (i = 0; i < els.length; i++) if (els[i].getAttribute('list') !== 'fth-people') { els[i].setAttribute('list', 'fth-people'); els[i].setAttribute('autocomplete', 'off'); }
+    }
+    function soon() { clearTimeout(pt); pt = setTimeout(sync, 150); }
+    document.addEventListener('DOMContentLoaded', function () { sync(); try { new MutationObserver(soon).observe(document.body, {childList: true, subtree: true}); } catch (e) {} });
+    W.addEventListener('focusin', soon, true);
+  })();
+
   /* Documentation: a tool hands each export to the hub with window.fthDocs, and the hub files it under
      the current project. It only exists inside the hub: a tool opened on its own never sees it.
        fthDocs.save({type, filename, blob})   a real file (PDF, CSV, Excel, image…)
@@ -1992,12 +2043,18 @@ function kitHead(t) {
   return KIT_FONTS + '<style data-fth-kit>' + FTH_KIT + kitAccent(catOf(t.category).color) + '</style>';
 }
 
+/* fields in each tool that hold a person's name: in a shared project they offer the crew list, and still take any typed text */
+const PEOPLE_FIELDS = {
+  callsheet: '[data-k="producer"],[data-k="director"],[data-a="crew"][data-k="name"]',
+  risk: '[data-k="assessor"],[data-k="act"],[data-k="sup"],[data-k="fa"],[data-k="fbox"],[data-k="hod"],[data-k="sn"]',
+  recce: '[data-f="by"],[data-f="aid"]'
+};
 function themed(t, ro) {
   const cfg = TOOL_THEME[t.id] || {};
   const c = catOf(t.category);
   const cat = JSON.stringify({num:c.num, name:c.name, color:c.color}).replace(/</g, '\\u003c');
   const boot = (cfg.kit ? kitHead(t) : '') + '<script data-fth>window.__fthCat=' + cat + ';(' + fthEngine.toString() + ')(' + JSON.stringify(cfg).replace(/</g, '\\u003c') + ');'
-    + '(' + fthProjectShim.toString() + ')(' + JSON.stringify(ro ? {tool: t.id, ro: true} : {tool: t.id}).replace(/</g, '\\u003c') + ');<\/script>';
+    + '(' + fthProjectShim.toString() + ')(' + JSON.stringify({tool: t.id, ...(ro ? {ro: true} : {}), ...(PEOPLE_FIELDS[t.id] ? {people: PEOPLE_FIELDS[t.id]} : {})}).replace(/</g, '\\u003c') + ');<\/script>';
   /* a tool file carries its own copy of the look for when it's opened on its own; inside the hub that copy is removed */
   let h = t.html.replace(/<!--fth-standalone-->[\s\S]*?<!--\/fth-standalone-->\s*/g, '');
   if (/<head[^>]*>/i.test(h)) h = h.replace(/<head[^>]*>/i, m => m + boot);
@@ -2106,6 +2163,8 @@ function activate(id) {
   ws.hidden = !active;
   document.body.classList.toggle('tool-open', !!active);
   document.title = active ? `${t.name} · Film Tool Hub` : 'Film Tool Hub';
+  if (convTool != null && active && convTool !== active && convOn()) openConv(active);
+  else if (convTool != null && !active && convTool !== '*') closeConv();
   renderBar(); renderShare();
   if (active && sharedCur() && !held.has(active)) kickTick();
 }
@@ -2114,19 +2173,22 @@ function renderBar() {
   const pinned = pins();
   const tabs = [...pinned, ...openTabs.filter(id => !pinned.includes(id))].map(id => byId(id)).filter(Boolean);
   const X = UI.close.replace('stroke-width="1.6"', 'stroke-width="2"').replace('<svg', '<svg width="13" height="13"');
+  const due = tasksDue(cur());
   $('#tabs').innerHTML = tabs.length
     ? tabs.map(t => {
         const pin = pinned.includes(t.id), n = esc(t.name);
-        return `<button class="tab${t.id === active ? ' active' : ''}${pin ? ' pinned' : ''}${openTabs.includes(t.id) ? '' : ' idle'}" data-tab="${esc(t.id)}" style="--cat:${catOf(t.category).color}" title="${n}"><span class="dot"></span><span class="lbl">${n}</span>`
+        return `<button class="tab${t.id === active ? ' active' : ''}${pin ? ' pinned' : ''}${openTabs.includes(t.id) ? '' : ' idle'}" data-tab="${esc(t.id)}" style="--cat:${catOf(t.category).color}" title="${n}"><span class="dot"></span><span class="lbl">${n}</span>${t.id === 'tasks' && due ? `<b class="badge" title="${due} of your tasks ${due === 1 ? 'is' : 'are'} due">${due}</b>` : ''}`
           + `<span class="pin" data-pin="${esc(t.id)}" role="button" aria-label="${pin ? 'Unpin' : 'Pin'} ${n}" title="${pin ? 'Pinned. Click to unpin' : 'Pin this tab so it stays here'}">${UI.pin}</span>`
           + (pin ? '' : `<span class="x" data-close="${esc(t.id)}" role="button" aria-label="Close ${n}" title="Close">${X}</span>`) + `</button>`;
       }).join('')
     : `<span class="tabs-hint">Open tools appear here as tabs</span>`;
   $('#barActions').innerHTML = active ? `
+    ${convOn() ? `<button class="ibtn convbtn${convTool === active ? ' on' : ''}" data-act="conv" aria-pressed="${convTool === active}" title="Conversation: comments about ${esc(toolName(active))} for your crew">${CONVI}<span class="t">Conversation</span>${unreadIn(active).length ? `<b class="badge">${unreadIn(active).length}</b>` : ''}</button>` : ''}
     <button class="ibtn" data-act="reload" title="Reload this tool">${UI.reload}</button>
     <button class="ibtn" data-act="newtab" title="Open in a new browser tab">${UI.newtab}<span class="t">New tab</span></button>
     <button class="ibtn" data-act="menu" data-menu="${esc(active)}" title="More options">${UI.dots}</button>` : '';
   const at = $('#tabs .tab.active'); if (at) at.scrollIntoView({block:'nearest', inline:'nearest'});
+  renderMeBtn();
 }
 
 const go = id => { location.hash = id ? '#/tool/' + encodeURIComponent(id) : '#/'; };
@@ -2137,6 +2199,7 @@ function route() {
   const dm = location.hash.match(/^#\/docs(?:\/(.+))?$/);
   activate(m ? decodeURIComponent(m[1]) : null);
   showDocs(!!dm, dm && dm[1] ? decodeURIComponent(dm[1]) : null);
+  showMe(location.hash === '#/me');
 }
 function closeTab(id) {
   const i = openTabs.indexOf(id); if (i < 0) return;
@@ -2367,7 +2430,7 @@ const DOC_TYPES = {
   risk: ['Risk Assessment PDF', 'Risk Assessment Excel']
 };
 const DOC_KEEP_MS = 30 * 864e5, SHARED_DOC_CAP = 200 * 1024 * 1024;
-const DOC_PUBLIC = ['id', 'tool', 'type', 'group', 'name', 'ext', 'mime', 'size', 'at', 'mod', 'draft', 'page', 'by', 'deleted'];
+const DOC_PUBLIC = ['id', 'tool', 'type', 'group', 'name', 'ext', 'mime', 'size', 'at', 'mod', 'draft', 'page', 'by', 'deleted', 'signed'];
 const docPublic = d => { const o = {}; DOC_PUBLIC.forEach(k => { if (d[k] !== undefined) o[k] = d[k]; }); return o; };
 let docCache = [], docsOpen = false, docsTool = null, docDirs = new Map();
 const docsOlder = new Set();
@@ -2388,7 +2451,7 @@ async function docsLoad() {
   for (const d of list) if (d.deleted && !d.purged && Date.now() - d.deleted > DOC_KEEP_MS) { await delBytes(d.id); d.purged = true; await patchDoc(d.id, {purged: true}); }
   return (docCache = list);
 }
-async function docsRefresh() { docsOlder.clear(); await docsLoad(); if (docsOpen) { if (docsTool && !byId(docsTool)) docsTool = null; renderDocs(); docsSendSoon(cur(), 200, true); } }
+async function docsRefresh() { docsOlder.clear(); await msgsLoad(); renderConv(); renderMe(); await docsLoad(); if (docsOpen) { if (docsTool && !byId(docsTool)) docsTool = null; renderDocs(); docsSendSoon(cur(), 200, true); } }
 async function docsWipe(pid) { for (const d of await docsAll(pid)) { await delBytes(d.id); await store.gtx('docs', 'readwrite', s => s.delete(d.id)).catch(() => {}); } docDirs.delete(pid); }
 const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(n >= 10485760 ? 0 : 1) + ' MB' : n >= 1024 ? Math.round(n / 1024) + ' KB' : (n || 0) + ' B';
 const fmtStamp = t => new Date(t).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'}) + ', ' + new Date(t).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
@@ -2458,7 +2521,7 @@ async function saveDoc(tool, pid, o) {
 async function docsChanged(p) {
   p.changedAt = Date.now(); if (p.shared) p.docsDirty = p.changedAt;
   await putProject(p);
-  if (p.id === curId) { await docsLoad(); renderDocs(); renderProjUI(); }
+  if (p.id === curId) { await docsLoad(); renderDocs(); renderProjUI(); renderMe(); }
   docsSendSoon(p, 1200);
 }
 
@@ -2541,7 +2604,7 @@ async function docsMergeIn(p, list, files) {
     const f = files && files[r.id];
     if (f && !r.deleted && !(await hasBytes(r.id))) { try { await putBytes(r.id, f.__fth ? unpackValue(f) : f); ch = true; } catch (e) {} }
   }
-  if (ch && p.id === curId) { await docsLoad(); renderDocs(); }
+  if (ch && p.id === curId) { await docsLoad(); renderDocs(); renderMe(); }
 }
 async function docsIntoSnap(p, out, remote) {
   const list = await docsAll(p.id), files = {}, theirs = (remote && remote.docFiles) || {};
@@ -2590,13 +2653,14 @@ function docRow(d, latest, older) {
   const waiting = driveOn() && account && p && !p.sharedBy && !d.driveId;
   return `<div class="drow${older ? ' old' : ''}" data-doc="${esc(d.id)}">
     <span class="dkind${d.page ? ' pg' : ''}" title="${d.page ? 'Print-ready page: open it here, or use Save as PDF' : esc((d.ext || 'file').toUpperCase() + ' file')}">${esc(kind)}</span>
-    <div class="dname"><b title="${esc(d.name)}">${esc(d.name)}</b><small><span class="dx">${esc(d.type)} · ${esc(fmtStamp(d.at))} · </span>${esc(fmtSize(d.size))}${d.by && d.by.name && p && p.shared ? ' · saved by ' + esc(firstName(d.by)) : ''}${waiting ? ' · <i title="It will be sent to your Google Drive once Drive is connected">not in Drive yet</i>' : ''}</small></div>
+    <div class="dname"><b title="${esc(d.name)}">${esc(d.name)}</b><small><span class="dx">${esc(d.type)} · ${esc(fmtStamp(d.at))} · </span>${esc(fmtSize(d.size))}${d.by && d.by.name && p && p.shared ? ' · saved by ' + esc(whoName(d.by)) : ''}${d.signed ? ` · <b class="dsigned">signed off${d.signed.name ? ' by ' + esc(whoName(d.signed)) : ''}, ${esc(fmtStamp(d.signed.at))}</b>` : ''}${waiting ? ' · <i title="It will be sent to your Google Drive once Drive is connected">not in Drive yet</i>' : ''}</small></div>
     <span class="dtype">${esc(d.type)}</span>
     <span class="dwhen">${esc(fmtStamp(d.at))}</span>
     <span class="ddraft">Draft ${d.draft}${latest ? '<em>Latest</em>' : ''}</span>
     <div class="dacts">
       <button type="button" class="btn sm" data-da="open">${DOCI.eye}Open</button>
       <button type="button" class="btn sm" data-da="down" title="${d.page ? 'Opens the print window: choose “Save as PDF”' : 'Download a copy to this computer'}">${d.page ? DOCI.print + 'Save as PDF' : UI.down + 'Download'}</button>
+      <button type="button" class="btn sm${d.signed ? ' signed' : ' ghost'}" data-da="sign" aria-pressed="${!!d.signed}" title="${d.signed ? 'Signed off. Click to take the sign-off back' : 'Sign off this draft: it’s checked and ready'}">${UI.check || ''}${d.signed ? 'Signed off' : 'Sign off'}</button>
       <button type="button" class="btn sm ghost" data-da="rename" title="Rename">${UI.edit}<span class="sr">Rename</span></button>
       <button type="button" class="btn sm ghost danger" data-da="delete" title="Delete">${UI.trash}<span class="sr">Delete</span></button>
     </div></div>`;
@@ -2719,6 +2783,11 @@ $('#docsPage').addEventListener('click', async e => {
   const row = b.closest('[data-doc]'), d = row && docCache.find(x => x.id === row.dataset.doc), p = cur(); if (!d || !p) return;
   if (a === 'open') docOpen(d);
   if (a === 'down') docDownload(d);
+  if (a === 'sign') {
+    const now = Date.now();
+    await patchDoc(d.id, {signed: d.signed ? null : {...(whoAmI() || {}), at: now}, mod: now}); await docsChanged(p);
+    toast(d.signed ? 'Sign-off taken back' : `Signed off “${d.name}” (Draft ${d.draft})`);
+  }
   if (a === 'rename') {
     showDlg(`<h3>Rename document</h3><p class="sub">${esc(d.type)} · Draft ${d.draft}</p>
       <div class="field"><label for="f-dname">Name</label><input id="f-dname" name="name" required value="${esc(d.name)}" maxlength="120"></div>
@@ -2732,6 +2801,176 @@ $('#docsPage').addEventListener('click', async e => {
     }
   }
 });
+
+/* ───────── Conversations ─────────
+   In a shared project every tool has a conversation: anyone on the project can leave a comment and
+   tag the people it's for. Comments belong to the hub, not the tool, so you don't need to be the one
+   editing the tool to write one. They travel inside the project file (snap.msgs) and are merged one
+   by one, so two people writing at once both keep their comment. "*" is the whole-project conversation. */
+const MSG_PUBLIC = ['id', 'tool', 'text', 'to', 'by', 'at', 'mod', 'deleted'];
+const msgPublic = m => { const o = {}; MSG_PUBLIC.forEach(k => { if (m[k] !== undefined) o[k] = m[k]; }); return o; };
+let msgCache = [], convTool = null, meOpen = false;
+const convTo = new Set();
+const msgsAll = async pid => (pid && await store.gtx('msgs', 'readonly', s => s.index('projectId').getAll(pid)).catch(() => [])) || [];
+const putMsg = rec => store.gtx('msgs', 'readwrite', s => s.put(rec));
+async function msgsLoad() { const pid = curId, l = await msgsAll(pid); if (pid !== curId) return msgCache; return (msgCache = l.sort((a, b) => a.at - b.at)); }
+async function msgsWipe(pid) { for (const m of await msgsAll(pid)) await store.gtx('msgs', 'readwrite', s => s.delete(m.id)).catch(() => {}); }
+const meMail = () => account ? account.email.toLowerCase() : '';
+const convOn = () => { const p = cur(); return !!(p && p.shared && account); };
+const byMe = m => !!(m.by && m.by.email && m.by.email.toLowerCase() === meMail());
+const forMe = m => (m.to || []).includes(meMail());
+const liveMsgs = tool => msgCache.filter(m => !m.deleted && (tool == null || m.tool === tool));
+const msgSeen = tool => ((cur() || {}).msgSeen || {})[tool] || 0;
+const unreadIn = tool => liveMsgs(tool).filter(m => !byMe(m) && m.at > msgSeen(tool));
+const unreadForMe = () => liveMsgs().filter(m => !byMe(m) && forMe(m) && m.at > msgSeen(m.tool));
+const convName = tool => tool === '*' ? 'Whole project' : toolName(tool);
+/* the name the crew list gives someone, falling back to the name saved with their comment or document */
+function whoName(by) {
+  if (!by) return 'Someone';
+  const e = String(by.email || '').toLowerCase(), hit = projectPeople(cur()).find(x => x.email === e);
+  return (hit && hit.name) || by.name || by.email || 'Someone';
+}
+async function msgsMergeIn(p, list) {
+  if (!Array.isArray(list)) return;
+  const have = new Map((await msgsAll(p.id)).map(m => [m.id, m])), fresh = []; let ch = false;
+  for (const r of list) {
+    if (!r || !r.id) continue;
+    const m = have.get(r.id);
+    if (!m || (r.mod || 0) > (m.mod || 0)) { await putMsg({...msgPublic(r), projectId: p.id}); ch = true; if (!m && !r.deleted) fresh.push(r); }
+  }
+  if (!ch || p.id !== curId) return;
+  await msgsLoad(); renderConv(); renderBar(); renderMe();
+  const mine = fresh.filter(m => !byMe(m) && forMe(m) && Date.now() - m.at < 3 * 60e3 && m.tool !== convTool);
+  if (mine.length) toastLong(`${whoName(mine[0].by)} left you a comment in ${convName(mine[0].tool)}. Open My work to read it.`);
+}
+async function markSeen(tool) {
+  const p = cur(); if (!p || !unreadIn(tool).length) return;
+  (p.msgSeen || (p.msgSeen = {}))[tool] = Date.now(); await putProject(p); renderBar(); renderMe();
+}
+async function msgsChanged(p) {
+  p.changedAt = Date.now(); if (p.shared) p.docsDirty = p.changedAt;   /* docsDirty makes Save send the project file */
+  await putProject(p); await msgsLoad(); renderConv(); renderBar(); renderMe(); renderProjUI();
+  docsSendSoon(p, 300);
+}
+async function postMsg(tool, text, to) {
+  const p = cur(); text = String(text || '').trim().slice(0, 2000);
+  if (!p || !convOn() || !text) return false;
+  const now = Date.now();
+  await putMsg({id: 'm' + now.toString(36) + Math.random().toString(36).slice(2, 7), projectId: p.id, tool, text, to: [...to], by: whoAmI(), at: now, mod: now, deleted: 0});
+  (p.msgSeen || (p.msgSeen = {}))[tool] = now;
+  await msgsChanged(p);
+  return true;
+}
+const CONVI = P('<path d="M4.5 5.5h15a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H12l-4.5 3.5v-3.5h-3a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/>');
+function openConv(tool) {
+  if (!convOn()) return;
+  if (convTool !== tool) { convTo.clear(); $('#cvText').value = ''; }
+  convTool = tool; document.body.classList.add('conv-open'); $('#convPanel').hidden = false;
+  renderConv(true); markSeen(tool); renderBar();
+  setTimeout(() => $('#cvText').focus(), 30);
+}
+function closeConv() { convTool = null; document.body.classList.remove('conv-open'); $('#convPanel').hidden = true; renderBar(); }
+function renderConv(jump) {
+  if (convTool == null) return;
+  if (!convOn() || (convTool !== '*' && !byId(convTool))) { closeConv(); return; }
+  const list = liveMsgs(convTool), ppl = projectPeople(cur()), el = $('#cvList');
+  const nameOf = e => (ppl.find(x => x.email === e) || {}).name || mailName(e);
+  $('#cvTitle').textContent = convName(convTool);
+  const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+  const html = list.length ? list.map(m => {
+    const who = ppl.find(x => x.email === String((m.by || {}).email || '').toLowerCase());
+    return `<div class="cv-msg${byMe(m) ? ' mine' : ''}${forMe(m) ? ' forme' : ''}" data-msg="${esc(m.id)}">
+      <div class="cv-by"><b>${esc(whoName(m.by))}</b>${who && who.role ? `<span>${esc(who.role)}</span>` : ''}<time title="${esc(fmtStamp(m.at))}">${esc(fmtWhen(m.at))}</time>${byMe(m) ? `<button type="button" class="cv-del" data-cv="del" title="Delete this comment" aria-label="Delete this comment">${UI.trash}</button>` : ''}</div>
+      <p>${esc(m.text).replace(/\n/g, '<br>')}</p>
+      ${(m.to || []).length ? `<div class="cv-for">For ${m.to.map(e => `<b${e === meMail() ? ' class="me"' : ''}>${esc(e === meMail() ? 'you' : nameOf(e))}</b>`).join(', ')}</div>` : ''}</div>`;
+  }).join('') : `<div class="cv-none">No comments yet. Write the first one below. Tag the people it’s for and it shows up in their <b>My work</b>.</div>`;
+  if (el.dataset.h !== html) { el.innerHTML = html; el.dataset.h = html; if (jump || atEnd) el.scrollTop = el.scrollHeight; }
+  else if (jump) el.scrollTop = el.scrollHeight;
+  const others = ppl.filter(x => !x.me);
+  [...convTo].forEach(e => { if (!others.some(x => x.email === e)) convTo.delete(e); });
+  $('#cvTo').innerHTML = others.length ? '<span>For</span>' + others.map(x => `<button type="button" class="cv-chip${convTo.has(x.email) ? ' on' : ''}" data-cvto="${esc(x.email)}" aria-pressed="${convTo.has(x.email)}" title="${esc(x.role || x.email)}">${esc(x.name)}</button>`).join('')
+    : '<span>Nobody else is on this project yet.</span>';
+  if (!document.hidden && convTool != null) markSeen(convTool);
+}
+async function sendConv() {
+  const t = $('#cvText'); if (!t.value.trim() || convTool == null) return;
+  const text = t.value; t.value = '';
+  if (await postMsg(convTool, text, convTo)) { convTo.clear(); renderConv(true); } else t.value = text;
+}
+
+/* ───────── My work ─────────
+   One page for the person signed in: tasks with their name on, comments left for them, and the
+   documents they've saved. */
+const sameName = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+const today = () => { const d = new Date(), pad = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+function myNames(p) {
+  const out = [], me = projectPeople(p).find(x => x.me);
+  if (me) out.push(me.name, ...me.aka); if (account && account.name) out.push(account.name);
+  return out;
+}
+/* the Task Board keeps its tasks under this name (see tools/tasks.html) */
+function boardTasks(p) {
+  try { const d = JSON.parse(localStorage.getItem(PFX(p.id) + 'fth-tasks-v1') || 'null'); return d && Array.isArray(d.tasks) ? d.tasks.filter(t => t && t.title) : []; } catch (e) { return []; }
+}
+function myTasks(p) {
+  const names = myNames(p), all = boardTasks(p).filter(t => t.status !== 'done');
+  const mineOnly = p.shared && names.length;
+  return {mineOnly, list: (mineOnly ? all.filter(t => (t.who || []).some(w => names.some(n => sameName(n, w)))) : all).sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999'))};
+}
+const tasksDue = p => { if (!p || !p.shared) return 0; const t = today(), m = myTasks(p); return m.mineOnly ? m.list.filter(x => x.due && x.due <= t).length : 0; };
+const fmtDue = d => { const t = today(); if (!d) return ''; if (d === t) return 'Due today'; const x = new Date(d + 'T12:00:00'); return (d < t ? 'Overdue · ' : 'Due ') + x.toLocaleDateString(undefined, {weekday: 'short', day: 'numeric', month: 'short'}); };
+function showMe(on) {
+  meOpen = on; document.body.classList.toggle('me-open', on);
+  $('#mePage').hidden = !on; $('#meBtn').classList.toggle('on', on); $('#meBtn').setAttribute('aria-pressed', on);
+  if (!on) return;
+  document.title = 'My work · Film Tool Hub'; window.scrollTo(0, 0); renderMe();
+}
+function renderMeBtn() {
+  const b = $('#meBtn'); if (!b) return;
+  const p = cur(), n = convOn() ? unreadForMe().length : 0, due = tasksDue(p), tot = n + due;
+  const badge = b.querySelector('.badge'); badge.hidden = !tot; badge.textContent = tot;
+  b.title = 'My work: your tasks, comments left for you and your documents' + (tot ? ` (${[n ? n + ' new comment' + (n === 1 ? '' : 's') : '', due ? due + ' task' + (due === 1 ? '' : 's') + ' due' : ''].filter(Boolean).join(', ')})` : '');
+}
+function renderMe() {
+  renderMeBtn();
+  if (!meOpen) return;
+  const p = cur(), el = $('#meWrap'); if (!p) return;
+  const me = projectPeople(p).find(x => x.me), t = today();
+  const head = `<section class="dhero"><p class="eyebrow"><span>Project</span><span>${esc(p.name)}</span></p><h1>My <em>work</em></h1>
+    <p class="lede">${me ? `${esc(me.name)}${me.role ? ', ' + esc(me.role) : ''}: your` : 'Your'} tasks, the comments left for you and the documents you’ve saved in this project.</p></section>`;
+  /* tasks */
+  const mt = myTasks(p), tc = catOf((byId('tasks') || {}).category);
+  const taskRows = mt.list.map(x => `<a class="mrow${x.due && x.due < t ? ' late' : ''}" href="#/tool/tasks">
+      <span class="mst ${esc(x.status)}">${x.status === 'doing' ? 'Doing' : 'To do'}</span>
+      <div class="mmain"><b>${esc(x.title)}</b><small>${esc([(x.depts || []).join(', '), !mt.mineOnly && (x.who || []).length ? x.who.join(', ') : ''].filter(Boolean).join(' · '))}</small></div>
+      <span class="mdue">${esc(fmtDue(x.due))}</span></a>`).join('');
+  const tasks = byId('tasks') ? `<section class="section" style="--cat:${tc.color}"><div class="sec-head"><div class="sec-num">01</div><h2>${mt.mineOnly ? 'My tasks' : 'Open tasks'}</h2>
+      <p>${mt.list.length ? `${mt.list.length} still to do` + (mt.list.some(x => x.due && x.due <= t) ? ` · ${mt.list.filter(x => x.due && x.due <= t).length} due now` : '') : mt.mineOnly ? 'Nothing waiting on you.' : 'No open tasks.'}${mt.mineOnly ? '' : p.shared ? '' : ' In a shared project this shows only the tasks with your name on.'}</p></div>
+      ${taskRows ? `<div class="mlist">${taskRows}</div>` : `<div class="empty msmall">Tasks ${mt.mineOnly ? 'given to you' : ''} on the <a href="#/tool/tasks">Task Board</a> appear here.</div>`}</section>` : '';
+  /* conversations */
+  let conv;
+  if (convOn()) {
+    const list = liveMsgs().filter(m => !byMe(m) && (forMe(m) || !(m.to || []).length)).sort((a, b) => b.at - a.at).slice(0, 40), nNew = unreadForMe().length;
+    conv = `<section class="section" style="--cat:var(--accent)"><div class="sec-head"><div class="sec-num">02</div><h2>My conversations</h2>
+      <p>${list.length ? (nNew ? `${nNew} new for you` : 'Nothing new') + ' · comments that tag you, or are for everyone' : 'Comments that tag you appear here.'}</p></div>
+      <div class="dtop"><button type="button" class="btn" data-mc="*">${CONVI}Whole-project conversation${unreadIn('*').length ? ` <b class="badge">${unreadIn('*').length}</b>` : ''}</button></div>
+      ${list.length ? `<div class="mlist">${list.map(m => `<button type="button" class="mrow mconv${m.at > msgSeen(m.tool) ? ' new' : ''}" data-mc="${esc(m.tool)}">
+        <span class="mst ${forMe(m) ? 'you' : ''}">${forMe(m) ? 'For you' : 'Everyone'}</span>
+        <div class="mmain"><b>${esc(whoName(m.by))} <i>in ${esc(convName(m.tool))}</i></b><small>${esc(m.text.length > 180 ? m.text.slice(0, 180) + '…' : m.text)}</small></div>
+        <span class="mdue">${esc(fmtWhen(m.at))}</span></button>`).join('')}</div>`
+      : `<div class="empty msmall">Open any tool and press <b>Conversation</b> in the top bar to leave a comment for your crew.</div>`}</section>`;
+  } else conv = `<section class="section" style="--cat:var(--accent)"><div class="sec-head"><div class="sec-num">02</div><h2>My conversations</h2><p>Conversations are for shared projects.</p></div>
+      <div class="empty msmall">Share this project with your crew and every tool gets a conversation, where you can leave comments and tag the person they’re for.</div></section>`;
+  /* documents */
+  const docs = liveDocs().filter(d => !account || (d.by && String(d.by.email || '').toLowerCase() === meMail())).sort((a, b) => b.at - a.at).slice(0, 8);
+  const dsec = `<section class="section" style="--cat:var(--muted)"><div class="sec-head"><div class="sec-num">03</div><h2>My documents</h2><p>${docs.length ? 'The latest documents you saved.' : 'Documents you save appear here.'}</p></div>
+      ${docs.length ? `<div class="mlist">${docs.map(d => `<a class="mrow" href="#/docs/${encodeURIComponent(d.tool)}">
+        <span class="mst ${d.signed ? 'done' : ''}">${d.signed ? 'Signed off' : 'Draft ' + d.draft}</span>
+        <div class="mmain"><b>${esc(d.name)}</b><small>${esc(d.type)} · ${esc(toolName(d.tool))}${d.signed ? ' · signed off by ' + esc(whoName(d.signed)) : ''}</small></div>
+        <span class="mdue">${esc(fmtWhen(d.at))}</span></a>`).join('')}</div>`
+      : `<div class="empty msmall">Export from a tool, or use its <b>Save to Documentation</b> button. Everything is kept in <a href="#/docs">Documentation</a>.</div>`}</section>`;
+  el.innerHTML = head + tasks + conv + dsec;
+}
 
 /* ───────── toast ───────── */
 let toastT;
@@ -2755,6 +2994,7 @@ document.addEventListener('click', e => {
   const chip = e.target.closest('[data-f]'); if (chip) { filter = chip.dataset.f; render(); return; }
   const act = e.target.closest('[data-act]');
   if (act) {
+    if (act.dataset.act === 'conv') { if (convTool === active) closeConv(); else openConv(active); }
     if (act.dataset.act === 'reload') reloadTool(active);
     if (act.dataset.act === 'newtab') newTab(active);
   }
@@ -2762,6 +3002,19 @@ document.addEventListener('click', e => {
 document.addEventListener('auxclick', e => { const x = e.target.closest('[data-tab]'); if (e.button === 1 && x) { e.preventDefault(); closeTab(x.dataset.tab); } });
 $('#homeBtn').onclick = () => go(null);
 $('#docsBtn').onclick = () => { location.hash = location.hash.startsWith('#/docs') ? '#/' : '#/docs'; };
+$('#meBtn').onclick = () => { location.hash = location.hash === '#/me' ? '#/' : '#/me'; };
+$('#mePage').addEventListener('click', e => { const b = e.target.closest('[data-mc]'); if (!b) return; const t = b.dataset.mc; if (t === '*') openConv('*'); else if (byId(t)) { go(t); setTimeout(() => openConv(t), 0); } });
+$('#convPanel').addEventListener('click', async e => {
+  const b = e.target.closest('[data-cv], [data-cvto]'); if (!b) return;
+  if (b.dataset.cvto) { const m = b.dataset.cvto; if (convTo.has(m)) convTo.delete(m); else convTo.add(m); renderConv(); $('#cvText').focus(); return; }
+  if (b.dataset.cv === 'close') closeConv();
+  if (b.dataset.cv === 'send') sendConv();
+  if (b.dataset.cv === 'del') {
+    const row = b.closest('[data-msg]'), m = row && msgCache.find(x => x.id === row.dataset.msg), p = cur(); if (!m || !p || !byMe(m)) return;
+    if (await confirmDlg('Delete this comment?', 'It will be removed for everyone on this project.', 'Delete', true)) { await putMsg({...m, text: '', deleted: Date.now(), mod: Date.now()}); await msgsChanged(p); }
+  }
+});
+$('#cvText').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendConv(); } });
 $('#projBtn').onclick = e => { e.stopPropagation(); if (!pmenu().hidden) closeProjMenu(); else { closeMenu(); openProjMenu($('#projBtn')); } };
 pmenu().addEventListener('click', e => {
   const b = e.target.closest('[data-pm]'); if (!b) return; closeProjMenu();
@@ -2773,8 +3026,8 @@ pmenu().addEventListener('click', e => {
 document.addEventListener('click', e => { if (!pmenu().hidden && !e.target.closest('#pmenu,#projBtn')) closeProjMenu(); });
 $('#saveBtn').onclick = () => saveProject();
 document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); saveProject(); } });
-form.addEventListener('change', e => { if (e.target.matches && e.target.matches('[data-crew]')) crewRename(e.target); });
-form.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches && e.target.matches('[data-crew], .crewrow input')) { e.preventDefault(); e.target.blur(); } });
+form.addEventListener('change', e => { if (!e.target.matches) return; if (e.target.matches('[data-crew]')) crewRename(e.target); if (e.target.matches('[data-crewrole]')) crewRole(e.target); });
+form.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches && e.target.matches('[data-crew], [data-crewrole], .crewrow input')) { e.preventDefault(); e.target.blur(); } });
 form.addEventListener('click', e => { const b = e.target.closest('[data-sa]'); if (!b) return; e.preventDefault(); shareAction(b.dataset.sa, b); });
 $('#shareBtn').onclick = () => shareDialog();
 $('#reqCard').addEventListener('click', e => { const b = e.target.closest('[data-rq]'); if (b) answerReq(b.dataset.rq === 'yes'); });
@@ -2817,6 +3070,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !menu.hidden) { closeMenu(); return; }
   if (e.key === 'Escape' && !pmenu().hidden) { closeProjMenu(); return; }
   if (e.key === 'Escape' && !$('#amenu').hidden) { closeAcctMenu(); return; }
+  if (e.key === 'Escape' && convTool != null && !dlg.open) { closeConv(); return; }
   if (e.key === '/' && !active && !dlg.open && !/input|textarea|select/i.test(document.activeElement.tagName)) { e.preventDefault(); qEl.focus(); }
 });
 window.addEventListener('resize', () => { closeMenu(); closeProjMenu(); closeAcctMenu(); });
@@ -2854,7 +3108,7 @@ window.addEventListener('drop', e => {
   const st = solo && byId(decodeURIComponent(solo[1]));
   if (st) { try { await loadHtml(st); } catch (e) {} const s2 = byId(st.id); if (s2 && s2.html != null) { setTimeout(() => { document.open(); document.write(themed(s2, !!(cur() && cur().shared))); document.close(); }, 0); return; } }
   renderAccount(); gisReady.then(renderAccount);
-  await docsLoad();
+  await docsLoad(); await msgsLoad();
   render(); route(); renderProjUI(); resetShare(); kickTick(500);
   setInterval(renderProjUI, 60 * 1000);
 })();

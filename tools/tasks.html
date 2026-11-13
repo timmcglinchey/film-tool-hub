@@ -383,7 +383,7 @@ async function getProjectPeople() {
     if (!hub) { try { if (window.parent !== window) hub = window.parent.__fthHub; } catch (e) {} }   /* inside the hub, the hub is the page around this tool */
     if (hub && typeof hub.people === 'function') {
       const list = await hub.people();
-      if (Array.isArray(list)) return list.filter(p => p && p.name).map(p => ({name: String(p.name), email: p.email || '', role: p.role || ''}));
+      if (Array.isArray(list)) return list.filter(p => p && p.name).map(p => ({name: String(p.name), email: p.email || '', role: p.role || '', me: !!p.me, aka: Array.isArray(p.aka) ? p.aka : []}));
     }
   } catch (e) {}
   return [];
@@ -850,7 +850,14 @@ $('viewSeg').addEventListener('click', e => {
 /* ── start ── */
 render();
 if (data.view === 'timeline') scrollToToday();
-getProjectPeople().then(list => { projectPeople = list; if (list.length) render(); });
+getProjectPeople().then(list => {
+  projectPeople = list; if (!list.length) return;
+  /* in a shared project the board opens on your own tasks (Everyone is one click away in the filter) */
+  const me = list.find(p => p.me);
+  if (me && filter === '' && data.tasks.some(t => t.status !== 'done' && t.who.some(n => sameName(n, me.name)))) filter = me.name;
+  else if (me && filter === '') { const old = me.aka.find(a => data.tasks.some(t => t.status !== 'done' && t.who.some(n => sameName(n, a)))); if (old) filter = old; }   /* tasks given under an earlier name */
+  render();
+});
 </script>
 </body>
 </html>

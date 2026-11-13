@@ -855,6 +855,8 @@ fileIn.addEventListener('change', async e => {
   const f = e.target.files[0]; if (!f) return; e.target.value = '';
   await openFile(f);
 });
+/* in a shared project: the person signed in, from the project's crew list (null otherwise) */
+const ME = () => { try { return (window.fthPeople ? window.fthPeople() : []).find(p => p.me) || null; } catch (e) { return null; } };
 const HUB = (() => { try { const H = window.parent !== window && window.parent.__fthHub; return H && typeof H.save === 'function' ? H : null; } catch (e) { return null; } })();
 const hasWork = () => S.comments.length || SORDER.some(placedCount) || Object.values(S.summaries).some(v => (v || '').trim())
   || SORDER.some(st => Object.values(S.notes[st]).some(v => (v || '').trim())) || (S.tlNotes || '').trim() || covWork();
@@ -1122,6 +1124,7 @@ pagesEl.addEventListener('pointerup', e => {
     toast(`${b2.name} placed at ${pLabel(placedPos(pl))}${di ? ' · ' + di.txt : ''}`);
   } else {
     const {a, b} = d, c = {id:uid(), p:a.pg, x0:a.x, y0:a.y, text:'', kind:S.kindFilter || 'note', t:Date.now()};
+    const me = ME(); if (me) c.by = me.name;   /* so several people's notes on one draft can be told apart */
     if (d.moved && Math.abs(b.x - a.x) > 0.01 && Math.abs(b.y - a.y) > 0.005){ c.x0 = Math.min(a.x, b.x); c.x1 = Math.max(a.x, b.x); c.y0 = Math.min(a.y, b.y); c.y1 = Math.max(a.y, b.y); }
     S.comments.push(c); S.ui.rightOpen = true; save();
     renderOverlays(); renderComments(); renderStrip();
@@ -1342,6 +1345,7 @@ function renderComments(){
       h('div', {class:'cm-top'},
         h('span', {class:'cm-num'}, n),
         h('span', {class:'cm-loc', onclick:() => focusComment(c.id, true)}, pLabel(cPos(c)) + (c.x1 != null ? ' · highlight' : '')),
+        c.by ? h('span', {class:'fth-mono', title:'Who wrote this comment', style:{fontSize:'11px', color:'var(--fth-muted)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}, c.by) : null,
         h('select', {onchange:e => { c.kind = e.target.value; save(); renderComments(); renderOverlays(); renderStrip(); }}, Object.entries(KINDS).map(([k, l]) => h('option', {value:k, selected:c.kind === k ? 'selected' : null}, l))),
         h('button', {class:'xbtn', title:'Delete comment', onclick:() => removeComment(c.id)}, '×')),
       ta);
@@ -2060,6 +2064,7 @@ function afterGeometry(){ renderOverlays(); renderStrip(); renderLeft(); renderR
   const saved = await store.get('state');
   if (saved && typeof saved === 'object') S = merge(blankState(), saved);
   if (!window.fthStore && !saved){ S.mode = 'coverage'; }
+  { const me = ME(); if (me && !String(S.cov.details.reader || '').trim()) S.cov.details.reader = me.name; }   /* the reader is whoever is signed in, until someone types another name */
   ready = true;
   renderAll();
   const pdf = await store.get('pdf');
