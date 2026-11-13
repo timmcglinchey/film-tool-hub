@@ -66,6 +66,7 @@ const UI = {
   close:  P('<path d="M6 6l12 12M18 6L6 18"/>'),
   info:   P('<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.6" r=".5" fill="currentColor"/>'),
   file:   P('<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/><path d="M9 14l-1.5 1.5L9 17M13 14l1.5 1.5L13 17"/>'),
+  pin:    P('<path d="M9 3.5h6l-.8 6 3.3 4H6.5l3.3-4z"/><path d="M12 13.5V21"/>'),
   share:  P('<circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c0-3.2 2.7-5.6 6-5.6s6 2.4 6 5.6"/><path d="M18.5 8v6M15.5 11h6"/>')
 };
 
@@ -417,6 +418,7 @@ const gisReady = !driveOn() ? Promise.resolve(false) : new Promise(res => {
           token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000;
           if (!driveOk) { token = null; w.rej(new Error('Google Drive access wasn’t allowed, so your projects can’t be saved to your Drive. Click Sign in again and tick the Google Drive box.')); return; }
           w.res(token);
+          setTimeout(syncPins, 0);   /* pinned tools follow the person between devices */
         },
         error_callback: e => { const w = tokenWait; tokenWait = null; if (w) w.rej(new Error((e && e.type) || 'sign-in cancelled')); }
       });
@@ -470,11 +472,17 @@ async function folder(name, props, parent) {
   const meta = {name, mimeType: 'application/vnd.google-apps.folder', appProperties: props, ...(parent ? {parents: [parent]} : {})};
   return (await gjson(`${DRIVE_API}/files?fields=id`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(meta)})).id;
 }
-async function ensureFolders() {
-  if (folders) return folders;
-  const root = await folder('Film Tool Hub', {fth: 'root'});
-  const [projectsF, backupsF] = await Promise.all([folder('Projects', {fth: 'projects'}, root), folder('Backups', {fth: 'backups'}, root)]);
-  return (folders = {root, projects: projectsF, backups: backupsF});
+let foldersBusy = null;
+function ensureFolders() {
+  if (folders) return Promise.resolve(folders);
+  if (!foldersBusy) foldersBusy = (async () => {   /* one lookup at a time, so two callers can't both create the folders */
+    try {
+      const root = await folder('Film Tool Hub', {fth: 'root'});
+      const [projectsF, backupsF] = await Promise.all([folder('Projects', {fth: 'projects'}, root), folder('Backups', {fth: 'backups'}, root)]);
+      return (folders = {root, projects: projectsF, backups: backupsF});
+    } finally { foldersBusy = null; }
+  })();
+  return foldersBusy;
 }
 /* upload (create when no fileId) with a resumable session, so big projects (script PDFs, stills) fit */
 async function uploadFile(meta, text, fileId) {
@@ -586,6 +594,7 @@ async function driveSync(askAboutCurrent) {
   driveSyncing = true; renderAccount();
   try {
     await ensureFolders();
+    syncPins();
     const files = await findFiles(byProp('fth', 'project'));
     for (const f of files) {
       const id = (f.appProperties || {}).fthId; if (!id) continue;
@@ -638,6 +647,7 @@ async function signIn() {
     account = {email: me.email, name: me.name || me.email, picture: me.picture || ''};
     try { localStorage.setItem(ACCT_KEY, JSON.stringify(account)); } catch (e) {}
     if (!prev) projects.filter(p => !p.owner).forEach(p => { p.owner = account.email; putProject(p); });
+    adoptPins();
     toast(`Signed in as ${account.email}`);
     renderAccount(); render();
     await driveSync(true);
@@ -671,6 +681,8 @@ async function signOut() {
   const email = account && account.email;
   token = null; tokenExp = 0; folders = null; account = null;
   try { localStorage.removeItem(ACCT_KEY); } catch (e) {}
+  if (clear) { delete pinStore[email]; savePins(); }
+  renderBar();
   if (clear) {
     await unloadFrames();
     for (const p of projects.filter(p => p.owner === email || !p.owner)) {
@@ -686,6 +698,70 @@ async function signOut() {
   reloadFrames(); renderAccount(); renderProjUI(); render();
   toast('Signed out');
 }
+
+/* ───────── pinned tools ─────────
+   A pinned tool keeps its tab at the left of the top bar, whether or not it's open, so the tools a
+   person uses most are always one click away. Pins belong to the person, not the project. They're
+   kept in this browser and, once signed in, in a small "Settings" file in their Film Tool Hub folder
+   on Google Drive, so the same pins appear on every device. The most recent change wins. */
+const PINS_KEY = 'filmtoolhub-pins';
+let pinStore = {};
+try { const v = JSON.parse(localStorage.getItem(PINS_KEY) || '{}'); if (v && typeof v === 'object' && !Array.isArray(v)) pinStore = v; } catch (e) {}
+const pinWho = () => (account && account.email) || '';
+const pinRec = () => { const k = pinWho(); let r = pinStore[k]; if (!r || !Array.isArray(r.ids)) r = pinStore[k] = {ids: [], at: 0}; return r; };
+const pins = () => pinRec().ids.filter(id => byId(id));
+const isPinned = id => pinRec().ids.includes(id);
+const savePins = () => { try { localStorage.setItem(PINS_KEY, JSON.stringify(pinStore)); } catch (e) {} };
+let pinPushT;
+function togglePin(id) {
+  const t = byId(id); if (!t) return;
+  const r = pinRec(), i = r.ids.indexOf(id);
+  if (i < 0) r.ids.push(id); else r.ids.splice(i, 1);
+  r.at = Date.now(); savePins();
+  renderBar(); render();
+  toast(i < 0 ? `${t.name} pinned to the top bar` : `${t.name} unpinned`);
+  clearTimeout(pinPushT); pinPushT = setTimeout(syncPins, 1200);
+}
+/* pins made before signing in on this device join the person's own, rather than replacing them */
+function adoptPins() {
+  const anon = pinStore[''];
+  if (!account || !anon || !Array.isArray(anon.ids) || !anon.ids.length) return;
+  const r = pinRec();
+  r.ids = [...new Set([...r.ids, ...anon.ids])]; r.join = true;
+  delete pinStore['']; savePins(); renderBar(); render();
+}
+let pinSyncBusy = null, pinSyncAgain = false, pinSyncAt = 0;
+async function syncPins() {
+  if (!driveOn() || !account || !hasToken()) return;
+  if (pinSyncBusy) { pinSyncAgain = true; return pinSyncBusy; }
+  pinSyncBusy = (async () => {
+    try {
+      const who = account.email, r = pinRec();
+      const f = await ensureFolders();
+      const hit = (await findFiles(byProp('fth', 'settings'), 'id,modifiedTime')).sort((a, b) => Date.parse(b.modifiedTime) - Date.parse(a.modifiedTime))[0];
+      let remote = hit ? await gjson(`${DRIVE_API}/files/${hit.id}?alt=media`).catch(() => null) : null;
+      if (!remote || !Array.isArray(remote.pins)) remote = null;
+      if (pinWho() !== who) return;
+      const rIds = remote ? remote.pins.filter(x => typeof x === 'string') : [], rAt = remote ? +remote.pinsAt || 0 : 0;
+      let send = false;
+      if (r.join) { r.ids = [...new Set([...rIds, ...r.ids])]; r.at = Date.now(); delete r.join; send = r.ids.length !== rIds.length; if (!send) r.at = rAt; }
+      else if (rAt > (r.at || 0)) { r.ids = rIds; r.at = rAt; }
+      else if ((r.at || 0) > rAt && (remote || r.ids.length)) send = true;
+      savePins(); renderBar(); render();
+      if (send) {
+        const body = JSON.stringify({app: 'film-tool-hub', kind: 'settings', v: 1, pins: r.ids, pinsAt: r.at});
+        const meta = {name: 'Settings.filmtoolhub.json', mimeType: 'application/json', appProperties: {fth: 'settings'}};
+        await uploadFile(hit ? meta : {...meta, parents: [f.root]}, body, hit && hit.id);
+      }
+      pinSyncAt = Date.now();
+    } catch (e) {}
+  })();
+  await pinSyncBusy; pinSyncBusy = null;
+  if (pinSyncAgain) { pinSyncAgain = false; return syncPins(); }
+}
+/* coming back to the page: pick up pins changed on another device */
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - pinSyncAt > 60e3) syncPins(); });
+window.addEventListener('focus', () => { if (Date.now() - pinSyncAt > 60e3) syncPins(); });
 
 /* ───────── shared projects ─────────
    The owner shares a project's Drive file with the crew (they get edit access to that one file).
@@ -1737,6 +1813,7 @@ function card(t) {
       ${t.note ? `<div class="note">${esc(t.note)}</div>` : ''}
       <div class="meta"><span class="tags">${esc((t.tags || []).join(' · '))}</span>${cur() && (cur().tools || {})[t.id] ? '<span class="inproj" title="Used in the current project">● In project</span>' : ''}${ver}<span class="go">Open ${UI.arrow}</span></div>
     </a>
+    <button class="pinb${isPinned(t.id) ? ' on' : ''}" data-pin="${esc(t.id)}" aria-pressed="${isPinned(t.id)}" aria-label="${isPinned(t.id) ? 'Unpin' : 'Pin'} ${esc(t.name)}" title="${isPinned(t.id) ? 'Pinned to the top bar. Click to unpin' : 'Pin to the top bar'}">${UI.pin}</button>
     <button class="more" data-menu="${esc(t.id)}" aria-label="Options for ${esc(t.name)}" aria-haspopup="menu" aria-expanded="false">${UI.dots}</button>
   </div>`;
 }
@@ -1779,9 +1856,16 @@ function activate(id) {
 }
 
 function renderBar() {
-  const tabs = openTabs.map(id => byId(id)).filter(Boolean);
+  const pinned = pins();
+  const tabs = [...pinned, ...openTabs.filter(id => !pinned.includes(id))].map(id => byId(id)).filter(Boolean);
+  const X = UI.close.replace('stroke-width="1.6"', 'stroke-width="2"').replace('<svg', '<svg width="13" height="13"');
   $('#tabs').innerHTML = tabs.length
-    ? tabs.map(t => `<button class="tab${t.id === active ? ' active' : ''}" data-tab="${esc(t.id)}" style="--cat:${catOf(t.category).color}" title="${esc(t.name)}"><span class="dot"></span><span class="lbl">${esc(t.name)}</span><span class="x" data-close="${esc(t.id)}" role="button" aria-label="Close ${esc(t.name)}">${UI.close.replace('stroke-width="1.6"', 'stroke-width="2"').replace('<svg', '<svg width="13" height="13"')}</span></button>`).join('')
+    ? tabs.map(t => {
+        const pin = pinned.includes(t.id), n = esc(t.name);
+        return `<button class="tab${t.id === active ? ' active' : ''}${pin ? ' pinned' : ''}${openTabs.includes(t.id) ? '' : ' idle'}" data-tab="${esc(t.id)}" style="--cat:${catOf(t.category).color}" title="${n}"><span class="dot"></span><span class="lbl">${n}</span>`
+          + `<span class="pin" data-pin="${esc(t.id)}" role="button" aria-label="${pin ? 'Unpin' : 'Pin'} ${n}" title="${pin ? 'Pinned. Click to unpin' : 'Pin this tab so it stays here'}">${UI.pin}</span>`
+          + (pin ? '' : `<span class="x" data-close="${esc(t.id)}" role="button" aria-label="Close ${n}" title="Close">${X}</span>`) + `</button>`;
+      }).join('')
     : `<span class="tabs-hint">Open tools appear here as tabs</span>`;
   $('#barActions').innerHTML = active ? `
     <button class="ibtn" data-act="reload" title="Reload this tool">${UI.reload}</button>
@@ -1828,6 +1912,7 @@ function openMenu(btn, id) {
     <div class="hint">${esc(t.name)}</div>
     ${active === id ? '' : `<button data-m="open">${UI.open}Open here</button>`}
     <button data-m="newtab">${UI.newtab}Open in new tab</button>
+    <button data-m="pin">${UI.pin}${isPinned(id) ? 'Unpin from the top bar' : 'Pin to the top bar'}</button>
     <hr>
     <button data-m="update">${UI.upload}Upload new version…</button>
     <button data-m="edit">${UI.edit}Edit name, description &amp; stage</button>
@@ -1850,6 +1935,7 @@ menu.addEventListener('click', async e => {
   switch (b.dataset.m) {
     case 'open': go(id); break;
     case 'newtab': newTab(id); break;
+    case 'pin': togglePin(id); break;
     case 'update': pickFile(f => startUpdate(id, f)); break;
     case 'edit': editDialog(id); break;
     case 'download': await loadHtml(t); download(t.fileName || slug(t.name) + '.html', byId(id).html); break;
@@ -1968,6 +2054,7 @@ function helpDialog() {
     <ol>
       <li><b>Open a tool</b> by clicking its card. It opens here as a tab, and your other open tools keep their place when you switch.</li>
       <li><b>Open in a new browser tab</b> by right-clicking a card and choosing “Open link in new tab”, or with Ctrl/⌘-click.</li>
+      <li><b>Pin the tools you use most.</b> Click the pin on a tool’s card or on its tab. Pinned tools stay at the left of the top bar, so you can jump between them in one click. Click the pin again to unpin${driveOn() ? '. When you’re signed in, your pins follow you to any computer' : ''}.</li>
       <li><b>Light or dark.</b> The sun/moon button in the top bar switches the hub and every tool at once.</li>
       <li><b>Projects.</b> Pick a project in the top bar and every tool files its work under it, so you can move between tools on the same film. Archive projects you’ve finished with.</li>
       <li><b>Saving and backups.</b> Your work saves in this browser as you go. Press <b>Save</b> (or Ctrl/⌘+S) to store the project’s main copy${driveOn() ? '; sign in with Google to keep it in your own Google Drive and carry on from any computer' : ''}. Backups are taken every few minutes while you work. Bring one back from Manage projects → Backups.</li>
@@ -1998,6 +2085,8 @@ function toast(msg) { const el = $('#toast'); el.textContent = msg; el.classList
 
 /* ───────── events ───────── */
 document.addEventListener('click', e => {
+  const pn = e.target.closest('[data-pin]');
+  if (pn) { e.preventDefault(); e.stopPropagation(); togglePin(pn.dataset.pin); return; }
   const open = e.target.closest('[data-open]');
   if (open) {
     if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return; // let the browser open a new tab/window

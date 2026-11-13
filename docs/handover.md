@@ -44,6 +44,11 @@ Tim McGlinchey is a film lecturer at Belfast Met. He isn't technical, so:
   - **One editor per tool:** a hold is a note on the file, `appProperties["lk:<tool>"] = time|email|session|name`; a request is `rq:<tool>`. A hold lapses 5 minutes after its last heartbeat; the hub lets go after 4 minutes without activity, saving first. Tools not held are view-only: the shim drops their writes and blocks typing (`__fthHub.readOnly`).
   - **Unsaved changes in a tool someone else now holds** are never pushed: they're backed up locally and replaced by the shared version (`strand`).
   - **Tests:** `node tests/sharing/run.js` runs two pretend people against a pretend Google Drive (needs Playwright). Real Google sign-in can't be tested off the live site, so check with two real accounts after any change here.
+- **Pinned tools** (added 13 November 2026; in `hub/hub.js`, the "pinned tools" section). A pin keeps a tool's tab at the left of the top bar even when the tool isn't open. Pins belong to the person, not the project.
+  - In the browser they're kept in `localStorage` under `filmtoolhub-pins`, one list per signed-in email (and one for "not signed in").
+  - Once signed in, they're also kept in a small file, `Settings.filmtoolhub.json`, in the person's Film Tool Hub folder on Drive (marked `fth: 'settings'`). `syncPins` compares the two and the most recent change wins. It runs whenever Google is connected, after a pin changes, and when the person comes back to the page.
+  - Pins made on a device before signing in are added to the person's own pins, not swapped for them.
+  - `tests/sharing/test4.js` covers this.
 - **No HTML exports.** Tools must not offer to download a copy of the page. PDF, CSV, Excel and .json data exports are fine.
 
 ## Adding or updating a tool (Tim sends a file)

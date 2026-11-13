@@ -52,6 +52,17 @@ svg{display:block}
 .tab .lbl{overflow:hidden;text-overflow:ellipsis}
 .tab .x{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:var(--faint);flex:none}
 .tab .x:hover{background:var(--surface3);color:var(--text)}
+.tab .pin{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;color:var(--faint);flex:none;visibility:hidden;margin-right:-6px}
+.tab .pin svg{width:14px;height:14px}
+.tab:hover .pin,.tab.active .pin,.tab.pinned .pin{visibility:visible}
+.tab .pin:hover{background:var(--surface3);color:var(--text)}
+.tab.pinned{padding-right:6px;max-width:190px;gap:7px}
+/* tabs squeeze up before the bar has to scroll, so pinned tools stay in view */
+.tab{flex:0 1 auto;min-width:104px}.tab.active{min-width:150px}.tab .lbl{flex:1;min-width:0;text-align:left}
+.tab.pinned .pin{margin-right:0;color:var(--accent-ink)}
+.tab.pinned .pin svg path:first-child,.pinb.on svg path:first-child{fill:currentColor}
+.tab.idle:not(:hover) .lbl{opacity:.75}
+.tab.idle .dot{box-shadow:none;background:none;border:1.5px solid var(--cat);width:8px;height:8px}
 .tabs-hint{font:500 11px var(--mono);color:var(--faint);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;padding-left:6px}
 #barActions{display:flex;gap:4px;flex:none}
 .ibtn{height:34px;min-width:34px;padding:0 10px;border-radius:9px;border:1px solid transparent;background:none;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:13px;font-weight:500;white-space:nowrap}
@@ -186,6 +197,11 @@ h1 em{font-style:normal;color:transparent;-webkit-text-stroke:1.5px var(--text)}
 .more{position:absolute;top:16px;right:14px;width:32px;height:32px;border-radius:8px;border:1px solid transparent;background:none;color:var(--faint);display:grid;place-items:center;z-index:2}
 .more:hover,.more[aria-expanded="true"]{background:var(--surface3);border-color:var(--line2);color:var(--text)}
 .more svg{width:18px;height:18px}
+.pinb{position:absolute;top:16px;right:14px;width:32px;height:32px;border-radius:8px;border:1px solid transparent;background:none;color:var(--faint);display:grid;place-items:center;z-index:2}
+.pinb:hover{background:var(--surface3);border-color:var(--line2);color:var(--text)}
+.pinb svg{width:17px;height:17px}
+.pinb.on{color:var(--accent-ink)}
+body.admin .cardw .pinb{right:50px}
 
 .empty{padding:60px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line2);border-radius:var(--radius)}
 .foot{border-top:1px solid var(--line);padding:22px 0 40px;margin-top:10px;display:flex;gap:18px;flex-wrap:wrap;align-items:center;color:var(--faint);font-size:13px}
