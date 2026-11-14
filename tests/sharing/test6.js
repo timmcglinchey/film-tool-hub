@@ -39,7 +39,7 @@ const { assert, sleep, until, H } = require('./lib');
   await f.fill('#fTitle', 'Book the van'); await f.click('#whoList .tb-who-row:nth-child(2) input'); await f.evaluate(() => document.querySelector('#taskForm').requestSubmit());
   await until(async () => (await f.evaluate(() => JSON.stringify(data.tasks.map(t => t.who)))) === '[["Bobby"]]', 'task assigned to Bobby');
   await H.save(A);
-  await A.page.click('#tabs [data-close=tasks]'); await until(() => !pf.appProperties['lk.tasks'], 'Alice lets go');
+  await A.page.click('#tasksBtn');   /* leaving the Task Board closes it */ await until(() => !pf.appProperties['lk.tasks'], 'Alice lets go');
 
   step('Bob joins: he sees the same names (and himself marked as "me")');
   await B.page.goto(base + '#/join/' + pf.id); await B.page.click('#dlg button[value=ok]');

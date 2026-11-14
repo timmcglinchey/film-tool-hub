@@ -743,7 +743,7 @@ async function signOut() {
 }
 
 /* ───────── pinned tools ─────────
-   A pinned tool keeps its tab at the left of the top bar, whether or not it's open, so the tools a
+   A pinned tool keeps its tab at the left of the tab strip, whether or not it's open, so the tools a
    person uses most are always one click away. Pins belong to the person, not the project. They're
    kept in this browser and, once signed in, in a small "Settings" file in their Film Tool Hub folder
    on Google Drive, so the same pins appear on every device. The most recent change wins. */
@@ -762,7 +762,7 @@ function togglePin(id) {
   if (i < 0) r.ids.push(id); else r.ids.splice(i, 1);
   r.at = Date.now(); savePins();
   renderBar(); render();
-  toast(i < 0 ? `${t.name} pinned to the top bar` : `${t.name} unpinned`);
+  toast(i < 0 ? `${t.name} pinned to the tab strip` : `${t.name} unpinned`);
   clearTimeout(pinPushT); pinPushT = setTimeout(syncPins, 1200);
 }
 /* pins made before signing in on this device join the person's own, rather than replacing them */
@@ -2082,7 +2082,7 @@ let filter = 'all';
 const qEl = $('#q');
 
 function render() {
-  const all = tools();
+  const all = tools().filter(t => t.id !== TASKS);
   const q = qEl.value.trim().toLowerCase();
   const match = t => !q || [t.name, t.desc, (t.tags || []).join(' '), catOf(t.category).name].join(' ').toLowerCase().includes(q);
   const visibleCats = CATS.filter(c => all.some(t => catOf(t.category).id === c.id));
@@ -2125,7 +2125,7 @@ function card(t) {
       ${t.note ? `<div class="note">${esc(t.note)}</div>` : ''}
       <div class="meta"><span class="tags">${esc((t.tags || []).join(' · '))}</span>${cur() && (cur().tools || {})[t.id] ? '<span class="inproj" title="Used in the current project">● In project</span>' : ''}${ver}<span class="go">Open ${UI.arrow}</span></div>
     </a>
-    <button class="pinb${isPinned(t.id) ? ' on' : ''}" data-pin="${esc(t.id)}" aria-pressed="${isPinned(t.id)}" aria-label="${isPinned(t.id) ? 'Unpin' : 'Pin'} ${esc(t.name)}" title="${isPinned(t.id) ? 'Pinned to the top bar. Click to unpin' : 'Pin to the top bar'}">${UI.pin}</button>
+    <button class="pinb${isPinned(t.id) ? ' on' : ''}" data-pin="${esc(t.id)}" aria-pressed="${isPinned(t.id)}" aria-label="${isPinned(t.id) ? 'Unpin' : 'Pin'} ${esc(t.name)}" title="${isPinned(t.id) ? 'Pinned to the tab strip. Click to unpin' : 'Pin to the tab strip'}">${UI.pin}</button>
     <button class="more" data-menu="${esc(t.id)}" aria-label="Options for ${esc(t.name)}" aria-haspopup="menu" aria-expanded="false">${UI.dots}</button>
   </div>`;
 }
@@ -2139,7 +2139,7 @@ function frameFor(t) {
   let f = frames.get(t.id);
   if (!f) {
     f = document.createElement('iframe');
-    f.title = t.name;
+    f.title = t.name; f.dataset.tool = t.id;
     f.setAttribute('allow', 'fullscreen; clipboard-read; clipboard-write; geolocation; camera; microphone; autoplay');
     if (t.html != null) f.srcdoc = themed(t);
     else {
@@ -2153,7 +2153,7 @@ function frameFor(t) {
 }
 
 function activate(id) {
-  const t = id && byId(id);
+  const t = id && byId(id), prev = active;
   if (t) {
     if (!openTabs.includes(id)) openTabs.push(id);
     frameFor(t);
@@ -2167,28 +2167,40 @@ function activate(id) {
   else if (convTool != null && !active && convTool !== '*') closeConv();
   renderBar(); renderShare();
   if (active && sharedCur() && !held.has(active)) kickTick();
+  /* the Task Board is a page, not a tab: leaving it closes it (saving my work and freeing it for the crew) */
+  if (prev === TASKS && active !== TASKS) closeTab(TASKS);
 }
 
+/* The Task Board is hub-wide: a button in the top bar, not one of the tools. Its frame works like any
+   other tool's, but it never gets a tab in the strip. */
+const TASKS = 'tasks';
+function renderTasksBtn() {
+  const b = $('#tasksBtn'); if (!b) return;
+  const on = active === TASKS, due = tasksDue(cur()), badge = b.querySelector('.badge');
+  b.hidden = !byId(TASKS);
+  b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+  badge.hidden = !due; badge.textContent = due;
+  b.title = 'Task Board: everything that needs doing on this project' + (due ? ` (${due} of your tasks ${due === 1 ? 'is' : 'are'} due)` : '');
+}
 function renderBar() {
-  const pinned = pins();
-  const tabs = [...pinned, ...openTabs.filter(id => !pinned.includes(id))].map(id => byId(id)).filter(Boolean);
-  const X = UI.close.replace('stroke-width="1.6"', 'stroke-width="2"').replace('<svg', '<svg width="13" height="13"');
-  const due = tasksDue(cur());
+  const pinned = pins().filter(id => id !== TASKS);
+  const tabs = [...pinned, ...openTabs.filter(id => !pinned.includes(id) && id !== TASKS)].map(id => byId(id)).filter(Boolean);
+  const X = UI.close.replace('stroke-width="1.6"', 'stroke-width="2.2"');
   $('#tabs').innerHTML = tabs.length
     ? tabs.map(t => {
         const pin = pinned.includes(t.id), n = esc(t.name);
-        return `<button class="tab${t.id === active ? ' active' : ''}${pin ? ' pinned' : ''}${openTabs.includes(t.id) ? '' : ' idle'}" data-tab="${esc(t.id)}" style="--cat:${catOf(t.category).color}" title="${n}"><span class="dot"></span><span class="lbl">${n}</span>${t.id === 'tasks' && due ? `<b class="badge" title="${due} of your tasks ${due === 1 ? 'is' : 'are'} due">${due}</b>` : ''}`
+        return `<button class="tab${t.id === active ? ' active' : ''}${pin ? ' pinned' : ''}${openTabs.includes(t.id) ? '' : ' idle'}" data-tab="${esc(t.id)}" style="--cat:${catOf(t.category).color}" title="${n}"><span class="dot"></span><span class="lbl">${n}</span><span class="ctl">`
           + `<span class="pin" data-pin="${esc(t.id)}" role="button" aria-label="${pin ? 'Unpin' : 'Pin'} ${n}" title="${pin ? 'Pinned. Click to unpin' : 'Pin this tab so it stays here'}">${UI.pin}</span>`
-          + (pin ? '' : `<span class="x" data-close="${esc(t.id)}" role="button" aria-label="Close ${n}" title="Close">${X}</span>`) + `</button>`;
+          + (pin ? '' : `<span class="x" data-close="${esc(t.id)}" role="button" aria-label="Close ${n}" title="Close">${X}</span>`) + `</span></button>`;
       }).join('')
-    : `<span class="tabs-hint">Open tools appear here as tabs</span>`;
+    : `<span class="tabs-hint">Open and pinned tools appear here</span>`;
   $('#barActions').innerHTML = active ? `
     ${convOn() ? `<button class="ibtn convbtn${convTool === active ? ' on' : ''}" data-act="conv" aria-pressed="${convTool === active}" title="Conversation: comments about ${esc(toolName(active))} for your crew">${CONVI}<span class="t">Conversation</span>${unreadIn(active).length ? `<b class="badge">${unreadIn(active).length}</b>` : ''}</button>` : ''}
     <button class="ibtn" data-act="reload" title="Reload this tool">${UI.reload}</button>
     <button class="ibtn" data-act="newtab" title="Open in a new browser tab">${UI.newtab}<span class="t">New tab</span></button>
     <button class="ibtn" data-act="menu" data-menu="${esc(active)}" title="More options">${UI.dots}</button>` : '';
   const at = $('#tabs .tab.active'); if (at) at.scrollIntoView({block:'nearest', inline:'nearest'});
-  renderMeBtn();
+  renderMeBtn(); renderTasksBtn();
 }
 
 const go = id => { location.hash = id ? '#/tool/' + encodeURIComponent(id) : '#/'; };
@@ -2232,7 +2244,7 @@ function openMenu(btn, id) {
     <div class="hint">${esc(t.name)}</div>
     ${active === id ? '' : `<button data-m="open">${UI.open}Open here</button>`}
     <button data-m="newtab">${UI.newtab}Open in new tab</button>
-    <button data-m="pin">${UI.pin}${isPinned(id) ? 'Unpin from the top bar' : 'Pin to the top bar'}</button>
+    ${id === TASKS ? '' : `<button data-m="pin">${UI.pin}${isPinned(id) ? 'Unpin from the tab strip' : 'Pin to the tab strip'}</button>`}
     <hr>
     <button data-m="update">${UI.upload}Upload new version…</button>
     <button data-m="edit">${UI.edit}Edit name, description &amp; stage</button>
@@ -2372,9 +2384,10 @@ function helpDialog() {
     </ul></div>` : '';
   showDlg(`<div class="help"><h3>How it works</h3><p class="sub">Everything you need to plan a film, in one place.</p>
     <ol>
-      <li><b>Open a tool</b> by clicking its card. It opens here as a tab, and your other open tools keep their place when you switch.</li>
+      <li><b>Open a tool</b> by clicking its card. It opens here, with a tab in the strip under the top bar. That strip stays on every page, so you can flick between your open tools and they keep their place.</li>
       <li><b>Open in a new browser tab</b> by right-clicking a card and choosing “Open link in new tab”, or with Ctrl/⌘-click.</li>
-      <li><b>Pin the tools you use most.</b> Click the pin on a tool’s card or on its tab. Pinned tools stay at the left of the top bar, so you can jump between them in one click. Click the pin again to unpin${driveOn() ? '. When you’re signed in, your pins follow you to any computer' : ''}.</li>
+      <li><b>Pin the tools you use most.</b> Click the pin on a tool’s card or on its tab. Pinned tools stay at the left of the tab strip, even when closed, so you can jump between them in one click. Click the pin again to unpin${driveOn() ? '. When you’re signed in, your pins follow you to any computer' : ''}.</li>
+      <li><b>Task Board.</b> The <b>Task Board</b> button in the top bar opens the project’s tasks from anywhere in the hub. Give tasks to your crew and they appear on each person’s <b>My work</b>.</li>
       <li><b>Light or dark.</b> The sun/moon button in the top bar switches the hub and every tool at once.</li>
       <li><b>Projects.</b> Pick a project in the top bar and every tool files its work under it, so you can move between tools on the same film. Archive projects you’ve finished with.</li>
       <li><b>Documentation.</b> The <b>Documentation</b> button in the top bar opens a folder for each tool. Whenever you export from a tool (a PDF, spreadsheet or picture), a copy is filed there as a new draft, so the whole project’s paperwork is in one place. Each tool also has a <b>Save to Documentation</b> button, for saving a draft without downloading it.</li>
@@ -3003,6 +3016,7 @@ document.addEventListener('auxclick', e => { const x = e.target.closest('[data-t
 $('#homeBtn').onclick = () => go(null);
 $('#docsBtn').onclick = () => { location.hash = location.hash.startsWith('#/docs') ? '#/' : '#/docs'; };
 $('#meBtn').onclick = () => { location.hash = location.hash === '#/me' ? '#/' : '#/me'; };
+$('#tasksBtn').onclick = () => go(active === TASKS ? null : TASKS);
 $('#mePage').addEventListener('click', e => { const b = e.target.closest('[data-mc]'); if (!b) return; const t = b.dataset.mc; if (t === '*') openConv('*'); else if (byId(t)) { go(t); setTimeout(() => openConv(t), 0); } });
 $('#convPanel').addEventListener('click', async e => {
   const b = e.target.closest('[data-cv], [data-cvto]'); if (!b) return;
