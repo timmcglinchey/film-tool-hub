@@ -19,9 +19,8 @@
   </button>
   <div class="sep"></div>
   <button class="projbtn" id="projBtn" aria-haspopup="menu" aria-expanded="false" title="Switch project"><span class="pl">Project</span><b id="projName">…</b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10l5 5 5-5"/></svg></button>
-  <div class="sep"></div>
-  <nav id="tabs" aria-label="Open tools"></nav>
-  <div id="barActions"></div>
+  <div class="grow"></div>
+  <button class="ibtn tasksbtn" id="tasksBtn" aria-pressed="false" title="Task Board: everything that needs doing on this project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="4.6" height="16" rx="1.2"/><rect x="9.7" y="4" width="4.6" height="10" rx="1.2"/><rect x="15.9" y="4" width="4.6" height="13" rx="1.2"/></svg><span class="t">Task Board</span><b class="badge" hidden></b></button>
   <button class="ibtn docsbtn" id="docsBtn" aria-pressed="false" title="Documentation: every export and draft saved in this project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M8 13h8M8 16h5"/></svg><span class="t">Documentation</span></button>
   <button class="ibtn mebtn" id="meBtn" aria-pressed="false" title="My work: your tasks, comments left for you and your documents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2"/></svg><span class="t">My work</span><b class="badge" hidden></b></button>
   <button class="ibtn savebtn" id="saveBtn" title="Save this project (Ctrl/⌘+S)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></svg><span class="t" id="saveLbl">Save</span><i class="dot"></i></button>
@@ -33,6 +32,10 @@
     <span class="t" id="themeLbl">Dark</span>
   </button>
 </header>
+<div id="tabbar">
+  <nav id="tabs" aria-label="Open and pinned tools"></nav>
+  <div id="barActions"></div>
+</div>
 
 <main id="home">
   <div class="wrap">
