@@ -31,8 +31,10 @@ const fs = require('fs');
   await A.page.click('#dlg button[value=cancel]');
   // Alice holds everything (all tabs are open and recently used)
   await A.page.evaluate(() => { location.hash = '#/tool/callsheet'; });
-  for (const id of ids) await H.act(A, id);
-  await until(() => ids.every(id => (pf.appProperties['lk.' + id] || '').includes('alice@')), 'Alice holds all 21 tools');
+  /* the Task Board is a page, not a tab: it closes when she moves on, so she holds every other tool */
+  const kept = ids.filter(id => id !== 'tasks');
+  for (const id of kept) await H.act(A, id);
+  await until(() => kept.every(id => (pf.appProperties['lk.' + id] || '').includes('alice@')), 'Alice holds every tool but the Task Board');
   console.log('• one person can hold all 21 tools at once (within Drive’s note limits):', Object.keys(pf.appProperties).length, 'notes');
   await B.page.goto(base + '#/join/' + pf.id); await B.page.waitForSelector('#dlg[open]');
   await B.page.screenshot({ path: require('path').join(require('os').tmpdir(), 'fth-shot-') + 'join.png' });
