@@ -50,6 +50,7 @@ const ICONS = {
   exposure: P('<circle cx="12" cy="12" r="8.8"/><path d="M12 3.2l2.6 6.4M20.4 9.3l-6.8.9M17.4 18.9l-4.2-5.4M6.6 18.9l4.2-5.4M3.6 9.3l6.8.9"/><circle cx="12" cy="12" r="2.6"/>'),
   dof:      P('<circle cx="12" cy="12" r="8.8"/><path d="M3.2 12h17.6"/><path d="M8 7.4v9.2M16 7.4v9.2"/><path d="M12 9.6v4.8" stroke-width="2.4"/>'),
   falsecolour: P('<rect x="3" y="5" width="18" height="14" rx="1.8"/><path d="M3 15l4.5-4.5 3.5 3.5 4-5 6 6"/><path d="M7 5v14M11 5v14M15 5v14" opacity=".35"/>'),
+  research: P('<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/><path d="M8 9.2h5M8 11.8h3.4"/>'),
   generic:  P('<rect x="3" y="9" width="18" height="11.5" rx="1.6"/><path d="M3.4 5.6L20 3l.6 3.6L4 9.2z"/><path d="M8 4.8l2 3.4M13 4l2 3.4"/>')
 };
 const UI = {
@@ -113,7 +114,7 @@ const store = (() => {
 
 /* ───────── data model ───────── */
 const CATS = manifest.categories.slice();
-if (!CATS.some(c => c.id === 'other')) CATS.push({id:'other', num:String(CATS.length + 1).padStart(2, '0'), name:'Other tools', blurb:'Tools added to the hub that sit outside the main stages.', color:'#b9bec7'});
+if (!CATS.some(c => c.id === 'other')) CATS.push({id:'other', num:String(CATS.filter(c => !c.personal).length + 1).padStart(2, '0'), name:'Other tools', blurb:'Tools added to the hub that sit outside the main stages.', color:'#b9bec7'});
 const catOf = id => CATS.find(c => c.id === id) || CATS.find(c => c.id === 'other');
 
 /* a tool's "rev" in tools.json is when its file last changed: date and time as YYYYMMDDHHMM
@@ -136,6 +137,9 @@ function loadHtml(t) {
 }
 const LOADING = '<!doctype html><meta name="color-scheme" content="dark light"><body style="margin:0;display:grid;place-items:center;height:100vh;font:500 12px ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:#888;background:transparent">Loading…</body>';
 const baseIds = new Set(base.map(t => t.id));
+/* personal tools (My Research) belong to the person, not the project: see "My research" below */
+const PERSONAL = new Set(base.filter(t => t.personal).map(t => t.id));
+const isPersonal = id => PERSONAL.has(id);
 const overrides = new Map();
 const MKEYS = ['name', 'desc', 'category', 'tags'];
 
@@ -390,7 +394,9 @@ window.__fthHub = {
   /* shared projects: everyone on the project, owner first, as {name, email, role, me}. [] when it isn't shared */
   people() { return projectPeople(cur()); },
   /* Documentation: every tool hands its exports to this one helper (through window.fthDocs in the tool) */
-  saveDoc(tool, pid, o) { return saveDoc(tool, pid, o || {}); }
+  saveDoc(tool, pid, o) { return saveDoc(tool, pid, o || {}); },
+  /* a personal tool (My Research) changed: send it to the person's own Drive shortly */
+  personalChanged() { researchChanged(); }
 };
 
 
@@ -438,6 +444,7 @@ const gisReady = !driveOn() ? Promise.resolve(false) : new Promise(res => {
             token = r.access_token; tokenExp = Date.now() + (r.expires_in || 3600) * 1000;
             w.res(token);
             setTimeout(syncPins, 0);   /* pinned tools follow the person between devices */
+            setTimeout(syncResearch, 0);   /* and so does their research */
           });
         },
         error_callback: e => { const w = tokenWait; tokenWait = null; if (w) w.rej(new Error((e && e.type) || 'sign-in cancelled')); }
@@ -637,7 +644,7 @@ async function driveSync(askAboutCurrent) {
   driveSyncing = true; renderAccount();
   try {
     await ensureFolders();
-    syncPins();
+    syncPins(); syncResearch();
     const files = await findFiles(byProp('fth', 'project'));
     for (const f of files) {
       const id = (f.appProperties || {}).fthId; if (!id) continue;
@@ -691,6 +698,7 @@ async function signIn() {
     try { localStorage.setItem(ACCT_KEY, JSON.stringify(account)); } catch (e) {}
     if (!prev) projects.filter(p => !p.owner).forEach(p => { p.owner = account.email; putProject(p); });
     adoptPins();
+    if (prev !== account.email) { adoptResearch(); reloadPersonal(); }
     toast(`Signed in as ${account.email}`);
     renderAccount(); render();
     await driveSync(true);
@@ -724,7 +732,8 @@ async function signOut() {
   const email = account && account.email;
   token = null; tokenExp = 0; folders = null; account = null;
   try { localStorage.removeItem(ACCT_KEY); } catch (e) {}
-  if (clear) { delete pinStore[email]; savePins(); }
+  if (clear) { delete pinStore[email]; savePins(); try { meWrite(email, {}); } catch (e) {} const m = rsAll(); delete m[email]; try { localStorage.setItem(RS_KEY, JSON.stringify(m)); } catch (e) {} }
+  reloadPersonal();   /* signed out: personal tools show the signed-out space */
   renderBar();
   if (clear) {
     await unloadFrames();
@@ -805,6 +814,75 @@ async function syncPins() {
 /* coming back to the page: pick up pins changed on another device */
 document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - pinSyncAt > 60e3) syncPins(); });
 window.addEventListener('focus', () => { if (Date.now() - pinSyncAt > 60e3) syncPins(); });
+
+/* ───────── My research ─────────
+   Personal tools (My Research, tools.json "personal") belong to the person, not the project. Their saved
+   work is filed in this browser under "fth:me:<email>:" (signed out: "fth:me::"), so it's the same in every
+   project, is never put in a project file, and is never locked or shared with a crew. When signed in it's
+   also kept in a private file in the person's own Film Tool Hub folder on Google Drive
+   (My research.filmtoolhub.json, never shared), so it follows them between computers. The newest copy wins:
+   "filmtoolhub-research" notes, per person, when the work here last changed (at) and which Drive copy it
+   matches (synced). The Drive file's own "at" note says when its copy was made, so it's only downloaded when newer. */
+const RS_KEY = 'filmtoolhub-research';
+const meWho = () => (account && account.email) || '';
+const mePre = who => 'fth:me:' + who + ':';
+function rsAll() { try { const v = JSON.parse(localStorage.getItem(RS_KEY) || '{}'); return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; } catch (e) { return {}; } }
+const rsRec = who => rsAll()[who] || {};
+function rsSet(who, patch) { const m = rsAll(); m[who] = {...(m[who] || {}), ...patch}; try { localStorage.setItem(RS_KEY, JSON.stringify(m)); } catch (e) {} }
+function meData(who) {
+  const pre = mePre(who), o = {};
+  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(pre)) o[k.slice(pre.length)] = localStorage.getItem(k); }
+  return o;
+}
+function meWrite(who, data) {
+  const pre = mePre(who);
+  Object.keys(meData(who)).forEach(k => localStorage.removeItem(pre + k));
+  for (const [k, v] of Object.entries(data || {})) if (typeof v === 'string') localStorage.setItem(pre + k, v);
+}
+/* the person changed: open personal tools again, now showing their own work */
+function reloadPersonal() { try { PERSONAL.forEach(id => { if (frames.has(id)) reloadTool(id); }); } catch (e) {} }
+/* research done before signing in on this computer becomes the person's, unless they already have some here */
+function adoptResearch() {
+  if (!account) return;
+  const who = account.email, anon = meData('');
+  if (!Object.keys(anon).length || Object.keys(meData(who)).length) return;
+  try { meWrite(who, anon); } catch (e) { return; }
+  rsSet(who, {at: +rsRec('').at || 0, synced: 0}); meWrite('', {}); rsSet('', {at: 0, synced: 0});
+}
+let rsBusy = null, rsAgain = false, rsAt = 0, rsT = null;
+function researchChanged() { clearTimeout(rsT); rsT = setTimeout(syncResearch, 4000); }
+async function syncResearch() {
+  if (!driveOn() || !account || !hasToken()) return;
+  if (rsBusy) { rsAgain = true; return rsBusy; }
+  rsBusy = (async () => {
+    try {
+      const who = account.email, f = await ensureFolders();
+      const hit = (await findFiles(byProp('fth', 'research'), 'id,modifiedTime,appProperties,ownedByMe'))
+        .filter(x => x.ownedByMe !== false).sort((a, b) => Date.parse(b.modifiedTime) - Date.parse(a.modifiedTime))[0];
+      if (meWho() !== who) return;
+      const r = rsRec(who), lAt = +r.at || 0, synced = +r.synced || 0, rAt = hit ? +((hit.appProperties || {}).at) || 0 : 0;
+      if (hit && rAt > synced && rAt >= lAt) {   /* a newer copy on Drive (from another computer) */
+        const remote = await gjson(`${DRIVE_API}/files/${hit.id}?alt=media`);
+        if (meWho() !== who || !remote || !remote.data || typeof remote.data !== 'object') return;
+        if ((+rsRec(who).at || 0) > lAt) { rsAgain = true; return; }   /* changed here meanwhile: that's newer still */
+        try { meWrite(who, remote.data); } catch (e) { toastLong('Your research from Google Drive doesn’t fit in this browser’s storage. Free some space (archive old projects), then reload.'); return; }
+        rsSet(who, {at: rAt, synced: rAt});
+        reloadPersonal();
+      } else if (lAt > synced || (!hit && Object.keys(meData(who)).length)) {   /* newer here: send it */
+        const at = lAt || Date.now();
+        const body = JSON.stringify({app: 'film-tool-hub', kind: 'research', v: 1, at, data: meData(who)});
+        const meta = {name: 'My research.filmtoolhub.json', mimeType: 'application/json', appProperties: {fth: 'research', at: String(at)}};
+        await uploadFile(hit ? meta : {...meta, parents: [f.root]}, body, hit && hit.id);
+        rsSet(who, (+rsRec(who).at || 0) === lAt ? {at, synced: at} : {synced: at});
+      }
+      rsAt = Date.now();
+    } catch (e) {}
+  })();
+  await rsBusy; rsBusy = null;
+  if (rsAgain) { rsAgain = false; return syncResearch(); }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - rsAt > 60e3) syncResearch(); });
+window.addEventListener('focus', () => { if (Date.now() - rsAt > 60e3) syncResearch(); });
 
 /* ───────── shared projects ─────────
    The owner shares a project's Drive file with the crew (they get edit access to that one file).
@@ -1103,7 +1181,8 @@ async function tick1() {
   if (meta.rev !== p.driveRev || lostNow.length) await syncDown(p, meta, lostNow.length);
   if (p.id !== curId) return;
 
-  const now = Date.now(), patch = {}, isActive = t => openTabs.includes(t) && now - (lastAct[t] || 0) < IDLE_MS;
+  const tabsL = openTabs.filter(t => !isPersonal(t));   /* personal tools are never locked */
+  const now = Date.now(), patch = {}, isActive = t => tabsL.includes(t) && now - (lastAct[t] || 0) < IDLE_MS;
   /* let go of tools I've closed or left untouched (my work is saved first); keep the rest alive */
   const letGo = [...held].filter(t => !isActive(t));
   if (letGo.length && letGo.some(t => dirtyTools(p).has(t))) await saveProject(true);
@@ -1112,8 +1191,8 @@ async function tick1() {
     else if (now - (lockOf(t) || {ts: 0}).ts > BEAT_MS) patch['lk.' + t] = myLock(t);
   }
   /* take the tools I'm using, if nobody else has them */
-  const wanted = new Set([...openTabs.filter(isActive), ...dirtyTools(p)]);
-  for (const t of new Set([...openTabs, ...wanted])) {
+  const wanted = new Set([...tabsL.filter(isActive), ...dirtyTools(p)]);
+  for (const t of new Set([...tabsL, ...wanted])) {
     if (held.has(t)) continue;
     const l = lockOf(t);
     if (mineL(l)) {   /* I asked for it and got it, or it was handed to me */
@@ -1195,7 +1274,7 @@ function renderShare() {
     sb.title = c && c.shared ? 'This project is shared. Click to see or change who it’s shared with' : 'Share this project with your crew';
   }
   if (!bar) return;
-  const show = !!(p && active);
+  const show = !!(p && active && !isPersonal(active));
   document.body.classList.toggle('has-lockbar', show);
   bar.hidden = !show; if (!show) return;
   const t = active, l = lockOf(t), nm = esc(toolName(t));
@@ -1730,19 +1809,38 @@ function fthProjectShim(cfg) {
   var realLS = window.localStorage, W = window, hub = null;
   try { if (W.parent !== W && W.parent.__fthHub) hub = W.parent.__fthHub; } catch (e) {}
   var P = (hub && hub.project) || (function () { try { return realLS.getItem('fth-current-project'); } catch (e) {} })() || 'default';
-  var pre = 'fth:p:' + P + ':';
+  /* a personal tool (cfg.personal) is filed under the person instead ("fth:me:<email>:"): the same in every
+     project, never part of a project file, never locked or shared, and always editable */
+  var PERS = !!cfg.personal;
+  var pre = PERS ? 'fth:me:' + (cfg.who || '') + ':' : 'fth:p:' + P + ':';
   var GLOBAL = /^(filmtoolhub-|fth-current-project$)/;
   var tool = cfg.tool;
   W.__fthProjectId = P;
   var tT;
-  function touched() { clearTimeout(tT); tT = setTimeout(function () { try { if (hub) hub.touched(tool, P); } catch (e) {} }, 250); }
+  function touched() {
+    clearTimeout(tT); tT = setTimeout(function () {
+      if (PERS) {   /* noted here too, so work done in a separate browser tab still reaches Drive */
+        try { var m = JSON.parse(realLS.getItem('filmtoolhub-research') || '{}') || {}, w = cfg.who || ''; m[w] = m[w] || {}; m[w].at = Date.now(); realLS.setItem('filmtoolhub-research', JSON.stringify(m)); } catch (e) {}
+        try { if (hub && hub.personalChanged) hub.personalChanged(tool); } catch (e) {}
+        return;
+      }
+      try { if (hub) hub.touched(tool, P); } catch (e) {}
+    }, 250);
+  }
+  /* a personal tool may save as it opens: only a real change counts (its save time and "seen the welcome page" are ignored), so a fresh
+     copy on a new computer can never replace newer work kept on Drive */
+  function sig(v) { try { var o = JSON.parse(v); if (o && typeof o === 'object' && !Array.isArray(o)) { delete o.t; delete o.v; delete o.seen; return JSON.stringify(o); } } catch (e) {} return v; }
   /* shared projects: only the person holding this tool can change it; everyone else has it view-only */
-  function ro() { try { if (hub && hub.readOnly) return !!hub.readOnly(tool, P); } catch (e) {} return !!cfg.ro; }
-  function dirty(kind, name) { try { if (hub && hub.dirty) hub.dirty(tool, P, kind, name); } catch (e) {} }
+  function ro() { if (PERS) return false; try { if (hub && hub.readOnly) return !!hub.readOnly(tool, P); } catch (e) {} return !!cfg.ro; }
+  function dirty(kind, name) { if (PERS) return; try { if (hub && hub.dirty) hub.dirty(tool, P, kind, name); } catch (e) {} }
   function own() { var out = []; for (var i = 0; i < realLS.length; i++) { var k = realLS.key(i); if (k && k.indexOf(pre) === 0) out.push(k.slice(pre.length)); } return out; }
   var api = {
     getItem: function (k) { k = String(k); return GLOBAL.test(k) ? realLS.getItem(k) : realLS.getItem(pre + k); },
-    setItem: function (k, v) { k = String(k); if (GLOBAL.test(k)) return realLS.setItem(k, v); if (ro()) return; dirty('ls', k); realLS.setItem(pre + k, String(v)); touched(); },
+    setItem: function (k, v) {
+      k = String(k); if (GLOBAL.test(k)) return realLS.setItem(k, v); if (ro()) return; dirty('ls', k);
+      var old = PERS ? realLS.getItem(pre + k) : null; realLS.setItem(pre + k, String(v));
+      if (!PERS || (old !== null && sig(old) !== sig(String(v)))) touched();   /* its first save, as it opens, isn't a change */
+    },
     removeItem: function (k) { k = String(k); if (GLOBAL.test(k)) return realLS.removeItem(k); if (ro()) return; dirty('ls', k); realLS.removeItem(pre + k); touched(); },
     clear: function () { if (ro()) return; own().forEach(function (k) { dirty('ls', k); realLS.removeItem(pre + k); }); touched(); },
     key: function (i) { var o = own(); return i < o.length ? o[i] : null; }
@@ -1818,7 +1916,7 @@ function fthProjectShim(cfg) {
        fthDocs.save({type, filename, blob})   a real file (PDF, CSV, Excel, image…)
        fthDocs.page({type, name})             the page exactly as it would print (for tools that use the print window)
      Both return true when the person chose "Save to Documentation", meaning: skip the download / print window. */
-  if (hub && hub.saveDoc) (function () {
+  if (hub && hub.saveDoc && !PERS) (function () {
     var D, onlyT = 0, busy = false;
     function off() { clearTimeout(onlyT); D.only = false; busy = false; }
     /* any fresh click means the person has moved on: the next export is an ordinary one again */
@@ -1947,7 +2045,7 @@ function fthProjectShim(cfg) {
     };
   })();
   var aT = 0;
-  function act() { var n = Date.now(); if (n - aT < 3000) return; aT = n; try { if (hub && hub.activity) hub.activity(tool, P); } catch (e) {} }
+  function act() { if (PERS) return; var n = Date.now(); if (n - aT < 3000) return; aT = n; try { if (hub && hub.activity) hub.activity(tool, P); } catch (e) {} }
   ['pointerdown', 'keydown', 'wheel'].forEach(function (ev) { W.addEventListener(ev, act, true); });
   ['beforeinput', 'paste', 'cut', 'drop'].forEach(function (ev) { W.addEventListener(ev, function (e) { if (!ro()) return; e.preventDefault(); if (ev !== 'beforeinput') e.stopImmediatePropagation(); }, true); });
   if (cfg.ro && !hub) document.addEventListener('DOMContentLoaded', function () {
@@ -2001,6 +2099,7 @@ html.fth-dark ::-webkit-scrollbar{width:11px;height:11px}html.fth-dark ::-webkit
 `;
 
 const TOOL_THEME = {
+  research:  {kit: true},
   callsheet: {kit: true},
   shotlist:  {kit: true},
   risk:      {kit: true},
@@ -2054,7 +2153,7 @@ function themed(t, ro) {
   const c = catOf(t.category);
   const cat = JSON.stringify({num:c.num, name:c.name, color:c.color}).replace(/</g, '\\u003c');
   const boot = (cfg.kit ? kitHead(t) : '') + '<script data-fth>window.__fthCat=' + cat + ';(' + fthEngine.toString() + ')(' + JSON.stringify(cfg).replace(/</g, '\\u003c') + ');'
-    + '(' + fthProjectShim.toString() + ')(' + JSON.stringify({tool: t.id, ...(ro ? {ro: true} : {}), ...(PEOPLE_FIELDS[t.id] ? {people: PEOPLE_FIELDS[t.id]} : {})}).replace(/</g, '\\u003c') + ');<\/script>';
+    + '(' + fthProjectShim.toString() + ')(' + JSON.stringify(isPersonal(t.id) ? {tool: t.id, personal: true, who: meWho()} : {tool: t.id, ...(ro ? {ro: true} : {}), ...(PEOPLE_FIELDS[t.id] ? {people: PEOPLE_FIELDS[t.id]} : {})}).replace(/</g, '\\u003c') + ');<\/script>';
   /* a tool file carries its own copy of the look for when it's opened on its own; inside the hub that copy is removed */
   let h = t.html.replace(/<!--fth-standalone-->[\s\S]*?<!--\/fth-standalone-->\s*/g, '');
   if (/<head[^>]*>/i.test(h)) h = h.replace(/<head[^>]*>/i, m => m + boot);
@@ -2087,7 +2186,7 @@ function render() {
   const match = t => !q || [t.name, t.desc, (t.tags || []).join(' '), catOf(t.category).name].join(' ').toLowerCase().includes(q);
   const visibleCats = CATS.filter(c => all.some(t => catOf(t.category).id === c.id));
 
-  $('#counter').innerHTML = `<b>${all.length}</b> TOOLS &nbsp;·&nbsp; <b>${visibleCats.length}</b> STAGES<br>WRITE → PLAN → SHOOT`;
+  $('#counter').innerHTML = `<b>${all.filter(t => !isPersonal(t.id)).length}</b> TOOLS &nbsp;·&nbsp; <b>${visibleCats.filter(c => !c.personal).length}</b> STAGES<br>WRITE → PLAN → SHOOT`;
 
   $('#chips').innerHTML = [`<button class="chip" data-f="all" aria-pressed="${filter === 'all'}">All <span class="n">${all.length}</span></button>`]
     .concat(visibleCats.map(c => `<button class="chip" data-f="${c.id}" style="--cat:${c.color}" aria-pressed="${filter === c.id}"><span class="sw"></span>${esc(c.short || c.name)} <span class="n">${all.filter(t => catOf(t.category).id === c.id).length}</span></button>`)).join('');
@@ -2095,16 +2194,19 @@ function render() {
   const n = localCount();
   $('#banner').innerHTML = n ? `<div class="banner">${UI.info}<p><b>${n} change${n > 1 ? 's' : ''}</b> are only in this browser, for trying things out. To publish ${n > 1 ? 'them' : 'it'} for everyone, the tool file${n > 1 ? 's go' : ' goes'} into the tools folder on GitHub.</p></div>` : '';
 
-  let html = '';
+  /* the personal section (My Research) sits above the current project, because it's the same in every project */
+  let html = '', mine = '';
   for (const c of visibleCats) {
     if (filter !== 'all' && filter !== c.id) continue;
     const list = all.filter(t => catOf(t.category).id === c.id && match(t));
     if (!list.length) continue;
-    html += `<section class="section" style="--cat:${c.color}">
+    const sec = `<section class="section" style="--cat:${c.color}">
       <div class="sec-head"><div class="sec-num">${esc(c.num)}</div><h2>${esc(c.name)}</h2><p>${esc(c.blurb)}</p></div>
       <div class="grid">${list.map(card).join('')}</div></section>`;
+    if (c.personal) mine += sec; else html += sec;
   }
-  $('#sections').innerHTML = html || `<div class="empty">No tools match “${esc(qEl.value)}”.</div>`;
+  $('#mySections').innerHTML = mine;
+  $('#sections').innerHTML = html || (mine ? '' : `<div class="empty">No tools match “${esc(qEl.value)}”.</div>`);
 
   const h = hiddenBase();
   const rb = $('#restoreBtn'); rb.hidden = !h.length; rb.textContent = `Restore removed tools (${h.length})`;
@@ -2123,7 +2225,7 @@ function card(t) {
       <h3>${esc(t.name)}</h3>
       <p>${esc(t.desc || '')}</p>
       ${t.note ? `<div class="note">${esc(t.note)}</div>` : ''}
-      <div class="meta"><span class="tags">${esc((t.tags || []).join(' · '))}</span>${cur() && (cur().tools || {})[t.id] ? '<span class="inproj" title="Used in the current project">● In project</span>' : ''}${ver}<span class="go">Open ${UI.arrow}</span></div>
+      <div class="meta"><span class="tags">${esc((t.tags || []).join(' · '))}</span>${isPersonal(t.id) ? '<span class="inproj priv" title="Only you can see this. It’s the same in every project and is never shared with your crew.">Private to you</span>' : cur() && (cur().tools || {})[t.id] ? '<span class="inproj" title="Used in the current project">● In project</span>' : ''}${ver}<span class="go">Open ${UI.arrow}</span></div>
     </a>
     <button class="pinb${isPinned(t.id) ? ' on' : ''}" data-pin="${esc(t.id)}" aria-pressed="${isPinned(t.id)}" aria-label="${isPinned(t.id) ? 'Unpin' : 'Pin'} ${esc(t.name)}" title="${isPinned(t.id) ? 'Pinned to the tab strip. Click to unpin' : 'Pin to the tab strip'}">${UI.pin}</button>
     <button class="more" data-menu="${esc(t.id)}" aria-label="Options for ${esc(t.name)}" aria-haspopup="menu" aria-expanded="false">${UI.dots}</button>
@@ -2163,7 +2265,8 @@ function activate(id) {
   ws.hidden = !active;
   document.body.classList.toggle('tool-open', !!active);
   document.title = active ? `${t.name} · Film Tool Hub` : 'Film Tool Hub';
-  if (convTool != null && active && convTool !== active && convOn()) openConv(active);
+  if (convTool != null && active && isPersonal(active)) closeConv();
+  else if (convTool != null && active && convTool !== active && convOn()) openConv(active);
   else if (convTool != null && !active && convTool !== '*') closeConv();
   renderBar(); renderShare();
   if (active && sharedCur() && !held.has(active)) kickTick();
@@ -2195,7 +2298,7 @@ function renderBar() {
       }).join('')
     : `<span class="tabs-hint">Open and pinned tools appear here</span>`;
   $('#barActions').innerHTML = active ? `
-    ${convOn() ? `<button class="ibtn convbtn${convTool === active ? ' on' : ''}" data-act="conv" aria-pressed="${convTool === active}" title="Conversation: comments about ${esc(toolName(active))} for your crew">${CONVI}<span class="t">Conversation</span>${unreadIn(active).length ? `<b class="badge">${unreadIn(active).length}</b>` : ''}</button>` : ''}
+    ${convOn() && !isPersonal(active) ? `<button class="ibtn convbtn${convTool === active ? ' on' : ''}" data-act="conv" aria-pressed="${convTool === active}" title="Conversation: comments about ${esc(toolName(active))} for your crew">${CONVI}<span class="t">Conversation</span>${unreadIn(active).length ? `<b class="badge">${unreadIn(active).length}</b>` : ''}</button>` : ''}
     <button class="ibtn" data-act="reload" title="Reload this tool">${UI.reload}</button>
     <button class="ibtn" data-act="newtab" title="Open in a new browser tab">${UI.newtab}<span class="t">New tab</span></button>
     <button class="ibtn" data-act="menu" data-menu="${esc(active)}" title="More options">${UI.dots}</button>` : '';
@@ -2298,7 +2401,7 @@ function confirmDlg(title, msg, okLabel, danger, altLabel) {
     dlg.addEventListener('close', () => res(dlg.returnValue === 'ok' ? true : dlg.returnValue === 'alt' ? false : (altLabel ? null : false)), {once:true});
   });
 }
-const catOptions = sel => CATS.map(c => `<option value="${c.id}"${c.id === sel ? ' selected' : ''}>${esc(c.num + ' · ' + c.name)}</option>`).join('');
+const catOptions = sel => CATS.filter(c => !c.personal || c.id === sel).map(c => `<option value="${c.id}"${c.id === sel ? ' selected' : ''}>${esc(c.num + ' · ' + c.name)}</option>`).join('');
 const fileBox = (f, title) => `<div class="filebox">${UI.file}<div><div class="fn">${esc(f.name)}</div><div class="ft">${title ? 'Page title: ' + esc(title) + ' · ' : ''}${(f.size / 1024).toFixed(0)} KB</div></div></div>`;
 
 function editDialog(id) {
@@ -2387,6 +2490,7 @@ function helpDialog() {
       <li><b>Open a tool</b> by clicking its card. It opens here, with a tab in the strip under the top bar. That strip stays on every page, so you can flick between your open tools and they keep their place.</li>
       <li><b>Open in a new browser tab</b> by right-clicking a card and choosing “Open link in new tab”, or with Ctrl/⌘-click.</li>
       <li><b>Pin the tools you use most.</b> Click the pin on a tool’s card or on its tab. Pinned tools stay at the left of the tab strip, even when closed, so you can jump between them in one click. Click the pin again to unpin${driveOn() ? '. When you’re signed in, your pins follow you to any computer' : ''}.</li>
+      <li><b>My Research.</b> The <b>Specialist Research Hub</b> at the top of this page is yours alone. It’s the same whichever project is open, it’s never part of a project, and nobody you share a project with can see it${driveOn() ? '. When you’re signed in, it’s kept in a private file in your own Google Drive, so it follows you to any computer' : ''}. Its own buttons export it as a web page, a progress file, a submission (web page or PDF) or a printable summary.</li>
       <li><b>Task Board.</b> The <b>Task Board</b> button in the top bar opens the project’s tasks from anywhere in the hub. Give tasks to your crew and they appear on each person’s <b>My work</b>.</li>
       <li><b>Light or dark.</b> The sun/moon button in the top bar switches the hub and every tool at once.</li>
       <li><b>Projects.</b> Pick a project in the top bar and every tool files its work under it, so you can move between tools on the same film. Archive projects you’ve finished with.</li>

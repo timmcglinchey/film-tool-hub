@@ -13,6 +13,8 @@ The website for Film Tool Hub: 14 filmmaking tools in one place, with projects a
 | `hub/config.json` | Settings: the Google sign-in key (Client ID) and the email addresses that see the admin controls |
 | `tools/tools.json` | The list of tools: name, category, description and order |
 | `tools/<name>.html` | One file per tool |
+| `tools/research.html` | My Research: the Specialist Research Hub, private to each person (see below) |
+| `scripts/import_research_hub.py` | Brings a new version of the Specialist Research Hub file into the hub |
 | `tests/sharing/` | Automatic tests for shared projects (run with `node tests/sharing/run.js`) |
 
 ## Common jobs
@@ -22,6 +24,8 @@ The website for Film Tool Hub: 14 filmmaking tools in one place, with projects a
 **Add a tool.** Upload its file into `tools/`, then add an entry for it in `tools/tools.json` (copy an existing entry and change the details). A new tool should use the shared look in `hub/kit.css`.
 
 **Work on a tool in a separate chat.** Download its file from `tools/` and attach it together with `docs/tool-guide.md`, which explains the rules that keep it working in the hub. Each tool file also opens on its own in a browser.
+
+**Update the Specialist Research Hub.** Run `python3 scripts/import_research_hub.py "<new file>.html"`. It writes `tools/research.html` with the hub's look and saving; the content stays exactly as written.
 
 **Change a tool's name, description or category.** Edit its entry in `tools/tools.json`.
 
