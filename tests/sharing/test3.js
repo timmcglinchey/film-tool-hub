@@ -7,7 +7,7 @@ const fs = require('fs');
   const browser = await chromium.launch();
   const A = await person(browser, base, 'alice@example.com', 'Alice Adams'), B = await person(browser, base, 'bob@example.com', 'Bob Brown');
   global.__U = [A, B];
-  const ids = JSON.parse(fs.readFileSync(require('path').resolve(__dirname, '..', '..', 'tools', 'tools.json'))).tools.map(t => t.id);
+  const ids = JSON.parse(fs.readFileSync(require('path').resolve(__dirname, '..', '..', 'tools', 'tools.json'))).tools.filter(t => !t.personal).map(t => t.id);   /* personal tools (My Research) are never shared: see test8 */
   await A.page.goto(base); await H.signIn(A);
   // baseline: every tool in an ordinary project
   const errs = {};

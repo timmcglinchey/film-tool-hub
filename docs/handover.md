@@ -52,6 +52,12 @@ Tim McGlinchey is a film lecturer at Belfast Met. He isn't technical, so:
   - **Unsaved changes in a tool someone else now holds** are never pushed: they're backed up locally and replaced by the shared version (`strand`).
   - **Tests:** `node tests/sharing/run.js` runs two pretend people against a pretend Google Drive (needs Playwright). Real Google sign-in can't be tested off the live site, so check with two real accounts after any change here.
 - **Layout** (changed 14 November 2026): two rows. The top bar (`#bar`) has the logo, project picker, **Task Board**, Documentation, My work, Save, Share, Google account and theme. Under it, the tab strip (`#tabbar`, height `--tabbar`) holds pinned then open tools as compact tabs, with the open tool's Conversation / Reload / New tab / ⋯ buttons at its right end. It shows on every page; anything placed under the bars uses `--top` (bar + strip) as its offset.
+- **My Research** (added 15 November 2026): the Specialist Research Hub (`tools/research.html`, made from Tim's own file with `scripts/import_research_hub.py`) is a *personal* tool (`"personal": true` in tools.json, on the tool and on its `research` category, which is numbered 00). It shows in its own section above the current project on the home page and opens as a normal tab, but:
+  - its storage is filed under the person, not the project (`fth:me:<email>:`, signed out `fth:me::`; the shim's `cfg.personal`), so it's the same in every project and never goes into a project file;
+  - it's never locked, never view-only, has no Conversation button and no lock bar, and it never files anything in Documentation;
+  - when signed in it's kept in a private Drive file, `My research.filmtoolhub.json` (`appProperties fth=research, at=<time>`), in the person's Film Tool Hub folder, never shared. hub.js "My research" syncs it: newest wins, using `filmtoolhub-research` ({email: {at, synced}}) to know what changed here. Opening the tool doesn't count as a change (its first save and its `t`/`v`/`seen` fields are ignored), so a fresh computer can't overwrite newer work on Drive;
+  - signing in adopts research done while signed out (if the account has none here); signing out and removing work from the computer removes it too. `tests/sharing/test8.js` covers all of this.
+  - Its exports (whole hub as HTML, progress JSON, submission as HTML or PDF, printable summary) are its own; inside the hub they come out as clean standalone files.
 - **Task Board** (changed 14 November 2026): no longer a card in the tools grid or a tab. The **Task Board** button (`#tasksBtn`, `TASKS` in hub.js) opens it like a page; underneath it is still the `tasks` tool in a frame, so storage, locking and Conversations work as for any tool. Leaving it closes its frame, which saves and frees it in a shared project. Tasks are still kept per project.
 - **Pinned tools** (added 13 November 2026; in `hub/hub.js`, the "pinned tools" section). A pin keeps a tool's tab at the left of the tab strip even when the tool isn't open. Pins belong to the person, not the project.
   - In the browser they're kept in `localStorage` under `filmtoolhub-pins`, one list per signed-in email (and one for "not signed in").
@@ -82,6 +88,7 @@ Tim McGlinchey is a film lecturer at Belfast Met. He isn't technical, so:
    - no Google font links of its own;
    - saving through `fthStore`/`fthAutosave` or `localStorage`.
 3. Add the tool to `tools/tools.json` and to the per-tool settings table and icon set in `hub/hub.js`.
+   (The Specialist Research Hub is the exception: run `scripts/import_research_hub.py` on Tim's file instead. It keeps its own look and header, restyled.)
 4. Run `scripts/refresh_standalone.py`.
 5. Test it inside the hub, in light and dark, and check that switching projects keeps each project's work separate.
 6. Commit and push to `main`. The site updates about a minute later.

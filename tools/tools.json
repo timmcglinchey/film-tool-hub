@@ -1,6 +1,15 @@
 {
   "categories": [
     {
+      "id": "research",
+      "num": "00",
+      "short": "Research",
+      "name": "My Research",
+      "color": "#5fb4f0",
+      "blurb": "Private to you: the same in every project, and never shared with your crew.",
+      "personal": true
+    },
+    {
       "id": "pipelines",
       "num": "01",
       "short": "Pipelines",
@@ -50,6 +59,25 @@
     }
   ],
   "tools": [
+    {
+      "id": "research",
+      "name": "Specialist Research Hub",
+      "desc": "Find what you already know about your specialist role, where the gaps are, and how to close them: rate yourself concept by concept, then keep notes, references and evidence.",
+      "category": "research",
+      "tags": [
+        "Every role",
+        "Self-assessment"
+      ],
+      "icon": "research",
+      "fileName": "Specialist Research Hub.html",
+      "origTitle": "Specialist Research Hub",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611151200,
+      "file": "tools/research.html",
+      "personal": true
+    },
     {
       "id": "preprod",
       "name": "Pre-Production Pipeline",
