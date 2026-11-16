@@ -22,11 +22,14 @@ const { assert, until, H } = require('./lib');
   };
   const noteOf = s => Object.values(s.n || {})[0] || '';
 
-  step('Signed in, Alice opens My Research from the top of the home page; opening it changes nothing');
+  step('Signed in, Alice opens My Research from its button beside My work; opening it changes nothing');
   await A1.page.goto(base); await H.signIn(A1);
-  assert.equal(await A1.page.$eval('#mySections .section h2', e => e.textContent), 'My Research');
-  assert(await A1.page.$eval('#mySections', (m, ps) => !!(m.compareDocumentPosition(ps) & Node.DOCUMENT_POSITION_FOLLOWING), await A1.page.$('#projStrip')), 'above the current project');
-  await H.open(A1, 'research');
+  assert.equal(await A1.page.$$eval('.cardw[data-id=research]', l => l.length), 0, 'not a card on the home page');
+  assert.equal(await A1.page.$eval('#meBtn', (m, r) => m.nextElementSibling === r, await A1.page.$('#researchBtn')), true, 'beside My work');
+  await A1.page.click('#researchBtn'); await until(async () => !!(await H.frame(A1, 'research')), 'research opens');
+  assert.equal(await A1.page.evaluate(() => location.hash), '#/tool/research');
+  assert.equal(await A1.page.$eval('#researchBtn', b => b.getAttribute('aria-pressed')), 'true');
+  assert.equal(await A1.page.$$eval('#tabs [data-tab=research]', l => l.length), 0, 'a page, not a tab');
   await new Promise(r => setTimeout(r, 5000));
   assert.equal(rfile(), undefined, 'just opening it sends nothing to Drive');
 
