@@ -242,6 +242,7 @@ table.grid{border-collapse:separate;border-spacing:0;width:max-content;min-width
 .brkin input[data-k=duration]{width:72px}
 .imgcell{position:relative;padding:3px}
 .imgcell img{display:block;max-width:100%;max-height:70px;border-radius:4px;cursor:zoom-in}
+.imgcell .giftag{position:absolute;left:6px;bottom:6px;background:rgba(0,0,0,.6);color:#fff;font-size:9px;font-weight:700;letter-spacing:.05em;padding:1px 4px;border-radius:3px;pointer-events:none}
 .imgcell button{position:absolute;top:5px;right:5px;border:none;border-radius:50%;width:20px;height:20px;background:rgba(0,0,0,.6);color:#fff;cursor:pointer;line-height:1;padding:0}
 .imgadd{border:1px dashed var(--line2);background:transparent;border-radius:5px;padding:6px 8px;margin:2px;cursor:pointer;color:var(--muted);font-size:12px;width:calc(100% - 4px)}
 .addbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
@@ -457,7 +458,7 @@ dialog.dlg::backdrop{background:rgba(5,6,8,.6);backdrop-filter:blur(3px)}
       <label class="field"><span>Text size</span><select data-s="density"><option value="compact">Standard</option><option value="comfortable">Larger</option></select></label>
       <label class="field"><span>Days to include</span><select data-s="printDays"><option value="current">Current day only</option><option value="all">All days</option></select></label>
       <label class="check"><input type="checkbox" data-s="printCut"> Include cut shots</label>
-      <label class="check"><input type="checkbox" data-s="printImages"> Include reference images</label>
+      <label class="check"><input type="checkbox" data-s="printImages"> Include reference images <span class="muted">(GIFs print as their first frame)</span></label>
       <label class="check"><input type="checkbox" data-s="printWarnings"> Include scheduling warnings</label>
       <label class="check"><input type="checkbox" data-s="exportExample"> Include the example day in exports and saved files</label>
       <button class="fth-btn" id="restoreEx" type="button">Restore example day</button>
@@ -474,7 +475,7 @@ dialog.dlg::backdrop{background:rgba(5,6,8,.6);backdrop-filter:blur(3px)}
 
 <input type="file" id="fileImport" accept=".csv,.tsv,.xlsx,.xls" hidden>
 <input type="file" id="fileOpen" accept=".json,.shotlist" hidden>
-<input type="file" id="fileImg" accept="image/*" hidden>
+<input type="file" id="fileImg" accept="image/*,.gif" hidden>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -616,6 +617,19 @@ function save(){
   catch(e){$('#saveState').innerHTML='<b style="color:var(--bad)">Browser storage is full (reference images take space). Use “Save file” to keep your work.</b>';}
  },300);
 }
+/* animated GIFs (e.g. ShotDeck downloads) are too big for browser storage, so the GIF itself lives in
+   IndexedDB under r.gif; r.image keeps a small still of its first frame for print, PDF and as a fallback */
+const MEDIA_DB='fth-shotlist-media',media=new Map(),GIF_MAX=20*1024*1024;
+function mediaDB(){return new Promise((res,rej)=>{const q=indexedDB.open(MEDIA_DB,1);q.onupgradeneeded=()=>q.result.createObjectStore('gifs');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
+async function mediaDo(mode,fn){const db=await mediaDB();return new Promise((res,rej)=>{const t=db.transaction('gifs',mode),s=t.objectStore('gifs'),out=fn(s);t.oncomplete=()=>{db.close();res(out&&out.result)};t.onerror=t.onabort=()=>{db.close();rej(t.error)}})}
+const mediaPut=(id,url)=>{media.set(id,url);return mediaDo('readwrite',s=>s.put(url,id))};
+const gifIds=()=>new Set(state.days.flatMap(d=>d.rows.map(r=>r.gif).filter(Boolean)));
+async function mediaLoad(){
+ try{const keys=await mediaDo('readonly',s=>s.getAllKeys()),vals=await mediaDo('readonly',s=>s.getAll());keys.forEach((k,i)=>media.set(k,vals[i]));
+  const used=gifIds(),gone=keys.filter(k=>!used.has(k));if(gone.length)await mediaDo('readwrite',s=>gone.forEach(k=>{s.delete(k);media.delete(k)}));}
+ catch(e){}
+}
+const imgSrc=r=>(r.gif&&media.get(r.gif))||r.image;
 function toast(msg,ms=3200){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms)}
 
 const day=()=>state.days.find(d=>d.id===state.activeDay)||state.days[0];
@@ -701,7 +715,7 @@ function cellHTML(c,r){
   case 'number':return `<input type="number" min="0" step="${c.key==='shoot'?5:1}" data-k="${c.key}" value="${esc(v)}" aria-label="${esc(c.label)}">`;
   case 'long':return `<textarea rows="1" data-k="${c.key}" aria-label="${esc(c.label)}">${esc(v)}</textarea>`;
   case 'select':return selectHTML(c,v);
-  case 'image':return r.image?`<div class="imgcell"><img src="${r.image}" alt="Reference" data-a="imgview"><button data-a="imgdel" title="Remove image">×</button></div>`:`<button class="imgadd" data-a="imgadd">＋ Image</button>`;
+  case 'image':return r.image?`<div class="imgcell"><img src="${imgSrc(r)}" alt="Reference" data-a="imgview">${r.gif&&media.has(r.gif)?'<span class="giftag">GIF</span>':''}<button data-a="imgdel" title="Remove image">×</button></div>`:`<button class="imgadd" data-a="imgadd">＋ Image</button>`;
   default:return `<input data-k="${c.key}" value="${esc(v)}" aria-label="${esc(c.label)}">`;
  }
 }
@@ -834,8 +848,8 @@ tbody.addEventListener('click',e=>{
   case 'dup':{const c=clone(r);c.id=uid();c.status='To do';d.rows.splice(i+1,0,c);break}
   case 'menu':openInsMenu(b,r.id);return;
   case 'imgadd':imgTarget=r;$('#fileImg').value='';$('#fileImg').click();return;
-  case 'imgdel':delete r.image;break;
-  case 'imgview':$('#imgDlg img').src=r.image;$('#imgDlg').showModal();return;
+  case 'imgdel':delete r.image;delete r.gif;break;
+  case 'imgview':$('#imgDlg img').src=imgSrc(r);$('#imgDlg').showModal();return;
  }
  renderTable();save();
 });
@@ -843,7 +857,12 @@ function focusRow(id){const tr=tbody.querySelector(`tr[data-id="${id}"]`);if(!tr
 $('#fileImg').addEventListener('change',async e=>{
  const f=e.target.files[0];if(!f||!imgTarget)return;
  const url=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(f)});
- const img=new Image();img.onload=()=>{const s=Math.min(1,640/Math.max(img.width,img.height));const cv=document.createElement('canvas');cv.width=Math.round(img.width*s);cv.height=Math.round(img.height*s);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);imgTarget.image=cv.toDataURL('image/jpeg',.8);imgTarget=null;renderTable();save()};img.src=url;
+ const isGif=f.type==='image/gif'||/\.gif$/i.test(f.name||'');
+ if(isGif&&f.size>GIF_MAX){toast(`That GIF is ${Math.round(f.size/1048576)} MB, over the 20 MB limit. Only its first frame was added.`,6000)}
+ const r=imgTarget;imgTarget=null;
+ const img=new Image();img.onerror=()=>toast('Couldn’t read that image.');img.onload=async()=>{const s=Math.min(1,640/Math.max(img.width,img.height));const cv=document.createElement('canvas');cv.width=Math.round(img.width*s);cv.height=Math.round(img.height*s);const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(img,0,0,cv.width,cv.height);r.image=cv.toDataURL('image/jpeg',.8);delete r.gif;
+  if(isGif&&f.size<=GIF_MAX){const id='g'+uid();try{await mediaPut(id,url);r.gif=id}catch(e){media.delete(id);toast('Couldn’t keep the GIF moving (browser storage is full), so its first frame was added.',6000)}}
+  renderTable();save()};img.src=url;
 });
 /* paste an image into a focused row */
 document.addEventListener('paste',e=>{
@@ -1037,9 +1056,9 @@ const fileBase=()=>(state.project.title||'Shot list').replace(/[\\/:*?"<>|]+/g,'
 const fthDoc = (type, filename, blob, group) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob, group}));
 const fthPage = (type, name, group) => !!(window.fthDocs && window.fthDocs.page({type, name, group}));
 function download(content,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-$('#btnSave').onclick=()=>{const days=expDays();if(!days.length){toast('No shoot days to save');return}const out={...state,days,activeDay:days.some(d=>d.id===state.activeDay)?state.activeDay:days[0].id};download(JSON.stringify(out,(k,v)=>k==='_sunNote'?undefined:v,1),`${fileBase()}.shotlist.json`,'application/json');toast('Saved. Open it later with “Open”.')};
+$('#btnSave').onclick=()=>{const days=expDays();if(!days.length){toast('No shoot days to save');return}const out={...state,days,activeDay:days.some(d=>d.id===state.activeDay)?state.activeDay:days[0].id},gifs={};days.forEach(d=>d.rows.forEach(r=>{if(r.gif&&media.has(r.gif))gifs[r.gif]=media.get(r.gif)}));if(Object.keys(gifs).length)out.gifs=gifs;download(JSON.stringify(out,(k,v)=>k==='_sunNote'?undefined:v,1),`${fileBase()}.shotlist.json`,'application/json');toast('Saved. Open it later with “Open”.')};
 $('#btnOpen').onclick=()=>{$('#fileOpen').value='';$('#fileOpen').click()};
-$('#fileOpen').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const s=JSON.parse(await f.text());if(!s.days)throw 0;const ex=state.days.filter(d=>d.example);state=migrate(s);if(!state.days.some(d=>d.example))state.days.push(...ex);state.days.forEach(updateSun);renderAll();save();toast(`Opened ${f.name}`)}catch(err){toast('That file isn’t a shot list saved from this tool. For spreadsheets, use Import.')}});
+$('#fileOpen').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const s=JSON.parse(await f.text());if(!s.days)throw 0;const gifs=s.gifs||{};delete s.gifs;for(const [id,u] of Object.entries(gifs))if(typeof u==='string'&&u.startsWith('data:image/gif'))await mediaPut(id,u).catch(()=>media.delete(id));const ex=state.days.filter(d=>d.example);state=migrate(s);if(!state.days.some(d=>d.example))state.days.push(...ex);state.days.forEach(updateSun);renderAll();save();toast(`Opened ${f.name}`)}catch(err){toast('That file isn’t a shot list saved from this tool. For spreadsheets, use Import.')}});
 const csvEsc=v=>{v=String(v??'');return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
 $('#btnCSV').onclick=()=>{
  if(!exampleOK())return;
@@ -1094,6 +1113,7 @@ $('#fileImport').addEventListener('change',async e=>{
 
 renderAll();
 if(!localStorage.getItem(STORE))save();
+mediaLoad().then(()=>{if(media.size)renderTable()});
 })();
 </script>
 </body>

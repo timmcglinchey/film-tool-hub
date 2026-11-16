@@ -36,6 +36,7 @@ Tim McGlinchey is a film lecturer at Belfast Met. He isn't technical, so:
   - Casting Tracker reads Script Breakdown's IndexedDB (`script-breakdown`, key `last`) and Script Development's data.
   - Location Recce reads the Production Schedule Builder (`fth-schedule-v1`) and writes to the Call Sheet Builder (`fth-callsheet-v1`).
   - If a tool's saved data changes shape, check these links still work.
+- **Shot List reference GIFs** (added 16 November 2026): an animated GIF (e.g. a ShotDeck download, up to 20 MB) is kept in the tool's own IndexedDB `fth-shotlist-media` under `r.gif`, because localStorage is too small. `r.image` still holds a small JPEG of the first frame, used for the PDF and as a fallback. "Save file" puts the GIFs in the file as `gifs`; GIFs no row uses are cleared when the tool opens.
 - **How shared projects work** (all in `hub/hub.js`, the "shared projects" section). There is no server; everything goes through the project's one Drive file.
   - **Share:** the owner adds crew as editors of the file (Drive permissions) and marks it `shared: '1'` in the file's `appProperties`. Crew open `#/join/<fileId>`; because the site only has the `drive.file` permission, they must choose the file once in Google Picker before the site can read it. After that it shows up in the normal Drive sync as a file they don't own (`p.sharedBy`).
   - **Tracking changes:** the storage shim tells the hub exactly which localStorage key or IndexedDB database each tool wrote (`__fthHub.dirty`), kept in `p.dirty`.
