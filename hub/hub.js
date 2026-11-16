@@ -2181,7 +2181,7 @@ let filter = 'all';
 const qEl = $('#q');
 
 function render() {
-  const all = tools().filter(t => t.id !== TASKS);
+  const all = tools().filter(t => !isPage(t.id) && !isPersonal(t.id));
   const q = qEl.value.trim().toLowerCase();
   const match = t => !q || [t.name, t.desc, (t.tags || []).join(' '), catOf(t.category).name].join(' ').toLowerCase().includes(q);
   const visibleCats = CATS.filter(c => all.some(t => catOf(t.category).id === c.id));
@@ -2194,8 +2194,7 @@ function render() {
   const n = localCount();
   $('#banner').innerHTML = n ? `<div class="banner">${UI.info}<p><b>${n} change${n > 1 ? 's' : ''}</b> are only in this browser, for trying things out. To publish ${n > 1 ? 'them' : 'it'} for everyone, the tool file${n > 1 ? 's go' : ' goes'} into the tools folder on GitHub.</p></div>` : '';
 
-  /* the personal section (My Research) sits above the current project, because it's the same in every project */
-  let html = '', mine = '';
+  let html = '';
   for (const c of visibleCats) {
     if (filter !== 'all' && filter !== c.id) continue;
     const list = all.filter(t => catOf(t.category).id === c.id && match(t));
@@ -2203,10 +2202,9 @@ function render() {
     const sec = `<section class="section" style="--cat:${c.color}">
       <div class="sec-head"><div class="sec-num">${esc(c.num)}</div><h2>${esc(c.name)}</h2><p>${esc(c.blurb)}</p></div>
       <div class="grid">${list.map(card).join('')}</div></section>`;
-    if (c.personal) mine += sec; else html += sec;
+    html += sec;
   }
-  $('#mySections').innerHTML = mine;
-  $('#sections').innerHTML = html || (mine ? '' : `<div class="empty">No tools match “${esc(qEl.value)}”.</div>`);
+  $('#sections').innerHTML = html || `<div class="empty">No tools match “${esc(qEl.value)}”.</div>`;
 
   const h = hiddenBase();
   const rb = $('#restoreBtn'); rb.hidden = !h.length; rb.textContent = `Restore removed tools (${h.length})`;
@@ -2270,13 +2268,24 @@ function activate(id) {
   else if (convTool != null && !active && convTool !== '*') closeConv();
   renderBar(); renderShare();
   if (active && sharedCur() && !held.has(active)) kickTick();
-  /* the Task Board is a page, not a tab: leaving it closes it (saving my work and freeing it for the crew) */
+  /* the Task Board is a page, not a tab: leaving it closes it (saving my work and freeing it for the crew).
+     My Research stays loaded in the background, so it keeps its place; it's never locked, so that frees nothing. */
   if (prev === TASKS && active !== TASKS) closeTab(TASKS);
 }
 
 /* The Task Board is hub-wide: a button in the top bar, not one of the tools. Its frame works like any
    other tool's, but it never gets a tab in the strip. */
 const TASKS = 'tasks';
+/* My Research is a page of its own too, opened from its button beside My work. It's personal: the same in
+   every project and never shared (see "My research" above). */
+const RESEARCH = 'research';
+const isPage = id => id === TASKS || id === RESEARCH;
+function renderResearchBtn() {
+  const b = $('#researchBtn'); if (!b) return;
+  const on = active === RESEARCH;
+  b.hidden = !byId(RESEARCH);
+  b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+}
 function renderTasksBtn() {
   const b = $('#tasksBtn'); if (!b) return;
   const on = active === TASKS, due = tasksDue(cur()), badge = b.querySelector('.badge');
@@ -2286,8 +2295,8 @@ function renderTasksBtn() {
   b.title = 'Task Board: everything that needs doing on this project' + (due ? ` (${due} of your tasks ${due === 1 ? 'is' : 'are'} due)` : '');
 }
 function renderBar() {
-  const pinned = pins().filter(id => id !== TASKS);
-  const tabs = [...pinned, ...openTabs.filter(id => !pinned.includes(id) && id !== TASKS)].map(id => byId(id)).filter(Boolean);
+  const pinned = pins().filter(id => !isPage(id));
+  const tabs = [...pinned, ...openTabs.filter(id => !pinned.includes(id) && !isPage(id))].map(id => byId(id)).filter(Boolean);
   const X = UI.close.replace('stroke-width="1.6"', 'stroke-width="2.2"');
   $('#tabs').innerHTML = tabs.length
     ? tabs.map(t => {
@@ -2303,7 +2312,7 @@ function renderBar() {
     <button class="ibtn" data-act="newtab" title="Open in a new browser tab">${UI.newtab}<span class="t">New tab</span></button>
     <button class="ibtn" data-act="menu" data-menu="${esc(active)}" title="More options">${UI.dots}</button>` : '';
   const at = $('#tabs .tab.active'); if (at) at.scrollIntoView({block:'nearest', inline:'nearest'});
-  renderMeBtn(); renderTasksBtn();
+  renderMeBtn(); renderTasksBtn(); renderResearchBtn();
 }
 
 const go = id => { location.hash = id ? '#/tool/' + encodeURIComponent(id) : '#/'; };
@@ -2321,7 +2330,8 @@ function closeTab(id) {
   openTabs.splice(i, 1);
   const f = frames.get(id); if (f) { f.remove(); frames.delete(id); }
   if (active === id) {
-    const next = openTabs[i] || openTabs[i - 1];
+    /* the next tab along, or the one before; never a page (Task Board, My Research), which has no tab */
+    const next = isPage(id) ? null : openTabs.slice(i).find(t => !isPage(t)) || openTabs.slice(0, i).reverse().find(t => !isPage(t));
     history.replaceState(null, '', next ? '#/tool/' + encodeURIComponent(next) : '#/');
     activate(next || null);
   } else renderBar();
@@ -2347,7 +2357,7 @@ function openMenu(btn, id) {
     <div class="hint">${esc(t.name)}</div>
     ${active === id ? '' : `<button data-m="open">${UI.open}Open here</button>`}
     <button data-m="newtab">${UI.newtab}Open in new tab</button>
-    ${id === TASKS ? '' : `<button data-m="pin">${UI.pin}${isPinned(id) ? 'Unpin from the tab strip' : 'Pin to the tab strip'}</button>`}
+    ${isPage(id) ? '' : `<button data-m="pin">${UI.pin}${isPinned(id) ? 'Unpin from the tab strip' : 'Pin to the tab strip'}</button>`}
     <hr>
     <button data-m="update">${UI.upload}Upload new version…</button>
     <button data-m="edit">${UI.edit}Edit name, description &amp; stage</button>
@@ -2490,7 +2500,7 @@ function helpDialog() {
       <li><b>Open a tool</b> by clicking its card. It opens here, with a tab in the strip under the top bar. That strip stays on every page, so you can flick between your open tools and they keep their place.</li>
       <li><b>Open in a new browser tab</b> by right-clicking a card and choosing “Open link in new tab”, or with Ctrl/⌘-click.</li>
       <li><b>Pin the tools you use most.</b> Click the pin on a tool’s card or on its tab. Pinned tools stay at the left of the tab strip, even when closed, so you can jump between them in one click. Click the pin again to unpin${driveOn() ? '. When you’re signed in, your pins follow you to any computer' : ''}.</li>
-      <li><b>My Research.</b> The <b>Specialist Research Hub</b> at the top of this page is yours alone. It’s the same whichever project is open, it’s never part of a project, and nobody you share a project with can see it${driveOn() ? '. When you’re signed in, it’s kept in a private file in your own Google Drive, so it follows you to any computer' : ''}. Its own buttons export it as a web page, a progress file, a submission (web page or PDF) or a printable summary.</li>
+      <li><b>My Research.</b> The <b>My Research</b> button in the top bar opens the <b>Specialist Research Hub</b>, which is yours alone. It’s the same whichever project is open, it’s never part of a project, and nobody you share a project with can see it${driveOn() ? '. When you’re signed in, it’s kept in a private file in your own Google Drive, so it follows you to any computer' : ''}. Its own buttons export it as a web page, a progress file, a submission (web page or PDF) or a printable summary.</li>
       <li><b>Task Board.</b> The <b>Task Board</b> button in the top bar opens the project’s tasks from anywhere in the hub. Give tasks to your crew and they appear on each person’s <b>My work</b>.</li>
       <li><b>Light or dark.</b> The sun/moon button in the top bar switches the hub and every tool at once.</li>
       <li><b>Projects.</b> Pick a project in the top bar and every tool files its work under it, so you can move between tools on the same film. Archive projects you’ve finished with.</li>
@@ -3121,6 +3131,7 @@ $('#homeBtn').onclick = () => go(null);
 $('#docsBtn').onclick = () => { location.hash = location.hash.startsWith('#/docs') ? '#/' : '#/docs'; };
 $('#meBtn').onclick = () => { location.hash = location.hash === '#/me' ? '#/' : '#/me'; };
 $('#tasksBtn').onclick = () => go(active === TASKS ? null : TASKS);
+$('#researchBtn').onclick = () => go(active === RESEARCH ? null : RESEARCH);
 $('#mePage').addEventListener('click', e => { const b = e.target.closest('[data-mc]'); if (!b) return; const t = b.dataset.mc; if (t === '*') openConv('*'); else if (byId(t)) { go(t); setTimeout(() => openConv(t), 0); } });
 $('#convPanel').addEventListener('click', async e => {
   const b = e.target.closest('[data-cv], [data-cvto]'); if (!b) return;
