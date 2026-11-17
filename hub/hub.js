@@ -113,9 +113,16 @@ const store = (() => {
 })();
 
 /* ───────── data model ───────── */
+/* Categories are the homepage's stages, in order: Develop, Prep, Shoot, Post, then Learn (not a stage, so it has
+   no number). A stage can be split into "groups" (Prep's Breakdown, People and places…); a tool names its group
+   with "group", and "lead": true makes it the stage's wide "start here" card (the pipeline guides). */
 const CATS = manifest.categories.slice();
-if (!CATS.some(c => c.id === 'other')) CATS.push({id:'other', num:String(CATS.filter(c => !c.personal).length + 1).padStart(2, '0'), name:'Other tools', blurb:'Tools added to the hub that sit outside the main stages.', color:'#b9bec7'});
+if (!CATS.some(c => c.id === 'other')) {
+  const at = CATS.findIndex(c => c.learn);
+  CATS.splice(at < 0 ? CATS.length : at, 0, {id:'other', num:String(CATS.filter(c => !c.personal && c.num).length + 1).padStart(2, '0'), name:'Other tools', blurb:'Tools added to the hub that sit outside the main stages.', color:'#b9bec7'});
+}
 const catOf = id => CATS.find(c => c.id === id) || CATS.find(c => c.id === 'other');
+const catLabel = c => c.num ? c.num + ' · ' + c.name : c.name;
 
 /* a tool's "rev" in tools.json is when its file last changed: date and time as YYYYMMDDHHMM
    (e.g. 202611091430), a date as YYYYMMDD, or a timestamp. A newer published file replaces any older
@@ -151,7 +158,7 @@ function tools() {
     const t = {...b, local:false, htmlLocal:false};
     if (o) {
       if (o.html && o.htmlAt > b.rev) Object.assign(t, {html:o.html, updated:o.htmlAt, fileName:o.fileName || t.fileName, note:o.note || '', ver:o.ver, local:true, htmlLocal:true});
-      if (o.meta && o.metaAt > b.rev) { Object.assign(t, o.meta); t.local = true; }
+      if (o.meta && o.metaAt > b.rev) { Object.assign(t, o.meta); t.local = true; if (!CATS.some(c => c.id === t.category)) t.category = b.category; }
     }
     out.push(t);
   }
@@ -1727,7 +1734,7 @@ function fthEngine(CSS) {
   function fillCat() {
     var c = window.__fthCat; if (!c) return;
     var els = document.querySelectorAll('[data-fth-cat]');
-    for (var i = 0; i < els.length; i++) els[i].textContent = c.num + ' · ' + c.name;
+    for (var i = 0; i < els.length; i++) els[i].textContent = c.num ? c.num + ' · ' + c.name : c.name;
   }
   document.addEventListener('DOMContentLoaded', fillCat);
   var BASE = 'html.fth-invert{filter:invert(.9) hue-rotate(180deg)}html.fth-invert :is(img,video,canvas,picture,iframe){filter:invert(1) hue-rotate(180deg)}';
@@ -2176,33 +2183,36 @@ function syncThemeBtn() {
   $('#themeBtn').title = `Theme: ${m}. Click to switch to ${m === 'light' ? 'dark' : 'light'} (applies to every tool)`;
 }
 
-/* ───────── home rendering ───────── */
-let filter = 'all';
+/* ───────── home rendering ─────────
+   The current project sits at the top (renderStrip). Below it, one section per stage in production order.
+   A stage's lead tool (its pipeline guide) comes first as a wide card, then its tools, under group
+   headings where the stage has groups. Search filters every section at once. */
 const qEl = $('#q');
 
 function render() {
   const all = tools().filter(t => !isPage(t.id) && !isPersonal(t.id));
   const q = qEl.value.trim().toLowerCase();
-  const match = t => !q || [t.name, t.desc, (t.tags || []).join(' '), catOf(t.category).name].join(' ').toLowerCase().includes(q);
-  const visibleCats = CATS.filter(c => all.some(t => catOf(t.category).id === c.id));
-
-  $('#counter').innerHTML = `<b>${all.filter(t => !isPersonal(t.id)).length}</b> TOOLS &nbsp;·&nbsp; <b>${visibleCats.filter(c => !c.personal).length}</b> STAGES<br>WRITE → PLAN → SHOOT`;
-
-  $('#chips').innerHTML = [`<button class="chip" data-f="all" aria-pressed="${filter === 'all'}">All <span class="n">${all.length}</span></button>`]
-    .concat(visibleCats.map(c => `<button class="chip" data-f="${c.id}" style="--cat:${c.color}" aria-pressed="${filter === c.id}"><span class="sw"></span>${esc(c.short || c.name)} <span class="n">${all.filter(t => catOf(t.category).id === c.id).length}</span></button>`)).join('');
+  const match = t => !q || [t.name, t.desc, (t.tags || []).join(' '), catOf(t.category).name, groupOf(t) ? groupOf(t).name : ''].join(' ').toLowerCase().includes(q);
 
   const n = localCount();
   $('#banner').innerHTML = n ? `<div class="banner">${UI.info}<p><b>${n} change${n > 1 ? 's' : ''}</b> are only in this browser, for trying things out. To publish ${n > 1 ? 'them' : 'it'} for everyone, the tool file${n > 1 ? 's go' : ' goes'} into the tools folder on GitHub.</p></div>` : '';
 
   let html = '';
-  for (const c of visibleCats) {
-    if (filter !== 'all' && filter !== c.id) continue;
+  for (const c of CATS) {
     const list = all.filter(t => catOf(t.category).id === c.id && match(t));
     if (!list.length) continue;
-    const sec = `<section class="section" style="--cat:${c.color}">
-      <div class="sec-head"><div class="sec-num">${esc(c.num)}</div><h2>${esc(c.name)}</h2><p>${esc(c.blurb)}</p></div>
-      <div class="grid">${list.map(card).join('')}</div></section>`;
-    html += sec;
+    const leads = list.filter(t => t.lead), rest = list.filter(t => !t.lead);
+    let body = leads.map(leadCard).join('');
+    const groups = c.groups || [];
+    const ungrouped = rest.filter(t => !groups.some(g => g.id === t.group));
+    if (ungrouped.length) body += `<div class="grid">${ungrouped.map(card).join('')}</div>`;
+    for (const g of groups) {
+      const gl = rest.filter(t => t.group === g.id);
+      if (gl.length) body += `<div class="subh">${esc(g.name)}</div><div class="grid">${gl.map(card).join('')}</div>`;
+    }
+    html += `<section class="section${c.learn ? ' learn' : ''}${rest.length ? '' : ' thin'}" style="--cat:${c.color}">
+      <div class="sec-head">${c.num ? `<div class="sec-num">${esc(c.num)}</div>` : ''}<h2>${esc(c.name)}</h2><p>${esc(c.blurb)}</p></div>
+      ${body}</section>`;
   }
   $('#sections').innerHTML = html || `<div class="empty">No tools match “${esc(qEl.value)}”.</div>`;
 
@@ -2212,6 +2222,21 @@ function render() {
   $('#storeNote').textContent = store.persistent
     ? 'Updates you upload here are only for trying out, in this browser. Publish them through GitHub.'
     : 'This browser is blocking storage, so uploaded updates last until you close the page.';
+}
+const groupOf = t => ((catOf(t.category).groups) || []).find(g => g.id === t.group) || null;
+
+/* the wide "start here" card for a stage's pipeline guide; same menus and pin as any card */
+function leadCard(t) {
+  const c = catOf(t.category);
+  return `<div class="cardw lead" data-id="${esc(t.id)}" style="--cat:${c.color}">
+    <a class="card" href="#/solo/${encodeURIComponent(t.id)}" target="_blank" rel="noopener" data-open="${esc(t.id)}" title="Click to open here · right-click to open in a new tab">
+      <div class="ico">${ICONS[t.icon] || ICONS.generic}</div>
+      <div class="lt"><span class="kick">Pipeline guide · start here</span><h3>${esc(t.name)}</h3><p>${esc(t.desc || '')}</p>${t.note ? `<div class="note">${esc(t.note)}</div>` : ''}</div>
+      <div class="meta">${cur() && (cur().tools || {})[t.id] ? '<span class="inproj" title="Used in the current project">● In project</span>' : ''}<span class="go">Open ${UI.arrow}</span></div>
+    </a>
+    <button class="pinb${isPinned(t.id) ? ' on' : ''}" data-pin="${esc(t.id)}" aria-pressed="${isPinned(t.id)}" aria-label="${isPinned(t.id) ? 'Unpin' : 'Pin'} ${esc(t.name)}" title="${isPinned(t.id) ? 'Pinned to the tab strip. Click to unpin' : 'Pin to the tab strip'}">${UI.pin}</button>
+    <button class="more" data-menu="${esc(t.id)}" aria-label="Options for ${esc(t.name)}" aria-haspopup="menu" aria-expanded="false">${UI.dots}</button>
+  </div>`;
 }
 
 function card(t) {
@@ -2411,7 +2436,7 @@ function confirmDlg(title, msg, okLabel, danger, altLabel) {
     dlg.addEventListener('close', () => res(dlg.returnValue === 'ok' ? true : dlg.returnValue === 'alt' ? false : (altLabel ? null : false)), {once:true});
   });
 }
-const catOptions = sel => CATS.filter(c => !c.personal || c.id === sel).map(c => `<option value="${c.id}"${c.id === sel ? ' selected' : ''}>${esc(c.num + ' · ' + c.name)}</option>`).join('');
+const catOptions = sel => CATS.filter(c => !c.personal || c.id === sel).map(c => `<option value="${c.id}"${c.id === sel ? ' selected' : ''}>${esc(catLabel(c))}</option>`).join('');
 const fileBox = (f, title) => `<div class="filebox">${UI.file}<div><div class="fn">${esc(f.name)}</div><div class="ft">${title ? 'Page title: ' + esc(title) + ' · ' : ''}${(f.size / 1024).toFixed(0)} KB</div></div></div>`;
 
 function editDialog(id) {
@@ -2497,6 +2522,7 @@ function helpDialog() {
     </ul></div>` : '';
   showDlg(`<div class="help"><h3>How it works</h3><p class="sub">Everything you need to plan a film, in one place.</p>
     <ol>
+      <li><b>Find your stage.</b> The home page runs in production order: <b>Develop</b>, <b>Prep</b>, <b>Shoot</b> and <b>Post</b>. Each stage with a pipeline guide opens with it, so start there to see what the stage involves. <b>Learn</b>, at the bottom, holds the hands-on labs, which aren’t tied to a project.</li>
       <li><b>Open a tool</b> by clicking its card. It opens here, with a tab in the strip under the top bar. That strip stays on every page, so you can flick between your open tools and they keep their place.</li>
       <li><b>Open in a new browser tab</b> by right-clicking a card and choosing “Open link in new tab”, or with Ctrl/⌘-click.</li>
       <li><b>Pin the tools you use most.</b> Click the pin on a tool’s card or on its tab. Pinned tools stay at the left of the tab strip, even when closed, so you can jump between them in one click. Click the pin again to unpin${driveOn() ? '. When you’re signed in, your pins follow you to any computer' : ''}.</li>
@@ -3118,7 +3144,6 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#menu')) closeMenu();
   const x = e.target.closest('[data-close]'); if (x) { e.stopPropagation(); closeTab(x.dataset.close); return; }
   const tab = e.target.closest('[data-tab]'); if (tab) { go(tab.dataset.tab); return; }
-  const chip = e.target.closest('[data-f]'); if (chip) { filter = chip.dataset.f; render(); return; }
   const act = e.target.closest('[data-act]');
   if (act) {
     if (act.dataset.act === 'conv') { if (convTool === active) closeConv(); else openConv(active); }
@@ -3194,7 +3219,7 @@ $('#resetBtn').onclick = async () => {
     await store.clear(); overrides.clear(); openTabs.slice().forEach(closeTab); render(); toast('Back to the built-in tools');
   }
 };
-qEl.addEventListener('input', () => { if (filter !== 'all' && qEl.value) filter = 'all'; render(); });
+qEl.addEventListener('input', render);
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !menu.hidden) { closeMenu(); return; }
   if (e.key === 'Escape' && !pmenu().hidden) { closeProjMenu(); return; }

@@ -23,7 +23,7 @@ async function docBtn(f, sel, label) { await f.click(sel); if (label) await f.cl
   await until(async () => await sum(A) === '0 of 16 tools have documents', 'the empty strip');
   assert.equal(await A.page.$$eval('#docsPage .dfold', a => a.length), 16);
   assert.equal(await A.page.$$eval('#docsPage .dfold.none', a => a.length), 16);
-  assert.equal(await A.page.$$eval('#docsPage .section', a => a.length), 4, 'grouped by the four categories that have exports');
+  assert.equal(await A.page.$$eval('#docsPage .section', a => a.length), 2, 'grouped by the two stages that have exports (Develop and Prep)');
 
   step('Three call sheet drafts and a recce spreadsheet');
   await H.open(A, 'callsheet'); let f = await H.frame(A, 'callsheet');
