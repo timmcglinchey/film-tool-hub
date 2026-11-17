@@ -12,7 +12,7 @@ def accent(hexv):
 FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">'
 for t in man['tools']:
     f = f"{R}/{t['file']}"; h = open(f).read(); c = cats[t['category']]
-    label = f"{c['num']} · {c['name']}"
+    label = f"{c['num']} · {c['name']}" if c.get('num') else c['name']
     block = f'''<!--fth-standalone-->
 <!-- Film Tool Hub: this block is only used when this file is opened on its own (for example while working on it).
      Inside the hub it is removed and the hub supplies the same look from hub/kit.css. Keep it, but don't edit it here. -->

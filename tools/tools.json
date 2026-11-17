@@ -10,52 +10,63 @@
       "personal": true
     },
     {
-      "id": "pipelines",
+      "id": "develop",
       "num": "01",
-      "short": "Pipelines",
-      "name": "Film Production Pipelines",
-      "color": "#8bd16a",
-      "blurb": "See how a film comes together, stage by stage, from pre-production to post."
-    },
-    {
-      "id": "technical",
-      "num": "02",
-      "short": "Technical",
-      "name": "Technical Development Tools",
-      "color": "#e889c8",
-      "blurb": "Get to grips with light, exposure and lenses before you're on set."
-    },
-    {
-      "id": "write",
-      "num": "03",
-      "short": "Write",
-      "name": "Writing & Script Prep",
+      "short": "Develop",
+      "name": "Develop",
       "color": "#f5b14c",
-      "blurb": "Develop the screenplay, then line it for coverage."
+      "blurb": "Shape the story and the look before anything gets scheduled."
     },
     {
-      "id": "plan",
-      "num": "04",
-      "short": "Plan",
-      "name": "Planning & Scheduling",
+      "id": "prep",
+      "num": "02",
+      "short": "Prep",
+      "name": "Prep",
       "color": "#4fc7b5",
-      "blurb": "Build the shooting schedule."
-    },
-    {
-      "id": "visual",
-      "num": "05",
-      "short": "Visualise",
-      "name": "Visual Planning",
-      "color": "#97a3ff",
-      "blurb": "Design the shots, blocking and lighting before you get to set."
+      "blurb": "Take the script from the page to shoot-ready, department by department.",
+      "groups": [
+        {
+          "id": "breakdown",
+          "name": "Breakdown"
+        },
+        {
+          "id": "people",
+          "name": "People and places"
+        },
+        {
+          "id": "visual",
+          "name": "Visual planning"
+        },
+        {
+          "id": "finalise",
+          "name": "Finalise"
+        }
+      ]
     },
     {
       "id": "shoot",
-      "num": "06",
-      "short": "Shoot day",
-      "name": "Shoot-Day Paperwork",
+      "num": "03",
+      "short": "Shoot",
+      "name": "Shoot",
       "color": "#ff7152",
-      "blurb": "The documents your crew needs before cameras roll."
+      "blurb": "The shoot day, from crew call to wrap."
+    },
+    {
+      "id": "post",
+      "num": "04",
+      "short": "Post",
+      "name": "Post",
+      "color": "#97a3ff",
+      "blurb": "From offload to final export."
+    },
+    {
+      "id": "learn",
+      "num": "",
+      "short": "Learn",
+      "name": "Learn",
+      "color": "#e889c8",
+      "blurb": "Hands-on labs to build your skills. Not tied to any project.",
+      "learn": true
     }
   ],
   "tools": [
@@ -74,127 +85,15 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611151200,
+      "rev": 202611171845,
       "file": "tools/research.html",
       "personal": true
-    },
-    {
-      "id": "preprod",
-      "name": "Pre-Production Pipeline",
-      "desc": "A department-by-department roadmap from idea to shoot-ready, with trackable tasks, filters and an editable glossary.",
-      "category": "pipelines",
-      "tags": [
-        "All crew",
-        "Checklist"
-      ],
-      "icon": "timeline",
-      "fileName": "Pre-Production Pipeline.html",
-      "origTitle": "Short Film Pre-Production",
-      "ver": 1,
-      "updated": null,
-      "note": "",
-      "rev": 202611131315,
-      "file": "tools/preprod.html"
-    },
-    {
-      "id": "production",
-      "name": "Production Pipeline",
-      "desc": "The shoot day from crew call to wrap: set-up, the repeating shot cycle and tear down, with guidance for every department.",
-      "category": "pipelines",
-      "tags": [
-        "All crew",
-        "Shoot day"
-      ],
-      "icon": "production",
-      "fileName": "Production Pipeline.html",
-      "origTitle": "Short Film Production",
-      "ver": 1,
-      "updated": null,
-      "note": "",
-      "rev": 202611131315,
-      "file": "tools/production.html"
-    },
-    {
-      "id": "postprod",
-      "name": "Post-Production Pipeline",
-      "desc": "A phase-by-phase roadmap from offload to final export in DaVinci Resolve, with trackable tasks, research, Resolve basics and an editable glossary.",
-      "category": "pipelines",
-      "tags": [
-        "Editor",
-        "Colour",
-        "Sound"
-      ],
-      "icon": "post",
-      "fileName": "Post-Production Pipeline.html",
-      "origTitle": "Short Film Post-Production",
-      "ver": 1,
-      "updated": null,
-      "note": "",
-      "rev": 202611131315,
-      "file": "tools/postprod.html"
-    },
-    {
-      "id": "pattern-lab",
-      "name": "Lighting Pattern Lab",
-      "desc": "Learn classic portrait lighting on a 3D head: Rembrandt, loop, butterfly, split, broad and short. Move the key light and see real soft-shadow falloff.",
-      "category": "technical",
-      "tags": [
-        "DP",
-        "Gaffer",
-        "Learning"
-      ],
-      "icon": "portrait",
-      "fileName": "Lighting Pattern Lab.html",
-      "origTitle": "Lighting Pattern Lab",
-      "ver": 2,
-      "updated": 1793998377844,
-      "note": "",
-      "rev": 202611131315,
-      "file": "tools/pattern-lab.html"
-    },
-    {
-      "id": "exposure",
-      "name": "Exposure Lab",
-      "category": "technical",
-      "icon": "exposure",
-      "desc": "Explore falloff, collimation and hard vs soft light from arm's length to a kilometre, with an exposure triangle, ND and a live camera preview.",
-      "tags": [
-        "DP",
-        "Gaffer",
-        "Learning"
-      ],
-      "fileName": "Exposure Lab.html",
-      "origTitle": "Exposure Lab",
-      "ver": 1,
-      "updated": null,
-      "note": "",
-      "rev": 202611131315,
-      "file": "tools/exposure.html"
-    },
-    {
-      "id": "dof",
-      "name": "Depth of Field Lab",
-      "desc": "Move a camera through a 3D set and see exactly what's sharp: focal length, aperture, focus distance and sensor size.",
-      "category": "technical",
-      "tags": [
-        "DP",
-        "1st AC",
-        "Lenses"
-      ],
-      "icon": "dof",
-      "fileName": "Depth of Field Lab.html",
-      "origTitle": "Depth of Field Lab",
-      "ver": 1,
-      "updated": null,
-      "note": "",
-      "rev": 202611131315,
-      "file": "tools/dof.html"
     },
     {
       "id": "script-dev",
       "name": "Script Development Tool",
       "desc": "Scaffolded scriptwriting: build characters, settings and structure, then write in screenplay format with saved drafts.",
-      "category": "write",
+      "category": "develop",
       "tags": [
         "Writer",
         "Fountain",
@@ -207,14 +106,14 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611131315,
+      "rev": 202611171845,
       "file": "tools/script-dev.html"
     },
     {
       "id": "coverage",
       "name": "Script Coverage & Feedback",
       "desc": "Read a script PDF: map its structure against Save the Cat, 3-Act or Scaffolded, leave comments and page summaries, and write a full coverage report.",
-      "category": "write",
+      "category": "develop",
       "tags": [
         "Writer",
         "Script editor",
@@ -226,33 +125,72 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611131315,
+      "rev": 202611171845,
       "file": "tools/coverage.html"
     },
     {
-      "id": "script-lining",
-      "name": "Script Lining Tool",
-      "desc": "Upload a script PDF and draw tramlines to map shot coverage, with zig-zags for off-screen lines and notes per shot.",
-      "category": "write",
+      "id": "moodboard",
+      "name": "Mood Board",
+      "desc": "Collect stills, clips and music for the film's look and sound, tick which department each one is for, and export a PDF.",
+      "category": "develop",
       "tags": [
         "Director",
-        "Script supervisor",
-        "PDF"
+        "DP",
+        "Designer"
       ],
-      "icon": "lining",
-      "fileName": "Script Lining Tool.html",
-      "origTitle": "Script Lining Tool",
+      "icon": "moodboard",
+      "fileName": "Mood Board.html",
+      "origTitle": "Mood Board",
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611131315,
-      "file": "tools/script-lining.html"
+      "rev": 202611171845,
+      "file": "tools/moodboard.html"
+    },
+    {
+      "id": "palette",
+      "name": "Colour Palette Studio",
+      "desc": "Pull a 3–10 colour palette from any still, check it against 60/30/10, and build a reference deck that blends many stills into one look.",
+      "category": "develop",
+      "tags": [
+        "DP",
+        "Director",
+        "Production designer",
+        "PDF"
+      ],
+      "icon": "palette",
+      "fileName": "Colour Palette Studio.html",
+      "origTitle": "Colour Palette Studio",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611171845,
+      "file": "tools/palette.html"
+    },
+    {
+      "id": "preprod",
+      "name": "Pre-Production Pipeline",
+      "desc": "A department-by-department roadmap from idea to shoot-ready, with trackable tasks, filters and an editable glossary.",
+      "category": "prep",
+      "tags": [
+        "All crew",
+        "Checklist"
+      ],
+      "icon": "timeline",
+      "fileName": "Pre-Production Pipeline.html",
+      "origTitle": "Short Film Pre-Production",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611171845,
+      "file": "tools/preprod.html",
+      "lead": true
     },
     {
       "id": "breakdown",
       "name": "Script Breakdown",
       "desc": "Tag cast, props, SFX, wardrobe and more straight onto your script PDF, then export category lists, scene-by-scene breakdowns and a colour-coded script.",
-      "category": "write",
+      "category": "prep",
       "tags": [
         "1st AD",
         "Producer",
@@ -266,52 +204,35 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611131315,
-      "file": "tools/breakdown.html"
+      "rev": 202611171845,
+      "file": "tools/breakdown.html",
+      "group": "breakdown"
     },
     {
-      "id": "schedule",
-      "name": "Production Schedule Builder",
-      "desc": "Build a stripboard-style shoot schedule with shoot days, cast legend, locations and a day-out-of-days.",
-      "category": "plan",
+      "id": "script-lining",
+      "name": "Script Lining Tool",
+      "desc": "Upload a script PDF and draw tramlines to map shot coverage, with zig-zags for off-screen lines and notes per shot.",
+      "category": "prep",
       "tags": [
-        "1st AD",
-        "Producer",
-        "Excel"
+        "Director",
+        "Script supervisor",
+        "PDF"
       ],
-      "icon": "schedule",
-      "fileName": "Production Schedule Builder.html",
-      "origTitle": "Production Schedule Builder",
+      "icon": "lining",
+      "fileName": "Script Lining Tool.html",
+      "origTitle": "Script Lining Tool",
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611131315,
-      "file": "tools/schedule.html"
-    },
-    {
-      "id": "recce",
-      "name": "Location Recce",
-      "desc": "Recce every location: print a field sheet to fill in on site, then write up access, power, sound, light and safety, add photos, and compare candidates.",
-      "category": "plan",
-      "tags": [
-        "Locations",
-        "Producer",
-        "1st AD"
-      ],
-      "icon": "recce",
-      "fileName": "Location Recce.html",
-      "origTitle": "Location Recce",
-      "ver": 1,
-      "updated": null,
-      "note": "",
-      "rev": 202611131315,
-      "file": "tools/recce.html"
+      "rev": 202611171845,
+      "file": "tools/script-lining.html",
+      "group": "breakdown"
     },
     {
       "id": "casting",
       "name": "Casting Tracker",
       "desc": "Cast every role: write breakdowns, track auditionees from submission to booked, score auditions and chemistry reads, and check availability and fees.",
-      "category": "plan",
+      "category": "prep",
       "tags": [
         "Casting",
         "Director",
@@ -323,52 +244,35 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611131315,
-      "file": "tools/casting.html"
+      "rev": 202611171845,
+      "file": "tools/casting.html",
+      "group": "people"
     },
     {
-      "id": "tasks",
-      "name": "Task Board",
-      "desc": "Keep on top of pre-production: what needs doing, who's doing it and when it's due, as a board, a calendar or a timeline.",
-      "category": "plan",
+      "id": "recce",
+      "name": "Location Recce",
+      "desc": "Recce every location: print a field sheet to fill in on site, then write up access, power, sound, light and safety, add photos, and compare candidates.",
+      "category": "prep",
       "tags": [
-        "All crew",
+        "Locations",
         "Producer",
         "1st AD"
       ],
-      "icon": "tasks",
-      "fileName": "Task Board.html",
-      "origTitle": "Task Board",
+      "icon": "recce",
+      "fileName": "Location Recce.html",
+      "origTitle": "Location Recce",
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611131315,
-      "file": "tools/tasks.html"
-    },
-    {
-      "id": "moodboard",
-      "name": "Mood Board",
-      "desc": "Collect stills, clips and music for the film's look and sound, tick which department each one is for, and export a PDF.",
-      "category": "visual",
-      "tags": [
-        "Director",
-        "DP",
-        "Designer"
-      ],
-      "icon": "moodboard",
-      "fileName": "Mood Board.html",
-      "origTitle": "Mood Board",
-      "ver": 1,
-      "updated": null,
-      "note": "",
-      "rev": 202611131315,
-      "file": "tools/moodboard.html"
+      "rev": 202611171845,
+      "file": "tools/recce.html",
+      "group": "people"
     },
     {
       "id": "shotlist",
       "name": "Shot List Builder",
       "desc": "Plan every shot day by day with custom columns, sunrise and sunset times, breaks and company moves. Track it live on the day.",
-      "category": "visual",
+      "category": "prep",
       "tags": [
         "Director",
         "DP",
@@ -381,14 +285,15 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611161300,
-      "file": "tools/shotlist.html"
+      "rev": 202611171845,
+      "file": "tools/shotlist.html",
+      "group": "visual"
     },
     {
       "id": "blocking",
       "name": "Blocking Planner",
       "desc": "Top-down floor plans for actor and camera blocking: rooms, props, movement paths and animated keyframes.",
-      "category": "visual",
+      "category": "prep",
       "tags": [
         "Director",
         "DP",
@@ -400,14 +305,15 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611131315,
-      "file": "tools/blocking.html"
+      "rev": 202611171845,
+      "file": "tools/blocking.html",
+      "group": "visual"
     },
     {
       "id": "lighting",
       "name": "Lighting Plan Studio",
       "desc": "Draw lighting diagrams from a full library of fixtures and modifiers, with shoot info and a kit list.",
-      "category": "visual",
+      "category": "prep",
       "tags": [
         "Gaffer",
         "DP",
@@ -419,13 +325,14 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611131315,
-      "file": "tools/lighting.html"
+      "rev": 202611171845,
+      "file": "tools/lighting.html",
+      "group": "visual"
     },
     {
       "id": "falsecolour",
       "name": "False Colour Studio",
-      "category": "visual",
+      "category": "prep",
       "icon": "falsecolour",
       "desc": "Plan exposure with false colour: load stills, check levels and contrast ratios, compare frames side by side and export a PDF.",
       "tags": [
@@ -438,53 +345,35 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611131315,
-      "file": "tools/falsecolour.html"
+      "rev": 202611171845,
+      "file": "tools/falsecolour.html",
+      "group": "visual"
     },
     {
-      "id": "palette",
-      "name": "Colour Palette Studio",
-      "desc": "Pull a 3–10 colour palette from any still, check it against 60/30/10, and build a reference deck that blends many stills into one look.",
-      "category": "visual",
+      "id": "schedule",
+      "name": "Production Schedule Builder",
+      "desc": "Build a stripboard-style shoot schedule with shoot days, cast legend, locations and a day-out-of-days.",
+      "category": "prep",
       "tags": [
-        "DP",
-        "Director",
-        "Production designer",
-        "PDF"
-      ],
-      "icon": "palette",
-      "fileName": "Colour Palette Studio.html",
-      "origTitle": "Colour Palette Studio",
-      "ver": 1,
-      "updated": null,
-      "note": "",
-      "rev": 202611131315,
-      "file": "tools/palette.html"
-    },
-    {
-      "id": "callsheet",
-      "name": "Call Sheet Builder",
-      "desc": "Fill in production, location, scenes, weather and catering details while the call sheet builds alongside.",
-      "category": "shoot",
-      "tags": [
-        "Producer",
         "1st AD",
+        "Producer",
         "Excel"
       ],
-      "icon": "callsheet",
-      "fileName": "Call Sheet Builder.html",
-      "origTitle": "Call Sheet Builder",
+      "icon": "schedule",
+      "fileName": "Production Schedule Builder.html",
+      "origTitle": "Production Schedule Builder",
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611131315,
-      "file": "tools/callsheet.html"
+      "rev": 202611171845,
+      "file": "tools/schedule.html",
+      "group": "finalise"
     },
     {
       "id": "risk",
       "name": "Risk Assessment Builder",
       "desc": "Work through hazards, controls, emergency, welfare and sign-off while the risk assessment builds alongside.",
-      "category": "shoot",
+      "category": "prep",
       "tags": [
         "Producer",
         "Safety",
@@ -496,8 +385,144 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611131315,
-      "file": "tools/risk.html"
+      "rev": 202611171845,
+      "file": "tools/risk.html",
+      "group": "finalise"
+    },
+    {
+      "id": "callsheet",
+      "name": "Call Sheet Builder",
+      "desc": "Fill in production, location, scenes, weather and catering details while the call sheet builds alongside.",
+      "category": "prep",
+      "tags": [
+        "Producer",
+        "1st AD",
+        "Excel"
+      ],
+      "icon": "callsheet",
+      "fileName": "Call Sheet Builder.html",
+      "origTitle": "Call Sheet Builder",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611171845,
+      "file": "tools/callsheet.html",
+      "group": "finalise"
+    },
+    {
+      "id": "tasks",
+      "name": "Task Board",
+      "desc": "Keep on top of pre-production: what needs doing, who's doing it and when it's due, as a board, a calendar or a timeline.",
+      "category": "prep",
+      "tags": [
+        "All crew",
+        "Producer",
+        "1st AD"
+      ],
+      "icon": "tasks",
+      "fileName": "Task Board.html",
+      "origTitle": "Task Board",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611171845,
+      "file": "tools/tasks.html"
+    },
+    {
+      "id": "production",
+      "name": "Production Pipeline",
+      "desc": "The shoot day from crew call to wrap: set-up, the repeating shot cycle and tear down, with guidance for every department.",
+      "category": "shoot",
+      "tags": [
+        "All crew",
+        "Shoot day"
+      ],
+      "icon": "production",
+      "fileName": "Production Pipeline.html",
+      "origTitle": "Short Film Production",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611171845,
+      "file": "tools/production.html",
+      "lead": true
+    },
+    {
+      "id": "postprod",
+      "name": "Post-Production Pipeline",
+      "desc": "A phase-by-phase roadmap from offload to final export in DaVinci Resolve, with trackable tasks, research, Resolve basics and an editable glossary.",
+      "category": "post",
+      "tags": [
+        "Editor",
+        "Colour",
+        "Sound"
+      ],
+      "icon": "post",
+      "fileName": "Post-Production Pipeline.html",
+      "origTitle": "Short Film Post-Production",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611171845,
+      "file": "tools/postprod.html",
+      "lead": true
+    },
+    {
+      "id": "pattern-lab",
+      "name": "Lighting Pattern Lab",
+      "desc": "Learn classic portrait lighting on a 3D head: Rembrandt, loop, butterfly, split, broad and short. Move the key light and see real soft-shadow falloff.",
+      "category": "learn",
+      "tags": [
+        "DP",
+        "Gaffer",
+        "Learning"
+      ],
+      "icon": "portrait",
+      "fileName": "Lighting Pattern Lab.html",
+      "origTitle": "Lighting Pattern Lab",
+      "ver": 2,
+      "updated": 1793998377844,
+      "note": "",
+      "rev": 202611171845,
+      "file": "tools/pattern-lab.html"
+    },
+    {
+      "id": "exposure",
+      "name": "Exposure Lab",
+      "category": "learn",
+      "icon": "exposure",
+      "desc": "Explore falloff, collimation and hard vs soft light from arm's length to a kilometre, with an exposure triangle, ND and a live camera preview.",
+      "tags": [
+        "DP",
+        "Gaffer",
+        "Learning"
+      ],
+      "fileName": "Exposure Lab.html",
+      "origTitle": "Exposure Lab",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611171845,
+      "file": "tools/exposure.html"
+    },
+    {
+      "id": "dof",
+      "name": "Depth of Field Lab",
+      "desc": "Move a camera through a 3D set and see exactly what's sharp: focal length, aperture, focus distance and sensor size.",
+      "category": "learn",
+      "tags": [
+        "DP",
+        "1st AC",
+        "Lenses"
+      ],
+      "icon": "dof",
+      "fileName": "Depth of Field Lab.html",
+      "origTitle": "Depth of Field Lab",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611171845,
+      "file": "tools/dof.html"
     }
   ]
 }

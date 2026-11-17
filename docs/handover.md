@@ -22,7 +22,8 @@ Tim McGlinchey is a film lecturer at Belfast Met. He isn't technical, so:
 - `index.html`, `hub/hub.css` and `hub/hub.js` make up the hub.
 - `hub/kit.css` holds the shared styles: `--fth-*` design tokens and `.fth-*` components. Fonts are Archivo and JetBrains Mono, with Courier for screenplay text.
 - `tools/tools.json` is the manifest:
-  - six categories, each with its own colour;
+  - the homepage stages, in order, each with its own colour: Develop (01), Prep (02), Shoot (03), Post (04), then Learn (no number, shown apart at the bottom). My Research is a category too, but it's personal and lives in the top bar, not on the homepage;
+  - a stage can have `groups` (Prep has Breakdown, People and places, Visual planning, Finalise); a tool joins one with `"group"`, and `"lead": true` makes it the stage's wide "start here" card (used for the three pipeline guides);
   - each tool's `id`, `name`, `desc`, `category`, `tags`, `icon` and `file`;
   - a `rev` value in the format YYYYMMDDHHMM. **Bump `rev` whenever a tool file changes.**
 - Each tool is a single file, `tools/<id>.html`. The hub loads it in an iframe and injects into it:

@@ -487,3 +487,30 @@ body.me-open #home{display:none}
 .btn.sm.signed{color:#3fbf8f;border-color:color-mix(in srgb,#3fbf8f 55%,transparent)}
 .dsigned{color:#3fbf8f;font-weight:600}
 #mePage .dtop{margin-bottom:14px}
+
+/* ───────── home: stages (Develop, Prep, Shoot, Post) and Learn ───────── */
+#home .pstrip{margin:28px 0 4px}
+.controls .grow{flex:1}
+.controls .btn{height:40px}
+.subh{display:flex;align-items:center;gap:12px;margin:28px 0 14px;font:600 11.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--cat-ink)}
+.subh::after{content:"";flex:1;height:1px;background:var(--line)}
+.cardw.lead + .subh{margin-top:24px}
+.cardw.lead + .grid{margin-top:16px}
+/* a stage's pipeline guide: one wide "start here" card */
+.cardw.lead .card{flex-direction:row;align-items:center;min-height:0;gap:18px;padding:18px 96px 18px 20px;
+  border-color:color-mix(in srgb,var(--cat) 40%,var(--line));background:linear-gradient(90deg,color-mix(in srgb,var(--cat) 10%,var(--surface)) 0%,var(--bg2) 70%)}
+.cardw.lead .lt{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.cardw.lead .kick{font:600 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--cat-ink)}
+.cardw.lead .card h3{padding-right:0}
+.cardw.lead .card .meta{margin:0;border:0;padding:0;min-height:0;flex:none}
+.cardw.lead .card .go{opacity:1;transform:none}
+.cardw.lead .pinb,.cardw.lead .more{top:50%;margin-top:-16px}
+.section.thin{margin-bottom:34px}
+/* Learn: not a stage, so it sits apart in a lighter box */
+.section.learn{margin-top:70px;padding:26px 24px 30px;border:1px dashed var(--line2);border-radius:var(--radius)}
+.section.learn .sec-head{grid-template-columns:1fr}
+@media (max-width:760px){
+  .cardw.lead .card{flex-direction:column;align-items:flex-start;padding-right:20px}
+  .cardw.lead .pinb,.cardw.lead .more{top:16px;margin-top:0}
+  .section.learn{padding:20px 14px 24px}
+}
