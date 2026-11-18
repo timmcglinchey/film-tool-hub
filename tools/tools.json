@@ -27,7 +27,7 @@
       "groups": [
         {
           "id": "breakdown",
-          "name": "Breakdown"
+          "name": "Breakdown and Budget"
         },
         {
           "id": "people",
@@ -226,6 +226,27 @@
       "note": "",
       "rev": 202611171845,
       "file": "tools/script-lining.html",
+      "group": "breakdown"
+    },
+    {
+      "id": "budget",
+      "name": "Film Budget Builder",
+      "desc": "Build a top-sheet budget department by department, from line items or by allocating money first, with contingency, then track actual spending against the plan.",
+      "category": "prep",
+      "tags": [
+        "Producer",
+        "Line producer",
+        "Excel",
+        "PDF"
+      ],
+      "icon": "budget",
+      "fileName": "Film Budget Builder.html",
+      "origTitle": "Film Budget Builder",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611180913,
+      "file": "tools/budget.html",
       "group": "breakdown"
     },
     {
