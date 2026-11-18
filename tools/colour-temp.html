@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--fth-standalone-->
+<!-- Film Tool Hub: this block is only used when this file is opened on its own (for example while working on it).
+     Inside the hub it is removed and the hub supplies the same look from hub/kit.css. Keep it, but don't edit it here. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═════════ Film Tool Hub kit ═════════
+   Shared look for every tool. The hub injects this at the top of each tool's <head>,
+   sets data-theme="light|dark" on the tool's <html>, and sets --fth-cat to the tool's
+   category colour. Tools use the --fth-* tokens and the .fth-* components. */
+:root{
+  --fth-bg:#0b0c0e; --fth-bg2:#101216; --fth-surface:#15181d; --fth-surface2:#1b1f26; --fth-surface3:#232831;
+  --fth-line:#242931; --fth-line2:#333a45; --fth-line3:#46505e;
+  --fth-text:#f0ece5; --fth-muted:#9aa0aa; --fth-faint:#666c77;
+  --fth-good:#5cc98a; --fth-bad:#ff8f7a; --fth-warn:#f2bd5c;
+  /* accent tokens (--fth-cat, --fth-accent, --fth-accent-ink, --fth-accent-soft, --fth-accent-line, --fth-on-accent)
+     are written by the hub for each tool's category, as plain colours for both themes */
+  --fth-cat:#ffb547; --fth-accent:#ffb547; --fth-accent-ink:#ffb547; --fth-accent-soft:rgba(255,181,71,.14); --fth-accent-line:rgba(255,181,71,.45); --fth-on-accent:#14110b;
+  --fth-paper-backdrop:#07080a;
+  --fth-shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --fth-shadow-sm:none;
+  --fth-radius:14px; --fth-radius-sm:9px;
+  --fth-display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --fth-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --fth-script:"Courier Prime","Courier New",Courier,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --fth-bg:#f3f0ea; --fth-bg2:#f9f7f3; --fth-surface:#ffffff; --fth-surface2:#f1ede5; --fth-surface3:#e6e1d6;
+  --fth-line:#e3ded4; --fth-line2:#d2ccc0; --fth-line3:#b4ad9f;
+  --fth-text:#16181c; --fth-muted:#565c66; --fth-faint:#878c95;
+  --fth-good:#22804a; --fth-bad:#c0392b; --fth-warn:#9a6200;
+  --fth-paper-backdrop:#e4dfd5;
+  --fth-shadow:0 14px 30px -16px rgba(70,50,20,.30);
+  --fth-shadow-sm:0 1px 2px rgba(60,45,20,.05),0 4px 14px rgba(60,45,20,.05);
+  color-scheme:light;
+}
+
+/* base */
+html{background:var(--fth-bg)}
+body{background:var(--fth-bg);color:var(--fth-text);font-family:var(--fth-display);-webkit-font-smoothing:antialiased}
+::selection{background:var(--fth-accent-line)}
+:focus-visible{outline:2px solid var(--fth-accent);outline-offset:2px}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--fth-line2);border-radius:6px;border:2px solid var(--fth-bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--fth-line3)}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+
+/* tool header: category eyebrow, tool name, then actions on the right */
+.fth-head{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 20px;
+  background:color-mix(in srgb,var(--fth-bg) 88%,transparent);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  border-bottom:1px solid var(--fth-line)}
+.fth-head::before{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:linear-gradient(90deg,var(--fth-cat),transparent 38%);opacity:.75;pointer-events:none}
+.fth-id{display:flex;flex-direction:column;gap:5px;min-width:0;flex:none}
+.fth-eyebrow{display:flex;align-items:center;gap:8px;font:500 10.5px/1 var(--fth-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fth-accent-ink);white-space:nowrap}
+.fth-eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fth-cat);box-shadow:0 0 0 3px var(--fth-accent-soft);flex:none}
+.fth-title{margin:0;font-weight:800;font-variation-settings:"wdth" 68;font-size:23px;line-height:1;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap}
+.fth-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.fth-vsep{width:1px;height:22px;background:var(--fth-line2);margin:0 3px;flex:none}
+
+/* buttons */
+.fth-btn{height:34px;padding:0 13px;border-radius:var(--fth-radius-sm);border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);
+  font:600 13px/1 var(--fth-display);display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  transition:background-color .15s,border-color .15s,color .15s}
+.fth-btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.fth-btn:disabled{opacity:.45;cursor:default}
+.fth-btn.primary{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.fth-btn.primary:hover{filter:brightness(1.08)}
+.fth-btn.ghost{background:transparent;border-color:transparent;color:var(--fth-muted)}
+.fth-btn.ghost:hover{background:var(--fth-surface2);border-color:var(--fth-line2);color:var(--fth-text)}
+.fth-btn.danger{color:var(--fth-bad)}
+.fth-btn.sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.fth-btn.icon{width:30px;height:30px;padding:0}
+
+/* labels, fields */
+.fth-label{font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.fth-input{width:100%;min-width:0;background:var(--fth-bg2);border:1px solid var(--fth-line2);border-radius:8px;padding:7px 10px;color:var(--fth-text);font:14px/1.35 var(--fth-display);outline:none;transition:border-color .15s,box-shadow .15s}
+.fth-input:hover{border-color:var(--fth-line3)}
+.fth-input:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+select.fth-input{cursor:pointer}
+textarea.fth-input{resize:vertical;line-height:1.45}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-accent)}
+
+/* sections & surfaces */
+.fth-card{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);box-shadow:var(--fth-shadow-sm)}
+.fth-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.fth-sec::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+.fth-sec .fth-num{font:600 11px var(--fth-mono);color:var(--fth-accent-ink);letter-spacing:.08em}
+.fth-muted{color:var(--fth-muted)}
+.fth-mono{font-family:var(--fth-mono)}
+
+/* notes */
+.fth-tip{background:var(--fth-accent-soft);border-left:2px solid var(--fth-accent);color:var(--fth-text);padding:7px 10px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.45}
+.fth-warn{background:color-mix(in srgb,var(--fth-warn) 10%,var(--fth-surface));border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent);color:var(--fth-text);border-radius:10px;padding:10px 12px;font-size:13px}
+.fth-warn b:first-child{color:var(--fth-warn)}
+.fth-info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--fth-line3);color:var(--fth-muted);font:600 10px/1 var(--fth-mono);text-transform:none;letter-spacing:0;cursor:pointer;user-select:none;vertical-align:1px;margin-left:5px;transition:.15s}
+.fth-info:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+
+/* toast */
+.fth-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;z-index:200;background:var(--fth-text);color:var(--fth-bg);padding:10px 16px;border-radius:10px;font:500 13.5px var(--fth-display);box-shadow:var(--fth-shadow);transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.fth-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* paper: a printable page shown on screen stays paper-white in both themes */
+.fth-paper-wrap{background:var(--fth-paper-backdrop)}
+.fth-paper{background:#fff;color:#000;color-scheme:light;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55)}
+
+@media print{
+  html,body{background:#fff!important;color:#000}
+  .fth-head{display:none!important}
+  .fth-paper-wrap{background:#fff!important}
+  .fth-paper{box-shadow:none!important}
+}
+@media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
+@media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
+
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
+:root{--fth-cat:#e889c8;--fth-accent:#e889c8;--fth-accent-ink:#e889c8;--fth-accent-soft:rgba(232,137,200,0.14);--fth-accent-line:rgba(232,137,200,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#874f74;--fth-accent-ink:#874f74;--fth-accent-soft:rgba(232,137,200,0.16);--fth-accent-line:rgba(232,137,200,0.6);--fth-on-accent:#ffffff}
+</style>
+<script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
+<!--/fth-standalone-->
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Colour Temperature Lab</title>
+<style>
+html,body{margin:0}
+body{font-size:14px;line-height:1.45}
+.wrap{max-width:1080px;margin:0 auto;padding:22px max(20px,env(safe-area-inset-left,0px)) 44px}
+
+/* scales */
+.scales{position:relative}
+.scale + .scale{margin-top:10px}
+.scale-head{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin-bottom:2px}
+.scale-head .what{font:700 14px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.scale-head .fth-label{color:var(--fth-faint)}
+.presets{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+.presets .fth-btn{height:24px;padding:0 8px;font:500 11px/1 var(--fth-mono);border-radius:6px}
+.presets .fth-btn.on{border-color:var(--fth-accent-line);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+
+.track{position:relative;height:74px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:8px;outline-offset:4px}
+.bar{position:absolute;left:0;right:0;top:30px;height:24px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.22)}
+.pin{position:absolute;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:3}
+.pin .tag{font:600 11.5px/1 var(--fth-mono);background:var(--fth-text);color:var(--fth-bg);padding:4px 7px;border-radius:5px;white-space:nowrap}
+.pin .tri{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:7px solid var(--fth-text)}
+.pin.wb .tag{background:var(--fth-accent);color:var(--fth-on-accent)}
+.pin.wb .tri{border-top-color:var(--fth-accent)}
+.track.drag .pin .tag{box-shadow:0 0 0 3px var(--fth-accent-soft)}
+.ticks{position:absolute;left:0;right:0;top:58px;height:14px;pointer-events:none}
+.ticks span{position:absolute;transform:translateX(-50%);font:500 10px/1 var(--fth-mono);color:var(--fth-faint);white-space:nowrap}
+.ticks span.mid{color:var(--fth-muted);font-weight:600}
+.ticks i{position:absolute;top:-4px;width:1px;height:3px;background:var(--fth-line3)}
+
+/* the dashed line that carries the light's position down onto the white balance bar */
+.guide{position:absolute;width:0;border-left:2px dashed var(--fth-text);opacity:.55;transform:translateX(-1px);pointer-events:none;z-index:2}
+
+/* readout */
+.readout{display:flex;flex-direction:column;align-items:center;gap:7px;margin:18px 0 14px;text-align:center}
+.big{display:flex;align-items:center;gap:12px;font-weight:800;font-variation-settings:"wdth" 70;font-size:clamp(24px,4.4vw,38px);line-height:1;text-transform:uppercase;letter-spacing:.01em}
+.swatch{width:.72em;height:.72em;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25),0 0 0 3px var(--fth-surface2);flex:none}
+.sub{font:500 12px/1.4 var(--fth-mono);color:var(--fth-muted)}
+.sub b{color:var(--fth-text);font-weight:600}
+
+/* image */
+.stage{position:relative;border-radius:var(--fth-radius);overflow:hidden;border:1px solid var(--fth-line);background:#000;box-shadow:var(--fth-shadow)}
+.stage canvas{display:block;width:100%;height:auto;aspect-ratio:16/9}
+
+/* notes */
+.notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+.notes .fth-card{padding:13px 15px}
+.notes h3{margin:0 0 5px;font:700 13px/1.2 var(--fth-display);font-variation-settings:"wdth" 82;text-transform:uppercase;letter-spacing:.03em;color:var(--fth-accent-ink)}
+.notes p{margin:0;font-size:13px;color:var(--fth-muted)}
+.foot{margin:14px 0 0;font:11px/1.5 var(--fth-mono);color:var(--fth-faint);text-align:center}
+@media (max-width:760px){.notes{grid-template-columns:1fr}.presets{margin-left:0;width:100%}}
+</style>
+</head>
+<body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>Learn</span><h1 class="fth-title">Colour Temperature Lab</h1></div>
+  <div class="fth-actions">
+    <button class="fth-btn sm" id="matchBtn" type="button">Match white balance to light</button>
+    <button class="fth-btn sm ghost" id="resetBtn" type="button">Reset</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="scales" id="scales">
+    <div class="scale">
+      <div class="scale-head">
+        <span class="what">Colour temperature</span><span class="fth-label">The light</span>
+        <div class="presets" data-for="cct"></div>
+      </div>
+      <div class="track" id="cctTrack" tabindex="0" role="slider" aria-label="Colour temperature of the light" aria-valuemin="1600" aria-valuemax="9600">
+        <div class="pin" id="cctPin"><span class="tag" id="cctTag"></span><span class="tri"></span></div>
+        <div class="bar" id="cctBar"></div>
+        <div class="ticks"></div>
+      </div>
+    </div>
+    <div class="scale">
+      <div class="scale-head">
+        <span class="what">White balance</span><span class="fth-label">The camera</span>
+        <div class="presets" data-for="wb"></div>
+      </div>
+      <div class="track" id="wbTrack" tabindex="0" role="slider" aria-label="Camera white balance" aria-valuemin="1600" aria-valuemax="9600">
+        <div class="pin wb" id="wbPin"><span class="tag" id="wbTag"></span><span class="tri"></span></div>
+        <div class="bar" id="wbBar"></div>
+        <div class="ticks"></div>
+      </div>
+    </div>
+    <div class="guide" id="guide"></div>
+  </div>
+
+  <div class="readout" aria-live="polite">
+    <div class="big"><span class="swatch" id="swatch"></span><span id="status">Balanced</span></div>
+    <div class="sub" id="detail"></div>
+  </div>
+
+  <div class="stage"><canvas id="view" width="1200" height="675" aria-label="Test scene shown with the current colour temperature and white balance"></canvas></div>
+
+  <div class="notes">
+    <div class="fth-card"><h3>Colour temperature is the light</h3><p>Measured in Kelvin. Lower numbers are warmer (candlelight, tungsten), higher numbers are cooler (shade, overcast sky). Move the top arrow to change the light.</p></div>
+    <div class="fth-card"><h3>White balance is the camera</h3><p>It tells the camera which colour of light to treat as white. Wherever you set it, pure white moves with it. When it sits under the light's arrow, the colour is cancelled out and whites come out white.</p></div>
+    <div class="fth-card"><h3>Why 1000K isn't always 1000K</h3><p>We see colour shifts in mireds (1,000,000 ÷ K), not Kelvin. 1000K under 5600K is a 39 mired shift, but 1000K over is only 27. That's why warm mismatches look stronger than cool ones.</p></div>
+  </div>
+  <p class="foot">Colours follow the blackbody curve. White balance is applied as a Bradford chromatic adaptation, with balanced white shown as display white.</p>
+</main>
+
+<script>
+(function(){
+'use strict';
+const KMIN = 1600, KMAX = 9600, STEP = 25, NEUTRAL = 5600;
+const PRESETS = [['Candle',1900],['Tungsten',3200],['Daylight',5600],['Shade',7500]];
+const state = {cct: NEUTRAL, wb: NEUTRAL};
+
+/* ── colour science ───────────────────────────────────────────────
+   Blackbody chromaticity: Krystek (1985) rational approximation of the
+   Planckian locus in CIE 1960 uv, valid 1000–15000K.
+   White balance: Bradford chromatic adaptation from the white balance
+   setting's white to the display's white (D65), then XYZ → linear sRGB. */
+function xyzOfK(T){
+  const u = (0.860117757 + 1.54118254e-4*T + 1.28641212e-7*T*T) / (1 + 8.42420235e-4*T + 7.08145163e-7*T*T);
+  const v = (0.317398726 + 4.22806245e-5*T + 4.20481691e-8*T*T) / (1 - 2.89741816e-5*T + 1.61456053e-7*T*T);
+  const d = 2*u - 8*v + 4, x = 3*u/d, y = 2*v/d;
+  return [x/y, 1, (1-x-y)/y];
+}
+const BF  = [[0.8951,0.2664,-0.1614],[-0.7502,1.7135,0.0367],[0.0389,-0.0685,1.0296]];
+const BFI = [[0.9869929,-0.1470543,0.1599627],[0.4323053,0.5183603,0.0492912],[-0.0085287,0.0400428,0.9684867]];
+const XYZ2RGB = [[3.2404542,-1.5371385,-0.4985314],[-0.9692660,1.8760108,0.0415560],[0.0556434,-0.2040259,1.0572252]];
+const D65 = [0.95047,1,1.08883];
+const mul = (m,v) => [m[0][0]*v[0]+m[0][1]*v[1]+m[0][2]*v[2], m[1][0]*v[0]+m[1][1]*v[1]+m[1][2]*v[2], m[2][0]*v[0]+m[2][1]*v[1]+m[2][2]*v[2]];
+const lmsD65 = mul(BF, D65);
+const xyzCache = new Map();
+function xyzK(T){ let r = xyzCache.get(T); if(!r){ r = xyzOfK(T); xyzCache.set(T, r); } return r; }
+
+/* linear-light RGB gains for a white surface lit at `light` K, shot with white balance `wb` K.
+   Scaled so the brightest channel is 1, so a balanced image is untouched. */
+function gains(light, wb){
+  const src = mul(BF, xyzK(wb)), lms = mul(BF, xyzK(light));
+  const ad = [lms[0]*lmsD65[0]/src[0], lms[1]*lmsD65[1]/src[1], lms[2]*lmsD65[2]/src[2]];
+  const rgb = mul(XYZ2RGB, mul(BFI, ad)).map(c => Math.max(0, c));
+  const m = Math.max(rgb[0], rgb[1], rgb[2]) || 1;
+  return rgb.map(c => c/m);
+}
+const enc = c => c <= 0.0031308 ? 12.92*c : 1.055*Math.pow(c, 1/2.4) - 0.055;
+const dec = c => c <= 0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4);
+const css = g => `rgb(${g.map(c => Math.round(255*enc(Math.min(1,c)))).join(',')})`;
+
+/* ── helpers ── */
+const $ = id => document.getElementById(id);
+const frac = K => (K - KMIN) / (KMAX - KMIN);
+const clampK = K => Math.min(KMAX, Math.max(KMIN, Math.round(K/STEP)*STEP));
+const fmt = K => K + 'K';
+
+/* ── the bars ── */
+function gradientFor(wb){
+  const stops = [];
+  for(let K = KMIN; K <= KMAX; K += 200) stops.push(`${css(gains(K, wb))} ${(frac(K)*100).toFixed(2)}%`);
+  return `linear-gradient(90deg,${stops.join(',')})`;
+}
+$('cctBar').style.background = gradientFor(NEUTRAL);
+document.querySelectorAll('.ticks').forEach(t => {
+  let h = '';
+  for(let K = KMIN; K <= KMAX; K += 1000) h += `<span class="${K===NEUTRAL?'mid':''}" style="left:${frac(K)*100}%">${K}</span>`;
+  for(let K = KMIN + 500; K < KMAX; K += 1000) h += `<i style="left:${frac(K)*100}%"></i>`;
+  t.innerHTML = h;
+});
+/* keep the first/last span rules working: spans first, ticks after */
+document.querySelectorAll('.ticks').forEach(t => { const s = [...t.querySelectorAll('span')]; s[0].style.transform='none'; s[s.length-1].style.transform='translateX(-100%)'; });
+
+document.querySelectorAll('.presets').forEach(p => {
+  const key = p.dataset.for;
+  p.innerHTML = PRESETS.map(([n,K]) => `<button type="button" class="fth-btn ghost" data-k="${K}" title="${n} ${K}K">${n} ${K}</button>`).join('');
+  p.addEventListener('click', e => { const b = e.target.closest('button'); if(b) set(key, +b.dataset.k); });
+});
+
+/* ── dragging and keys ── */
+function bindTrack(track, key){
+  const fromX = x => { const r = track.getBoundingClientRect(); return clampK(KMIN + (x - r.left)/r.width*(KMAX-KMIN)); };
+  track.addEventListener('pointerdown', e => {
+    if(e.button !== 0) return;
+    track.setPointerCapture(e.pointerId); track.classList.add('drag'); track.focus({preventScroll:true});
+    set(key, fromX(e.clientX));
+  });
+  track.addEventListener('pointermove', e => { if(track.hasPointerCapture(e.pointerId)) set(key, fromX(e.clientX)); });
+  const end = e => { track.classList.remove('drag'); };
+  track.addEventListener('pointerup', end); track.addEventListener('pointercancel', end);
+  track.addEventListener('keydown', e => {
+    const v = state[key], big = e.shiftKey ? 100 : STEP;
+    const next = {ArrowLeft:v-big, ArrowDown:v-big, ArrowRight:v+big, ArrowUp:v+big, PageDown:v-500, PageUp:v+500, Home:KMIN, End:KMAX}[e.key];
+    if(next !== undefined){ e.preventDefault(); set(key, next); }
+  });
+}
+bindTrack($('cctTrack'), 'cct');
+bindTrack($('wbTrack'), 'wb');
+$('matchBtn').addEventListener('click', () => set('wb', state.cct));
+$('resetBtn').addEventListener('click', () => { state.cct = NEUTRAL; set('wb', NEUTRAL); });
+
+function set(key, K){ state[key] = clampK(K); schedule(); }
+let raf = 0;
+function schedule(){ if(!raf) raf = requestAnimationFrame(() => { raf = 0; update(); }); }
+
+/* ── test scene: drawn once in neutral greys, then tinted per pixel in linear light ── */
+const view = $('view'), vctx = view.getContext('2d');
+const W = view.width, H = view.height, N = W*H;
+const baseLin = new Float32Array(N*3);
+const out = vctx.createImageData(W, H);
+const ENC = new Uint8ClampedArray(4096);
+for(let i = 0; i < 4096; i++) ENC[i] = Math.round(255*enc(i/4095));
+
+function drawScene(){
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d'), ox = 50, floor = 540;
+  // seamless backdrop
+  let gr = g.createLinearGradient(0,0,0,H);
+  gr.addColorStop(0,'#7a7a7a'); gr.addColorStop(.56,'#bababa'); gr.addColorStop(.72,'#c4c4c4'); gr.addColorStop(1,'#9c9c9c');
+  g.fillStyle = gr; g.fillRect(0,0,W,H);
+  // soft key pool from upper left
+  gr = g.createRadialGradient(520,300,10,520,300,640);
+  gr.addColorStop(0,'rgba(255,255,255,.34)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle = gr; g.fillRect(0,0,W,H);
+  const shadow = (cx, cy, rx, ry, a) => {
+    g.save(); g.translate(cx, cy); g.scale(1, ry/rx);
+    const s = g.createRadialGradient(0,0,0,0,0,rx);
+    s.addColorStop(0,`rgba(0,0,0,${a})`); s.addColorStop(.55,`rgba(0,0,0,${a*.45})`); s.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle = s; g.beginPath(); g.arc(0,0,rx,0,Math.PI*2); g.fill(); g.restore();
+  };
+  // grey card (18% grey)
+  shadow(ox+345, floor+4, 90, 13, .38);
+  gr = g.createLinearGradient(ox+260,0,ox+355,0); gr.addColorStop(0,'#7b7b7b'); gr.addColorStop(1,'#717171');
+  g.fillStyle = gr; g.fillRect(ox+260, 362, 95, floor-362);
+  g.fillStyle = '#8c8c8c'; g.fillRect(ox+260, 362, 95, 2);
+  g.fillStyle = '#5e5e5e'; g.fillRect(ox+355, 364, 5, floor-364);
+  // white sphere
+  shadow(ox+560, floor+2, 125, 19, .5);
+  gr = g.createRadialGradient(ox+478,388,6, ox+520,434,106);
+  gr.addColorStop(0,'#ffffff'); gr.addColorStop(.22,'#f1f1f1'); gr.addColorStop(.66,'#ababab'); gr.addColorStop(.9,'#6d6d6d'); gr.addColorStop(1,'#7c7c7c');
+  g.fillStyle = gr; g.beginPath(); g.arc(ox+520, 434, 106, 0, Math.PI*2); g.fill();
+  // cylinder
+  const cx = ox+765, rx = 64, ry = 16, top = 318;
+  shadow(cx+30, floor+4, 112, 17, .45);
+  gr = g.createLinearGradient(cx-rx,0,cx+rx,0);
+  gr.addColorStop(0,'#575757'); gr.addColorStop(.2,'#bcbcbc'); gr.addColorStop(.36,'#ececec'); gr.addColorStop(.55,'#cfcfcf'); gr.addColorStop(.86,'#7a7a7a'); gr.addColorStop(1,'#5c5c5c');
+  g.fillStyle = gr; g.beginPath();
+  g.moveTo(cx-rx, top); g.lineTo(cx-rx, floor-ry);
+  g.ellipse(cx, floor-ry, rx, ry, 0, Math.PI, 0, true);
+  g.lineTo(cx+rx, top); g.ellipse(cx, top, rx, ry, 0, 0, Math.PI, false);
+  g.fill();
+  gr = g.createLinearGradient(cx-rx,0,cx+rx,0); gr.addColorStop(0,'#e9e9e9'); gr.addColorStop(1,'#c9c9c9');
+  g.fillStyle = gr; g.beginPath(); g.ellipse(cx, top, rx, ry, 0, 0, Math.PI*2); g.fill();
+  // vignette
+  gr = g.createRadialGradient(W/2,H*.48,H*.42,W/2,H*.48,W*.72);
+  gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(1,'rgba(0,0,0,.42)');
+  g.fillStyle = gr; g.fillRect(0,0,W,H);
+  // store in linear light
+  const d = g.getImageData(0,0,W,H).data, DEC = new Float32Array(256);
+  for(let i = 0; i < 256; i++) DEC[i] = dec(i/255);
+  for(let i = 0, j = 0; i < N; i++, j += 4){ baseLin[i*3] = DEC[d[j]]; baseLin[i*3+1] = DEC[d[j+1]]; baseLin[i*3+2] = DEC[d[j+2]]; }
+}
+
+function renderImage(g){
+  const o = out.data, r = g[0]*4095, gg = g[1]*4095, b = g[2]*4095;
+  for(let i = 0, j = 0; i < N; i++, j += 4){
+    const k = i*3;
+    o[j]   = ENC[Math.min(4095, (baseLin[k]*r) | 0)];
+    o[j+1] = ENC[Math.min(4095, (baseLin[k+1]*gg) | 0)];
+    o[j+2] = ENC[Math.min(4095, (baseLin[k+2]*b) | 0)];
+    o[j+3] = 255;
+  }
+  vctx.putImageData(out, 0, 0);
+}
+
+/* ── update everything from state ── */
+let lastWb = null;
+function placeGuide(){
+  const s = $('scales').getBoundingClientRect(), a = $('cctBar').getBoundingClientRect(), b = $('wbBar').getBoundingClientRect();
+  const gd = $('guide');
+  gd.style.left = (a.left - s.left + a.width*frac(state.cct)) + 'px';
+  gd.style.top = (a.bottom - s.top) + 'px';
+  gd.style.height = Math.max(0, b.bottom - a.bottom) + 'px';
+}
+function update(){
+  const {cct, wb} = state;
+  $('cctPin').style.left = frac(cct)*100 + '%';
+  $('wbPin').style.left  = frac(wb)*100 + '%';
+  $('cctTag').textContent = fmt(cct);
+  $('wbTag').textContent  = 'WB ' + fmt(wb);
+  $('cctTrack').setAttribute('aria-valuenow', cct); $('cctTrack').setAttribute('aria-valuetext', fmt(cct));
+  $('wbTrack').setAttribute('aria-valuenow', wb);  $('wbTrack').setAttribute('aria-valuetext', fmt(wb));
+  if(wb !== lastWb){ $('wbBar').style.background = gradientFor(wb); lastWb = wb; }
+  document.querySelectorAll('.presets').forEach(p => p.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.k === state[p.dataset.for])));
+  placeGuide();
+
+  const g = gains(cct, wb);
+  const diff = cct - wb, mired = Math.round(1e6/cct - 1e6/wb);
+  $('status').textContent = diff === 0 ? 'Balanced' : `${Math.abs(diff)}K ${diff < 0 ? 'under' : 'over'} balanced`;
+  $('swatch').style.background = css(g);
+  $('detail').innerHTML = diff === 0
+    ? `Light <b>${fmt(cct)}</b> · White balance <b>${fmt(wb)}</b> · whites read white`
+    : `Light <b>${fmt(cct)}</b> · White balance <b>${fmt(wb)}</b> · image reads <b>${diff < 0 ? 'warm' : 'cool'}</b> · ${Math.abs(mired)} mired shift`;
+  renderImage(g);
+}
+
+drawScene();
+addEventListener('resize', placeGuide);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(placeGuide);
+update();
+})();
+</script>
+</body>
+</html>

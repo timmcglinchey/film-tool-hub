@@ -544,6 +544,25 @@
       "note": "",
       "rev": 202611171845,
       "file": "tools/dof.html"
+    },
+    {
+      "id": "colour-temp",
+      "name": "Colour Temperature Lab",
+      "desc": "See how the colour of light and your camera's white balance work together. Move each along the Kelvin scale and watch a scene warm, cool and come back to neutral.",
+      "category": "learn",
+      "tags": [
+        "DP",
+        "Gaffer",
+        "Learning"
+      ],
+      "icon": "colourtemp",
+      "fileName": "Colour Temperature Lab.html",
+      "origTitle": "Colour Temperature Lab",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611181100,
+      "file": "tools/colour-temp.html"
     }
   ]
 }
