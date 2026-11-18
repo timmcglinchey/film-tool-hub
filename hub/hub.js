@@ -50,6 +50,7 @@ const ICONS = {
   exposure: P('<circle cx="12" cy="12" r="8.8"/><path d="M12 3.2l2.6 6.4M20.4 9.3l-6.8.9M17.4 18.9l-4.2-5.4M6.6 18.9l4.2-5.4M3.6 9.3l6.8.9"/><circle cx="12" cy="12" r="2.6"/>'),
   dof:      P('<circle cx="12" cy="12" r="8.8"/><path d="M3.2 12h17.6"/><path d="M8 7.4v9.2M16 7.4v9.2"/><path d="M12 9.6v4.8" stroke-width="2.4"/>'),
   falsecolour: P('<rect x="3" y="5" width="18" height="14" rx="1.8"/><path d="M3 15l4.5-4.5 3.5 3.5 4-5 6 6"/><path d="M7 5v14M11 5v14M15 5v14" opacity=".35"/>'),
+  budget:   P('<ellipse cx="9.5" cy="6.5" rx="6" ry="2.5"/><path d="M3.5 6.5V11c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V6.5"/><path d="M3.5 11v4.5c0 1.4 2.7 2.5 6 2.5"/><circle cx="16.8" cy="16.6" r="4.2"/><path d="M16.8 14.6v4"/>'),
   research: P('<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/><path d="M8 9.2h5M8 11.8h3.4"/>'),
   generic:  P('<rect x="3" y="9" width="18" height="11.5" rx="1.6"/><path d="M3.4 5.6L20 3l.6 3.6L4 9.2z"/><path d="M8 4.8l2 3.4M13 4l2 3.4"/>')
 };
@@ -2127,6 +2128,7 @@ const TOOL_THEME = {
   breakdown:     {kit: true},
   coverage:      {kit: true},
   'script-lining': {kit: true},
+  budget:        {kit: true},
   lighting:      {kit: true},
   falsecolour:   {kit: true, after: 'drawHist'},
   dof:           {kit: true},
@@ -2153,7 +2155,8 @@ function kitHead(t) {
 const PEOPLE_FIELDS = {
   callsheet: '[data-k="producer"],[data-k="director"],[data-a="crew"][data-k="name"]',
   risk: '[data-k="assessor"],[data-k="act"],[data-k="sup"],[data-k="fa"],[data-k="fbox"],[data-k="hod"],[data-k="sn"]',
-  recce: '[data-f="by"],[data-f="aid"]'
+  recce: '[data-f="by"],[data-f="aid"]',
+  budget: '#sProd'
 };
 function themed(t, ro) {
   const cfg = TOOL_THEME[t.id] || {};
@@ -2569,6 +2572,7 @@ const DOC_TYPES = {
   coverage: ['Coverage Report PDF', 'Feedback PDF', 'Timeline PDF'],
   'script-lining': ['Lined Script PDF'],
   breakdown: ['Breakdown PDF', 'Advanced Breakdown PDF', 'Breakdown CSV'],
+  budget: ['Budget PDF', 'Budget Excel', 'Budget CSV'],
   schedule: ['Schedule PDF', 'Schedule Excel'],
   recce: ['Recce Field Sheet PDF', 'Recce Report PDF', 'Recce Comparison PDF', 'Recce CSV'],
   casting: ['Casting Breakdowns PDF', 'Contact Sheet PDF', 'Auditionees CSV'],

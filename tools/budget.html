@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!--fth-standalone-->
+<!-- Film Tool Hub: this block is only used when this file is opened on its own (for example while working on it).
+     Inside the hub it is removed and the hub supplies the same look from hub/kit.css. Keep it, but don't edit it here. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═════════ Film Tool Hub kit ═════════
+   Shared look for every tool. The hub injects this at the top of each tool's <head>,
+   sets data-theme="light|dark" on the tool's <html>, and sets --fth-cat to the tool's
+   category colour. Tools use the --fth-* tokens and the .fth-* components. */
+:root{
+  --fth-bg:#0b0c0e; --fth-bg2:#101216; --fth-surface:#15181d; --fth-surface2:#1b1f26; --fth-surface3:#232831;
+  --fth-line:#242931; --fth-line2:#333a45; --fth-line3:#46505e;
+  --fth-text:#f0ece5; --fth-muted:#9aa0aa; --fth-faint:#666c77;
+  --fth-good:#5cc98a; --fth-bad:#ff8f7a; --fth-warn:#f2bd5c;
+  /* accent tokens (--fth-cat, --fth-accent, --fth-accent-ink, --fth-accent-soft, --fth-accent-line, --fth-on-accent)
+     are written by the hub for each tool's category, as plain colours for both themes */
+  --fth-cat:#ffb547; --fth-accent:#ffb547; --fth-accent-ink:#ffb547; --fth-accent-soft:rgba(255,181,71,.14); --fth-accent-line:rgba(255,181,71,.45); --fth-on-accent:#14110b;
+  --fth-paper-backdrop:#07080a;
+  --fth-shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --fth-shadow-sm:none;
+  --fth-radius:14px; --fth-radius-sm:9px;
+  --fth-display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --fth-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --fth-script:"Courier Prime","Courier New",Courier,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --fth-bg:#f3f0ea; --fth-bg2:#f9f7f3; --fth-surface:#ffffff; --fth-surface2:#f1ede5; --fth-surface3:#e6e1d6;
+  --fth-line:#e3ded4; --fth-line2:#d2ccc0; --fth-line3:#b4ad9f;
+  --fth-text:#16181c; --fth-muted:#565c66; --fth-faint:#878c95;
+  --fth-good:#22804a; --fth-bad:#c0392b; --fth-warn:#9a6200;
+  --fth-paper-backdrop:#e4dfd5;
+  --fth-shadow:0 14px 30px -16px rgba(70,50,20,.30);
+  --fth-shadow-sm:0 1px 2px rgba(60,45,20,.05),0 4px 14px rgba(60,45,20,.05);
+  color-scheme:light;
+}
+
+/* base */
+html{background:var(--fth-bg)}
+body{background:var(--fth-bg);color:var(--fth-text);font-family:var(--fth-display);-webkit-font-smoothing:antialiased}
+::selection{background:var(--fth-accent-line)}
+:focus-visible{outline:2px solid var(--fth-accent);outline-offset:2px}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--fth-line2);border-radius:6px;border:2px solid var(--fth-bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--fth-line3)}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+
+/* tool header: category eyebrow, tool name, then actions on the right */
+.fth-head{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 20px;
+  background:color-mix(in srgb,var(--fth-bg) 88%,transparent);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  border-bottom:1px solid var(--fth-line)}
+.fth-head::before{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:linear-gradient(90deg,var(--fth-cat),transparent 38%);opacity:.75;pointer-events:none}
+.fth-id{display:flex;flex-direction:column;gap:5px;min-width:0;flex:none}
+.fth-eyebrow{display:flex;align-items:center;gap:8px;font:500 10.5px/1 var(--fth-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fth-accent-ink);white-space:nowrap}
+.fth-eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fth-cat);box-shadow:0 0 0 3px var(--fth-accent-soft);flex:none}
+.fth-title{margin:0;font-weight:800;font-variation-settings:"wdth" 68;font-size:23px;line-height:1;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap}
+.fth-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.fth-vsep{width:1px;height:22px;background:var(--fth-line2);margin:0 3px;flex:none}
+
+/* buttons */
+.fth-btn{height:34px;padding:0 13px;border-radius:var(--fth-radius-sm);border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);
+  font:600 13px/1 var(--fth-display);display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  transition:background-color .15s,border-color .15s,color .15s}
+.fth-btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.fth-btn:disabled{opacity:.45;cursor:default}
+.fth-btn.primary{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.fth-btn.primary:hover{filter:brightness(1.08)}
+.fth-btn.ghost{background:transparent;border-color:transparent;color:var(--fth-muted)}
+.fth-btn.ghost:hover{background:var(--fth-surface2);border-color:var(--fth-line2);color:var(--fth-text)}
+.fth-btn.danger{color:var(--fth-bad)}
+.fth-btn.sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.fth-btn.icon{width:30px;height:30px;padding:0}
+
+/* labels, fields */
+.fth-label{font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.fth-input{width:100%;min-width:0;background:var(--fth-bg2);border:1px solid var(--fth-line2);border-radius:8px;padding:7px 10px;color:var(--fth-text);font:14px/1.35 var(--fth-display);outline:none;transition:border-color .15s,box-shadow .15s}
+.fth-input:hover{border-color:var(--fth-line3)}
+.fth-input:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+select.fth-input{cursor:pointer}
+textarea.fth-input{resize:vertical;line-height:1.45}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-accent)}
+
+/* sections & surfaces */
+.fth-card{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);box-shadow:var(--fth-shadow-sm)}
+.fth-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.fth-sec::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+.fth-sec .fth-num{font:600 11px var(--fth-mono);color:var(--fth-accent-ink);letter-spacing:.08em}
+.fth-muted{color:var(--fth-muted)}
+.fth-mono{font-family:var(--fth-mono)}
+
+/* notes */
+.fth-tip{background:var(--fth-accent-soft);border-left:2px solid var(--fth-accent);color:var(--fth-text);padding:7px 10px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.45}
+.fth-warn{background:color-mix(in srgb,var(--fth-warn) 10%,var(--fth-surface));border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent);color:var(--fth-text);border-radius:10px;padding:10px 12px;font-size:13px}
+.fth-warn b:first-child{color:var(--fth-warn)}
+.fth-info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--fth-line3);color:var(--fth-muted);font:600 10px/1 var(--fth-mono);text-transform:none;letter-spacing:0;cursor:pointer;user-select:none;vertical-align:1px;margin-left:5px;transition:.15s}
+.fth-info:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+
+/* toast */
+.fth-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;z-index:200;background:var(--fth-text);color:var(--fth-bg);padding:10px 16px;border-radius:10px;font:500 13.5px var(--fth-display);box-shadow:var(--fth-shadow);transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.fth-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* paper: a printable page shown on screen stays paper-white in both themes */
+.fth-paper-wrap{background:var(--fth-paper-backdrop)}
+.fth-paper{background:#fff;color:#000;color-scheme:light;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55)}
+
+@media print{
+  html,body{background:#fff!important;color:#000}
+  .fth-head{display:none!important}
+  .fth-paper-wrap{background:#fff!important}
+  .fth-paper{box-shadow:none!important}
+}
+@media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
+@media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
+
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
+:root{--fth-cat:#4fc7b5;--fth-accent:#4fc7b5;--fth-accent-ink:#4fc7b5;--fth-accent-soft:rgba(79,199,181,0.14);--fth-accent-line:rgba(79,199,181,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#2e7369;--fth-accent-ink:#2e7369;--fth-accent-soft:rgba(79,199,181,0.16);--fth-accent-line:rgba(79,199,181,0.6);--fth-on-accent:#ffffff}
+</style>
+<script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
+<!--/fth-standalone-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Film Budget Builder</title>
+<style>
+/* the tool's colour names, mapped onto the hub's shared tokens (hub/kit.css) */
+:root{
+  --bg:var(--fth-bg); --bg2:var(--fth-bg2); --panel:var(--fth-surface); --panel2:var(--fth-surface2); --field:var(--fth-bg2);
+  --line:var(--fth-line); --line2:var(--fth-line2);
+  --fg:var(--fth-text); --muted:var(--fth-muted); --faint:var(--fth-faint);
+  --accent:var(--fth-accent); --accent-ink:var(--fth-on-accent); --accent-tx:var(--fth-accent-ink); --accent-soft:var(--fth-accent-soft);
+  --over:var(--fth-bad); --over-soft:color-mix(in srgb,var(--fth-bad) 13%,transparent);
+  --good:var(--fth-good); --good-soft:color-mix(in srgb,var(--fth-good) 12%,transparent);
+  --bar-bud:var(--fth-surface3); --bar-act:var(--fth-accent);
+  --shadow:var(--fth-shadow);
+  --display:var(--fth-display); --mono:var(--fth-mono);
+  /* budget section colours carry meaning, so they stay fixed (a darker set in light mode) */
+  --g-atl:#f5b14c; --g-btl:#4fc7b5; --g-post:#97a3ff; --g-other:#c9a0e8;
+}
+:root[data-theme="light"]{--g-atl:#b9770f; --g-btl:#14857a; --g-post:#4e5bd0; --g-other:#8a4fb8}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--display);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.over{color:var(--over)!important}
+.good{color:var(--good)}
+.muted{color:var(--muted)}
+
+/* header */
+.fth-head{flex:none;margin-bottom:12px}
+.fth-btn svg{width:15px;height:15px;flex:none}
+.brand{display:flex;flex-direction:column;gap:3px;margin-right:4px}
+.eyebrow{font:600 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent-tx)}
+.brand h1{margin:0;font-stretch:72%;font-weight:800;font-size:25px;line-height:1;letter-spacing:.03em;text-transform:uppercase}
+.proj{flex:1;min-width:160px;max-width:340px;height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--line2);background:var(--field)}
+.proj::placeholder{color:var(--faint)}
+
+.btn{height:36px;padding:0 13px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--fg)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent-tx)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.sm{height:30px;padding:0 10px;font-size:12.5px}
+.btn.ghost{background:none}
+.btn svg{width:15px;height:15px;flex:none}
+.ib{width:28px;height:28px;padding:0;justify-content:center;border-radius:7px;border:1px solid transparent;background:none;color:var(--muted);display:inline-flex;align-items:center}
+.ib:hover{border-color:var(--line2);color:var(--fg);background:var(--panel2)}
+.ib.del:hover{color:var(--over)}
+.ib svg{width:15px;height:15px}
+
+.menu{position:relative}
+.menu .pop{position:absolute;right:0;top:calc(100% + 6px);z-index:40;min-width:240px;background:var(--panel);border:1px solid var(--line2);border-radius:11px;box-shadow:var(--shadow);padding:6px}
+.menu .pop button{display:flex;flex-direction:column;align-items:flex-start;width:100%;text-align:left;background:none;border:0;border-radius:8px;padding:8px 10px;font-size:13px;font-weight:600}
+.menu .pop button small{font-weight:400;color:var(--muted);font-size:12px}
+.menu .pop button:hover{background:var(--panel2)}
+.menu .pop hr{border:0;border-top:1px solid var(--line);margin:5px 4px}
+
+/* KPI strip */
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 18px 10px;flex:none}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px 11px;min-width:0}
+.kpi .k{font:600 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font:600 21px/1.1 var(--mono);margin-top:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meter{height:5px;border-radius:3px;background:var(--bar-bud);margin-top:8px;overflow:hidden;position:relative}
+.meter i{position:absolute;inset:0 auto 0 0;background:var(--bar-act);border-radius:3px}
+.meter i.ov{background:var(--over)}
+@media (max-width:980px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.kpi:nth-child(n+4){display:none}}
+
+/* tabs */
+.tabs{display:flex;align-items:center;gap:4px;margin:0 18px 10px;flex:none;border-bottom:1px solid var(--line)}
+.tab{background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px 9px;font-weight:650;font-size:13.5px;color:var(--muted);margin-bottom:-1px}
+.tab[aria-selected=true]{color:var(--fg);border-bottom-color:var(--accent-tx)}
+.tab:hover{color:var(--fg)}
+.tabs .sp{flex:1}
+.saved{font:500 11.5px var(--mono);color:var(--faint)}
+
+/* views */
+.view{flex:1;min-height:0;padding:0 18px 16px}
+.view[hidden]{display:none}
+.ts{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:12px;height:100%}
+.li{display:grid;grid-template-columns:250px minmax(0,1fr);gap:12px;height:100%}
+@media (max-width:1080px){.ts{grid-template-columns:minmax(0,1fr) 290px}}
+@media (max-width:900px){.ts,.li{grid-template-columns:1fr;height:auto}.view{overflow:auto}.rail{display:none}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.scroll{overflow:auto;min-height:0}
+
+/* top sheet */
+.sheet{padding:4px 0 10px}
+.sheet h2,.side h2{margin:0;font-stretch:80%;font-weight:750;font-size:15px;letter-spacing:.04em;text-transform:uppercase}
+.sheethead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding:14px 18px 8px}
+.sheethead .meta{font-size:12.5px;color:var(--muted)}
+table{border-collapse:collapse;width:100%}
+.tst th{font:600 10.5px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);text-align:right;padding:8px 10px;border-bottom:1px solid var(--line2);white-space:nowrap;position:sticky;top:0;background:var(--panel);z-index:1}
+.tst th:nth-child(1),.tst th:nth-child(2){text-align:left}
+.tst td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.tst td:nth-child(1){text-align:left;font:500 12px var(--mono);color:var(--muted);width:62px}
+.tst td:nth-child(2){text-align:left;white-space:normal;width:34%}
+.tst tr.dep{cursor:pointer}
+.tst tr.dep:hover td{background:var(--panel2)}
+.tst tr.grp td{padding-top:16px;border-bottom:0;font:700 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;text-align:left}
+.tst tr.grp td i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:8px;vertical-align:-1px}
+.tst tr.sub td{font-weight:700;border-bottom:1px solid var(--line2);background:var(--panel2)}
+.tst tr.tot td{font-weight:700}
+.tst tr.grand td{font-weight:800;font-size:15px;border-top:2px solid var(--fg);border-bottom:2px solid var(--fg);padding:11px 10px}
+.tst tr.cont td{color:var(--fg)}
+.tst tr.fund td{color:var(--muted);border-bottom:0}
+.tst .bar{width:130px}
+.sbar{position:relative;height:8px;border-radius:4px;background:var(--bar-bud);overflow:hidden;min-width:70px}
+.sbar i{position:absolute;inset:0 auto 0 0;background:var(--bar-act);border-radius:4px}
+.sbar i.ov{background:var(--over)}
+.pct{font:500 11px var(--mono);color:var(--muted);margin-left:6px;display:inline-block;width:38px;text-align:right}
+.barcell{display:flex;align-items:center;justify-content:flex-end}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+
+/* side panel */
+.side{padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.side section{display:flex;flex-direction:column;gap:9px}
+.side section+section{border-top:1px solid var(--line);padding-top:14px}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label,.lbl{font:600 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.fld input,.fld select{height:34px;padding:0 10px;border-radius:8px;border:1px solid var(--line2);background:var(--field);min-width:0;width:100%}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.seg{display:flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.seg button{flex:1;height:32px;padding:0 6px;white-space:nowrap;background:var(--field);border:0;font-size:12.5px;font-weight:600;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent-tx)}
+.tgl{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}
+.tgl input{accent-color:var(--accent-tx);width:15px;height:15px}
+.alerts{display:flex;flex-direction:column;gap:6px}
+.alert{display:flex;justify-content:space-between;gap:10px;align-items:baseline;padding:7px 10px;border-radius:8px;background:var(--over-soft);font-size:12.5px;cursor:pointer;border:0;text-align:left;width:100%}
+.alert b{font-weight:600}
+.alert span{font-family:var(--mono);color:var(--over);white-space:nowrap}
+.alert:hover{outline:1px solid var(--over)}
+.ok{padding:8px 10px;border-radius:8px;background:var(--good-soft);color:var(--good);font-size:12.5px}
+
+/* line items */
+.rail{padding:10px 8px;display:flex;flex-direction:column}
+.rail .rg{font:700 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:12px 8px 6px;display:flex;align-items:center;gap:7px}
+.rail .rg:first-child{padding-top:4px}
+.rail .rg i{width:8px;height:8px;border-radius:2px}
+.ritem{display:flex;align-items:flex-start;gap:7px;border-radius:8px;padding:6px 8px 6px 6px}
+.ritem:hover{background:var(--panel2)}
+.ritem input{accent-color:var(--accent-tx);width:15px;height:15px;margin:2px 0 0;flex:none;cursor:pointer}
+.ritem .go{flex:1;min-width:0;display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:baseline;background:none;border:0;padding:0;text-align:left}
+.ritem b{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ritem span{font:500 11.5px var(--mono);color:var(--muted)}
+.ritem .sbar{grid-column:1/-1;height:4px;margin-top:3px}
+.ritem.off .go{opacity:.42;cursor:default}
+.ritem.off b{font-weight:500}
+.ritem.off span{text-decoration:line-through}
+.rail .railhint{font-size:11.5px;color:var(--faint);padding:2px 8px 4px;margin:0}
+.dh .inc{width:16px;height:16px;accent-color:var(--accent-tx);margin:0 2px;cursor:pointer;flex:none}
+.dept.off{background:transparent;border-style:dashed}
+.dept.off .dh>*:not(.inc):not(.offnote){opacity:.42}
+.dept.off .dbody{display:none}
+.dept.off .dh .chev{visibility:hidden}
+.offnote{margin-left:auto;font-size:12px;color:var(--muted)}
+.tsoff{padding:10px 18px 0;font-size:12.5px;color:var(--muted);margin:0}
+.tsoff button{background:none;border:0;padding:0;color:var(--accent-tx);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.rail .add{margin:12px 6px 4px}
+
+.depts{display:flex;flex-direction:column;gap:12px;padding-bottom:30px}
+.dept{background:var(--panel);border:1px solid var(--line);border-radius:12px;scroll-margin-top:6px}
+.dept.flash{animation:fl 1.3s ease}
+@keyframes fl{30%{border-color:var(--accent-tx);box-shadow:0 0 0 3px var(--accent-soft)}}
+.dh{display:flex;align-items:center;gap:8px;padding:9px 10px 9px 12px;flex-wrap:wrap}
+.dh .chev{transition:transform .15s}
+.dept.closed .dh .chev{transform:rotate(-90deg)}
+.dh .gdot{width:10px;height:10px;border-radius:3px;flex:none}
+.dh input.code{width:62px;font:600 12.5px var(--mono);color:var(--muted)}
+.dh input.name{flex:1;min-width:140px;font-weight:700;font-size:14.5px}
+.dh input{height:30px;padding:0 8px;border-radius:7px;border:1px solid transparent;background:none}
+.dh input:hover{border-color:var(--line2)}
+.dh input:focus{border-color:var(--accent-tx);background:var(--field);outline:none}
+.dh select{height:30px;border-radius:7px;border:1px solid var(--line2);background:var(--field);font-size:12px;padding:0 6px;color:var(--muted)}
+.dsum{display:flex;gap:14px;font:500 12px var(--mono);color:var(--muted);margin-left:auto;white-space:nowrap}
+.dsum b{color:var(--fg);font-weight:600}
+.dbody{border-top:1px solid var(--line);overflow-x:auto}
+.dept.closed .dbody{display:none}
+.lt{min-width:1180px}
+.lt input[data-k=desc]{min-width:190px}
+.lt input[data-k=note]{min-width:150px}
+.lt select[data-k=unit]{min-width:96px}
+.lt th{font:600 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);text-align:left;padding:8px 6px 6px;white-space:nowrap}
+.lt th.r{text-align:right}
+.lt td{padding:2px 3px;border-top:1px solid var(--line);vertical-align:middle}
+.lt tr:hover td{background:color-mix(in oklab,var(--panel2) 60%,transparent)}
+.lt input,.lt select{height:30px;width:100%;padding:0 7px;border-radius:6px;border:1px solid transparent;background:none;min-width:0}
+.lt input:hover,.lt select:hover{border-color:var(--line2)}
+.lt input:focus,.lt select:focus{border-color:var(--accent-tx);background:var(--field);outline:none}
+.lt input.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px}
+.lt input.act{background:var(--accent-soft)}
+.lt .acc{font:500 11.5px var(--mono);color:var(--faint);padding-left:9px;width:58px}
+.lt .calc{text-align:right;font:600 13px var(--mono);font-variant-numeric:tabular-nums;padding-right:9px;white-space:nowrap}
+.lt .x{color:var(--faint);text-align:center;width:14px;font-size:12px;padding:0}
+.lt .fin{text-align:center;width:46px}
+.lt .fin input{width:15px;height:15px;accent-color:var(--good);cursor:pointer}
+.lt tr.final .calc.var{color:var(--good)}
+.lt tr.final .calc.var.over{color:var(--over)}
+.lt tfoot td{border-top:1px solid var(--line2);font:700 12.5px var(--mono);padding:8px 9px;text-align:right}
+.lt tfoot td:first-child{text-align:left}
+.lt .rowacts{white-space:nowrap;width:62px;text-align:right;padding-right:6px}
+.addline{margin:8px 10px 10px}
+.toolbar2{display:flex;gap:8px;align-items:center;padding:0 0 10px;flex-wrap:wrap}
+.toolbar2 .sp{flex:1}
+.filter{height:30px;padding:0 10px;border-radius:8px;border:1px solid var(--line2);background:var(--field);font-size:12.5px;min-width:180px}
+
+/* allocation mode */
+.modeseg{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.modeseg .seg button{height:28px;padding:0 10px;font-size:12px}
+.tst input.al{width:118px;height:30px;text-align:right;padding:0 8px;border-radius:7px;border:1px solid var(--line2);background:var(--accent-soft);font:600 13px var(--mono);font-variant-numeric:tabular-nums;color:var(--fg)}
+.tst input.al::placeholder{color:var(--faint);font-weight:500}
+.tst input.al:focus{outline:none;border-color:var(--accent-tx)}
+.tst td.alc{padding-top:4px;padding-bottom:4px}
+.gap{display:block;font:500 10.5px var(--mono);color:var(--muted);margin-top:1px}
+.gap.over{color:var(--over)}
+.dh .alloc{display:flex;align-items:center;gap:6px;font:600 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-tx)}
+.dh .alloc input{width:110px;height:30px;text-align:right;font:600 13px var(--mono);text-transform:none;letter-spacing:0;border:1px solid var(--line2);background:var(--accent-soft);color:var(--fg)}
+.dh .alloc input:focus{border-color:var(--accent-tx)}
+.alert.warn{background:var(--accent-soft)}
+.alert.warn span{color:var(--accent-tx)}
+/* column info tips */
+.hi{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;margin-left:5px;padding:0;border-radius:50%;border:1px solid var(--line2);background:none;color:var(--faint);font:700 9px/1 var(--display);letter-spacing:0;text-transform:none;vertical-align:1px;cursor:pointer}
+.hi:hover,.hi[aria-expanded=true]{border-color:var(--accent-tx);color:var(--accent-tx);background:var(--accent-soft)}
+.tip{position:fixed;z-index:70;width:250px;background:var(--panel);border:1px solid var(--line2);border-radius:10px;box-shadow:var(--shadow);padding:10px 12px 11px;font-size:12.5px;line-height:1.45;color:var(--fg)}
+.tip b{display:block;font:700 10.5px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--accent-tx);margin-bottom:6px}
+.tip em{font-style:normal;color:var(--muted)}
+/* overall budget field */
+.bigfld{background:var(--accent-soft);border:1px solid color-mix(in oklab,var(--accent) 35%,transparent);border-radius:10px;padding:11px 12px 12px;display:flex;flex-direction:column;gap:6px}
+.bigfld label{font:700 10.5px/1 var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--accent-tx)}
+.bigfld .in{display:flex;align-items:center;height:40px;border-radius:8px;border:1px solid var(--line2);background:var(--field);padding:0 10px;gap:4px}
+.bigfld .in span{font:600 16px var(--mono);color:var(--muted)}
+.bigfld input{flex:1;min-width:0;border:0;background:none;font:600 17px var(--mono);outline:none;height:100%}
+.bigfld .in:focus-within{border-color:var(--accent-tx)}
+.bigfld p{margin:0;font-size:12px;color:var(--muted)}
+.bigfld p.st{font-weight:600}
+/* toast */
+.toast{position:fixed;left:18px;bottom:18px;max-width:min(560px,calc(100vw - 36px));background:var(--fg);color:var(--bg);border-radius:10px;padding:9px 10px 9px 14px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600;box-shadow:var(--shadow);z-index:60}
+.toast button{background:none;border:1px solid currentColor;color:inherit;border-radius:7px;padding:3px 10px;font-weight:700;font-size:12.5px}
+
+/* print */
+#printDoc{display:none}
+@media print{
+  @page{size:A4;margin:14mm 12mm}
+  html,body{height:auto;overflow:visible;background:#fff!important;color:#111!important;display:block}
+  body>*:not(#printDoc){display:none!important}
+  #printDoc{display:block;font-family:var(--display);color:#111;font-size:10.5pt}
+  #printDoc h1{font-stretch:75%;font-weight:800;text-transform:uppercase;letter-spacing:.03em;font-size:20pt;margin:0 0 2pt}
+  #printDoc .pm{display:flex;flex-wrap:wrap;gap:4pt 18pt;font-size:9pt;color:#444;margin-bottom:10pt;border-bottom:1.5pt solid #111;padding-bottom:8pt}
+  #printDoc .pm b{color:#111}
+  #printDoc h2{font-size:11pt;text-transform:uppercase;letter-spacing:.06em;margin:14pt 0 5pt;font-stretch:80%}
+  #printDoc table{width:100%;border-collapse:collapse;font-size:9pt}
+  #printDoc th{text-align:right;font:600 7.5pt var(--mono);text-transform:uppercase;letter-spacing:.06em;color:#555;border-bottom:1pt solid #111;padding:4pt 5pt}
+  #printDoc th.l,#printDoc td.l{text-align:left}
+  #printDoc td{padding:3.5pt 5pt;border-bottom:.5pt solid #ccc;text-align:right;font-variant-numeric:tabular-nums}
+  #printDoc td.m{font-family:var(--mono);font-size:8pt;color:#555}
+  #printDoc tr.g td{font-weight:700;text-transform:uppercase;font-size:8pt;letter-spacing:.07em;border-bottom:0;padding-top:9pt;text-align:left}
+  #printDoc tr.s td{font-weight:700;background:#f1efea}
+  #printDoc tr.t td{font-weight:800;font-size:10.5pt;border-top:1.5pt solid #111;border-bottom:1.5pt solid #111}
+  #printDoc .ov{color:#b3261e}
+  #printDoc .dep{break-inside:avoid;margin-top:10pt}
+  #printDoc .dep h3{font-size:9.5pt;margin:0 0 3pt;display:flex;justify-content:space-between}
+  #printDoc .pb{break-before:page}
+  #printDoc .foot{margin-top:12pt;font-size:8pt;color:#666}
+}
+</style>
+</head>
+<body>
+
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>02 · Prep</span><h1 class="fth-title">Film Budget Builder</h1></div>
+  <span class="fth-vsep"></span>  <input class="proj" id="projTitle" placeholder="Production title" aria-label="Production title">
+  <div class="fth-actions">
+    <div class="menu" id="tplMenu">
+      <button class="fth-btn" data-pop="tplPop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M4 9h16M9 9v10"/></svg>New</button>
+      <div class="pop" id="tplPop" hidden>
+        <button data-tpl="micro">Micro-budget student film<small>Every amount at £0, with only the departments a student short usually pays for ticked</small></button>
+        <button data-tpl="sample">Indie short film sample<small>Every department filled in with typical UK indie rates, plus some actuals</small></button>
+        <button data-tpl="depts">Departments only<small>The standard accounts with empty line items</small></button>
+        <button data-tpl="blank">Blank<small>Start from nothing</small></button>
+      </div>
+    </div>
+    <button class="fth-btn" id="openBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h6l2 2h10v10H3z"/></svg>Open</button>
+    <button class="fth-btn" id="saveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg>Save file</button>
+    <span class="fth-vsep"></span>
+    <button class="fth-btn" id="docBtn" data-fth-doc hidden></button>
+    <div class="menu" id="expMenu">
+      <button class="fth-btn primary" data-pop="expPop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7 9l5-5 5 5M4 20h16"/></svg>Export</button>
+      <div class="pop" id="expPop" hidden>
+        <button data-exp="xlsx">Excel workbook (.xlsx)<small>Top sheet and line items, with live formulas</small></button>
+        <button data-exp="print">Print or save as PDF<small>Top sheet followed by the detail pages</small></button>
+        <button data-exp="csv">CSV of line items<small>For accounting software or Google Sheets</small></button>
+      </div>
+    </div>
+    <input type="file" id="fileIn" accept=".json,application/json" hidden>
+  </div>
+</header>
+
+<div class="kpis" id="kpis"></div>
+
+<nav class="tabs" role="tablist">
+  <button class="tab" role="tab" data-tab="top" aria-selected="true">Top sheet</button>
+  <button class="tab" role="tab" data-tab="lines" aria-selected="false">Line items</button>
+  <span class="sp"></span>
+  <span class="saved" id="saved"></span>
+</nav>
+
+<main class="view" id="v-top">
+  <div class="ts">
+    <div class="card scroll"><div class="sheet" id="topSheet"></div></div>
+    <aside class="card scroll side" id="side"></aside>
+  </div>
+</main>
+
+<main class="view" id="v-lines" hidden>
+  <div class="li">
+    <nav class="card scroll rail" id="rail"></nav>
+    <div class="scroll" id="linesScroll">
+      <div class="toolbar2">
+        <input class="filter" id="filter" placeholder="Filter line items…" aria-label="Filter line items">
+        <label class="tgl"><input type="checkbox" id="overOnly"> Over budget only</label>
+        <span class="sp"></span>
+        <button class="btn sm ghost" id="expandAll">Expand all</button>
+        <button class="btn sm ghost" id="collapseAll">Collapse all</button>
+      </div>
+      <div class="depts" id="depts"></div>
+    </div>
+  </div>
+</main>
+
+<div id="printDoc"></div>
+<div class="toast" id="toast" hidden><span id="toastMsg"></span><button id="toastUndo">Undo</button></div>
+
+<script>
+'use strict';
+const KEY = 'fth-budget-v1';
+const GROUPS = [
+  {id:'atl',   name:'Above the line',            short:'ATL'},
+  {id:'btl',   name:'Production · below the line', short:'BTL'},
+  {id:'post',  name:'Post-production',           short:'Post'},
+  {id:'other', name:'Other costs',               short:'Other'}
+];
+const UNITS = ['Flat','Days','Weeks','Hours','Each','Per head','Miles'];
+const $ = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 9);
+const N = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const has = v => v !== '' && v !== null && v !== undefined && isFinite(parseFloat(v));
+const SVG = {
+  chev:'<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  dup:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>',
+  del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>'
+};
+
+const TIPS = {
+  acct:    ['Acct', "Account code. Numbered from the department's code (Cast 1200 → 1201, 1202…) so receipts can be filed against the right line."],
+  desc:    ['Description', 'What the cost is, e.g. <em>Lead cast</em> or <em>Camera package hire</em>.'],
+  n:       ['No.', 'How many people or items. Leave at 1 for a single fee or item.'],
+  qty:     ['Qty', 'How many units each one needs, e.g. 4 days. Leave at 1 for one-off costs.'],
+  unit:    ['Unit', "What Qty is counted in. A label only; it doesn't change the maths."],
+  rate:    ['Rate', 'Cost of one unit for one person or item, e.g. 150 per day.'],
+  budget:  ['Budget', 'What you plan to spend. Worked out for you: No. × Qty × Rate.'],
+  actual:  ['Actual', "What you've really spent, from receipts and invoices. Leave blank until money goes out."],
+  variance:['Variance', 'Budget minus Actual: what’s left on this line. Red in brackets means over budget.'],
+  final:   ['Final', 'Tick once fully paid. Until then the forecast assumes the full budget will be spent; once ticked, any saving goes back into contingency.'],
+  note:    ['Notes', 'Anything worth remembering: rates agreed, supplier, what’s included.'],
+  alloc:   ['Allocated', 'The amount you’re giving this department from the overall budget. Leave blank to use its line-item total instead.'],
+  lines:   ['Line items', 'What the department’s line items add up to so far, and how much of the allocation is still to assign (or how far over it they are).'],
+  tbudget: ['Budget', 'The department’s planned spend: its line items added up.'],
+  tactual: ['Actual', 'Everything spent so far in this department.'],
+  tvar:    ['Variance', 'Budget minus Actual: what’s left to spend. Red in brackets means over.']
+};
+const hi = key => `<button class="hi" data-tip="${key}" aria-label="What is ${TIPS[key][0]}?" aria-expanded="false">i</button>`;
+const th = (key, cls='', style='') => `<th${cls ? ` class="${cls}"` : ''}${style ? ` style="${style}"` : ''}>${TIPS[key][0]}<button class="hi" data-tip="${key}" aria-label="What is ${TIPS[key][0]}?" aria-expanded="false">i</button></th>`;
+
+/* ───────── templates ───────── */
+// [code, name, group, [[desc, n, qty, unit, rate, actual?, final?, note?]]]
+const SAMPLE = [
+ [1000,'Story & Rights','atl',[['Screenplay fee',1,1,'Flat',500,500,1],['Script editor',1,1,'Flat',150,150,1]]],
+ [1100,'Producer & Director','atl',[['Producer fee',1,1,'Flat',600],['Director fee',1,1,'Flat',600]]],
+ [1200,'Cast','atl',[['Lead cast',2,4,'Days',150,'','','Equity low-budget rate'],['Supporting cast',3,2,'Days',120],['Supporting artists',6,1,'Days',60],['Rehearsal day',2,1,'Days',100]]],
+ [2000,'Production Staff','btl',[['Line producer',1,6,'Days',150],['1st AD',1,6,'Days',150,'','','Includes 2 prep days'],['2nd AD',1,4,'Days',100],['Runners',2,4,'Days',80]]],
+ [2100,'Camera','btl',[['Director of photography',1,6,'Days',250],['1st AC / focus puller',1,4,'Days',180],['2nd AC / DIT',1,4,'Days',150],['Camera package hire',1,4,'Days',220],['Lens set hire',1,4,'Days',120],['Media cards & drives',1,1,'Flat',250,268]]],
+ [2200,'Sound','btl',[['Production sound mixer',1,4,'Days',200],['Boom operator',1,4,'Days',130],['Sound kit hire',1,4,'Days',80]]],
+ [2300,'Lighting & Grip','btl',[['Gaffer',1,4,'Days',200],['Spark',1,4,'Days',150],['Lighting package hire',1,4,'Days',300],['Grip kit hire',1,4,'Days',100],['Expendables (gels, tape)',1,1,'Flat',150]]],
+ [2400,'Art Department','btl',[['Production designer',1,6,'Days',180],['Props & set dressing',1,1,'Flat',600,655],['Construction materials',1,1,'Flat',400,220]]],
+ [2500,'Costume & Make-up','btl',[['Costume designer',1,5,'Days',150],['Costume purchase & hire',1,1,'Flat',400,310],['Hair & make-up artist',1,4,'Days',150],['HMU consumables',1,1,'Flat',120]]],
+ [2600,'Locations','btl',[['Location fees',1,4,'Days',250],['Filming permits',1,1,'Flat',150,180,1],['Location recce travel',1,1,'Flat',120,96,1]]],
+ [2700,'Transport','btl',[['Van hire',1,4,'Days',90],['Fuel',1,1,'Flat',200],['Crew travel & mileage',1,300,'Miles',0.45]]],
+ [2800,'Catering & Welfare','btl',[['Catering (cast & crew)',22,4,'Per head',12,'','','22 heads × 4 days'],['Craft table & water',1,4,'Days',40],['First aid kit',1,1,'Flat',50,42,1]]],
+ [2900,'Production Expenses','btl',[['Walkie-talkie hire',1,4,'Days',40],['Printing & call sheets',1,1,'Flat',60],['Hard drive backups',2,1,'Each',90]]],
+ [3000,'Editorial','post',[['Editor',1,10,'Days',200],['Assistant editor / assembly',1,3,'Days',120]]],
+ [3100,'Sound Post & Music','post',[['Sound design & mix',1,5,'Days',250],['Composer',1,1,'Flat',800],['Music licensing',1,1,'Flat',300]]],
+ [3200,'Picture Post','post',[['Colourist',1,2,'Days',400],['VFX & clean-up',1,1,'Flat',300],['DCP & deliverables',1,1,'Flat',250]]],
+ [4000,'Insurance & Legal','other',[['Production insurance',1,1,'Flat',650,620,1],['Contracts & clearances',1,1,'Flat',200]]],
+ [4100,'Festivals & Marketing','other',[['Festival submissions',8,1,'Each',50],['Poster & stills',1,1,'Flat',200],['Cast & crew screening',1,1,'Flat',300]]]
+];
+const MICRO = [
+ [1000,'Story & Rights','atl',[['Screenplay (written in-house)',1,1,'Flat',0]]],
+ [1100,'Producer & Director','atl',[['Producer & director (unpaid, student roles)',1,1,'Flat',0]]],
+ [1200,'Cast','atl',[['Lead cast (expenses)',2,3,'Days',50,'','','Travel and expenses rather than fees'],['Supporting cast (expenses)',2,1,'Days',40],['Extras travel',4,1,'Each',10]]],
+ [2000,'Production Staff','btl',[['Runner expenses',1,3,'Days',10]]],
+ [2100,'Camera','btl',[['Camera kit (university store)',1,1,'Flat',0],['Extra lens hire',1,3,'Days',30],['SD cards',2,1,'Each',20]]],
+ [2200,'Sound','btl',[['Sound kit (university store)',1,1,'Flat',0],['Lav mic hire',1,3,'Days',15]]],
+ [2300,'Lighting & Grip','btl',[['LED panel hire',1,3,'Days',25],['Gels, clips & gaffer tape',1,1,'Flat',20]]],
+ [2400,'Art Department','btl',[['Props',1,1,'Flat',120,'','','Charity shops and borrowing first'],['Set dressing',1,1,'Flat',80],['Materials (paint, tape, fixings)',1,1,'Flat',40]]],
+ [2500,'Costume & Make-up','btl',[['Costume purchase & hire',1,1,'Flat',80],['Make-up & consumables',1,1,'Flat',50]]],
+ [2600,'Locations','btl',[['Location fee or donation',1,1,'Flat',100],['Filming permit',1,1,'Flat',40,'','','Many councils waive fees for students; check first'],['Thank-you gifts for locations',1,1,'Flat',30]]],
+ [2700,'Transport','btl',[['Van or car hire',1,1,'Days',70],['Fuel',1,1,'Flat',60],['Crew mileage',1,200,'Miles',0.45]]],
+ [2800,'Catering & Welfare','btl',[['Lunches',12,3,'Per head',6,'','','12 cast and crew × 3 days'],['Snacks & water',1,3,'Days',15],['First aid kit',1,1,'Flat',15]]],
+ [2900,'Production Expenses','btl',[['Printing & call sheets',1,1,'Flat',15]]],
+ [3000,'Editorial','post',[['Editing (student editor)',1,1,'Flat',0],['Backup hard drive',1,1,'Each',60]]],
+ [3100,'Sound Post & Music','post',[['Composer fee',1,1,'Flat',100],['Library music licence',1,1,'Flat',50],['Sound effects library',1,1,'Flat',20]]],
+ [3200,'Picture Post','post',[['Colour grade (in-house)',1,1,'Flat',0]]],
+ [4000,'Insurance & Legal','other',[['Public liability insurance',1,1,'Flat',150,'','','Check whether your university already covers you'],['Release forms & printing',1,1,'Flat',10]]],
+ [4100,'Festivals & Marketing','other',[['Festival submissions',5,1,'Each',25],['Poster printing',1,1,'Flat',30],['Cast & crew screening',1,1,'Flat',50]]]
+];
+const MICRO_ON = new Set(['Cast','Art Department','Costume & Make-up','Locations','Transport','Catering & Welfare','Sound Post & Music','Insurance & Legal','Festivals & Marketing']);
+function microTemplate() {
+  const s = build(MICRO, true);
+  Object.assign(s.project, {title:'Untitled Student Short', shootDays:3, target:''});
+  s.depts.forEach(d => d.lines.forEach(l => { l.rate = 0; }));
+  s.depts.forEach(d => { d.on = MICRO_ON.has(d.name); d.open = d.on; });
+  return s;
+}
+function build(tpl, withLines) {
+  return {
+    v:1,
+    project:{title: withLines ? 'Untitled Short' : '', company:'', producer:'', version:'Draft 1', date:new Date().toISOString().slice(0,10), currency:'£', shootDays: withLines ? 4 : '', target: withLines ? 36000 : '', pence:false},
+    contingency:{pct:10, base:'all'},
+    depts: tpl.map(([code, name, group, lines]) => ({id:uid(), code:String(code), name, group, open:true, on:true, alloc:'',
+      lines: withLines ? lines.map(([desc,n,qty,unit,rate,actual='',fin='',note='']) => ({id:uid(), desc, n, qty, unit, rate, actual, final:!!fin, note})) : [blankLine()]}))
+  };
+}
+const blankLine = () => ({id:uid(), desc:'', n:1, qty:1, unit:'Flat', rate:'', actual:'', final:false, note:''});
+const TEMPLATES = {
+  micro:  microTemplate,
+  sample: () => build(SAMPLE, true),
+  depts:  () => build(SAMPLE, false),
+  blank:  () => ({...build([], false), depts:[]})
+};
+
+/* ───────── state ───────── */
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+if (!S || !Array.isArray(S.depts)) S = TEMPLATES.micro();
+normalise(S);
+function normalise(s) {
+  s.project = Object.assign({title:'', company:'', producer:'', version:'', date:'', currency:'£', shootDays:'', target:'', pence:false}, s.project || {});
+  s.contingency = Object.assign({pct:10, base:'all'}, s.contingency || {});
+  s.allocate = !!s.allocate;
+  s.depts = (s.depts || []).map(d => ({id:d.id || uid(), code:String(d.code ?? ''), name:d.name || '', group:GROUPS.some(g => g.id === d.group) ? d.group : 'btl', open:d.open !== false, on:d.on !== false, alloc:d.alloc ?? '',
+    lines:(d.lines || []).map(l => ({id:l.id || uid(), desc:l.desc || '', n:l.n ?? 1, qty:l.qty ?? 1, unit:l.unit || 'Flat', rate:l.rate ?? '', actual:l.actual ?? '', final:!!l.final, note:l.note || ''}))}));
+}
+let saveT;
+function save() {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); $('#saved').textContent = 'Saved · ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
+    catch (e) { $('#saved').textContent = 'Couldn’t save in this browser. Use Save file.'; }
+  }, 250);
+}
+
+/* ───────── maths ───────── */
+const lineBudget = l => N(l.n) * N(l.qty) * N(l.rate);
+const lineForecast = l => l.final ? N(l.actual) : Math.max(lineBudget(l), N(l.actual));
+const cleanNum = v => String(v ?? '').replace(/[^\d.\-]/g, '');
+const allocOf = d => S.allocate && has(cleanNum(d.alloc)) ? N(cleanNum(d.alloc)) : null;
+function deptTotals(d) {
+  let lb = 0, a = 0, lf = 0;
+  for (const l of d.lines) { lb += lineBudget(l); a += N(l.actual); lf += lineForecast(l); }
+  const alloc = allocOf(d);
+  // With an allocation, the department's budget is the allocation. Unassigned money is still expected to be
+  // spent, unless every line is marked final.
+  const allFinal = d.lines.length > 0 && d.lines.every(l => l.final);
+  const b = alloc == null ? lb : alloc;
+  const f = alloc == null ? lf : (allFinal ? lf : Math.max(alloc, lf));
+  return {b, a, f, v:b - a, lines:lb, alloc, gap:alloc == null ? null : alloc - lb};
+}
+function totals() {
+  const g = {}; GROUPS.forEach(x => g[x.id] = {b:0, a:0, f:0, lines:0});
+  const per = new Map();
+  for (const d of S.depts) { const t = deptTotals(d); per.set(d.id, t); if (!d.on) continue; const G = g[d.group]; G.b += t.b; G.a += t.a; G.f += t.f; G.lines += t.lines; }
+  const sub = {b:0, a:0, f:0, lines:0}; for (const k in g) { sub.b += g[k].b; sub.a += g[k].a; sub.f += g[k].f; sub.lines += g[k].lines; }
+  const base = S.contingency.base === 'btl' ? sub.b - g.atl.b : sub.b;
+  const cont = Math.max(0, base * N(S.contingency.pct) / 100);
+  const drawn = Math.max(0, sub.f - sub.b);              // forecast overspend is covered by contingency
+  const grand = sub.b + cont;
+  const efc = sub.f;                                      // estimated final cost of lines
+  return {per, g, sub, base, cont, drawn, contLeft:cont - drawn, grand, spent:sub.a, remaining:grand - sub.a, efc,
+          target:has(S.project.target) ? N(S.project.target) : null};
+}
+function money(v, opt={}) {
+  const p = S.project.pence ? 2 : 0;
+  const neg = v < -0.004;
+  const s = (S.project.currency || '') + Math.abs(v).toLocaleString('en-GB', {minimumFractionDigits:p, maximumFractionDigits:p});
+  if (opt.signed && neg) return '−' + s;
+  return neg ? '(' + s + ')' : s;
+}
+const pct = (a, b) => b > 0 ? a / b * 100 : (a > 0 ? 100 : 0);
+const sbar = (a, b) => { const p = pct(a, b); return `<div class="sbar"><i class="${p > 100.05 ? 'ov' : ''}" style="width:${Math.min(100, p)}%"></i></div>`; };
+const gColor = id => `var(--g-${id})`;
+const activeIn = gid => S.depts.filter(d => d.on && d.group === gid);
+const deptLabel = d => (d.code ? d.code + ' ' : '') + (d.name || 'Untitled department');
+
+/* ───────── KPIs ───────── */
+function renderTargetStatus(T) {
+  const el = $('#targetStatus'); if (!el) return;
+  const c = $('#tgtCur'); if (c) c.textContent = (S.project.currency || '').trim();
+  if (T.target == null) { el.textContent = 'Not set yet'; el.className = 'st muted'; return; }
+  const d = T.target - T.grand;
+  el.textContent = d >= 0 ? `${money(d)} not yet allocated` : `Plan is ${money(-d)} over. Trim line items or contingency.`;
+  el.className = 'st ' + (d >= 0 ? 'good' : 'over');
+}
+function renderKpis(T) {
+  renderTargetStatus(T);
+  const sp = pct(T.spent, T.grand);
+  const over = T.efc > T.sub.b + T.cont;
+  const tgt = T.target != null ? `${T.target - T.grand >= 0 ? money(T.target - T.grand) + ' under' : money(T.grand - T.target) + ' over'} your ${money(T.target)} budget` : `${money(T.sub.b)} + ${money(T.cont)} contingency`;
+  $('#kpis').innerHTML = `
+  <div class="kpi"><div class="k">Planned spend</div><div class="v">${money(T.grand)}</div><div class="s ${T.target != null && T.grand > T.target ? 'over' : ''}">${esc(tgt)}</div></div>
+  <div class="kpi"><div class="k">Spent to date</div><div class="v">${money(T.spent)}</div><div class="meter"><i class="${sp > 100 ? 'ov' : ''}" style="width:${Math.min(100, sp)}%"></i></div><div class="s">${sp.toFixed(0)}% of total budget</div></div>
+  <div class="kpi"><div class="k">Remaining</div><div class="v ${T.remaining < 0 ? 'over' : ''}">${money(T.remaining, {signed:true})}</div><div class="s">Budget minus actuals</div></div>
+  <div class="kpi"><div class="k">Forecast final cost</div><div class="v ${over ? 'over' : ''}">${money(T.efc)}</div><div class="s">${T.efc > T.sub.b + 0.004 ? money(T.efc - T.sub.b) + ' over plan before contingency' : T.efc < T.sub.b - 0.004 ? money(T.sub.b - T.efc) + ' saved on finished lines' : 'On plan so far'}</div></div>
+  <div class="kpi"><div class="k">Contingency left</div><div class="v ${T.contLeft < 0 ? 'over' : ''}">${money(T.contLeft, {signed:true})}</div><div class="meter"><i class="${T.contLeft < 0 ? 'ov' : ''}" style="width:${T.cont > 0 ? Math.min(100, T.drawn / T.cont * 100) : (T.drawn > 0 ? 100 : 0)}%"></i></div><div class="s">${money(T.drawn)} drawn of ${money(T.cont)}</div></div>`;
+}
+
+/* ───────── top sheet ───────── */
+function renderTop(T) {
+  const p = S.project;
+  const meta = [p.company, p.producer && 'Producer: ' + p.producer, p.version, p.shootDays && p.shootDays + ' shoot days', p.date && new Date(p.date).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'})].filter(Boolean).map(esc).join(' · ');
+  if (!S.depts.length) {
+    $('#topSheet').innerHTML = `<div class="sheethead"><h2>Top sheet</h2></div><div class="empty">No departments yet.<br><br><button class="btn primary" id="addDeptTop">${SVG.plus}Add a department</button></div>`;
+    $('#addDeptTop').onclick = () => { addDept(); switchTab('lines'); };
+    return;
+  }
+  const A = S.allocate, cols = A ? 7 : 6;
+  let h = `<div class="sheethead"><h2>Top sheet</h2><span class="meta">${meta}</span>
+    <div class="modeseg"><span>Set department budgets by</span><div class="seg" role="group" aria-label="How department budgets are set">
+      <button data-mode="lines" aria-pressed="${!A}" title="Each department's budget is what its line items add up to">Line items</button>
+      <button data-mode="alloc" aria-pressed="${A}" title="Give each department an amount first, then fill in line items to match">Allocating first</button></div></div></div>
+  <table class="tst"><thead><tr><th>Acct</th><th>Department</th>${A ? `<th>Allocated${hi('alloc')}</th><th>Line items${hi('lines')}</th>` : `<th>Budget${hi('tbudget')}</th>`}<th>Actual${hi('tactual')}</th><th>Variance${hi('tvar')}</th><th class="bar">Spent</th></tr></thead><tbody>`;
+  const tail = (bud, act) => `<td class="num">${act == null ? '' : money(act)}</td><td class="num ${act != null && bud - act < -0.004 ? 'over' : ''}">${act == null ? '' : money(bud - act)}</td><td class="bar">${act == null ? '' : `<div class="barcell">${sbar(act, bud)}<span class="pct">${pct(act, bud).toFixed(0)}%</span></div>`}</td>`;
+  const row = (cls, a, b, bud, act, lines=null) => `<tr class="${cls}"><td>${a}</td><td>${b}</td><td class="num">${money(bud)}</td>${A ? `<td class="num">${lines == null ? '' : money(lines)}</td>` : ''}${tail(bud, act)}</tr>`;
+  const gapTxt = t => t.gap == null ? `` : Math.abs(t.gap) < 0.005 ? `<span class="gap">fully assigned</span>` : t.gap > 0 ? `<span class="gap">${money(t.gap)} to assign</span>` : `<span class="gap over">${money(-t.gap)} over</span>`;
+  for (const G of GROUPS) {
+    const ds = activeIn(G.id);
+    if (!ds.length) continue;
+    h += `<tr class="grp"><td colspan="${cols}" style="color:${gColor(G.id)}"><i style="background:${gColor(G.id)}"></i>${esc(G.name)}</td></tr>`;
+    for (const d of ds) {
+      const t = T.per.get(d.id);
+      h += `<tr class="dep" data-go="${d.id}" title="Open line items"><td>${esc(d.code)}</td><td>${esc(d.name || 'Untitled department')}</td>`
+        + (A ? `<td class="num alc"><input class="al" data-alloc="${d.id}" inputmode="decimal" value="${esc(d.alloc)}" placeholder="${esc(money(t.lines))}" aria-label="Allocation for ${esc(d.name)}" title="Type this department's allocation. Blank uses its line-item total."></td><td class="num ${t.gap != null && t.gap < -0.004 ? 'over' : ''}">${money(t.lines)}${gapTxt(t)}</td>` : `<td class="num">${money(t.b)}</td>`)
+        + tail(t.b, t.a) + `</tr>`;
+    }
+    const g = T.g[G.id];
+    h += row('sub', '', 'Total ' + esc(G.name.split(' · ')[0].toLowerCase()), g.b, g.a, g.lines);
+  }
+  const baseTxt = S.contingency.base === 'btl' ? 'of costs excluding above the line' : 'of all costs';
+  h += `<tr class="grp"><td colspan="${cols}" style="color:var(--muted)">&nbsp;</td></tr>`;
+  h += row('tot', '', 'Subtotal', T.sub.b, T.sub.a, T.sub.lines);
+  h += `<tr class="cont"><td></td><td>Contingency <span class="muted">· ${N(S.contingency.pct)}% ${baseTxt}</span></td><td class="num">${money(T.cont)}</td>${A ? '<td></td>' : ''}<td class="num" title="Forecast overspend, covered by contingency">${money(T.drawn)}<span class="muted" style="font-size:11px"> drawn</span></td><td class="num ${T.contLeft < 0 ? 'over' : ''}">${money(T.contLeft)}</td><td class="bar"><div class="barcell">${sbar(T.drawn, T.cont)}<span class="pct">${pct(T.drawn, T.cont).toFixed(0)}%</span></div></td></tr>`;
+  h += `<tr class="grand"><td></td><td>Grand total</td><td class="num">${money(T.grand)}</td>${A ? '<td></td>' : ''}<td class="num">${money(T.spent)}</td><td class="num ${T.remaining < 0 ? 'over' : ''}">${money(T.remaining)}</td><td class="bar"><div class="barcell">${sbar(T.spent, T.grand)}<span class="pct">${pct(T.spent, T.grand).toFixed(0)}%</span></div></td></tr>`;
+  if (T.target != null) {
+    const hd = T.target - T.grand;
+    h += `<tr class="fund"><td></td><td>Your overall budget</td><td class="num">${money(T.target)}</td>${A ? '<td></td>' : ''}<td></td><td class="num ${hd < 0 ? 'over' : 'good'}">${hd < 0 ? money(-hd) + ' over' : money(hd) + ' unallocated'}</td><td></td></tr>`;
+  }
+  h += `</tbody></table>`;
+  const offN = S.depts.filter(d => !d.on).length;
+  if (offN) h += `<p class="tsoff">${offN} department${offN === 1 ? ' is' : 's are'} switched off and left out of this budget. <button data-manage>Tick them back in on Line items</button></p>`;
+  if (A) h += `<p class="hint" style="padding:12px 18px 0">Type an amount for each department in <b>Allocated</b>, then fill in its line items. A department left blank uses its line-item total. Contingency is worked out on the allocations.</p>`;
+  $('#topSheet').innerHTML = h;
+  $$('#topSheet [data-go]').forEach(tr => tr.onclick = e => { if (!e.target.closest('input,button')) goDept(tr.dataset.go); });
+  $('#topSheet [data-manage]')?.addEventListener('click', () => switchTab('lines'));
+  $$('#topSheet [data-mode]').forEach(b => b.onclick = () => setAllocMode(b.dataset.mode === 'alloc'));
+  $$('#topSheet input.al').forEach(inp => inp.addEventListener('input', () => {
+    const d = S.depts.find(x => x.id === inp.dataset.alloc); if (!d) return;
+    d.alloc = cleanNum(inp.value) === '' ? '' : inp.value;
+    changed({top:true, rail:true, alerts:true, deptHead:d});
+  }));
+}
+function setAllocMode(on) {
+  if (S.allocate === on) return;
+  S.allocate = on;
+  changed({top:true, lines:true});
+  toast(on ? 'Allocation mode on. Type each department’s amount in the Allocated column.' : 'Back to building department budgets from line items. Your allocations are kept.');
+}
+
+/* ───────── side panel (settings + watch list) ───────── */
+function renderSide() {
+  const p = S.project, c = S.contingency;
+  $('#side').innerHTML = `
+  <section>
+    <div class="bigfld">
+      <label for="sTarget">Your overall budget</label>
+      <div class="in"><span id="tgtCur">${esc((p.currency || '').trim())}</span><input id="sTarget" type="number" min="0" step="any" placeholder="e.g. 30000" value="${esc(p.target)}" data-set="project.target"></div>
+      <p class="st" id="targetStatus"></p>
+      <p>The total money you have to make the film. Your line items and contingency are checked against it.</p>
+    </div>
+  </section>
+  <section>
+    <h2>Budget settings</h2>
+    <div class="row2">
+      <div class="fld"><label for="sCont">Contingency %</label><input id="sCont" type="number" min="0" step="0.5" value="${esc(c.pct)}" data-set="contingency.pct"></div>
+      <div class="fld"><label for="sCur">Currency</label><select id="sCur" data-set="project.currency">${['£','$','€','A$','C$','NZ$','₹','¥','kr '].map(x => `<option ${x === p.currency ? 'selected' : ''} value="${x}">${x.trim()}</option>`).join('')}${['£','$','€','A$','C$','NZ$','₹','¥','kr '].includes(p.currency) ? '' : `<option selected value="${esc(p.currency)}">${esc(p.currency)}</option>`}</select></div>
+    </div>
+    <div class="fld"><span class="lbl">Contingency is worked out on</span>
+      <div class="seg" role="group"><button data-base="all" aria-pressed="${c.base === 'all'}">All costs</button><button data-base="btl" aria-pressed="${c.base === 'btl'}" title="Leave above-the-line costs (story, producer, director, cast) out of the contingency calculation">Exclude above the line</button></div></div>
+    <label class="tgl"><input type="checkbox" id="sPence" ${p.pence ? 'checked' : ''}> Show pence / cents</label>
+    <p class="hint">Overspends on line items draw down the contingency. Tick a line's <b>Final</b> box once it's fully paid, so any saving goes back into the pot.</p>
+  </section>
+  <section>
+    <h2>Production details</h2>
+    <div class="fld"><label for="sCo">Production company</label><input id="sCo" value="${esc(p.company)}" data-set="project.company"></div>
+    <div class="row2">
+      <div class="fld"><label for="sProd">Producer</label><input id="sProd" value="${esc(p.producer)}" data-set="project.producer"></div>
+      <div class="fld"><label for="sDays">Shoot days</label><input id="sDays" type="number" min="0" value="${esc(p.shootDays)}" data-set="project.shootDays"></div>
+    </div>
+    <div class="row2">
+      <div class="fld"><label for="sVer">Version</label><input id="sVer" value="${esc(p.version)}" data-set="project.version"></div>
+      <div class="fld"><label for="sDate">Date</label><input id="sDate" type="date" value="${esc(p.date)}" data-set="project.date"></div>
+    </div>
+  </section>
+  <section>
+    <h2>Watch list</h2>
+    <div class="alerts" id="alerts"></div>
+  </section>`;
+  $$('#side [data-set]').forEach(el => el.addEventListener('input', () => {
+    const [o, k] = el.dataset.set.split('.'); S[o][k] = el.value; changed({top:true, side:false});
+  }));
+  $$('#side [data-base]').forEach(b => b.onclick = () => { S.contingency.base = b.dataset.base; $$('#side [data-base]').forEach(x => x.setAttribute('aria-pressed', x === b)); changed({top:true}); });
+  $('#sPence').onchange = e => { S.project.pence = e.target.checked; changed({top:true, lines:true}); };
+  renderAlerts();
+}
+function renderAlerts() {
+  const el = $('#alerts'); if (!el) return;
+  const list = [];
+  for (const d of S.depts) if (d.on) for (const l of d.lines) { const o = N(l.actual) - lineBudget(l); if (has(l.actual) && o > 0.004) list.push({d, l, o}); }
+  list.sort((a, b) => b.o - a.o);
+  const dl = S.depts.filter(d => d.on).map(d => ({d, t:deptTotals(d)})).filter(x => x.t.gap != null && x.t.gap < -0.004);
+  const dh = dl.map(x => `<button class="alert warn" data-go="${x.d.id}"><b>${esc(x.d.name || 'Department')} <span style="color:var(--muted);font-family:var(--display)">· line items over allocation</span></b><span>+${money(-x.t.gap)}</span></button>`).join('');
+  el.innerHTML = dh + (list.length
+    ? list.slice(0, 8).map(x => `<button class="alert" data-go="${x.d.id}" data-line="${x.l.id}"><b>${esc(x.l.desc || 'Untitled line')} <span class="muted" style="color:var(--muted);font-family:var(--display)">· ${esc(x.d.name)}</span></b><span>+${money(x.o)}</span></button>`).join('') + (list.length > 8 ? `<p class="hint">and ${list.length - 8} more over budget</p>` : '')
+    : (dh ? '' : `<div class="ok">No line items are over budget.</div>`));
+  $$('#alerts [data-go]').forEach(b => b.onclick = () => goDept(b.dataset.go, b.dataset.line));
+}
+
+/* ───────── line items ───────── */
+let filterTxt = '', overOnly = false;
+function lineVisible(d, l) {
+  if (overOnly && !(has(l.actual) && N(l.actual) - lineBudget(l) > 0.004)) return false;
+  if (filterTxt) { const q = filterTxt.toLowerCase(); return (l.desc + ' ' + l.note + ' ' + d.name).toLowerCase().includes(q); }
+  return true;
+}
+function renderLines() {
+  const T = totals();
+  const box = $('#depts');
+  if (!S.depts.length) { box.innerHTML = `<div class="card empty">No departments yet.<br><br><button class="btn primary" data-act="addDept">${SVG.plus}Add a department</button></div>`; renderRail(T); return; }
+  const filtering = filterTxt || overOnly;
+  let h = '';
+  for (const G of GROUPS) for (const d of S.depts.filter(x => x.group === G.id)) {
+    const lines = d.lines.filter(l => lineVisible(d, l));
+    if (!d.on || (filtering && !lines.length)) continue;
+    const t = T.per.get(d.id);
+    const open = d.open || filtering;
+    h += `<section class="dept ${open ? '' : 'closed'} ${d.on ? '' : 'off'}" id="d-${d.id}" data-d="${d.id}">
+      <div class="dh">
+        <input type="checkbox" class="inc" ${d.on ? 'checked' : ''} aria-label="Include this department in the budget" title="${d.on ? 'Untick to leave this department out of the budget' : 'Tick to include this department'}">
+        <button class="ib" data-act="toggle" title="Show or hide line items" aria-expanded="${open}">${SVG.chev}</button>
+        <span class="gdot" style="background:${gColor(d.group)}"></span>
+        <input class="code" value="${esc(d.code)}" data-dk="code" aria-label="Account code" placeholder="Code">
+        <input class="name" value="${esc(d.name)}" data-dk="name" aria-label="Department name" placeholder="Department name">
+        <select data-dk="group" aria-label="Budget section">${GROUPS.map(g => `<option value="${g.id}" ${g.id === d.group ? 'selected' : ''}>${esc(g.short === 'BTL' ? 'Below the line' : g.name)}</option>`).join('')}</select>
+        ${S.allocate ? `<label class="alloc">Allocated <input data-dk="alloc" inputmode="decimal" value="${esc(d.alloc)}" placeholder="${esc(money(t.lines))}" aria-label="Allocation for this department"></label>` : ''}
+        ${d.on ? `<span class="dsum" data-dsum>${dsum(t)}</span>` : `<span class="offnote" data-dsum>Not in this budget · tick to include</span>`}
+        <button class="ib del" data-act="delDept" title="Delete department">${SVG.del}</button>
+      </div>
+      <div class="dbody">
+        <table class="lt"><thead><tr>
+          ${th('acct')}${th('desc')}${th('n','r','width:66px')}<th></th>${th('qty','r','width:74px')}${th('unit','','width:106px')}${th('rate','r','width:98px')}
+          ${th('budget','r','width:108px')}${th('actual','r','width:110px')}${th('variance','r','width:110px')}${th('final','','width:64px')}${th('note')}<th></th>
+        </tr></thead><tbody>${lines.map((l) => lineRow(d, l, d.lines.indexOf(l))).join('')}</tbody>
+        <tfoot><tr><td colspan="7">Total ${esc(d.name)}</td><td data-tb>${money(t.lines)}</td><td data-ta>${money(t.a)}</td><td data-tv class="${t.lines - t.a < -0.004 ? 'over' : ''}">${money(t.lines - t.a)}</td><td colspan="3"></td></tr></tfoot></table>
+        <button class="btn sm ghost addline" data-act="addLine">${SVG.plus}Add line</button>
+      </div>
+    </section>`;
+  }
+  if (!h) h = filtering ? `<div class="card empty">No line items match.</div>` : `<div class="card empty">Every department is unticked.<br>Tick the ones you need in the list on the left.</div>`;
+  if (!filtering) h += `<button class="btn" data-act="addDept" style="align-self:flex-start">${SVG.plus}Add department</button>`;
+  box.innerHTML = h;
+  renderRail(T);
+}
+const dsum = t => t.alloc != null
+  ? `<span>Lines <b>${money(t.lines)}</b></span><span class="${t.gap < -0.004 ? 'over' : ''}">${t.gap < -0.004 ? 'Over allocation' : 'To assign'} <b class="${t.gap < -0.004 ? 'over' : ''}">${money(Math.abs(t.gap))}</b></span><span>Actual <b>${money(t.a)}</b></span><span class="${t.v < -0.004 ? 'over' : ''}">${t.v < -0.004 ? 'Over' : 'Left'} <b class="${t.v < -0.004 ? 'over' : ''}">${money(Math.abs(t.v))}</b></span>`
+  : `<span>Budget <b>${money(t.b)}</b></span><span>Actual <b>${money(t.a)}</b></span><span class="${t.v < -0.004 ? 'over' : ''}">${t.v < -0.004 ? 'Over' : 'Left'} <b class="${t.v < -0.004 ? 'over' : ''}">${money(Math.abs(t.v))}</b></span>`;
+function lineRow(d, l, i) {
+  const b = lineBudget(l), v = b - N(l.actual), showV = has(l.actual) || l.final;
+  return `<tr data-l="${l.id}" class="${l.final ? 'final' : ''}">
+    <td class="acc">${esc(d.code ? (N(d.code) ? String(N(d.code) + i + 1) : d.code + '.' + (i + 1)) : i + 1)}</td>
+    <td><input value="${esc(l.desc)}" data-k="desc" placeholder="Line item" aria-label="Description"></td>
+    <td><input class="n" type="number" step="any" min="0" value="${esc(l.n)}" data-k="n" aria-label="Number of people or items" title="Number of people or items"></td>
+    <td class="x">×</td>
+    <td><input class="n" type="number" step="any" min="0" value="${esc(l.qty)}" data-k="qty" aria-label="Quantity"></td>
+    <td><select data-k="unit" aria-label="Unit">${UNITS.concat(UNITS.includes(l.unit) ? [] : [l.unit]).map(u => `<option ${u === l.unit ? 'selected' : ''}>${esc(u)}</option>`).join('')}</select></td>
+    <td><input class="n" type="number" step="any" min="0" value="${esc(l.rate)}" data-k="rate" placeholder="0" aria-label="Rate"></td>
+    <td class="calc" data-cb>${money(b)}</td>
+    <td><input class="n act" type="number" step="any" value="${esc(l.actual)}" data-k="actual" placeholder="–" aria-label="Actual spend"></td>
+    <td class="calc var ${showV && v < -0.004 ? 'over' : ''}" data-cv>${showV ? money(v) : '<span class="muted">–</span>'}</td>
+    <td class="fin"><input type="checkbox" data-k="final" ${l.final ? 'checked' : ''} aria-label="Final: fully paid"></td>
+    <td><input value="${esc(l.note)}" data-k="note" placeholder="Notes" aria-label="Notes"></td>
+    <td class="rowacts"><button class="ib" data-act="dupLine" title="Duplicate line">${SVG.dup}</button><button class="ib del" data-act="delLine" title="Delete line">${SVG.del}</button></td>
+  </tr>`;
+}
+function renderRail(T) {
+  let h = '';
+  for (const G of GROUPS) {
+    const ds = S.depts.filter(dd => dd.group === G.id); if (!ds.length) continue;
+    h += `<div class="rg"><i style="background:${gColor(G.id)}"></i>${esc(G.name)}</div>`;
+    for (const d of ds) { const t = T.per.get(d.id); h += `<div class="ritem ${d.on ? '' : 'off'}"><input type="checkbox" data-on="${d.id}" ${d.on ? 'checked' : ''} aria-label="Include ${esc(d.name || 'department')} in the budget" title="${d.on ? 'Untick to leave this department out of the budget' : 'Tick to include this department in the budget'}"><button class="go" data-go="${d.id}"><b>${esc(d.name || 'Untitled')}</b><span>${money(t.b)}</span>${sbar(t.a, t.b)}</button></div>`; }
+  }
+  h += `<p class="railhint">Untick a department to leave it out of the budget.</p><button class="btn sm add" data-act="addDept">${SVG.plus}Add department</button>`;
+  $('#rail').innerHTML = h;
+}
+
+/* line-item events (delegated) */
+const depOf = el => S.depts.find(d => d.id === el.closest('[data-d]')?.dataset.d);
+const lineOf = (d, el) => d && d.lines.find(l => l.id === el.closest('[data-l]')?.dataset.l);
+function onLineInput(e) {
+  const el = e.target, d = depOf(el); if (!d || el.classList.contains('inc')) return;
+  if (el.dataset.dk) {
+    d[el.dataset.dk] = el.value;
+    if (el.dataset.dk === 'group') { changed({lines:true, top:true}); return; }
+    if (el.dataset.dk === 'alloc') { if (cleanNum(el.value) === '') d.alloc = ''; refreshDeptHead(d); changed({top:true, rail:true, alerts:true}); return; }
+    if (el.dataset.dk === 'code') $$(`#d-${d.id} tbody tr`).forEach(tr => { const l = lineOf(d, tr); tr.querySelector('.acc').textContent = d.code ? (N(d.code) ? String(N(d.code) + d.lines.indexOf(l) + 1) : d.code + '.' + (d.lines.indexOf(l) + 1)) : d.lines.indexOf(l) + 1; });
+    changed({top:true, rail:true}); return;
+  }
+  const l = lineOf(d, el); if (!l || !el.dataset.k) return;
+  l[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value;
+  if (['n','qty','rate','actual','final'].includes(el.dataset.k)) refreshLine(d, l);
+  changed({top:true, rail:true, alerts:true});
+}
+function refreshLine(d, l) {
+  const tr = $(`#d-${d.id} tr[data-l="${l.id}"]`); if (!tr) return;
+  const b = lineBudget(l), v = b - N(l.actual), showV = has(l.actual) || l.final;
+  tr.classList.toggle('final', l.final);
+  tr.querySelector('[data-cb]').textContent = money(b);
+  const cv = tr.querySelector('[data-cv]'); cv.innerHTML = showV ? money(v) : '<span class="muted">–</span>'; cv.classList.toggle('over', showV && v < -0.004);
+  refreshDeptHead(d);
+}
+function refreshDeptHead(d) {
+  const t = deptTotals(d), sec = $(`#d-${d.id}`); if (!sec || !d.on) return;
+  sec.querySelector('[data-dsum]').innerHTML = dsum(t);
+  const ai = sec.querySelector('[data-dk="alloc"]'); if (ai) { ai.placeholder = money(t.lines); if (document.activeElement !== ai) ai.value = d.alloc; }
+  sec.querySelector('[data-tb]').textContent = money(t.lines);
+  sec.querySelector('[data-ta]').textContent = money(t.a);
+  const tv = sec.querySelector('[data-tv]'); tv.textContent = money(t.lines - t.a); tv.classList.toggle('over', t.lines - t.a < -0.004);
+}
+function onLineClick(e) {
+  const go = e.target.closest('[data-go]');
+  if (go && go.closest('#rail')) { const d = S.depts.find(x => x.id === go.dataset.go); if (d && d.on) goDept(go.dataset.go); return; }
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act, d = depOf(b);
+  if (act === 'addDept') { addDept(); return; }
+  if (!d) return;
+  if (act === 'toggle') { d.open = !d.open; $(`#d-${d.id}`).classList.toggle('closed', !d.open); b.setAttribute('aria-expanded', d.open); save(); return; }
+  if (act === 'addLine') { const nl = blankLine(); d.lines.push(nl); d.open = true; changed({lines:true}); focusLine(d, nl); return; }
+  if (act === 'delDept') {
+    const snap = JSON.stringify(S); S.depts = S.depts.filter(x => x !== d); changed({lines:true, top:true});
+    toast(`Deleted ${d.name || 'department'} (${d.lines.length} line${d.lines.length === 1 ? '' : 's'})`, snap); return;
+  }
+  const l = lineOf(d, b); if (!l) return;
+  if (act === 'dupLine') { const c = {...l, id:uid(), actual:'', final:false}; d.lines.splice(d.lines.indexOf(l) + 1, 0, c); changed({lines:true, top:true}); focusLine(d, c); return; }
+  if (act === 'delLine') { const snap = JSON.stringify(S); d.lines = d.lines.filter(x => x !== l); changed({lines:true, top:true}); toast(`Deleted ${l.desc || 'line'}`, snap); }
+}
+function focusLine(d, l) { const el = $(`#d-${d.id} tr[data-l="${l.id}"] input[data-k="desc"]`); if (el) { el.focus(); el.scrollIntoView({block:'nearest'}); } }
+function addDept() {
+  const max = S.depts.reduce((m, d) => Math.max(m, N(d.code)), 0);
+  const d = {id:uid(), code:String(max ? Math.floor(max / 100) * 100 + 100 : 1000), name:'', group:'btl', open:true, lines:[blankLine()]};
+  S.depts.push(d); filterTxt = ''; overOnly = false; $('#filter').value = ''; $('#overOnly').checked = false;
+  switchTab('lines'); changed({lines:true, top:true});
+  const el = $(`#d-${d.id} input.name`); if (el) { el.scrollIntoView({block:'center'}); el.focus(); }
+}
+function goDept(id, lineId) {
+  const d = S.depts.find(x => x.id === id); if (!d) return;
+  if (!d.open) { d.open = true; save(); }
+  switchTab('lines');
+  if (filterTxt || overOnly) { filterTxt = ''; overOnly = false; $('#filter').value = ''; $('#overOnly').checked = false; }
+  renderLines();
+  const sec = $(`#d-${id}`); if (!sec) return;
+  sec.scrollIntoView({block:'start'}); sec.classList.remove('flash'); void sec.offsetWidth; sec.classList.add('flash');
+  if (lineId) { const i = sec.querySelector(`tr[data-l="${lineId}"] input[data-k="actual"]`); if (i) { i.focus({preventScroll:true}); i.select(); } }
+}
+
+/* ───────── central refresh ───────── */
+function changed(o={}) {
+  const T = totals();
+  renderKpis(T);
+  if (o.top) {
+    const ae = document.activeElement, fid = ae && ae.matches && ae.matches('#topSheet input.al') ? ae.dataset.alloc : null;
+    const caret = fid ? ae.selectionStart : null;
+    renderTop(T);
+    if (fid) { const n = $(`#topSheet input.al[data-alloc="${fid}"]`); if (n) { n.focus(); try { n.setSelectionRange(caret, caret); } catch (e) {} } }
+  }
+  if (o.deptHead && !o.lines) refreshDeptHead(o.deptHead);
+  if (o.lines) renderLines();
+  else if (o.rail) renderRail(T);
+  if (o.alerts || o.lines) renderAlerts();
+  printDirty = true;
+  save();
+}
+function renderAll() {
+  $('#projTitle').value = S.project.title;
+  renderSide(); changed({top:true, lines:true});
+}
+
+/* ───────── column info tips ───────── */
+const tipEl = document.createElement('div'); tipEl.className = 'tip'; tipEl.hidden = true; tipEl.setAttribute('role', 'tooltip'); document.body.appendChild(tipEl);
+let tipBtn = null;
+function closeTip() { if (tipBtn) tipBtn.setAttribute('aria-expanded', 'false'); tipBtn = null; tipEl.hidden = true; }
+function openTip(btn) {
+  if (tipBtn === btn) { closeTip(); return; }
+  closeTip(); tipBtn = btn; btn.setAttribute('aria-expanded', 'true');
+  const [t, body] = TIPS[btn.dataset.tip];
+  tipEl.innerHTML = `<b>${t}</b>${body}`; tipEl.hidden = false;
+  const r = btn.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+  let x = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8);
+  let y = r.bottom + 8; if (y + h > innerHeight - 8) y = r.top - h - 8;
+  tipEl.style.left = x + 'px'; tipEl.style.top = y + 'px';
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.hi'); if (b) { e.stopPropagation(); openTip(b); return; }
+  if (!e.target.closest('.tip')) closeTip();
+}, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTip(); });
+document.addEventListener('scroll', closeTip, true);
+window.addEventListener('resize', closeTip);
+
+/* ───────── toast / undo ───────── */
+let toastT, undoSnap = null;
+function toast(msg, snap) {
+  undoSnap = snap; $('#toastMsg').textContent = msg; $('#toastUndo').hidden = !snap; $('#toast').hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { $('#toast').hidden = true; undoSnap = null; }, 6000);
+}
+$('#toastUndo').onclick = () => { if (!undoSnap) return; S = JSON.parse(undoSnap); normalise(S); undoSnap = null; $('#toast').hidden = true; renderAll(); };
+
+/* ───────── tabs, menus ───────── */
+function switchTab(t) {
+  $$('.tab').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
+  $('#v-top').hidden = t !== 'top'; $('#v-lines').hidden = t !== 'lines';
+}
+$$('.tab').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+document.addEventListener('click', e => {
+  const opener = e.target.closest('[data-pop]');
+  $$('.pop').forEach(p => { if (!opener || p.id !== opener.dataset.pop) p.hidden = true; });
+  if (opener) { const p = $('#' + opener.dataset.pop); p.hidden = !p.hidden; }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $$('.pop').forEach(p => p.hidden = true); });
+
+$('#projTitle').addEventListener('input', e => { S.project.title = e.target.value; changed({}); });
+$('#depts').addEventListener('input', onLineInput);
+$('#depts').addEventListener('change', e => { if (e.target.matches('select,[type=checkbox]')) onLineInput(e); });
+$('#depts').addEventListener('click', onLineClick);
+$('#depts').addEventListener('keydown', e => {
+  // Enter in a line item jumps to the same field on the next row (adds one at the end)
+  if (e.key !== 'Enter' || !e.target.matches('.lt input:not([type=checkbox])')) return;
+  e.preventDefault();
+  const tr = e.target.closest('tr'), k = e.target.dataset.k, next = tr.nextElementSibling;
+  if (next) next.querySelector(`[data-k="${k}"]`)?.focus();
+  else { const d = depOf(tr); const nl = blankLine(); d.lines.push(nl); changed({lines:true, top:true}); $(`#d-${d.id} tr[data-l="${nl.id}"] [data-k="${k}"]`)?.focus(); }
+});
+$('#rail').addEventListener('click', onLineClick);
+function setOn(id, on, fromCard) {
+  const d = S.depts.find(x => x.id === id); if (!d) return;
+  const snap = JSON.stringify(S);
+  d.on = on; if (on) d.open = true;
+  changed({lines:true, top:true});
+  if (on) { const sec = $(`#d-${d.id}`); if (sec) { sec.scrollIntoView({block:'nearest'}); sec.classList.remove('flash'); void sec.offsetWidth; sec.classList.add('flash'); } }
+  else if (fromCard) toast(`${d.name || 'Department'} left out of the budget. Tick it in the list on the left to bring it back.`, snap);
+}
+$('#rail').addEventListener('change', e => { if (e.target.dataset.on) setOn(e.target.dataset.on, e.target.checked); });
+$('#depts').addEventListener('change', e => { if (e.target.matches('.inc')) setOn(depOf(e.target).id, e.target.checked, true); });
+$('#filter').addEventListener('input', e => { filterTxt = e.target.value.trim(); renderLines(); });
+$('#overOnly').addEventListener('change', e => { overOnly = e.target.checked; renderLines(); });
+$('#expandAll').onclick = () => { S.depts.forEach(d => d.open = true); changed({lines:true}); };
+$('#collapseAll').onclick = () => { S.depts.forEach(d => d.open = false); changed({lines:true}); };
+
+$$('[data-tpl]').forEach(b => b.onclick = () => {
+  const snap = JSON.stringify(S); S = TEMPLATES[b.dataset.tpl](); renderAll(); switchTab(b.dataset.tpl === 'sample' || b.dataset.tpl === 'micro' ? 'top' : 'lines');
+  toast('Started a new budget. Your previous one can be restored.', snap);
+});
+
+/* ───────── Documentation ─────────
+   Inside Film Tool Hub every export is also filed in the project's Documentation folder.
+   window.fthDocs only exists inside the hub. Both helpers return true when the person chose
+   "Save to Documentation", which means: skip the download / print window. */
+const fthDoc = (type, filename, blob) => !!(window.fthDocs && window.fthDocs.save({type, filename, blob}));
+const fthPage = (type, name) => !!(window.fthDocs && window.fthDocs.page({type, name}));
+
+/* ───────── files ───────── */
+const fileBase = () => (S.project.title || 'Film budget').replace(/[\\/:*?"<>|]+/g, '').trim() || 'Film budget';
+function download(name, blob) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+}
+$('#saveBtn').onclick = () => download(fileBase() + ' - Budget.json', new Blob([JSON.stringify({app:'Film Budget Builder', ...S}, null, 1)], {type:'application/json'}));
+$('#openBtn').onclick = () => $('#fileIn').click();
+$('#fileIn').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text()); if (!Array.isArray(d.depts)) throw 0;
+    const snap = JSON.stringify(S); delete d.app; S = d; normalise(S); renderAll(); switchTab('top'); toast('Opened ' + f.name, snap);
+  } catch (err) { toast("That file isn't a saved budget from this tool."); }
+};
+$$('[data-exp]').forEach(b => b.onclick = () => ({xlsx:exportXlsx, csv:exportCsv, print:doPrint})[b.dataset.exp]());
+
+function exportCsv() {
+  const q = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const rows = [['Section','Account','Department','Description','No.','Qty','Unit','Rate','Budget','Actual','Variance','Final','Notes']];
+  for (const G of GROUPS) for (const d of activeIn(G.id)) d.lines.forEach((l, i) => {
+    const b = lineBudget(l);
+    rows.push([G.name, d.code, d.name, l.desc, N(l.n), N(l.qty), l.unit, N(l.rate), b.toFixed(2), has(l.actual) ? N(l.actual).toFixed(2) : '', has(l.actual) ? (b - N(l.actual)).toFixed(2) : '', l.final ? 'Yes' : '', l.note]);
+  });
+  const name = fileBase() + ' - Budget line items.csv', blob = new Blob(['\ufeff' + rows.map(r => r.map(q).join(',')).join('\r\n')], {type:'text/csv'});
+  if (!fthDoc('Budget CSV', name, blob)) download(name, blob);
+}
+
+function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+async function exportXlsx() {
+  try { if (!window.ExcelJS) { toast('Preparing Excel file…'); await loadScript('https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js'); } }
+  catch (e) { toast("Couldn't load the Excel library. Check your internet connection, or export a CSV instead."); return; }
+  const wb = new ExcelJS.Workbook(); wb.creator = 'Film Budget Builder';
+  const cur = S.project.currency || '';
+  const fmt = `"${cur.replace(/"/g, '')}"#,##0${S.project.pence ? '.00' : ''};[Red]-"${cur.replace(/"/g, '')}"#,##0${S.project.pence ? '.00' : ''}`;
+  const ink = 'FF16181C', soft = 'FFF1EDE5', thin = {style:'thin', color:{argb:'FFD2CCC0'}};
+  const top = wb.addWorksheet('Top Sheet', {views:[{showGridLines:false}], pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0}});
+  const det = wb.addWorksheet('Line Items', {views:[{state:'frozen', ySplit:4, showGridLines:false}], pageSetup:{paperSize:9, orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0}});
+
+  // detail sheet
+  det.columns = [{width:9},{width:38},{width:7},{width:7},{width:10},{width:11},{width:13},{width:13},{width:13},{width:7},{width:34}];
+  det.getCell('A1').value = (S.project.title || 'Film budget') + ': line items'; det.getCell('A1').font = {bold:true, size:14};
+  det.getCell('A2').value = [S.project.company, S.project.version, S.project.date].filter(Boolean).join('  ·  '); det.getCell('A2').font = {color:{argb:'FF565C66'}};
+  const hdr = det.getRow(4); hdr.values = ['Acct','Description','No.','Qty','Unit','Rate','Budget','Actual','Variance','Final','Notes'];
+  hdr.font = {bold:true, color:{argb:'FFFFFFFF'}}; hdr.eachCell(c => { c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:ink}}; });
+  let r = 5; const deptRow = new Map(), grpRows = {};
+  for (const G of GROUPS) {
+    const ds = activeIn(G.id); if (!ds.length) continue;
+    det.getCell(r, 1).value = G.name.toUpperCase(); det.getRow(r).font = {bold:true, color:{argb:'FF565C66'}}; r++;
+    grpRows[G.id] = [];
+    for (const d of ds) {
+      det.getCell(r, 1).value = d.code; det.getCell(r, 2).value = d.name || 'Untitled department'; det.getRow(r).font = {bold:true}; r++;
+      const first = r;
+      d.lines.forEach((l, i) => {
+        const row = det.getRow(r);
+        row.values = [d.code && N(d.code) ? N(d.code) + i + 1 : (d.code ? d.code + '.' + (i + 1) : i + 1), l.desc, N(l.n), N(l.qty), l.unit, N(l.rate), null, has(l.actual) ? N(l.actual) : null, null, l.final ? 'Yes' : '', l.note];
+        row.getCell(7).value = {formula:`C${r}*D${r}*F${r}`, result:lineBudget(l)};
+        row.getCell(9).value = {formula:`IF(OR(H${r}<>"",J${r}="Yes"),G${r}-H${r},"")`, result:has(l.actual) || l.final ? lineBudget(l) - N(l.actual) : ''};
+        r++;
+      });
+      const last = r - 1, t = deptTotals(d);
+      const tr = det.getRow(r);
+      tr.getCell(2).value = 'Total ' + (d.name || 'department');
+      tr.getCell(7).value = {formula: last >= first ? `SUM(G${first}:G${last})` : '0', result:t.b};
+      tr.getCell(8).value = {formula: last >= first ? `SUM(H${first}:H${last})` : '0', result:t.a};
+      tr.getCell(9).value = {formula:`G${r}-H${r}`, result:t.v};
+      tr.font = {bold:true}; for (let c = 1; c <= 11; c++) { tr.getCell(c).fill = {type:'pattern', pattern:'solid', fgColor:{argb:soft}}; tr.getCell(c).border = {top:thin}; }
+      deptRow.set(d.id, r); grpRows[G.id].push(r); r += 2;
+    }
+  }
+  [6,7,8,9].forEach(c => det.getColumn(c).numFmt = fmt);
+  det.getColumn(6).numFmt = `"${cur.replace(/"/g, '')}"#,##0.00`;
+
+  // top sheet
+  const T = totals();
+  top.columns = [{width:9},{width:40},{width:15},{width:15},{width:15},{width:10}];
+  top.getCell('A1').value = S.project.title || 'Film budget'; top.getCell('A1').font = {bold:true, size:16};
+  top.getCell('A2').value = 'BUDGET TOP SHEET'; top.getCell('A2').font = {bold:true, size:9, color:{argb:'FF8A5200'}};
+  const meta = [S.project.company, S.project.producer && 'Producer: ' + S.project.producer, S.project.version, S.project.shootDays && S.project.shootDays + ' shoot days', S.project.date].filter(Boolean).join('  ·  ');
+  top.getCell('A3').value = meta; top.getCell('A3').font = {color:{argb:'FF565C66'}};
+  const AL = S.allocate;
+  const th = top.getRow(5); th.values = AL ? ['Acct','Department','Budget','Actual','Variance','% spent','Allocated','Line items'] : ['Acct','Department','Budget','Actual','Variance','% spent'];
+  th.font = {bold:true, color:{argb:'FFFFFFFF'}}; th.eachCell(c => c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:ink}});
+  let t = 6; const subRows = {};
+  const pctF = (rr) => ({formula:`IF(C${rr}=0,"",D${rr}/C${rr})`});
+  for (const G of GROUPS) {
+    const ds = activeIn(G.id); if (!ds.length) continue;
+    top.getCell(t, 1).value = G.name.toUpperCase(); top.getRow(t).font = {bold:true, size:9, color:{argb:'FF565C66'}}; t++;
+    const f0 = t;
+    for (const d of ds) {
+      const dr = deptRow.get(d.id), x = T.per.get(d.id);
+      top.getRow(t).values = [d.code, d.name || 'Untitled department'];
+      if (AL) {
+        top.getCell(t, 7).value = x.alloc == null ? null : x.alloc;
+        top.getCell(t, 7).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF4DF'}};
+        top.getCell(t, 8).value = {formula:`'Line Items'!G${dr}`, result:x.lines};
+        top.getCell(t, 3).value = {formula:`IF(G${t}="",H${t},G${t})`, result:x.b};
+      } else top.getCell(t, 3).value = {formula:`'Line Items'!G${dr}`, result:x.b};
+      top.getCell(t, 4).value = {formula:`'Line Items'!H${dr}`, result:x.a};
+      top.getCell(t, 5).value = {formula:`C${t}-D${t}`, result:x.v};
+      top.getCell(t, 6).value = pctF(t);
+      for (let c = 1; c <= 6; c++) top.getCell(t, c).border = {bottom:thin};
+      t++;
+    }
+    const sr = top.getRow(t); sr.getCell(2).value = 'Total ' + G.name.split(' · ')[0].toLowerCase();
+    sr.getCell(3).value = {formula:`SUM(C${f0}:C${t - 1})`, result:T.g[G.id].b};
+    sr.getCell(4).value = {formula:`SUM(D${f0}:D${t - 1})`, result:T.g[G.id].a};
+    sr.getCell(5).value = {formula:`C${t}-D${t}`}; sr.getCell(6).value = pctF(t);
+    if (AL) sr.getCell(8).value = {formula:`SUM(H${f0}:H${t - 1})`, result:T.g[G.id].lines};
+    sr.font = {bold:true}; for (let c = 1; c <= (AL ? 8 : 6); c++) sr.getCell(c).fill = {type:'pattern', pattern:'solid', fgColor:{argb:soft}};
+    subRows[G.id] = t; t += 2;
+  }
+  const subs = Object.values(subRows);
+  const sub = t;
+  top.getCell(t, 2).value = 'Subtotal';
+  top.getCell(t, 3).value = {formula: subs.length ? subs.map(x => 'C' + x).join('+') : '0', result:T.sub.b};
+  top.getCell(t, 4).value = {formula: subs.length ? subs.map(x => 'D' + x).join('+') : '0', result:T.sub.a};
+  top.getCell(t, 5).value = {formula:`C${t}-D${t}`}; top.getCell(t, 6).value = pctF(t); top.getRow(t).font = {bold:true}; t++;
+  const pc = t; top.getCell(t, 2).value = 'Contingency %'; top.getCell(t, 3).value = N(S.contingency.pct) / 100; top.getCell(t, 3).numFmt = '0.0%';
+  top.getCell(t, 3).fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF4DF'}}; top.getCell(t, 4).value = S.contingency.base === 'btl' ? 'on costs excluding above the line' : 'on all costs'; top.getCell(t, 4).font = {italic:true, color:{argb:'FF878C95'}}; t++;
+  const cr = t; top.getCell(t, 2).value = 'Contingency';
+  const baseF = S.contingency.base === 'btl' && subRows.atl ? `(C${sub}-C${subRows.atl})` : `C${sub}`;
+  top.getCell(t, 3).value = {formula:`${baseF}*C${pc}`, result:T.cont};
+  top.getCell(t, 4).value = T.drawn; top.getCell(t, 5).value = {formula:`C${t}-D${t}`}; top.getCell(t, 6).value = pctF(t);
+  top.getCell(t, AL ? 9 : 7).value = 'Actual = forecast overspend drawn from contingency'; top.getCell(t, AL ? 9 : 7).font = {italic:true, size:9, color:{argb:'FF878C95'}}; t++;
+  const gr = t; const g = top.getRow(t); g.getCell(2).value = 'GRAND TOTAL';
+  g.getCell(3).value = {formula:`C${sub}+C${cr}`, result:T.grand}; g.getCell(4).value = {formula:`D${sub}`, result:T.spent};
+  g.getCell(5).value = {formula:`C${t}-D${t}`}; g.getCell(6).value = pctF(t);
+  g.font = {bold:true, size:12}; for (let c = 1; c <= 6; c++) g.getCell(c).border = {top:{style:'medium'}, bottom:{style:'double'}};
+  t++;
+  if (T.target != null) { t++; top.getCell(t, 2).value = 'Your overall budget'; top.getCell(t, 3).value = T.target; t++; top.getCell(t, 2).value = 'Unallocated / (over)'; top.getCell(t, 3).value = {formula:`C${t - 1}-C${gr}`}; top.getRow(t).font = {bold:true}; }
+  [3,4,5].concat(AL ? [7,8] : []).forEach(c => top.getColumn(c).numFmt = fmt); top.getColumn(6).numFmt = '0%';
+  if (AL) { top.getColumn(7).width = 15; top.getColumn(8).width = 15; }
+  top.getCell(pc, 3).numFmt = '0.0%';
+  top.getCell(t + 2, 1).value = AL ? 'Budget uses the Allocated column (G) where filled in, otherwise the line-item total (H). Line items are No. × Qty × Rate.' : 'Budget figures in the Line Items sheet are No. × Qty × Rate. Edit them there and this sheet updates.';
+  top.getCell(t + 2, 1).font = {italic:true, size:9, color:{argb:'FF878C95'}};
+
+  const buf = await wb.xlsx.writeBuffer();
+  const xname = fileBase() + ' - Budget.xlsx', xblob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  if (!fthDoc('Budget Excel', xname, xblob)) download(xname, xblob);
+  $('#toast').hidden = true;
+}
+
+/* ───────── print ───────── */
+let printDirty = true;
+function buildPrint() {
+  const T = totals(), p = S.project;
+  const m = v => money(v), mv = v => `<span class="${v < -0.004 ? 'ov' : ''}">${money(v)}</span>`;
+  const meta = [['Company', p.company], ['Producer', p.producer], ['Version', p.version], ['Shoot days', p.shootDays], ['Date', p.date && new Date(p.date).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'})]].filter(x => x[1]).map(x => `<span>${x[0]}: <b>${esc(x[1])}</b></span>`).join('');
+  let h = `<h1>${esc(p.title || 'Film budget')}</h1><div class="pm"><span><b>Budget top sheet</b></span>${meta}</div>`;
+  const A = S.allocate, C = A ? 7 : 6, lc = v => A ? `<td>${v == null ? '' : m(v)}</td>` : '';
+  h += `<table><thead><tr><th class="l">Acct</th><th class="l">Department</th><th>Budget</th>${A ? '<th>Line items</th>' : ''}<th>Actual</th><th>Variance</th><th>Spent</th></tr></thead><tbody>`;
+  for (const G of GROUPS) {
+    const ds = activeIn(G.id); if (!ds.length) continue;
+    h += `<tr class="g"><td colspan="${C}">${esc(G.name)}</td></tr>`;
+    for (const d of ds) { const t = T.per.get(d.id); h += `<tr><td class="l m">${esc(d.code)}</td><td class="l">${esc(d.name)}</td><td>${m(t.b)}</td>${A ? `<td>${t.gap != null && t.gap < -0.004 ? `<span class="ov">${m(t.lines)}</span>` : m(t.lines)}</td>` : ''}<td>${m(t.a)}</td><td>${mv(t.v)}</td><td>${pct(t.a, t.b).toFixed(0)}%</td></tr>`; }
+    const g = T.g[G.id]; h += `<tr class="s"><td></td><td class="l">Total ${esc(G.name.split(' · ')[0].toLowerCase())}</td><td>${m(g.b)}</td>${lc(g.lines)}<td>${m(g.a)}</td><td>${mv(g.b - g.a)}</td><td>${pct(g.a, g.b).toFixed(0)}%</td></tr>`;
+  }
+  h += `<tr class="g"><td colspan="${C}"></td></tr><tr><td></td><td class="l"><b>Subtotal</b></td><td><b>${m(T.sub.b)}</b></td>${lc(T.sub.lines)}<td><b>${m(T.sub.a)}</b></td><td>${mv(T.sub.b - T.sub.a)}</td><td></td></tr>
+  <tr><td></td><td class="l">Contingency (${N(S.contingency.pct)}% ${S.contingency.base === 'btl' ? 'excl. above the line' : 'of all costs'})</td><td>${m(T.cont)}</td>${lc(null)}<td>${m(T.drawn)} drawn</td><td>${mv(T.contLeft)}</td><td></td></tr>
+  <tr class="t"><td></td><td class="l">Grand total</td><td>${m(T.grand)}</td>${lc(null)}<td>${m(T.spent)}</td><td>${mv(T.remaining)}</td><td>${pct(T.spent, T.grand).toFixed(0)}%</td></tr>`;
+  if (T.target != null) h += `<tr><td></td><td class="l">Your overall budget</td><td>${m(T.target)}</td>${lc(null)}<td></td><td>${mv(T.target - T.grand)}</td><td></td></tr>`;
+  h += `</tbody></table><div class="foot">Forecast final cost of line items: ${m(T.efc)}. Contingency left: ${money(T.contLeft, {signed:true})}.</div>`;
+  h += `<div class="pb"></div><h1 style="font-size:15pt">${esc(p.title || 'Film budget')}: detail</h1>`;
+  for (const G of GROUPS) {
+    const ds = activeIn(G.id); if (!ds.length) continue;
+    h += `<h2>${esc(G.name)}</h2>`;
+    for (const d of ds) {
+      const t = T.per.get(d.id);
+      h += `<div class="dep"><h3><span>${esc(deptLabel(d))}</span><span>${m(t.b)}</span></h3><table><thead><tr><th class="l">Acct</th><th class="l">Description</th><th>No.</th><th>Qty</th><th class="l">Unit</th><th>Rate</th><th>Budget</th><th>Actual</th><th>Variance</th><th class="l">Notes</th></tr></thead><tbody>`;
+      d.lines.forEach((l, i) => { const b = lineBudget(l); const sv = has(l.actual) || l.final;
+        h += `<tr><td class="l m">${esc(d.code && N(d.code) ? N(d.code) + i + 1 : i + 1)}</td><td class="l">${esc(l.desc)}${l.final ? ' ✓' : ''}</td><td>${N(l.n)}</td><td>${N(l.qty)}</td><td class="l">${esc(l.unit)}</td><td>${money(N(l.rate))}</td><td>${m(b)}</td><td>${has(l.actual) ? m(N(l.actual)) : ''}</td><td>${sv ? mv(b - N(l.actual)) : ''}</td><td class="l" style="font-size:8pt;color:#555">${esc(l.note)}</td></tr>`; });
+      h += `<tr class="s"><td></td><td class="l">Total</td><td></td><td></td><td></td><td></td><td>${m(t.b)}</td><td>${m(t.a)}</td><td>${mv(t.v)}</td><td></td></tr></tbody></table></div>`;
+    }
+  }
+  h += `<div class="foot">✓ = final, fully paid. Variance is budget minus actual; red figures are over budget.</div>`;
+  $('#printDoc').innerHTML = h; printDirty = false;
+}
+function doPrint() { buildPrint(); if (!fthPage('Budget PDF', (S.project.title || 'Film') + ' budget')) setTimeout(() => window.print(), 50); }
+window.addEventListener('beforeprint', () => { if (printDirty) buildPrint(); });
+
+renderAll();
+if (window.fthDocs) fthDocs.attach($('#docBtn'), [{label:'Budget PDF', fn:doPrint}, {label:'Budget Excel', fn:exportXlsx}, {label:'Budget CSV', fn:exportCsv}]);
+</script>
+</body>
+</html>

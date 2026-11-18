@@ -18,11 +18,11 @@ async function docBtn(f, sel, label) { await f.click(sel); if (label) await f.cl
   await A.page.goto(base);
   const dlgOk = () => A.page.click('#dlg button[value=ok]');
 
-  step('An empty project: every folder is faded and the strip says 0 of 16');
+  step('An empty project: every folder is faded and the strip says 0 of 17');
   await A.page.click('#docsBtn');
-  await until(async () => await sum(A) === '0 of 16 tools have documents', 'the empty strip');
-  assert.equal(await A.page.$$eval('#docsPage .dfold', a => a.length), 16);
-  assert.equal(await A.page.$$eval('#docsPage .dfold.none', a => a.length), 16);
+  await until(async () => await sum(A) === '0 of 17 tools have documents', 'the empty strip');
+  assert.equal(await A.page.$$eval('#docsPage .dfold', a => a.length), 17);
+  assert.equal(await A.page.$$eval('#docsPage .dfold.none', a => a.length), 17);
   assert.equal(await A.page.$$eval('#docsPage .section', a => a.length), 2, 'grouped by the two stages that have exports (Develop and Prep)');
 
   step('Three call sheet drafts and a recce spreadsheet');
@@ -31,7 +31,7 @@ async function docBtn(f, sel, label) { await f.click(sel); if (label) await f.cl
   for (let i = 0; i < 3; i++) { await docBtn(f, '#docBtn', 'Call Sheet PDF'); await sleep(500); }
   await H.open(A, 'recce'); f = await H.frame(A, 'recce'); await docBtn(f, '#docBtn', 'Comparison spreadsheet'); await sleep(600);
   await go(A, '#/docs');
-  await until(async () => await sum(A) === '2 of 16 tools have documents', 'the strip counts two tools');
+  await until(async () => await sum(A) === '2 of 17 tools have documents', 'the strip counts two tools');
   assert.equal(await folder(A, 'callsheet'), '3 documents');
   assert.equal(await folder(A, 'recce'), '1 document');
   assert.match(await folder(A, 'breakdown'), /^faded: Empty/);
@@ -82,7 +82,7 @@ async function docBtn(f, sel, label) { await f.click(sel); if (label) await f.cl
   await A.page.click('.drow:not(.dcols) [data-da=delete]'); await dlgOk();
   await until(async () => (await rows(A)).length === 0, 'recce doc deleted');
   await H.open(A, 'risk'); f = await H.frame(A, 'risk'); await f.evaluate(() => { window.print = () => {}; }); await docBtn(f, '#docBtn', 'Risk Assessment PDF'); await sleep(700);
-  await go(A, '#/docs'); await until(async () => await sum(A) === '2 of 16 tools have documents', 'callsheet + risk');
+  await go(A, '#/docs'); await until(async () => await sum(A) === '2 of 17 tools have documents', 'callsheet + risk');
   await A.page.click('#projBtn'); await A.page.click('#pmenu [data-pm=manage]'); await A.page.click('#dlg [data-pa=backups]');
   await A.page.click('#dlg [data-pa=restore]:not([data-pa=restore-save])'); await dlgOk();
   await until(async () => /Restored/.test(await H.toast(A)), 'restored');
@@ -95,13 +95,13 @@ async function docBtn(f, sel, label) { await f.click(sel); if (label) await f.cl
   await A.page.click('#projBtn'); await A.page.click('#pmenu [data-pm=new]'); await A.page.fill('#f-pname', 'Second film'); await dlgOk();
   await until(async () => /Second film/.test(await A.page.$eval('#projName', e => e.textContent)), 'new project');
   await go(A, '#/docs');
-  await until(async () => await sum(A) === '0 of 16 tools have documents', 'the new project has no documents');
+  await until(async () => await sum(A) === '0 of 17 tools have documents', 'the new project has no documents');
   await H.open(A, 'schedule'); f = await H.frame(A, 'schedule'); await f.evaluate(() => { window.print = () => {}; }); await docBtn(f, '#docBtn', 'Schedule PDF'); await sleep(700);
-  await go(A, '#/docs'); await until(async () => await sum(A) === '1 of 16 tools have documents', 'one in the new project');
+  await go(A, '#/docs'); await until(async () => await sum(A) === '1 of 17 tools have documents', 'one in the new project');
   await A.page.click('#projBtn'); await A.page.click('#pmenu [data-pm=open]:not(.on)');
   await until(async () => /My first project/.test(await A.page.$eval('#projName', e => e.textContent)), 'back to the first project');
   await go(A, '#/docs');
-  await until(async () => await sum(A) === '2 of 16 tools have documents', 'the first project’s documents again');
+  await until(async () => await sum(A) === '2 of 17 tools have documents', 'the first project’s documents again');
   assert.match(await folder(A, 'schedule'), /^faded/);
 
   if (LIBS) {
