@@ -150,6 +150,12 @@ body{font-size:14px;line-height:1.45}
 .pin.wb .tag{background:var(--fth-accent);color:var(--fth-on-accent)}
 .pin.wb .tri{border-top-color:var(--fth-accent)}
 .track.drag .pin .tag{box-shadow:0 0 0 3px var(--fth-accent-soft)}
+#lockBtn .ico{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#lockBtn[aria-pressed="true"]{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.locked .pin .tag{box-shadow:0 0 0 2px var(--fth-bg),0 0 0 3.5px var(--fth-accent)}
+.locked .guide{border-left-style:solid;border-color:var(--fth-accent);opacity:.8}
+.lockspan{position:absolute;height:2px;background:var(--fth-accent);opacity:.8;pointer-events:none;z-index:2;display:none}
+.locked .lockspan{display:block}
 .ticks{position:absolute;left:0;right:0;top:58px;height:14px;pointer-events:none}
 .ticks span{position:absolute;transform:translateX(-50%);font:500 10px/1 var(--fth-mono);color:var(--fth-faint);white-space:nowrap}
 .ticks span.mid{color:var(--fth-muted);font-weight:600}
@@ -182,6 +188,7 @@ body{font-size:14px;line-height:1.45}
 <header class="fth-head">
   <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>Learn</span><h1 class="fth-title">Colour Temperature Lab</h1></div>
   <div class="fth-actions">
+    <button class="fth-btn sm" id="lockBtn" type="button" aria-pressed="false" title="Keep the gap between colour temperature and white balance fixed while you drag either one"><svg class="ico" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path id="lockShackle" d="M8 11V7.5a4 4 0 0 1 7.6-1.7"/></svg><span>Lock relative difference</span></button>
     <button class="fth-btn sm" id="matchBtn" type="button">Match white balance to light</button>
     <button class="fth-btn sm ghost" id="resetBtn" type="button">Reset</button>
   </div>
@@ -212,6 +219,7 @@ body{font-size:14px;line-height:1.45}
       </div>
     </div>
     <div class="guide" id="guide"></div>
+    <div class="lockspan" id="lockspan"></div>
   </div>
 
   <div class="readout" aria-live="polite">
@@ -234,7 +242,7 @@ body{font-size:14px;line-height:1.45}
 'use strict';
 const KMIN = 1600, KMAX = 9600, STEP = 25, NEUTRAL = 5600;
 const PRESETS = [['Candle',1900],['Tungsten',3200],['Daylight',5600],['Shade',7500]];
-const state = {cct: NEUTRAL, wb: NEUTRAL};
+const state = {cct: NEUTRAL, wb: NEUTRAL, lock: false};
 
 /* ── colour science ───────────────────────────────────────────────
    Blackbody chromaticity: Krystek (1985) rational approximation of the
@@ -316,10 +324,30 @@ function bindTrack(track, key){
 }
 bindTrack($('cctTrack'), 'cct');
 bindTrack($('wbTrack'), 'wb');
-$('matchBtn').addEventListener('click', () => set('wb', state.cct));
-$('resetBtn').addEventListener('click', () => { state.cct = NEUTRAL; set('wb', NEUTRAL); });
+$('matchBtn').addEventListener('click', () => { state.wb = state.cct; schedule(); });
+$('resetBtn').addEventListener('click', () => { state.cct = state.wb = NEUTRAL; setLock(false); });
+function setLock(on){
+  state.lock = on;
+  $('lockBtn').setAttribute('aria-pressed', on);
+  $('lockShackle').setAttribute('d', on ? 'M8 11V7.5a4 4 0 0 1 8 0V11' : 'M8 11V7.5a4 4 0 0 1 7.6-1.7');
+  $('scales').classList.toggle('locked', on);
+  schedule();
+}
+$('lockBtn').addEventListener('click', () => setLock(!state.lock));
 
-function set(key, K){ state[key] = clampK(K); schedule(); }
+/* With the lock on, moving either arrow moves the other by the same number of Kelvin,
+   stopping when either one reaches the end of the scale. */
+function set(key, K){
+  K = clampK(K);
+  if(state.lock){
+    const other = key === 'cct' ? 'wb' : 'cct';
+    let d = K - state[key];
+    d = Math.max(d, KMIN - Math.min(state.cct, state.wb));
+    d = Math.min(d, KMAX - Math.max(state.cct, state.wb));
+    state[key] += d; state[other] += d;
+  } else state[key] = K;
+  schedule();
+}
 let raf = 0;
 function schedule(){ if(!raf) raf = requestAnimationFrame(() => { raf = 0; update(); }); }
 
@@ -401,6 +429,9 @@ function placeGuide(){
   gd.style.left = (a.left - s.left + a.width*frac(state.cct)) + 'px';
   gd.style.top = (a.bottom - s.top) + 'px';
   gd.style.height = Math.max(0, b.bottom - a.bottom) + 'px';
+  const ls = $('lockspan'), x1 = a.left - s.left + a.width*frac(state.cct), x2 = b.left - s.left + b.width*frac(state.wb);
+  ls.style.left = Math.min(x1, x2) + 'px'; ls.style.width = Math.abs(x2 - x1) + 'px';
+  ls.style.top = (b.top - s.top - 20) + 'px';
 }
 function update(){
   const {cct, wb} = state;
@@ -418,9 +449,9 @@ function update(){
   const diff = cct - wb, mired = Math.round(1e6/cct - 1e6/wb);
   $('status').textContent = diff === 0 ? 'Balanced' : `${Math.abs(diff)}K ${diff < 0 ? 'under' : 'over'} balanced`;
   $('swatch').style.background = css(g);
-  $('detail').innerHTML = diff === 0
+  $('detail').innerHTML = (state.lock ? `<b>Difference locked</b> · ` : '') + (diff === 0
     ? `Light <b>${fmt(cct)}</b> · White balance <b>${fmt(wb)}</b> · whites read white`
-    : `Light <b>${fmt(cct)}</b> · White balance <b>${fmt(wb)}</b> · image reads <b>${diff < 0 ? 'warm' : 'cool'}</b> · ${Math.abs(mired)} mired shift`;
+    : `Light <b>${fmt(cct)}</b> · White balance <b>${fmt(wb)}</b> · image reads <b>${diff < 0 ? 'warm' : 'cool'}</b> · ${Math.abs(mired)} mired shift`);
   renderImage(g);
 }
 
