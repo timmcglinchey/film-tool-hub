@@ -2141,7 +2141,7 @@ const TOOL_THEME = {
    tool's light/dark follows the hub through data-theme on its <html>. */
 const FTH_KIT = await getText('hub/kit.css');
 const KIT_FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-  + '<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">';
+  + '<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Caveat:wght@700&display=swap" rel="stylesheet">';
 function kitAccent(hex) {
   const n = parseInt(String(hex).replace('#', ''), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
   const rgba = a => `rgba(${r},${g},${b},${a})`;
@@ -2579,7 +2579,7 @@ const DOC_TYPES = {
   recce: ['Recce Field Sheet PDF', 'Recce Report PDF', 'Recce Comparison PDF', 'Recce CSV'],
   casting: ['Casting Breakdowns PDF', 'Contact Sheet PDF', 'Auditionees CSV'],
   tasks: ['Task List PDF'],
-  moodboard: ['Mood Board PDF'],
+  moodboard: ['Mood Board PDF', 'Whiteboard PNG'],
   shotlist: ['Shot List PDF', 'Shot List CSV'],
   blocking: ['Blocking Plan JPG'],
   lighting: ['Lighting Plan PDF', 'Lighting Plan PNG', 'Lighting Plan SVG', 'Kit List CSV'],

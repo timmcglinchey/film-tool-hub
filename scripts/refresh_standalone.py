@@ -9,7 +9,7 @@ def accent(hexv):
     ink = '#' + ''.join('%02x' % round(v * 0.58) for v in (r, g, b)); rgba = lambda a: f'rgba({r},{g},{b},{a})'
     return (f':root{{--fth-cat:{hexv};--fth-accent:{hexv};--fth-accent-ink:{hexv};--fth-accent-soft:{rgba(.14)};--fth-accent-line:{rgba(.45)};--fth-on-accent:#14110b}}'
             f':root[data-theme="light"]{{--fth-accent:{ink};--fth-accent-ink:{ink};--fth-accent-soft:{rgba(.16)};--fth-accent-line:{rgba(.6)};--fth-on-accent:#ffffff}}')
-FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">'
+FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Caveat:wght@700&display=swap" rel="stylesheet">'
 for t in man['tools']:
     f = f"{R}/{t['file']}"; h = open(f).read(); c = cats[t['category']]
     label = f"{c['num']} · {c['name']}" if c.get('num') else c['name']
