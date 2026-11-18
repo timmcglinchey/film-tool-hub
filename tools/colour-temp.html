@@ -150,8 +150,8 @@ body{font-size:14px;line-height:1.45}
 .pin.wb .tag{background:var(--fth-accent);color:var(--fth-on-accent)}
 .pin.wb .tri{border-top-color:var(--fth-accent)}
 .track.drag .pin .tag{box-shadow:0 0 0 3px var(--fth-accent-soft)}
-#lockBtn .ico{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#lockBtn[aria-pressed="true"]{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+#lockBtn .ico,#miredBtn .ico{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#lockBtn[aria-pressed="true"],#miredBtn[aria-pressed="true"]{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
 .locked .pin .tag{box-shadow:0 0 0 2px var(--fth-bg),0 0 0 3.5px var(--fth-accent)}
 .locked .guide{border-left-style:solid;border-color:var(--fth-accent);opacity:.8}
 .lockspan{position:absolute;height:2px;background:var(--fth-accent);opacity:.8;pointer-events:none;z-index:2;display:none}
@@ -189,6 +189,7 @@ body{font-size:14px;line-height:1.45}
   <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>Learn</span><h1 class="fth-title">Colour Temperature Lab</h1></div>
   <div class="fth-actions">
     <button class="fth-btn sm" id="lockBtn" type="button" aria-pressed="false" title="Keep the gap between colour temperature and white balance fixed while you drag either one"><svg class="ico" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9.5" rx="2"/><path id="lockShackle" d="M8 11V7.5a4 4 0 0 1 7.6-1.7"/></svg><span>Lock relative difference</span></button>
+    <button class="fth-btn sm" id="miredBtn" type="button" aria-pressed="false" title="Advanced: show colour shifts as the eye really sees them, in mireds"><svg class="ico" viewBox="0 0 24 24"><path d="M3 17c4 0 5-10 9-10s5 10 9 10"/><path d="M3 20.5h18"/></svg><span>Mired accurate</span></button>
     <button class="fth-btn sm" id="matchBtn" type="button">Match white balance to light</button>
     <button class="fth-btn sm ghost" id="resetBtn" type="button">Reset</button>
   </div>
@@ -232,9 +233,10 @@ body{font-size:14px;line-height:1.45}
   <div class="notes">
     <div class="fth-card"><h3>Colour temperature is the light</h3><p>Measured in Kelvin. Lower numbers are warmer (candlelight, tungsten), higher numbers are cooler (shade, overcast sky). Move the top arrow to change the light.</p></div>
     <div class="fth-card"><h3>White balance is the camera</h3><p>It tells the camera which colour of light to treat as white. Wherever you set it, pure white moves with it. When it sits under the light's arrow, the colour is cancelled out and whites come out white.</p></div>
-    <div class="fth-card"><h3>Why 1000K isn't always 1000K</h3><p>We see colour shifts in mireds (1,000,000 ÷ K), not Kelvin. 1000K under 5600K is a 39 mired shift, but 1000K over is only 27. That's why warm mismatches look stronger than cool ones.</p></div>
+    <div class="fth-card" id="noteSimple"><h3>The gap sets the look</h3><p>In this simple view, every 1000K of difference tints the image by the same amount, wherever the two arrows sit. Turn on <b>Mired accurate</b> for how it really behaves.</p></div>
+    <div class="fth-card" id="noteMired" hidden><h3>Why 1000K isn't always 1000K</h3><p>We see colour shifts in mireds (1,000,000 ÷ K), not Kelvin. 1000K under 5600K is a 39 mired shift, but 1000K over is only 27. That's why warm mismatches look stronger than cool ones, and a locked gap fades as you slide it up the scale.</p></div>
   </div>
-  <p class="foot">Colours follow the blackbody curve. White balance is applied as a Bradford chromatic adaptation, with balanced white shown as display white.</p>
+  <p class="foot" id="foot"></p>
 </main>
 
 <script>
@@ -242,7 +244,7 @@ body{font-size:14px;line-height:1.45}
 'use strict';
 const KMIN = 1600, KMAX = 9600, STEP = 25, NEUTRAL = 5600;
 const PRESETS = [['Candle',1900],['Tungsten',3200],['Daylight',5600],['Shade',7500]];
-const state = {cct: NEUTRAL, wb: NEUTRAL, lock: false};
+const state = {cct: NEUTRAL, wb: NEUTRAL, lock: false, mired: false};
 
 /* ── colour science ───────────────────────────────────────────────
    Blackbody chromaticity: Krystek (1985) rational approximation of the
@@ -284,9 +286,14 @@ const clampK = K => Math.min(KMAX, Math.max(KMIN, Math.round(K/STEP)*STEP));
 const fmt = K => K + 'K';
 
 /* ── the bars ── */
+/* Simple view: the tint depends only on the Kelvin gap, shown as if the camera were at 5600K.
+   Mired accurate: the real adaptation between the light and the white balance. */
+function tint(K, wb){
+  return state.mired ? gains(K, wb) : gains(Math.min(15000, Math.max(1000, NEUTRAL + K - wb)), NEUTRAL);
+}
 function gradientFor(wb){
   const stops = [];
-  for(let K = KMIN; K <= KMAX; K += 200) stops.push(`${css(gains(K, wb))} ${(frac(K)*100).toFixed(2)}%`);
+  for(let K = KMIN; K <= KMAX; K += 200) stops.push(`${css(tint(K, wb))} ${(frac(K)*100).toFixed(2)}%`);
   return `linear-gradient(90deg,${stops.join(',')})`;
 }
 $('cctBar').style.background = gradientFor(NEUTRAL);
@@ -334,6 +341,12 @@ function setLock(on){
   schedule();
 }
 $('lockBtn').addEventListener('click', () => setLock(!state.lock));
+$('miredBtn').addEventListener('click', () => {
+  state.mired = !state.mired;
+  $('miredBtn').setAttribute('aria-pressed', state.mired);
+  $('noteSimple').hidden = state.mired; $('noteMired').hidden = !state.mired;
+  schedule();
+});
 
 /* With the lock on, moving either arrow moves the other by the same number of Kelvin,
    stopping when either one reaches the end of the scale. */
@@ -441,17 +454,21 @@ function update(){
   $('wbTag').textContent  = 'WB ' + fmt(wb);
   $('cctTrack').setAttribute('aria-valuenow', cct); $('cctTrack').setAttribute('aria-valuetext', fmt(cct));
   $('wbTrack').setAttribute('aria-valuenow', wb);  $('wbTrack').setAttribute('aria-valuetext', fmt(wb));
-  if(wb !== lastWb){ $('wbBar').style.background = gradientFor(wb); lastWb = wb; }
+  const barKey = wb + (state.mired ? 'm' : 's');
+  if(barKey !== lastWb){ $('wbBar').style.background = gradientFor(wb); lastWb = barKey; }
+  $('foot').textContent = state.mired
+    ? 'Mired accurate: colours follow the blackbody curve, and white balance is applied as a Bradford chromatic adaptation, with balanced white shown as display white.'
+    : 'Simple view: the tint depends only on the Kelvin gap between the light and the white balance. Turn on Mired accurate for the full colour science.';
   document.querySelectorAll('.presets').forEach(p => p.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.k === state[p.dataset.for])));
   placeGuide();
 
-  const g = gains(cct, wb);
+  const g = tint(cct, wb);
   const diff = cct - wb, mired = Math.round(1e6/cct - 1e6/wb);
   $('status').textContent = diff === 0 ? 'Balanced' : `${Math.abs(diff)}K ${diff < 0 ? 'under' : 'over'} balanced`;
   $('swatch').style.background = css(g);
   $('detail').innerHTML = (state.lock ? `<b>Difference locked</b> · ` : '') + (diff === 0
     ? `Light <b>${fmt(cct)}</b> · White balance <b>${fmt(wb)}</b> · whites read white`
-    : `Light <b>${fmt(cct)}</b> · White balance <b>${fmt(wb)}</b> · image reads <b>${diff < 0 ? 'warm' : 'cool'}</b> · ${Math.abs(mired)} mired shift`);
+    : `Light <b>${fmt(cct)}</b> · White balance <b>${fmt(wb)}</b> · image reads <b>${diff < 0 ? 'warm' : 'cool'}</b>${state.mired ? ` · ${Math.abs(mired)} mired shift` : ''}`);
   renderImage(g);
 }
 
