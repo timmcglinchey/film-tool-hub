@@ -470,12 +470,59 @@ a.ov-btn{text-decoration:none}
 .w-draw{overflow:visible;pointer-events:none}
 .w-draw path{pointer-events:none}
 .w-draw path.hit{fill:none;stroke:transparent;pointer-events:stroke;cursor:move}
-.w-frame{border-radius:14px;background:color-mix(in srgb,var(--fc) 8%,transparent);border:calc(1.5px / var(--z,1)) dashed color-mix(in srgb,var(--fc) 60%,transparent);pointer-events:none}
-.w-frame .wfl{position:absolute;left:2px;bottom:100%;margin-bottom:8px;font:800 max(20px,calc(12px / var(--z,1)))/1 var(--fth-display);font-variation-settings:"wdth" 75;text-transform:uppercase;letter-spacing:.02em;color:var(--fc);white-space:nowrap;pointer-events:auto;cursor:move;outline:none}
+.w-frame{pointer-events:none}
+.w-frame .wfs{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.w-frame .wfs path{fill:color-mix(in srgb,var(--fc) 8%,transparent);stroke:color-mix(in srgb,var(--fc) 60%,transparent);stroke-width:1.5px;vector-effect:non-scaling-stroke;stroke-dasharray:6 5}
+.w-frame.solid .wfs path{stroke-dasharray:none;stroke:color-mix(in srgb,var(--fc) 80%,transparent)}
+.wflayer{position:absolute;left:0;top:0;width:0;height:0;z-index:800000}
+.wfl{position:absolute;transform:translateY(calc(-100% - 8px));font:800 max(20px,calc(12px / var(--z,1)))/1 var(--fth-display);font-variation-settings:"wdth" 75;text-transform:uppercase;letter-spacing:.02em;color:var(--fc);white-space:nowrap;pointer-events:auto;cursor:move;outline:none}
 .wvp:not(.t-select) .wi,.wvp:not(.t-select) .wfl,.wvp:not(.t-select) path.hit{cursor:inherit}
 .wi.on{outline:calc(2px / var(--z,1)) solid var(--fth-accent);outline-offset:calc(2px / var(--z,1))}
 .w-draw.on{outline-width:calc(1.5px / var(--z,1));outline-style:dashed}
-.w-frame.on{outline:0;border-style:solid;border-color:var(--fth-accent)}
+.w-frame.on{outline:0}.w-frame.on .wfs path{stroke:var(--fth-accent);stroke-dasharray:none}
+.wi.wsnap{outline:calc(2.5px / var(--z,1)) solid var(--fth-accent);outline-offset:calc(4px / var(--z,1))}
+.w-frame.wsnap{outline:0}.w-frame.wsnap .wfs path{stroke:var(--fth-accent);stroke-width:3px;stroke-dasharray:none}
+#wSelBox.ends{border:0}#wSelBox.ends .we{display:block;border-radius:50%;cursor:crosshair}
+#wSelBox .we.tied{background:var(--fth-accent)}
+.wpins{position:absolute;left:0;top:0;width:0;height:0;z-index:900000}
+.wpin{position:absolute;width:30px;height:30px;margin:-32px 0 0 -2px;transform-origin:2px 32px;transform:scale(calc(1 / var(--z,1)));border-radius:15px 15px 15px 3px;border:2px solid #fff;background:var(--fth-accent);color:var(--fth-on-accent);display:grid;place-items:center;font:700 11.5px var(--fth-mono);box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:pointer;padding:0;touch-action:none}
+.wpin.done{background:#7b818b;color:#fff;opacity:.75}
+.wpin.open{box-shadow:0 0 0 3px var(--fth-accent-soft),0 2px 8px rgba(0,0,0,.35)}
+.wpin svg{width:14px;height:14px}
+.wcpop{width:300px;max-height:min(460px,calc(100% - 24px));display:flex;flex-direction:column;background:var(--fth-surface);border:1px solid var(--fth-line2);border-radius:12px;box-shadow:var(--fth-shadow);overflow:hidden}
+.wch{display:flex;align-items:center;gap:2px;padding:6px 6px 6px 12px;border-bottom:1px solid var(--fth-line)}
+.wch b{font:700 12px var(--fth-display);text-transform:uppercase;letter-spacing:.04em;flex:1}
+.wcl{overflow:auto;padding:4px 12px;flex:1 1 auto}
+.wcl:empty{display:none}
+.wcm{padding:9px 0;border-bottom:1px solid var(--fth-line)}
+.wcm:last-child{border-bottom:0}
+.wcmh{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--fth-muted)}
+.wcmh b{color:var(--fth-text);font-size:12.5px}
+.wcmh .sp{flex:1}
+.wcmh .wpb{height:22px;min-width:22px;padding:0 4px;opacity:0}
+.wcm:hover .wcmh .wpb,.wcmh .wpb:focus{opacity:1}
+.wav{width:22px;height:22px;border-radius:50%;flex:none;display:grid;place-items:center;font:700 9.5px var(--fth-mono);color:#16181c;background:var(--av)}
+.wcm p{margin:5px 0 0 29px;font-size:13px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--fth-text)}
+.wcf{padding:8px 10px 10px;border-top:1px solid var(--fth-line);display:flex;flex-direction:column;gap:7px}
+.wcf textarea{width:100%;box-sizing:border-box;min-height:58px;resize:vertical;font:13px/1.4 var(--fth-body,inherit)}
+.wcfb{display:flex;align-items:center;gap:6px}
+.wcfb .sp{flex:1}
+.wcas{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--fth-muted)}
+.wcas input{width:110px;height:26px;padding:0 7px;font-size:12px}
+.wcpanel{right:12px;top:58px;width:290px;max-height:calc(100% - 130px);display:flex;flex-direction:column;background:var(--fth-surface);border:1px solid var(--fth-line2);border-radius:12px;box-shadow:var(--fth-shadow);overflow:hidden}
+.wcpanel .wcph{display:flex;align-items:center;gap:6px;padding:9px 8px 9px 12px;border-bottom:1px solid var(--fth-line)}
+.wcpanel .wcph b{font:700 12px var(--fth-display);text-transform:uppercase;letter-spacing:.04em;flex:1}
+.wcpanel .wcph label{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--fth-muted)}
+.wcpanel .wcpl{overflow:auto;padding:4px 0}
+.wcpi{display:block;width:100%;text-align:left;border:0;background:none;color:inherit;padding:9px 12px;border-bottom:1px solid var(--fth-line);cursor:pointer}
+.wcpi:hover{background:var(--fth-surface2)}
+.wcpi.done{opacity:.6}
+.wcpi .wcmh{margin-bottom:4px}
+.wcpi q{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;line-height:1.4;quotes:none;color:var(--fth-text)}
+.wcpi small{display:block;margin-top:3px;font-size:11px;color:var(--fth-faint)}
+.wcpe{padding:16px 12px;font-size:12.5px;line-height:1.5;color:var(--fth-muted)}
+.wvp.t-comment{cursor:crosshair}
+.wpb .wcount{min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--fth-accent);color:var(--fth-on-accent);font:700 10px/16px var(--fth-mono)}
 .wi [contenteditable="true"],.wi [contenteditable="plaintext-only"]{cursor:text;user-select:text;-webkit-user-select:text}
 .wtmp{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
 .wtmpf{position:absolute;border:1.5px dashed var(--fth-accent);border-radius:14px;background:var(--fth-accent-soft);pointer-events:none}
@@ -614,13 +661,17 @@ a.ov-btn{text-decoration:none}
       </aside>
       <div class="wvp t-select" id="wVp" tabindex="0" aria-label="Whiteboard canvas">
         <div class="wworld" id="wWorld"></div>
-        <div id="wSelBox" hidden><i class="wh" data-c="nw"></i><i class="wh" data-c="ne"></i><i class="wh" data-c="sw"></i><i class="wh" data-c="se"></i></div>
+        <div id="wSelBox" hidden><i class="wh" data-c="nw"></i><i class="wh" data-c="ne"></i><i class="wh" data-c="sw"></i><i class="wh" data-c="se"></i><i class="wh we" data-c="s" title="Drag onto a still, note or frame to tie this end to it"></i><i class="wh we" data-c="e" title="Drag onto a still, note or frame to tie this end to it"></i></div>
         <div id="wMarq" hidden></div>
         <div class="wempty" id="wEmpty" hidden><div><h3>Lay it all out</h3><p>Drag references in from the left, or drop and paste stills straight onto the canvas. Group them in frames, pin notes for each department, and draw over a frame to point out the light, the lens or the set dressing.</p></div></div>
         <div class="wui wrail" id="wRail" role="toolbar" aria-label="Whiteboard tools"></div>
         <div class="wui wpill" id="wOpts" hidden></div>
         <div class="wui wpill" id="wCtx" hidden></div>
+        <div class="wui wcpop" id="wCPop" hidden role="dialog" aria-label="Comment"></div>
+        <div class="wui wcpanel" id="wCPanel" hidden></div>
         <div class="wui wpill wtop">
+          <button class="wpb" id="wCmB" title="Comments on the whiteboard"></button>
+          <span class="wsep"></span>
           <button class="wpb" id="wBg" title="Switch the canvas between dark and light"></button>
           <span class="wsep"></span>
           <button class="wpb" id="wPng" title="Download the whiteboard (or just what's selected) as a PNG"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M4.5 19.5h15"/></svg>PNG</button>
@@ -904,7 +955,7 @@ const store = window.fthStore || (() => {
   return {get: k => tx('readonly', s => s.get(k)), set: (k, v) => tx('readwrite', s => s.put(v, k)), del: k => tx('readwrite', s => s.delete(k))};
 })();
 
-const wbBlank = () => ({items: [], view: {x: 260, y: 160, z: .6}, bg: 'auto', lib: true, ink: '#e0453a', sw: 6, note: '#ffe27a', font: 'hand', arrow: false, lf: {tag: '', q: ''}});
+const wbBlank = () => ({items: [], view: {x: 260, y: 160, z: .6}, bg: 'auto', lib: true, ink: '#e0453a', sw: 6, note: '#ffe27a', font: 'hand', arrow: false, fsh: 'round', fln: 'dash', snap: true, cm: [], cmShow: true, cmDone: false, lf: {tag: '', q: ''}});
 const PDFDEF = {page: 'a4', orient: 'landscape', layout: 'masonry', size: 3, gap: 5, margin: 12, shape: '16:9', fit: 'fill',
   names: 'below', credit: true, tags: true, notes: true, pal: 'tagged', bg: '#ffffff', header: true, visual: true, sound: true, board: true, wbp: 'frames'};
 const blank = () => ({app: 'fth-moodboard', v: 1, title: '', tab: 'visual', size: 260, view: 'grid', refs: [], sounds: [], wb: wbBlank(), pdf: {...PDFDEF},
@@ -1488,7 +1539,7 @@ $('#jsonFile').onchange = async e => {
 async function loadState(d, mediaObj) {
   const b = blank();
   state = {...b, ...d, pdf: {...PDFDEF, ...(d.pdf || {})}, vf: {...b.vf, ...(d.vf || {})}, sf: {...b.sf, ...(d.sf || {})}, refs: (d.refs || []).map(x => ({tags: [], ...x})), sounds: (d.sounds || []).map(x => ({tags: [], ...x})),
-    wb: {...b.wb, ...(d.wb || {}), view: {...b.wb.view, ...((d.wb || {}).view || {})}, lf: {...b.wb.lf, ...((d.wb || {}).lf || {})}, items: ((d.wb || {}).items || []).slice()}};
+    wb: {...b.wb, ...(d.wb || {}), view: {...b.wb.view, ...((d.wb || {}).view || {})}, lf: {...b.wb.lf, ...((d.wb || {}).lf || {})}, items: ((d.wb || {}).items || []).slice(), cm: ((d.wb || {}).cm || []).slice()}};
   delete state.media;
   media.clear(); cardCache.clear(); sel = {visual: null, sound: null}; playing = null;
   wResetBoard();
@@ -1874,7 +1925,9 @@ $('#pxGo').onclick = async () => {
    straight on, which also files them under Visual references), group them in frames, pin notes
    and labels, and draw over them. Everything lives in state.wb. Pictures point at references by
    id, so a still, its tags and its notes stay in one place; removing a reference takes it off the
-   whiteboard too. Item kinds (t): img, note, text, draw, frame. Frames always sit underneath. */
+   whiteboard too. Item kinds (t): img, note, text, draw, frame. Frames always sit underneath.
+   Frames have a shape (sh) and outline (ol). Straight arrows (ln) can be tied to an item at either
+   end (s, e) and follow it. Comments live apart from the items, in state.wb.cm, and never export. */
 const WB_INK = ['#e0453a', '#f5b14c', '#ffe27a', '#8bd16a', '#4fc7b5', '#97a3ff', '#e889c8', '#ffffff', '#16181c'];
 const WB_NOTE = ['#ffe27a', '#ffb67a', '#ff9fc7', '#c9b6ff', '#9fd0ff', '#b5e48c', '#ffffff', '#b8322a', '#22262d'];
 const WB_SW = [3, 6, 12];
@@ -1895,20 +1948,27 @@ const WI = {
   front: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="1.5" fill="currentColor" fill-opacity=".25"/><path d="M15 6V5.5A1.5 1.5 0 0 0 13.5 4h-8A1.5 1.5 0 0 0 4 5.5v8A1.5 1.5 0 0 0 5.5 15H6"/></svg>',
   back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="4" width="11" height="11" rx="1.5" fill="currentColor" fill-opacity=".25"/><path d="M18 9h.5A1.5 1.5 0 0 1 20 10.5v8a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 9 18.5V18"/></svg>',
   sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></svg>',
-  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></svg>'
+  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/></svg>',
+  cmt: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+  magnet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v7a6 6 0 0 0 12 0V4"/><path d="M6 8h3M15 8h3M9 4v7a3 3 0 0 0 6 0V4"/></svg>',
+  dash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h3M10.5 12h3M18 12h3"/></svg>',
+  solid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18"/></svg>'
 };
 const WTOOLS = [
   {id: 'select', k: 'v', label: 'Select and move', ic: WI.select},
   {id: 'hand', k: 'h', label: 'Pan (or hold Space)', ic: WI.hand},
   {sep: 1},
-  {id: 'frame', k: 'f', label: 'Frame: a named group (Bar, Office…)', ic: WI.frame},
+  {id: 'frame', k: 'f', label: 'Frame: drag to draw a named group (Bar, Office…). Things inside move with it', ic: WI.frame},
   {id: 'note', k: 'n', label: 'Sticky note', ic: WI.note},
   {id: 'text', k: 't', label: 'Text label', ic: WI.text},
   {sep: 1},
   {id: 'pen', k: 'p', label: 'Pen: draw over anything', ic: WI.pen},
   {id: 'hl', k: 'm', label: 'Highlighter', ic: WI.hl},
   {id: 'arrow', k: 'a', label: 'Arrow', ic: WI.arrow},
-  {id: 'eraser', k: 'e', label: 'Eraser: rubs out drawings', ic: WI.eraser}
+  {id: 'eraser', k: 'e', label: 'Eraser: rubs out drawings', ic: WI.eraser},
+  {sep: 1},
+  {id: 'comment', k: 'c', label: 'Comment: click anywhere to pin one. On a still or note, it moves with it', ic: WI.cmt}
 ];
 const wVp = $('#wVp'), wWorld = $('#wWorld');
 const W = () => state.wb;
@@ -1953,7 +2013,7 @@ function wApplyView() {
   wVp.style.backgroundSize = `${g}px ${g}px`; wVp.style.backgroundPosition = `${v.x}px ${v.y}px`;
   wVp.style.setProperty('--z', v.z);
   $('#wZoom').textContent = Math.round(v.z * 100) + '%';
-  wDrawSel();
+  wDrawSel(); wCPlace();
 }
 const wPt = e => { const r = wVp.getBoundingClientRect(), v = W().view; return {x: (e.clientX - r.left - v.x) / v.z, y: (e.clientY - r.top - v.y) / v.z}; };
 const wCentre = () => { const r = wVp.getBoundingClientRect(), v = W().view; return {x: (r.width / 2 - v.x) / v.z, y: (r.height / 2 - v.y) / v.z}; };
@@ -1995,6 +2055,94 @@ function wHead(p, sw) {
 }
 const wPad = it => it.sw / 2 + (it.arrow ? 14 + it.sw * 2.4 : 0) + 2;
 
+/* ── frame shapes ── */
+const WB_FSH = [{id: 'round', label: 'Rounded'}, {id: 'square', label: 'Square corners'}, {id: 'oval', label: 'Oval'}, {id: 'diamond', label: 'Diamond'}, {id: 'hex', label: 'Hexagon'}];
+function wFramePath(sh, w, h, rad) {
+  const W2 = r1(w / 2), H2 = r1(h / 2);
+  if (sh === 'square') return `M0 0H${w}V${h}H0Z`;
+  if (sh === 'oval') return `M0 ${H2}A${W2} ${H2} 0 1 1 ${w} ${H2}A${W2} ${H2} 0 1 1 0 ${H2}Z`;
+  if (sh === 'diamond') return `M${W2} 0L${w} ${H2}L${W2} ${h}L0 ${H2}Z`;
+  if (sh === 'hex') { const k = r1(Math.min(w * .25, h * .5)); return `M${k} 0H${w - k}L${w} ${H2}L${w - k} ${h}H${k}L0 ${H2}Z`; }
+  const r = r1(Math.min(rad == null ? 14 : rad, w / 2, h / 2));
+  return `M${r} 0H${w - r}A${r} ${r} 0 0 1 ${w} ${r}V${h - r}A${r} ${r} 0 0 1 ${w - r} ${h}H${r}A${r} ${r} 0 0 1 0 ${h - r}V${r}A${r} ${r} 0 0 1 ${r} 0Z`;
+}
+const wShapeIc = sh => `<svg viewBox="-1.5 -1.5 23 17" style="width:21px"><path d="${wFramePath(sh, 20, 14, 4)}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
+const wShapeOf = it => it.t === 'frame' ? it.sh || 'round' : 'rect';
+/* along a ray from the middle of a shape (half sizes hw, hh) towards (dx, dy): the fraction of the way at which
+   it crosses the edge. 1 means (dx, dy) is on the edge, more means it's inside. */
+function wEdgeT(sh, hw, hh, dx, dy) {
+  const ax = Math.abs(dx), ay = Math.abs(dy);
+  if (!ax && !ay) return Infinity;
+  if (sh === 'oval') return 1 / Math.hypot(ax / hw, ay / hh);
+  if (sh === 'diamond') return 1 / (ax / hw + ay / hh);
+  if (sh === 'hex') { const k = Math.min(hw * .5, hh); return Math.min(ay ? hh / ay : Infinity, (hw / k) / (ax / k + ay / hh)); }
+  return 1 / Math.max(ax / hw, ay / hh);
+}
+const wInShape = (it, p) => { const b = wBox(it); return wEdgeT(wShapeOf(it), b.w / 2, b.h / 2, p.x - b.x - b.w / 2, p.y - b.y - b.h / 2) >= 1; };
+/* does a frame hold a box: inside its outline, and for the shaped frames with its middle inside the shape */
+const wHolds = (f, b) => inside(b, wBox(f)) && (wShapeOf(f) === 'round' || wShapeOf(f) === 'square' || wInShape(f, {x: b.x + b.w / 2, y: b.y + b.h / 2}));
+
+/* ── arrows that snap: a straight arrow can be tied to an item at its start (s) or end (e) and follows it ── */
+const wIsLn = it => !!it && it.t === 'draw' && !it.hl && !!(it.ln || (it.arrow && it.pts.length === 2));
+const wMid = it => { const b = wBox(it); return {x: b.x + b.w / 2, y: b.y + b.h / 2}; };
+function wEnds(it) { const P = it.pts, l = P[P.length - 1]; return [{x: P[0][0] + it.x, y: P[0][1] + it.y}, {x: l[0] + it.x, y: l[1] + it.y}]; }
+function wSetEnds(it, a, b) {
+  const x = r1(Math.min(a.x, b.x)), y = r1(Math.min(a.y, b.y));
+  it.x = x; it.y = y; it.w = Math.max(1, r1(Math.max(a.x, b.x) - x)); it.h = Math.max(1, r1(Math.max(a.y, b.y) - y));
+  it.pts = [[r1(a.x - x), r1(a.y - y)], [r1(b.x - x), r1(b.y - y)]];
+}
+/* the point just outside an item's edge, facing 'from' */
+function wClip(t, from) {
+  const b = wBox(t), c = {x: b.x + b.w / 2, y: b.y + b.h / 2}, dx = from.x - c.x, dy = from.y - c.y, L = Math.hypot(dx, dy);
+  if (L < 1) return c;
+  const k = wEdgeT(wShapeOf(t), b.w / 2, b.h / 2, dx, dy), gap = 8;
+  if (k >= 1) return c;
+  return {x: c.x + dx * k + dx / L * gap, y: c.y + dy * k + dy / L * gap};
+}
+function wRoute(it) {
+  if (!it.s && !it.e) return false;
+  if (!wIsLn(it)) { delete it.s; delete it.e; return false; }
+  const A = it.s && wItem(it.s), B = it.e && wItem(it.e);
+  if (it.s && !A) delete it.s;
+  if (it.e && !B) delete it.e;
+  if (!A && !B) return false;
+  let [a, b] = wEnds(it);
+  const ra = A ? wMid(A) : a, rb = B ? wMid(B) : b;
+  if (A) a = wClip(A, rb);
+  if (B) b = wClip(B, ra);
+  wSetEnds(it, a, b); return true;
+}
+/* re-run the arrows tied to any of these items (all of them when none are given) */
+function wReroute(ids) {
+  W().items.forEach(it => {
+    if (!(it.s || it.e) || (ids && !ids.has(it.s) && !ids.has(it.e) && !ids.has(it.id))) return;
+    if (wRoute(it)) { const el = wEls.get(it.id); if (el) wPaint(el, it); }
+  });
+}
+/* what an arrow end at p would tie to: the top still, note or label under it (or very near), otherwise a frame when p is near its edge */
+function wSnapAt(p, not, alt) {
+  if (!W().snap || alt) return null;
+  const L = W().items, z = W().view.z, tol = 10 / z;
+  for (let i = L.length - 1; i >= 0; i--) {
+    const it = L[i]; if (it.t === 'frame' || it.t === 'draw' || it.id === not) continue;
+    const b = wBox(it); if (p.x > b.x - tol && p.x < b.x + b.w + tol && p.y > b.y - tol && p.y < b.y + b.h + tol) return it;
+  }
+  let best = null, bd = 18 / z;
+  L.forEach(it => {
+    if (it.t !== 'frame' || it.id === not) return;
+    const b = wBox(it), dx = p.x - b.x - b.w / 2, dy = p.y - b.y - b.h / 2, k = wEdgeT(wShapeOf(it), b.w / 2, b.h / 2, dx, dy);
+    const d = Math.hypot(dx, dy) * Math.abs(1 - 1 / k);
+    if (d < bd) { bd = d; best = it; }
+  });
+  return best;
+}
+let wHi = null;
+function wHilite(it) {
+  const id = it ? it.id : null; if (wHi === id) return;
+  const old = wHi && wEls.get(wHi); if (old) old.classList.remove('wsnap');
+  wHi = id; const el = id && wEls.get(id); if (el) el.classList.add('wsnap');
+}
+
 /* ── render ── */
 function wMake(it) {
   let el;
@@ -2002,7 +2150,11 @@ function wMake(it) {
   else {
     el = document.createElement('div'); el.className = 'wi w-' + it.t;
     if (it.t === 'note' || it.t === 'text') el.innerHTML = '<div class="wtxt"></div>';
-    if (it.t === 'frame') el.innerHTML = '<div class="wfl"></div>';
+    if (it.t === 'frame') {
+      /* the name sits in its own layer above everything, so a still on top of the frame never covers it */
+      el.innerHTML = '<svg class="wfs" aria-hidden="true"><path/></svg>';
+      const lab = document.createElement('div'); lab.className = 'wfl'; lab.dataset.id = it.id; wFLayer.appendChild(lab); el._lab = lab;
+    }
   }
   el.dataset.id = it.id; return el;
 }
@@ -2026,7 +2178,11 @@ function wPaint(el, it) {
     const t = el.firstChild; t.className = 'wtxt wf-' + it.f; if (t.textContent !== it.text) t.textContent = it.text;
   } else if (it.t === 'frame') {
     el.style.cssText = `left:${it.x}px;top:${it.y}px;width:${it.w}px;height:${it.h}px;--fc:${it.c}`;
-    const t = el.firstChild; if (t.textContent !== it.name) t.textContent = it.name;
+    el.classList.toggle('solid', it.ol === 'solid');
+    const sv = el.firstChild, key = [it.w, it.h, wShapeOf(it)].join();
+    if (sv._k !== key) { sv._k = key; sv.setAttribute('viewBox', `0 0 ${it.w} ${it.h}`); sv.firstChild.setAttribute('d', wFramePath(wShapeOf(it), it.w, it.h)); }
+    const t = el._lab; t.style.left = it.x + 2 + 'px'; t.style.top = it.y + 'px'; t.style.setProperty('--fc', it.c);
+    if (t.textContent !== it.name) t.textContent = it.name;
   } else if (it.t === 'draw') {
     const pad = wPad(it), key = JSON.stringify([it.pts, it.c, it.sw, it.hl, it.arrow]);
     el.setAttribute('style', `left:${it.x - pad}px;top:${it.y - pad}px;width:${it.w + pad * 2}px;height:${it.h + pad * 2}px`);
@@ -2044,7 +2200,12 @@ function wPos(it) {
   const el = wEls.get(it.id); if (!el) return;
   if (it.t === 'draw') { const p = wPad(it); el.style.left = it.x - p + 'px'; el.style.top = it.y - p + 'px'; }
   else { el.style.left = it.x + 'px'; el.style.top = it.y + 'px'; }
+  if (el._lab) { el._lab.style.left = it.x + 2 + 'px'; el._lab.style.top = it.y + 'px'; }
 }
+const wFLayer = (() => { const d = document.createElement('div'); d.className = 'wflayer'; wWorld.appendChild(d); return d; })();
+const wDrop = el => { el.remove(); if (el._lab) el._lab.remove(); };
+/* the item an element belongs to: frame names live outside their frame */
+const wOwner = n => { if (!n || !n.closest) return null; const l = n.closest('.wfl'); if (l && l.dataset.id) return wEls.get(l.dataset.id) || null; const w = n.closest('.wi'); return w && wWorld.contains(w) ? w : null; };
 function wMeasure() {
   W().items.forEach(it => {
     if (it.t !== 'note' && it.t !== 'text') return;
@@ -2058,6 +2219,7 @@ function wRender() {
   const L = W().items, keep = L.filter(it => it.t !== 'img' || refById(it.ref));
   if (keep.length !== L.length) { W().items = keep; dirty(); }
   const seen = new Set();
+  W().items.forEach(it => { if (it.s || it.e) wRoute(it); });
   W().items.forEach((it, i) => {
     let el = wEls.get(it.id);
     if (!el) { el = wMake(it); wEls.set(it.id, el); wWorld.appendChild(el); }
@@ -2065,9 +2227,9 @@ function wRender() {
     el.style.zIndex = it.t === 'frame' ? 1 + i : 1000 + i;
     seen.add(it.id);
   });
-  wEls.forEach((el, id) => { if (!seen.has(id)) { el.remove(); wEls.delete(id); } });
+  wEls.forEach((el, id) => { if (!seen.has(id)) { wDrop(el); wEls.delete(id); } });
   wSel.forEach(id => { if (!seen.has(id)) wSel.delete(id); });
-  wMeasure(); wSelKey = ''; wDrawSel(); wLib(); wRail(); wOpts();
+  wMeasure(); wSelKey = ''; wDrawSel(); wLib(); wRail(); wOpts(); wPins(); wCmBtn();
   $('#wEmpty').hidden = W().items.length > 0;
   $('#wb').classList.toggle('cv-light', wIsLight());
   $('#wBg').innerHTML = wIsLight() ? WI.moon + 'Dark' : WI.sun + 'Light';
@@ -2083,17 +2245,24 @@ function wDrawSel() {
   const x = b.x * v.z + v.x, y = b.y * v.z + v.y, w = b.w * v.z, h = b.h * v.z;
   box.hidden = !!wEditing;
   box.style.cssText = `left:${x - 3}px;top:${y - 3}px;width:${w + 6}px;height:${h + 6}px`;
-  box.className = items.length === 1 ? (items[0].t === 'draw' && items[0].pts.length < 2 ? '' : 'one') : 'multi';
-  const key = items.map(i => i.id + ':' + i.c + ':' + i.f + ':' + i.sw + ':' + i.arrow + ':' + i.size).join();
+  box.className = items.length === 1 ? (wIsLn(items[0]) ? 'ends' : items[0].t === 'draw' && items[0].pts.length < 2 ? '' : 'one') : 'multi';
+  if (box.className === 'ends') {
+    const it = items[0], E = wEnds(it);
+    $$('.we', box).forEach((h, i) => { h.style.left = E[i].x * v.z + v.x - x + 3 + 'px'; h.style.top = E[i].y * v.z + v.y - y + 3 + 'px'; h.classList.toggle('tied', !!it[h.dataset.c]); });
+  }
+  const key = items.map(i => i.id + ':' + i.c + ':' + i.f + ':' + i.sw + ':' + i.arrow + ':' + i.size + ':' + i.sh + ':' + i.ol + ':' + !!(i.s || i.e)).join();
   if (key !== wSelKey) { wSelKey = key; bar.innerHTML = wCtxHTML(items); }
   bar.hidden = !!wEditing;
   const vr = wVp.getBoundingClientRect(), bw = bar.offsetWidth, bh = bar.offsetHeight;
-  let top = y - bh - 14; if (top < 8) top = y + h + 14; if (top + bh > vr.height - 8) top = Math.max(8, Math.min(y + 10, vr.height - bh - 60));
+  /* keep clear of a frame's name, which sits above the frame */
+  const lab = items.some(i => i.t === 'frame' && i.y <= b.y + .5) ? Math.max(20 * v.z, 12) + 8 * v.z + 4 : 0;
+  let top = y - lab - bh - 14; if (top < 8) top = y + h + 14; if (top + bh > vr.height - 8) top = Math.max(8, Math.min(y + 10, vr.height - bh - 60));
   const left = Math.min(Math.max(x + w / 2 - bw / 2, 60), vr.width - bw - 8);
   bar.style.left = left + 'px'; bar.style.top = top + 'px';
 }
 const swatches = (list, cur, attr) => list.map(c => `<button class="wsw${c === cur ? ' on' : ''}" style="--sw:${c}" ${attr}="${c}" title="${c}"></button>`).join('');
 const widths = cur => WB_SW.map(s => `<button class="wpb${s === cur ? ' on' : ''}" data-wsw="${s}" title="${['Thin', 'Medium', 'Thick'][WB_SW.indexOf(s)]}"><i class="wdot" style="width:${s / 1.5 + 3}px;height:${s / 1.5 + 3}px"></i></button>`).join('');
+const shapes = (cur, attr) => WB_FSH.map(o => `<button class="wpb${o.id === cur ? ' on' : ''}" ${attr}="${o.id}" title="${o.label} frame">${wShapeIc(o.id)}</button>`).join('') + '<span class="wsep"></span>';
 const fonts = cur => Object.entries(WB_FONT).map(([k, l]) => `<button class="wpb ff wf-${k}${k === cur ? ' on' : ''}" data-wf="${k}" title="${l} lettering">${k === 'hand' ? 'Aa' : k === 'sans' ? 'AA' : 'Aa'}</button>`).join('');
 function wCtxHTML(items) {
   const one = items.length === 1 ? items[0] : null, types = new Set(items.map(i => i.t));
@@ -2102,12 +2271,14 @@ function wCtxHTML(items) {
     const r = refById(one.ref);
     h += `<span class="wt">${esc(r.title || 'Untitled reference')}</span><button class="wpb" data-wa="view" title="View large">${I.expand}</button>${safeHref(r.url) ? `<a class="wpb" href="${esc(safeHref(r.url))}" target="_blank" rel="noopener" title="Open the original in a new tab" style="text-decoration:none">${I.out}Open</a>` : ''}<button class="wpb" data-wa="ref" title="Edit its tags and notes in Visual references">Details</button><span class="wsep"></span>`;
   }
+  if (one && /note|text|frame/.test(one.t)) h += `<button class="wpb" data-wa="edit" title="${one.t === 'frame' ? 'Rename this frame (Enter, or double-click its name)' : 'Type in it (Enter, or double-click)'}">${WI.edit}${one.t === 'frame' ? 'Rename' : 'Edit text'}</button><span class="wsep"></span>`;
   const f = items.find(i => i.t !== 'img');
   if (f) {
     const note = f.t === 'note';
     h += swatches(note ? WB_NOTE : WB_INK, f.c, 'data-wc') + '<span class="wsep"></span>';
+    if (types.has('frame')) { const fr = items.find(i => i.t === 'frame'); h += shapes(wShapeOf(fr), 'data-wfs') + `<button class="wpb${fr.ol === 'solid' ? '' : ' on'}" data-wfl title="${fr.ol === 'solid' ? 'Solid outline: click for dashed' : 'Dashed outline: click for solid'}">${fr.ol === 'solid' ? WI.solid : WI.dash}</button><span class="wsep"></span>`; }
     if (types.has('text')) h += fonts(f.t === 'text' ? f.f : '') + `<button class="wpb" data-wsz="-1" title="Smaller">A−</button><button class="wpb" data-wsz="1" title="Bigger">A+</button><span class="wsep"></span>`;
-    if (types.has('draw')) { const d = items.find(i => i.t === 'draw'); h += widths(d.hl ? d.sw / 3 : d.sw) + (d.hl ? '' : `<button class="wpb${d.arrow ? ' on' : ''}" data-warr title="Arrowhead on the end">${WI.arrow}</button>`) + '<span class="wsep"></span>'; }
+    if (types.has('draw')) { const d = items.find(i => i.t === 'draw'); h += widths(d.hl ? d.sw / 3 : d.sw) + (d.hl ? '' : `<button class="wpb${d.arrow ? ' on' : ''}" data-warr title="Arrowhead on the end">${WI.arrow}</button>`) + (one && wIsLn(one) && (one.s || one.e) ? `<button class="wpb" data-wdet title="Untie this arrow from what it's snapped to">${WI.magnet}Untie</button>` : '') + '<span class="wsep"></span>'; }
   }
   h += `<button class="wpb" data-wa="front" title="Bring to front (])">${WI.front}</button><button class="wpb" data-wa="back" title="Send to back ([)">${WI.back}</button>`
     + `<button class="wpb" data-wa="dup" title="Duplicate (Ctrl/⌘+D)">${I.copy}</button><button class="wpb danger" data-wa="del" title="Remove from the whiteboard (Delete)">${I.trash}</button>`;
@@ -2124,10 +2295,11 @@ function wRail() {
 function wOpts() {
   const o = $('#wOpts'), w = W();
   let h = '';
-  if (wTool === 'pen' || wTool === 'arrow') h = swatches(WB_INK, w.ink, 'data-oc') + '<span class="wsep"></span>' + widths(w.sw) + (wTool === 'pen' ? `<span class="wsep"></span><button class="wpb${w.arrow ? ' on' : ''}" data-oarr title="Finish each line with an arrowhead">${WI.arrow}Arrowhead</button>` : '');
+  if (wTool === 'pen' || wTool === 'arrow') h = swatches(WB_INK, w.ink, 'data-oc') + '<span class="wsep"></span>' + widths(w.sw) + (wTool === 'pen' ? `<span class="wsep"></span><button class="wpb${w.arrow ? ' on' : ''}" data-oarr title="Finish each line with an arrowhead">${WI.arrow}Arrowhead</button>` : `<span class="wsep"></span><button class="wpb${w.snap ? ' on' : ''}" data-osnap title="${w.snap ? 'Arrows snap to stills, notes and frame edges, and follow them when they move. Hold Alt (Option) to place one freely.' : 'Snapping is off: arrows stay where you draw them'}">${WI.magnet}Snap</button>`);
   else if (wTool === 'hl') h = swatches(WB_INK, w.ink, 'data-oc') + '<span class="wsep"></span>' + widths(w.sw);
   else if (wTool === 'text') h = swatches(WB_INK, w.ink, 'data-oc') + '<span class="wsep"></span>' + fonts(w.font);
-  else if (wTool === 'frame') h = swatches(WB_INK, w.ink, 'data-oc') + '<span class="wsep"></span><span class="wt">Drag to draw a frame. Things inside move with it.</span>';
+  else if (wTool === 'frame') h = swatches(WB_INK, w.ink, 'data-oc') + '<span class="wsep"></span>' + shapes(w.fsh || 'round', 'data-ofs') + `<button class="wpb${w.fln === 'solid' ? '' : ' on'}" data-ofl title="${w.fln === 'solid' ? 'Solid outline: click for dashed' : 'Dashed outline: click for solid'}">${w.fln === 'solid' ? WI.solid : WI.dash}</button>`;
+  else if (wTool === 'comment') h = '<span class="wt" style="max-width:none">Click to pin a comment</span>';
   else if (wTool === 'note') h = swatches(WB_NOTE, w.note, 'data-on');
   else if (wTool === 'eraser') h = '<span class="wt">Drag across drawings to rub them out</span>';
   o.innerHTML = h; o.hidden = !h;
@@ -2152,6 +2324,9 @@ $('#wOpts').addEventListener('click', e => {
   if (b.dataset.wsw) w.sw = +b.dataset.wsw;
   if (b.dataset.wf) w.font = b.dataset.wf;
   if ('oarr' in b.dataset) w.arrow = !w.arrow;
+  if ('osnap' in b.dataset) w.snap = !w.snap;
+  if (b.dataset.ofs) w.fsh = b.dataset.ofs;
+  if ('ofl' in b.dataset) w.fln = w.fln === 'solid' ? 'dash' : 'solid';
   dirty(); wOpts();
 });
 $('#wCtx').addEventListener('pointerdown', e => e.stopPropagation());
@@ -2164,11 +2339,15 @@ $('#wCtx').addEventListener('click', e => {
   if (a === 'del') return wDelete();
   if (a === 'dup') return wDuplicate();
   if (a === 'front' || a === 'back') return wOrder(a === 'front');
+  if (a === 'edit') return wStartEdit(items[0].id);
   wSnap();
   if (b.dataset.wc) items.forEach(it => { if (it.t !== 'img') it.c = b.dataset.wc; if (it.t === 'note') w.note = it.c; else if (it.t !== 'img') w.ink = it.c; });
   if (b.dataset.wf) items.forEach(it => { if (it.t === 'text') it.f = w.font = b.dataset.wf; });
   if (b.dataset.wsz) items.forEach(it => { if (it.t === 'text') it.size = Math.max(10, Math.round(it.size * (+b.dataset.wsz > 0 ? 1.2 : 1 / 1.2))); });
   if (b.dataset.wsw) items.forEach(it => { if (it.t === 'draw') it.sw = +b.dataset.wsw * (it.hl ? 3 : 1); });
+  if (b.dataset.wfs) items.forEach(it => { if (it.t === 'frame') it.sh = w.fsh = b.dataset.wfs; });
+  if ('wfl' in b.dataset) { const sol = items.find(i => i.t === 'frame').ol !== 'solid'; items.forEach(it => { if (it.t === 'frame') it.ol = w.fln = sol ? 'solid' : 'dash'; }); }
+  if ('wdet' in b.dataset) items.forEach(it => { delete it.s; delete it.e; });
   if ('warr' in b.dataset) { const on = !items.find(i => i.t === 'draw').arrow; items.forEach(it => { if (it.t === 'draw' && !it.hl) it.arrow = on; }); }
   wCommit(); wRender();
 });
@@ -2180,7 +2359,8 @@ function wDelete() {
 }
 function wDuplicate() {
   if (!wSel.size) return; wSnap();
-  const copies = W().items.filter(it => wSel.has(it.id)).map(it => { const c = JSON.parse(JSON.stringify(it)); c.id = uid(); c.x += 30; c.y += 30; return c; });
+  const map = new Map(), copies = W().items.filter(it => wSel.has(it.id)).map(it => { const c = JSON.parse(JSON.stringify(it)); c.id = uid(); map.set(it.id, c.id); c.x += 30; c.y += 30; return c; });
+  copies.forEach(c => ['s', 'e'].forEach(k => { if (c[k]) { if (map.has(c[k])) c[k] = map.get(c[k]); else delete c[k]; } }));
   W().items.push(...copies); wCommit(); wRender(); wSelect(copies.map(c => c.id));
 }
 function wOrder(front) {
@@ -2190,7 +2370,7 @@ function wOrder(front) {
 }
 function wNudge(dx, dy) {
   if (!wSel.size) return; wSnap();
-  W().items.forEach(it => { if (wSel.has(it.id)) { it.x += dx; it.y += dy; wPos(it); } }); wCommit(); wDrawSel();
+  W().items.forEach(it => { if (wSel.has(it.id)) { it.x += dx; it.y += dy; wPos(it); } }); wReroute(new Set(wSel)); wPins(); wCommit(); wDrawSel();
 }
 
 /* what travels with an item being dragged: everything inside a frame, or the drawings, notes and labels sitting on top of a picture */
@@ -2199,7 +2379,7 @@ function wPassengers(ids) {
   ids.forEach(id => {
     const it = wItem(id); if (!it) return;
     const b = wBox(it), i0 = L.indexOf(it);
-    if (it.t === 'frame') L.forEach(o => { if (o !== it && inside(wBox(o), b)) out.add(o.id); });
+    if (it.t === 'frame') L.forEach(o => { if (o !== it && wHolds(it, wBox(o))) out.add(o.id); });
     else if (it.t === 'img') L.forEach((o, i) => { if (i > i0 && /draw|text|note/.test(o.t) && inside(wBox(o), b)) out.add(o.id); });
   });
   return out;
@@ -2208,7 +2388,7 @@ function wPassengers(ids) {
 /* ── text editing ── */
 function wStartEdit(id) {
   const it = wItem(id), el = wEls.get(id); if (!it || !el) return;
-  const t = it.t === 'frame' ? $('.wfl', el) : $('.wtxt', el); if (!t) return;
+  const t = it.t === 'frame' ? el._lab : $('.wtxt', el); if (!t) return;
   if (wEditing) wEndEdit();
   wSnap(); wEditing = {id, el: t, before: it.t === 'frame' ? it.name : it.text};
   t.contentEditable = 'plaintext-only'; if (t.contentEditable !== 'plaintext-only') t.contentEditable = 'true';
@@ -2285,6 +2465,7 @@ function wHitDraw(it, p, tol) {
 function wCancel() {
   if (!wAct) return;
   if (wAct.tmp) wAct.tmp.remove();
+  wHilite(null);
   if (wAct.k === 'move' && wAct.moved) { wAct.orig.forEach((o, id) => { const it = wItem(id); if (it) { it.x = o.x; it.y = o.y; wPos(it); } }); wHist.pop(); }
   $('#wMarq').hidden = true; wAct = null; wVp.classList.remove('grabbing'); wDrawSel();
 }
@@ -2292,6 +2473,7 @@ wVp.addEventListener('pointerdown', e => {
   if (e.target.closest('.wui')) return;
   if (wEditing && e.target.closest('[contenteditable="true"],[contenteditable="plaintext-only"]')) return;
   if (wEditing) wEndEdit();
+  if (wCOpen) wCClose();
   if (document.activeElement !== wVp) wVp.focus({preventScroll: true});
   wPtrs.set(e.pointerId, {x: e.clientX, y: e.clientY});
   if (wPtrs.size === 2) {
@@ -2301,10 +2483,13 @@ wVp.addEventListener('pointerdown', e => {
   }
   if (wPtrs.size > 2 || (e.button !== 0 && e.button !== 1)) return;
   wVp.setPointerCapture(e.pointerId);
-  const p = wPt(e), v = W().view, onItem = e.target.closest('.wi');
+  const p = wPt(e), v = W().view, onItem = wOwner(e.target);
   const pan = e.button === 1 || wSpace || wTool === 'hand' || (e.pointerType === 'touch' && wTool === 'select' && !onItem && !e.target.closest('.wh'));
   if (pan) { e.preventDefault(); wAct = {k: 'pan', sx: e.clientX, sy: e.clientY, vx: v.x, vy: v.y}; wVp.classList.add('grabbing'); return; }
   const handle = e.target.closest('.wh');
+  if (handle && wSel.size === 1 && handle.classList.contains('we')) {
+    wSnap(); wAct = {k: 'end', it: wItem([...wSel][0]), which: handle.dataset.c}; return;
+  }
   if (handle && wSel.size === 1) {
     const it = wItem([...wSel][0]), b = wBox(it), c = handle.dataset.c;
     wSnap(); wAct = {k: 'resize', it, c, b0: b, it0: JSON.parse(JSON.stringify(it)), ax: c.includes('w') ? b.x + b.w : b.x, ay: c.includes('n') ? b.y + b.h : b.y};
@@ -2312,11 +2497,11 @@ wVp.addEventListener('pointerdown', e => {
   }
   if (wTool === 'select') {
     if (onItem) {
-      const id = onItem.dataset.id;
+      const id = onItem.dataset.id, was = wSel.size === 1 && wSel.has(id);
       if (e.shiftKey) { wSel.has(id) ? wSel.delete(id) : wSel.add(id); wSelKey = ''; wDrawSel(); if (!wSel.has(id)) return; }
       else if (!wSel.has(id)) wSelect([id]);
       const orig = new Map(); wPassengers([...wSel]).forEach(i => { const it = wItem(i); if (it) orig.set(i, {x: it.x, y: it.y}); });
-      wAct = {k: 'move', p0: p, orig, moved: false, id, shift: e.shiftKey};
+      wAct = {k: 'move', p0: p, orig, moved: false, id, shift: e.shiftKey, was};
     } else {
       wAct = {k: 'marq', p0: p, base: e.shiftKey ? new Set(wSel) : new Set()};
       if (!e.shiftKey) wSelect([]);
@@ -2329,6 +2514,7 @@ wVp.addEventListener('pointerdown', e => {
     tmp.innerHTML = `<path fill="none" stroke="${esc(W().ink)}" stroke-width="${sw}" stroke-linecap="${hl ? 'butt' : 'round'}" stroke-linejoin="round"${hl ? ' stroke-opacity=".42"' : ''}/>`;
     wWorld.appendChild(tmp);
     wAct = {k: 'draw', pts: [[r1(p.x), r1(p.y)]], tmp, hl, sw, arrow: wTool === 'arrow' || (wTool === 'pen' && W().arrow), straight: wTool === 'arrow'};
+    if (wAct.straight) { const S = wSnapAt(p, null, e.altKey); wAct.p0 = p; wAct.s = S && S.id; wHilite(S); }
     return;
   }
   if (wTool === 'eraser') { wAct = {k: 'erase', snapped: false}; wErase(p); return; }
@@ -2338,14 +2524,18 @@ wVp.addEventListener('pointerdown', e => {
   }
   if (wTool === 'note') {
     e.preventDefault();
-    wAdd({id: uid(), t: 'note', x: Math.round(p.x - 110), y: Math.round(p.y - 30), w: 220, h: 200, text: '', c: W().note}, true);
-    wSetTool('select'); wSelect([W().items[W().items.length - 1].id]); return;
+    const it = {id: uid(), t: 'note', x: Math.round(p.x - 110), y: Math.round(p.y - 30), w: 220, h: 200, text: '', c: W().note};
+    wSetTool('select'); wAdd(it); wAct = {k: 'new', id: it.id}; return;
   }
   if (wTool === 'text') {
     e.preventDefault();
     const size = 34;
-    wAdd({id: uid(), t: 'text', x: Math.round(p.x), y: Math.round(p.y - size * .6), text: '', size, c: W().ink, f: W().font}, true);
-    wSetTool('select'); wSelect([W().items[W().items.length - 1].id]);
+    const it = {id: uid(), t: 'text', x: Math.round(p.x), y: Math.round(p.y - size * .6), text: '', size, c: W().ink, f: W().font};
+    wSetTool('select'); wAdd(it); wAct = {k: 'new', id: it.id}; return;
+  }
+  if (wTool === 'comment') {
+    e.preventDefault();
+    const c = wCNew(p); wSetTool('select'); wAct = {k: 'newcm', id: c.id};
   }
 });
 function wErase(p) {
@@ -2370,9 +2560,15 @@ wVp.addEventListener('pointermove', e => {
   const p = wPt(e), A = wAct;
   if (A.k === 'move') {
     let dx = p.x - A.p0.x, dy = p.y - A.p0.y;
-    if (!A.moved) { if (Math.hypot(dx, dy) * v.z < 3) return; A.moved = true; wSnap(); wDrawSel(); }
+    if (!A.moved) {
+      if (Math.hypot(dx, dy) * v.z < 3) return; A.moved = true; wSnap(); wDrawSel();
+      /* an arrow dragged on its own lets go of whatever isn't coming with it */
+      wSel.forEach(id => { const it = wItem(id); if (it) ['s', 'e'].forEach(k => { if (it[k] && !A.orig.has(it[k])) delete it[k]; }); });
+      A.ids = new Set(A.orig.keys());
+    }
     if (e.shiftKey) { if (Math.abs(dx) > Math.abs(dy)) dy = 0; else dx = 0; }
     A.orig.forEach((o, id) => { const it = wItem(id); if (it) { it.x = Math.round(o.x + dx); it.y = Math.round(o.y + dy); wPos(it); } });
+    wReroute(A.ids); wPins();
   } else if (A.k === 'resize') {
     const it = A.it, b0 = A.b0, o = A.it0;
     let w = Math.abs(p.x - A.ax), h = Math.abs(p.y - A.ay);
@@ -2386,7 +2582,13 @@ wVp.addEventListener('pointermove', e => {
     else if (it.t === 'note' || it.t === 'frame') { it.w = Math.round(w); it.h = Math.round(h); }
     else if (it.t === 'text') it.size = Math.max(8, r1(o.size * s));
     else if (it.t === 'draw') { it.pts = o.pts.map(q => [r1(q[0] * s), r1(q[1] * s)]); it.w = o.w * s; it.h = o.h * s; }
-    wPaint(wEls.get(it.id), it); wMeasure();
+    wPaint(wEls.get(it.id), it); wMeasure(); wReroute(new Set([it.id])); wPins();
+  } else if (A.k === 'end') {
+    const it = A.it, key = A.which, other = key === 's' ? 'e' : 's', T = wSnapAt(p, it[other], e.altKey);
+    if (T) it[key] = T.id; else delete it[key];
+    wHilite(T);
+    let [a, b] = wEnds(it); if (key === 's') a = p; else b = p;
+    wSetEnds(it, a, b); wRoute(it); wPaint(wEls.get(it.id), it); wSelKey = ''; wDrawSel();
   } else if (A.k === 'marq') {
     const x = Math.min(A.p0.x, p.x), y = Math.min(A.p0.y, p.y), w = Math.abs(p.x - A.p0.x), h = Math.abs(p.y - A.p0.y), m = $('#wMarq');
     m.hidden = false; m.style.cssText = `left:${x * v.z + v.x}px;top:${y * v.z + v.y}px;width:${w * v.z}px;height:${h * v.z}px`;
@@ -2395,7 +2597,13 @@ wVp.addEventListener('pointermove', e => {
     wSel = s; wEls.forEach((el, id) => el.classList.toggle('on', wSel.has(id)));
   } else if (A.k === 'draw') {
     const l = A.pts[A.pts.length - 1], q = [r1(p.x), r1(p.y)];
-    if (A.straight) A.pts = [A.pts[0], q];
+    if (A.straight) {
+      const S = A.s && wItem(A.s), T = wSnapAt(p, A.s, e.altKey); A.e = T && T.id; wHilite(T || S);
+      let a = A.p0, b = p;
+      if (S) a = wClip(S, T ? wMid(T) : b);
+      if (T) b = wClip(T, S ? wMid(S) : a);
+      A.pts = [[r1(a.x), r1(a.y)], [r1(b.x), r1(b.y)]];
+    }
     else if (Math.hypot(q[0] - l[0], q[1] - l[1]) * v.z > 1.6) A.pts.push(q);
     const d = wPath(A.pts) + (A.arrow ? wHead(A.pts, A.sw) : '');
     A.tmp.firstChild.setAttribute('d', d);
@@ -2411,7 +2619,12 @@ function wUp(e) {
   if (A.k === 'pinch') { if (wPtrs.size < 2) { wAct = null; dirty(); } return; }
   wAct = null; wVp.classList.remove('grabbing');
   if (A.k === 'pan') { dirty(); return; }
+  if (A.k === 'new') { wStartEdit(A.id); return; }
+  if (A.k === 'newcm') { wCOpenThread(A.id, true); return; }
+  if (A.k === 'end') { wHilite(null); wCommit(); wSelKey = ''; wRender(); return; }
   if (A.k === 'move') {
+    /* click on something already selected: start typing in it */
+    if (!A.moved && A.was && !A.shift) { const it = wItem(A.id); if (it && /note|text|frame/.test(it.t)) { wStartEdit(it.id); return; } }
     if (A.moved) wCommit();
     else if (!A.shift && wSel.size > 1) wSelect([A.id]);
     wSelKey = ''; wDrawSel(); return;
@@ -2420,11 +2633,12 @@ function wUp(e) {
   if (A.k === 'marq') { $('#wMarq').hidden = true; wSelKey = ''; wDrawSel(); return; }
   if (A.k === 'erase') { if (A.snapped) wCommit(); return; }
   if (A.k === 'draw') {
-    A.tmp.remove();
+    A.tmp.remove(); wHilite(null);
     let P = A.pts; if (A.straight && P.length < 2) return;
     if (A.straight && Math.hypot(P[1][0] - P[0][0], P[1][1] - P[0][1]) < 4) return;
     const xs = P.map(q => q[0]), ys = P.map(q => q[1]), x = Math.min(...xs), y = Math.min(...ys);
     const it = {id: uid(), t: 'draw', x, y, w: Math.max(1, Math.max(...xs) - x), h: Math.max(1, Math.max(...ys) - y), pts: P.map(q => [r1(q[0] - x), r1(q[1] - y)]), c: W().ink, sw: A.sw, hl: A.hl, arrow: A.arrow};
+    if (A.straight) { it.ln = 1; if (A.s) it.s = A.s; if (A.e && A.e !== A.s) it.e = A.e; }
     wSnap(); W().items.push(it); wCommit(); wRender(); return;
   }
   if (A.k === 'frame') {
@@ -2432,15 +2646,22 @@ function wUp(e) {
     const p = wPt(e); let x = Math.min(A.p0.x, p.x), y = Math.min(A.p0.y, p.y), w = Math.abs(p.x - A.p0.x), h = Math.abs(p.y - A.p0.y);
     if (w * W().view.z < 20 || h * W().view.z < 20) { w = 760; h = 480; x = A.p0.x; y = A.p0.y; }
     const n = W().items.filter(i => i.t === 'frame').length + 1;
-    const it = {id: uid(), t: 'frame', x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h), name: 'Frame ' + n, c: W().ink};
+    const it = {id: uid(), t: 'frame', x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h), name: 'Frame ' + n, c: W().ink, sh: W().fsh || 'round', ol: W().fln || 'dash'};
     wSetTool('select'); wAdd(it, true);
   }
 }
 wVp.addEventListener('pointerup', wUp);
-wVp.addEventListener('pointercancel', e => { wPtrs.delete(e.pointerId); wCancel(); });
+wVp.addEventListener('pointercancel', e => { wPtrs.delete(e.pointerId); wHilite(null); wCancel(); });
+function wElAt(cx, cy) {
+  for (const n of document.elementsFromPoint(cx, cy)) {
+    if (n === wVp) break;
+    const w = wOwner(n); if (w) return w;
+  }
+  return null;
+}
 wVp.addEventListener('dblclick', e => {
   if (wTool !== 'select' || e.target.closest('.wui')) return;
-  const el = e.target.closest('.wi'); if (!el) { return; }
+  const el = wElAt(e.clientX, e.clientY); if (!el) return;
   const it = wItem(el.dataset.id); if (!it) return;
   if (it.t === 'img') openLB(it.ref);
   else if (it.t === 'note' || it.t === 'text' || it.t === 'frame') wStartEdit(it.id);
@@ -2470,7 +2691,7 @@ document.addEventListener('keydown', e => {
   if (mod && k === 'a') { e.preventDefault(); wSetTool('select'); wSelect(W().items.map(i => i.id)); return; }
   if (mod) return;
   if (k === 'delete' || k === 'backspace') { e.preventDefault(); wDelete(); return; }
-  if (k === 'escape') { if (wAct) wCancel(); else if (wSel.size) wSelect([]); else wSetTool('select'); return; }
+  if (k === 'escape') { if (wCOpen) wCClose(); else if (wAct) wCancel(); else if (wSel.size) wSelect([]); else wSetTool('select'); return; }
   if (k === 'enter' && wSel.size === 1) { const it = wItem([...wSel][0]); if (it && it.t !== 'img' && it.t !== 'draw') { e.preventDefault(); wStartEdit(it.id); } return; }
   if (k.startsWith('arrow') && wSel.size) { e.preventDefault(); const d = e.shiftKey ? 20 : 2; wNudge(k === 'arrowleft' ? -d : k === 'arrowright' ? d : 0, k === 'arrowup' ? -d : k === 'arrowdown' ? d : 0); return; }
   if (k === ']') return wOrder(true);
@@ -2540,6 +2761,175 @@ addEventListener('pointerup', e => {
 });
 addEventListener('pointercancel', () => { if (wDrag) { if (wDrag.ghost) wDrag.ghost.remove(); wDrag = null; } });
 
+/* ── comments ──
+   Pinned to a spot on the canvas, or to a still / note / label / frame (on), in which case they move with it.
+   Each is a thread: msgs [{id, by, at, text}], and can be resolved (done). Kept in state.wb.cm, apart from the
+   items, so undo leaves them alone and they never go into the PNG or the PDF. */
+const CM_NAME_KEY = 'filmtoolhub-comment-name';
+const wHubName = () => { try { const H = window.parent !== window && window.parent.__fthHub; const me = H && H.people && (H.people() || []).find(x => x.me); return me && me.name || ''; } catch (e) { return ''; } };
+const wMyName = () => wHubName() || (() => { try { return localStorage.getItem(CM_NAME_KEY) || ''; } catch (e) { return ''; } })();
+const wInit = n => (String(n || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2) || '?').toUpperCase();
+const wAvC = n => WB_NOTE[[...String(n || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % 6];
+function wAgo(t) {
+  const s = (Date.now() - t) / 1000;
+  if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + 'm ago'; if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return new Date(t).toLocaleDateString(undefined, {day: 'numeric', month: 'short', ...(new Date(t).getFullYear() !== new Date().getFullYear() ? {year: 'numeric'} : {})});
+}
+const CM = () => W().cm || (W().cm = []);
+const wCm = id => CM().find(c => c.id === id);
+let wCOpen = null;
+const wPinEls = new Map();
+const wPinsLayer = (() => { const d = document.createElement('div'); d.className = 'wpins'; wWorld.appendChild(d); return d; })();
+/* where a comment sits now; one whose item has gone stays where it last was */
+function wCPos(c) {
+  const it = c.on && wItem(c.on);
+  if (c.on && !it) delete c.on;
+  if (it) { c.x = r1(it.x + c.ox); c.y = r1(it.y + c.oy); }
+  return {x: c.x, y: c.y};
+}
+function wCAttach(c) {
+  const p = {x: c.x, y: c.y}, L = W().items;
+  let on = null;
+  for (let i = L.length - 1; i >= 0 && !on; i--) { const it = L[i]; if (it.t !== 'frame' && it.t !== 'draw') { const b = wBox(it); if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) on = it; } }
+  if (!on) for (let i = L.length - 1; i >= 0 && !on; i--) { const it = L[i]; if (it.t === 'frame' && wInShape(it, p)) on = it; }
+  if (on) { c.on = on.id; c.ox = r1(p.x - on.x); c.oy = r1(p.y - on.y); } else delete c.on;
+}
+const wCShown = c => W().cmShow !== false && (!c.done || W().cmDone || wCOpen === c.id);
+function wPins() {
+  if (state.tab !== 'board') return;
+  const seen = new Set();
+  CM().forEach(c => {
+    if (!wCShown(c)) return;
+    let el = wPinEls.get(c.id);
+    if (!el) { el = document.createElement('button'); el.className = 'wpin'; el.dataset.cm = c.id; wPinEls.set(c.id, el); wPinsLayer.appendChild(el); }
+    const p = wCPos(c), n = (c.msgs || []).length;
+    el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
+    el.classList.toggle('done', !!c.done); el.classList.toggle('open', wCOpen === c.id);
+    const lbl = !n ? WI.cmt : n > 1 ? String(n) : wInit(c.msgs[0].by);
+    if (el._l !== lbl) { el._l = lbl; el.innerHTML = lbl; }
+    el.title = n ? `${c.msgs[0].by}: ${c.msgs[0].text.slice(0, 80)}${n > 1 ? ` (+${n - 1} repl${n > 2 ? 'ies' : 'y'})` : ''}${c.done ? ' · resolved' : ''}` : 'New comment';
+    seen.add(c.id);
+  });
+  wPinEls.forEach((el, id) => { if (!seen.has(id)) { el.remove(); wPinEls.delete(id); } });
+  if (wCOpen && !wCm(wCOpen)) wCClose();
+}
+function wCmBtn() {
+  const n = CM().filter(c => !c.done && (c.msgs || []).length).length;
+  $('#wCmB').innerHTML = WI.cmt + 'Comments' + (n ? `<span class="wcount">${n}</span>` : '');
+  $('#wCmB').classList.toggle('on', !$('#wCPanel').hidden);
+  if (!$('#wCPanel').hidden) wCPanel();
+}
+function wCNew(p) {
+  const c = {id: uid(), x: r1(p.x), y: r1(p.y), msgs: [], done: false};
+  wCAttach(c); CM().push(c); wPins(); return c;
+}
+function wCThreadHTML(c) {
+  const msgs = c.msgs || [], hub = !!wHubName(), me = wMyName();
+  const head = `<div class="wch"><b>${msgs.length ? 'Comment' : 'New comment'}</b>${msgs.length ? `<button class="wpb${c.done ? ' on' : ''}" data-cx="done" title="${c.done ? 'Reopen this comment' : 'Mark as resolved'}">${I.check}${c.done ? 'Resolved' : 'Resolve'}</button>` : ''}<button class="wpb danger" data-cx="del" title="Delete the whole comment">${I.trash}</button><button class="wpb" data-cx="close" title="Close (Esc)">${I.close}</button></div>`;
+  const list = msgs.map(m => `<div class="wcm" data-m="${m.id}"><div class="wcmh"><i class="wav" style="--av:${wAvC(m.by)}">${esc(wInit(m.by))}</i><b>${esc(m.by)}</b><span title="${esc(new Date(m.at).toLocaleString())}">${wAgo(m.at)}</span><span class="sp"></span>${msgs.length > 1 ? `<button class="wpb" data-cx="delm" title="Delete this message">${I.trash}</button>` : ''}</div><p>${esc(m.text)}</p></div>`).join('');
+  const foot = `<div class="wcf"><textarea class="fth-input" id="wCText" placeholder="${msgs.length ? 'Reply…' : 'Add a comment for the camera, lighting or art team…'}" aria-label="Comment"></textarea><div class="wcfb">${hub ? `<span class="wcas">As <b>${esc(me)}</b></span>` : `<label class="wcas">As <input class="fth-input" id="wCName" value="${esc(me)}" placeholder="Your name" maxlength="40"></label>`}<span class="sp"></span><button class="fth-btn sm primary" data-cx="send" title="Post (Ctrl/⌘+Enter)">${msgs.length ? 'Reply' : 'Post'}</button></div></div>`;
+  return head + `<div class="wcl">${list}</div>` + foot;
+}
+function wCOpenThread(id, focus) {
+  const c = wCm(id); if (!c) return;
+  if (wCOpen && wCOpen !== id) wCClose();
+  wCOpen = id; const pop = $('#wCPop');
+  pop.innerHTML = wCThreadHTML(c); pop.hidden = false; wPins(); wCPlace();
+  const l = $('.wcl', pop); if (l) l.scrollTop = l.scrollHeight;
+  if (focus) requestAnimationFrame(() => { const n = $('#wCName'); (n && !n.value ? n : $('#wCText')).focus(); });
+}
+function wCClose() {
+  const id = wCOpen; if (!id) return; wCOpen = null; $('#wCPop').hidden = true;
+  const c = wCm(id), t = $('#wCText');
+  if (c && !(c.msgs || []).length) { if (t && t.value.trim()) { wCOpen = id; wCSend(); wCOpen = null; } else W().cm = CM().filter(x => x !== c); }
+  wPins(); wCmBtn();
+}
+function wCPlace() {
+  const pop = $('#wCPop'); if (!wCOpen || pop.hidden) return;
+  const c = wCm(wCOpen); if (!c) return;
+  const v = W().view, p = wCPos(c), vr = wVp.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight;
+  let x = p.x * v.z + v.x + 22, y = p.y * v.z + v.y - 40;
+  if (x + pw > vr.width - 10) x = p.x * v.z + v.x - pw - 14;
+  pop.style.left = Math.max(10, Math.min(x, vr.width - pw - 10)) + 'px';
+  pop.style.top = Math.max(10, Math.min(y, vr.height - ph - 10)) + 'px';
+}
+function wCSend() {
+  const c = wCm(wCOpen), t = $('#wCText'); if (!c || !t) return;
+  const text = t.value.trim(); if (!text) { t.focus(); return; }
+  const n = $('#wCName');
+  if (n) { const v = n.value.trim(); try { if (v) localStorage.setItem(CM_NAME_KEY, v); } catch (e) {} }
+  const by = wHubName() || (n && n.value.trim()) || 'Someone';
+  (c.msgs || (c.msgs = [])).push({id: uid(), by, at: Date.now(), text});
+  c.done = false; dirty();
+  if (wCOpen) wCOpenThread(c.id, false);
+  wPins(); wCmBtn();
+}
+const wCPop = $('#wCPop');
+wCPop.addEventListener('pointerdown', e => e.stopPropagation());
+wCPop.addEventListener('wheel', e => e.stopPropagation());
+wCPop.addEventListener('keydown', e => {
+  e.stopPropagation();
+  if (e.key === 'Escape') { e.preventDefault(); wCClose(); wVp.focus(); }
+  else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); wCSend(); }
+});
+wCPop.addEventListener('click', e => {
+  const b = e.target.closest('[data-cx]'); if (!b) return;
+  const c = wCm(wCOpen); if (!c) return; const a = b.dataset.cx;
+  if (a === 'close') { wCClose(); return; }
+  if (a === 'send') { wCSend(); return; }
+  if (a === 'done') { c.done = !c.done; dirty(); wCOpenThread(c.id); toast(c.done ? 'Comment resolved' : 'Comment reopened'); }
+  if (a === 'del') { if ((c.msgs || []).length && !confirm('Delete this comment and its replies?')) return; W().cm = CM().filter(x => x !== c); wCOpen = null; $('#wCPop').hidden = true; dirty(); }
+  if (a === 'delm') { const m = b.closest('[data-m]').dataset.m; c.msgs = c.msgs.filter(x => x.id !== m); dirty(); wCOpenThread(c.id); }
+  wPins(); wCmBtn();
+});
+/* pins: click to open, drag to move (dropping one on a still or note ties it there) */
+wPinsLayer.addEventListener('pointerdown', e => {
+  const el = e.target.closest('.wpin'); if (!el || e.button !== 0) return;
+  e.stopPropagation(); e.preventDefault();
+  if (wEditing) wEndEdit();
+  const c = wCm(el.dataset.cm); if (!c) return;
+  const v = W().view, s0 = {x: e.clientX, y: e.clientY, cx: c.x, cy: c.y}; let moved = false;
+  el.setPointerCapture(e.pointerId);
+  const mv = ev => {
+    const dx = (ev.clientX - s0.x) / v.z, dy = (ev.clientY - s0.y) / v.z;
+    if (!moved && Math.hypot(ev.clientX - s0.x, ev.clientY - s0.y) < 4) return;
+    if (!moved) { moved = true; if (wCOpen) wCClose(); }
+    delete c.on; c.x = r1(s0.cx + dx); c.y = r1(s0.cy + dy); el.style.left = c.x + 'px'; el.style.top = c.y + 'px';
+  };
+  const up = () => {
+    el.removeEventListener('pointermove', mv); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
+    if (moved) { wCAttach(c); dirty(); wPins(); }
+    else if (wCOpen === c.id) wCClose(); else wCOpenThread(c.id, !(c.msgs || []).length);
+  };
+  el.addEventListener('pointermove', mv); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+});
+wPinsLayer.addEventListener('dblclick', e => e.stopPropagation());
+/* the list of every comment */
+function wCPanel() {
+  const P = $('#wCPanel'), w = W(), all = CM().filter(c => (c.msgs || []).length), list = all.filter(c => !c.done || w.cmDone);
+  const done = all.filter(c => c.done).length;
+  P.innerHTML = `<div class="wcph"><b>Comments</b><label title="Show resolved comments on the board and in this list"><input type="checkbox" data-cp="done"${w.cmDone ? ' checked' : ''}>Resolved${done ? ` (${done})` : ''}</label><label title="Show comment pins on the board"><input type="checkbox" data-cp="show"${w.cmShow !== false ? ' checked' : ''}>Pins</label><button class="wpb" data-cp="x" title="Close">${I.close}</button></div>`
+    + `<div class="wcpl">${list.length ? list.map(c => { const m = c.msgs[0], it = c.on && wItem(c.on), where = it ? (it.t === 'img' ? (refById(it.ref) || {}).title || 'a still' : it.t === 'frame' ? it.name : it.t === 'note' ? 'a sticky note' : 'a label') : ''; return `<button class="wcpi${c.done ? ' done' : ''}" data-cg="${c.id}"><div class="wcmh"><i class="wav" style="--av:${wAvC(m.by)}">${esc(wInit(m.by))}</i><b>${esc(m.by)}</b><span>${wAgo(m.at)}</span></div><q>${esc(m.text)}</q><small>${c.msgs.length > 1 ? `${c.msgs.length - 1} repl${c.msgs.length > 2 ? 'ies' : 'y'} · ` : ''}${where ? 'On ' + esc(where) : 'On the canvas'}${c.done ? ' · resolved' : ''}</small></button>`; }).join('')
+      : `<div class="wcpe">${all.length ? 'Every comment is resolved. Tick Resolved to see them.' : 'No comments yet. Pick the comment tool (C) and click anywhere on the board, or on a still or note, to start one.'}</div>`}</div>`;
+}
+$('#wCmB').onclick = () => { const P = $('#wCPanel'); P.hidden = !P.hidden; if (!P.hidden) wCPanel(); wCmBtn(); };
+$('#wCPanel').addEventListener('pointerdown', e => e.stopPropagation());
+$('#wCPanel').addEventListener('wheel', e => e.stopPropagation());
+$('#wCPanel').addEventListener('change', e => {
+  const k = e.target.dataset.cp; if (!k) return;
+  if (k === 'done') W().cmDone = e.target.checked; else W().cmShow = e.target.checked;
+  dirty(); wPins(); wCPanel();
+});
+$('#wCPanel').addEventListener('click', e => {
+  if (e.target.closest('[data-cp="x"]')) { $('#wCPanel').hidden = true; wCmBtn(); return; }
+  const g = e.target.closest('[data-cg]'); if (!g) return;
+  const c = wCm(g.dataset.cg); if (!c) return;
+  if (W().cmShow === false) { W().cmShow = true; dirty(); }
+  const p = wCPos(c), r = wVp.getBoundingClientRect(), v = W().view;
+  v.x = r.width / 2 - 150 - p.x * v.z; v.y = r.height / 2 - p.y * v.z; wApplyView(); dirty();
+  wCOpenThread(c.id);
+});
+
 /* ── PNG export ── */
 function wWrap(ctx, text, maxW) {
   const out = [];
@@ -2581,9 +2971,10 @@ function wPaint2D(ctx, items, imOf) {
   for (const it of order) {
     ctx.save();
     if (it.t === 'frame') {
-      ctx.fillStyle = it.c; ctx.globalAlpha = .08; rrect(ctx, it.x, it.y, it.w, it.h, 14); ctx.fill();
-      ctx.globalAlpha = .6; ctx.strokeStyle = it.c; ctx.lineWidth = 1.5; ctx.setLineDash([6, 5]); ctx.stroke();
-      ctx.globalAlpha = 1; ctx.setLineDash([]); ctx.font = '800 20px Archivo, sans-serif'; ctx.textBaseline = 'bottom'; ctx.textAlign = 'left'; ctx.fillText((it.name || '').toUpperCase(), it.x + 2, it.y - 8);
+      ctx.translate(it.x, it.y); const P = new Path2D(wFramePath(wShapeOf(it), it.w, it.h));
+      ctx.fillStyle = it.c; ctx.globalAlpha = .08; ctx.fill(P);
+      ctx.globalAlpha = it.ol === 'solid' ? .8 : .6; ctx.strokeStyle = it.c; ctx.lineWidth = 1.5; ctx.setLineDash(it.ol === 'solid' ? [] : [6, 5]); ctx.stroke(P);
+      ctx.globalAlpha = 1; ctx.setLineDash([]); ctx.font = '800 20px Archivo, sans-serif'; ctx.textBaseline = 'bottom'; ctx.textAlign = 'left'; ctx.fillText((it.name || '').toUpperCase(), 2, -8);
     } else if (it.t === 'img') {
       const bx = wBox(it), im = imOf(it.ref), r = refById(it.ref);
       ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 16; ctx.shadowOffsetY = 6;
@@ -2629,7 +3020,7 @@ async function wExportPNG() {
 }
 $('#wPng').onclick = wExportPNG;
 if (document.fonts) document.fonts.ready.then(() => { if (state.tab === 'board') wRender(); });
-function wResetBoard() { if (wEditing) wEditing = null; wAct = null; wSel.clear(); wHist = []; wFut = []; wEls.forEach(el => el.remove()); wEls.clear(); }
+function wResetBoard() { if (wEditing) wEditing = null; wAct = null; wCOpen = null; wHi = null; $('#wCPop').hidden = true; $('#wCPanel').hidden = true; wPinEls.forEach(el => el.remove()); wPinEls.clear(); wSel.clear(); wHist = []; wFut = []; wEls.forEach(wDrop); wEls.clear(); }
 
 /* ───────── start ───────── */
 (async () => {
