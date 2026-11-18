@@ -205,10 +205,11 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
 .media .play{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
 .media .play i{width:46px;height:46px;border-radius:50%;background:rgba(8,9,11,.6);display:grid;place-items:center;backdrop-filter:blur(4px)}
 .media .play svg{width:18px;height:18px;color:#fff;margin-left:2px}
-.media .tools-ov{position:absolute;right:7px;top:7px;display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.media .tools-ov{position:absolute;right:7px;top:7px;z-index:3;display:flex;gap:4px;opacity:0;transition:opacity .15s}
 .ref:hover .tools-ov,.ref:focus-within .tools-ov{opacity:1}
 .ov-btn{width:28px;height:28px;border-radius:7px;border:0;background:rgba(8,9,11,.66);color:#fff;display:grid;place-items:center;backdrop-filter:blur(4px)}
 .ov-btn:hover{background:rgba(8,9,11,.9)}
+a.ov-btn{text-decoration:none}
 .ov-btn svg{width:14px;height:14px}
 .loading{min-height:120px;animation:shim 1.2s ease-in-out infinite alternate}
 @keyframes shim{to{opacity:.55}}
@@ -217,14 +218,14 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
 @media (hover:hover){
   .board:not(.list) .ref .rbody{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:10px 11px 11px;background:color-mix(in srgb,var(--fth-surface) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--fth-line);transform:translateY(calc(100% + 2px));opacity:0;transition:transform .2s ease,opacity .16s ease;max-height:100%;overflow:auto}
   .board:not(.list) .ref:hover .rbody,.board:not(.list) .ref:focus-visible .rbody,.board:not(.list) .ref:has(:focus-visible) .rbody{transform:none;opacity:1}
-  .board:not(.list) .ref .rn,.board:not(.list) .ref .rlink{display:none}
+  .board:not(.list) .ref .rn{display:none}
   .board:not(.list) .ref .media img{min-height:0}
   .tagdots{position:absolute;left:8px;bottom:8px;z-index:1;display:flex;gap:4px;padding:4px 5px;border-radius:999px;background:rgba(8,9,11,.55);backdrop-filter:blur(4px);transition:opacity .15s;pointer-events:none}
   .tagdots:empty{display:none}
   .tagdots i{width:7px;height:7px;border-radius:50%}
   .ref:hover .tagdots,.board.list .tagdots{opacity:0}
 }
-@media (hover:none){.tagdots{display:none}.board:not(.list) .ref .rn,.board:not(.list) .ref .rlink{display:none}}
+@media (hover:none){.ref .tools-ov{opacity:1}.tagdots{display:none}.board:not(.list) .ref .rn,.board:not(.list) .ref .rlink{display:none}}
 .tk .l{display:none}
 .rlink{margin-top:7px;font-size:12px}
 .rlink a{color:var(--fth-accent-ink);text-decoration:none;font-weight:600}
@@ -326,6 +327,11 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
 .sthumb .pb:hover{background:var(--fth-accent);color:var(--fth-on-accent)}
 .splat{display:inline-flex;align-items:center;gap:6px;font:600 10px var(--fth-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fth-muted)}
 .splat i{width:7px;height:7px;border-radius:50%;background:var(--pc,var(--fth-faint))}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.srow .splat{min-width:0;overflow:hidden;white-space:nowrap}
+.sopen{flex:none;display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:6px;border:1px solid var(--fth-line2);color:var(--fth-accent-ink);font:600 11.5px var(--fth-display);text-decoration:none}
+.sopen:hover{border-color:var(--fth-accent);background:var(--fth-accent-soft)}
+.sopen svg{width:11px;height:11px}
 .splat .cue{color:var(--fth-faint);letter-spacing:.04em}
 .st{font-weight:650;font-size:14.5px;line-height:1.25;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .st.un{color:var(--fth-faint);font-weight:500}
@@ -998,10 +1004,16 @@ function mediaHTML(it) {
   else if (it.hasData) inner = `<div class="ph loading"></div>`;
   else inner = ph;
   return inner + badge + (it.kind === 'video' ? `<div class="play"><i>${I.play}</i></div>` : '')
-    + `<div class="tools-ov"><button class="ov-btn" data-act="lb" title="View large">${I.expand}</button></div>`;
+    + `<div class="tools-ov">${ovLink(it)}<button class="ov-btn" data-act="lb" title="View large">${I.expand}</button></div>`;
+}
+/* one click straight to the original: the video, page or image a reference came from */
+function ovLink(it) {
+  const href = safeHref(it.url); if (!href) return '';
+  const where = it.kind === 'video' ? `Watch on ${(PLAT[it.platform] || PLAT.web).name}` : `Open ${it.host || 'link'}`;
+  return `<a class="ov-btn" href="${esc(href)}" target="_blank" rel="noopener" title="${esc(where)} in a new tab" aria-label="${esc(where)}" draggable="false">${I.out}</a>`;
 }
 function updateCard(el, it) {
-  const key = srcOf(it) + '|' + it.kind + '|' + (it.hasData ? 1 : 0);
+  const key = srcOf(it) + '|' + it.kind + '|' + (it.hasData ? 1 : 0) + '|' + (it.url || '');
   if (el._mk !== key) { el._mk = key; $('.media', el).innerHTML = mediaHTML(it); }
   const showPal = it.tags.includes('colour') && it.pal && it.pal.length;
   const href = safeHref(it.url);
@@ -1070,7 +1082,7 @@ function playerHTML(it) {
 function sCardHTML(it) {
   const P = PLAT[it.platform] || PLAT.web, href = safeHref(it.url);
   return `<div class="shead">${sThumb(it)}<div style="min-width:0">
-      <div class="splat" style="--pc:${P.c}"><i></i>${esc(it.kind === 'file' ? 'Upload' : P.name)}${it.cue ? `<span class="cue">· from ${esc(it.cue)}</span>` : ''}</div>
+      <div class="srow"><div class="splat" style="--pc:${P.c}"><i></i>${esc(it.kind === 'file' ? 'Upload' : P.name)}${it.cue ? `<span class="cue">· from ${esc(it.cue)}</span>` : ''}</div>${href && it.kind !== 'file' ? `<a class="sopen" href="${esc(href)}" target="_blank" rel="noopener" draggable="false" title="Open on ${esc(P.name)} in a new tab">Open ${I.out}</a>` : ''}</div>
       <div class="st${it.title ? '' : ' un'}">${esc(it.title || it.fileName || 'Untitled sound')}</div>
       ${it.artist ? `<div class="sa">${esc(it.artist)}</div>` : ''}
       ${it.scene ? `<div class="sscene"><b>For</b>${esc(it.scene)}</div>` : ''}
@@ -1216,6 +1228,7 @@ async function duplicate(kind, it) {
 $('#board').addEventListener('click', e => {
   if (e.target.closest('#vEmpty')) { $('#vFile').click(); return; }
   const card = e.target.closest('.ref'); if (!card) return;
+  if (e.target.closest('a[href]')) return;
   const it = state.refs.find(x => x.id === card.dataset.id); if (!it) return;
   const tk = e.target.closest('[data-tk]');
   if (tk) { toggleTag('visual', it, tk.dataset.tk); if (sel.visual === it.id) renderEditor('visual'); return; }
@@ -1230,6 +1243,7 @@ $('#board').addEventListener('keydown', e => {
 $('#sgrid').addEventListener('click', e => {
   if (e.target.closest('#sEmpty')) { $('#sUrl').focus(); return; }
   const card = e.target.closest('.snd'); if (!card) return;
+  if (e.target.closest('a[href]')) return;
   const it = state.sounds.find(x => x.id === card.dataset.id); if (!it) return;
   const tk = e.target.closest('[data-tk]');
   if (tk) { toggleTag('sound', it, tk.dataset.tk); if (sel.sound === it.id) renderEditor('sound'); return; }
@@ -2086,7 +2100,7 @@ function wCtxHTML(items) {
   let h = '';
   if (one && one.t === 'img') {
     const r = refById(one.ref);
-    h += `<span class="wt">${esc(r.title || 'Untitled reference')}</span><button class="wpb" data-wa="view" title="View large">${I.expand}</button><button class="wpb" data-wa="ref" title="Edit its tags and notes in Visual references">${I.out}Details</button><span class="wsep"></span>`;
+    h += `<span class="wt">${esc(r.title || 'Untitled reference')}</span><button class="wpb" data-wa="view" title="View large">${I.expand}</button>${safeHref(r.url) ? `<a class="wpb" href="${esc(safeHref(r.url))}" target="_blank" rel="noopener" title="Open the original in a new tab" style="text-decoration:none">${I.out}Open</a>` : ''}<button class="wpb" data-wa="ref" title="Edit its tags and notes in Visual references">Details</button><span class="wsep"></span>`;
   }
   const f = items.find(i => i.t !== 'img');
   if (f) {
