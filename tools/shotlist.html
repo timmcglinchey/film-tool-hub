@@ -209,6 +209,7 @@ table.grid{border-collapse:separate;border-spacing:0;width:max-content;min-width
 .grid td.act button:hover{background:var(--field-hover);color:var(--ink)}
 .setupcell{display:flex;align-items:center}
 .eff{font:11px var(--mono);color:var(--good);white-space:nowrap;padding-right:4px;cursor:help}
+.eff.cam{color:var(--muted,inherit);opacity:.8;padding:0 4px}
 .flag{color:var(--warn);cursor:help;margin-left:3px;font-family:var(--sans)}
 .grid tr.tinted td{background:hsl(var(--h) 75% 50% / .07)}
 .grid tr.tinted td.h{box-shadow:inset 4px 0 0 hsl(var(--h) 65% 52%);background:linear-gradient(hsl(var(--h) 75% 50% / .07),hsl(var(--h) 75% 50% / .07)),var(--panel)}
@@ -360,6 +361,7 @@ dialog.dlg::backdrop{background:rgba(5,6,8,.6);backdrop-filter:blur(3px)}
         <label class="field"><span>Day name</span><input data-d="name"></label>
         <label class="field"><span>Shoot date</span><input type="date" data-d="date"></label>
         <label class="field"><span>Call time</span><input type="time" data-d="call"></label>
+        <label class="field" title="When the first shot should start rolling. The time between call and camera call is the first shot's setup, and the schedule runs from here."><span>Camera call</span><input type="time" data-d="camCall"></label>
         <label class="field"><span>Planned wrap</span><input type="time" data-d="wrap"></label>
         <label class="field"><span>Sun times for</span><select data-d="sunPlace" id="sunPlace"></select></label>
         <label class="field sunCustom"><span>Latitude</span><input type="number" step="0.0001" data-d="lat" placeholder="51.5074"></label>
@@ -531,7 +533,7 @@ const newShot=()=>({id:uid(),type:'shot',status:'To do',priority:'Must have',set
 const KINDS={break:{type:'break',label:'Break',duration:15,icon:'☕',name:'Break'},lunch:{type:'break',label:'Lunch',duration:30,icon:'🍽',name:'Lunch'},dinner:{type:'break',label:'Dinner',duration:30,icon:'🍽',name:'Dinner'},move:{type:'move',label:'Company move',duration:30,icon:'⇄',name:'Company move'}};
 const newBreak=k=>({id:uid(),type:KINDS[k].type,kind:k,label:KINDS[k].label,duration:KINDS[k].duration});
 const kindOf=r=>r.kind&&KINDS[r.kind]?r.kind:r.type==='move'?'move':/lunch/i.test(r.label)?'lunch':/dinner|supper/i.test(r.label)?'dinner':'break';
-const newDay=n=>({id:uid(),name:n,date:'',call:'08:00',wrap:'18:00',sunPlace:'london',lat:'',lon:'',sunrise:'',sunset:'',rows:[newShot()]});
+const newDay=n=>({id:uid(),name:n,date:'',call:'08:00',camCall:'',wrap:'18:00',sunPlace:'london',lat:'',lon:'',sunrise:'',sunset:'',rows:[newShot()]});
 
 /* ---------- sunrise / sunset (NOAA sunrise equation) ---------- */
 const PLACES=[['london','London',51.5074,-0.1278],['birmingham','Birmingham',52.4862,-1.8904],['bristol','Bristol',51.4545,-2.5879],['brighton','Brighton',50.8225,-0.1372],['cardiff','Cardiff',51.4816,-3.1791],['plymouth','Plymouth',50.3755,-4.1427],['norwich','Norwich',52.6309,1.2974],['manchester','Manchester',53.4808,-2.2426],['liverpool','Liverpool',53.4084,-2.9916],['leeds','Leeds',53.8008,-1.5491],['newcastle','Newcastle',54.9783,-1.6178],['belfast','Belfast',54.5973,-5.9301],['glasgow','Glasgow',55.8642,-4.2518],['edinburgh','Edinburgh',55.9533,-3.1883],['aberdeen','Aberdeen',57.1497,-2.0943],['inverness','Inverness',57.4778,-4.2247]];
@@ -582,7 +584,7 @@ function sampleDay(){
   [1,1,'1','EXT','Night','Car parked outside Bet Shop. Engine off, Kingpin out, then Boxer.','Wide','','Dolly Left','Dana Dolly','Kingpin, Boxer','Could see about wet down',30,10],
   [2,12,'8','EXT/INT','Night','Jane in car emerging out of silhouette into street light','MCU/CU','','Push in','Dana Dolly','Jane','Sillhouette beforehand, could be tricky to pull off',30,10],
  ];
- const d=newDay('The Bet'); d.example=true; d.call='17:00'; d.wrap='01:00';
+ const d=newDay('The Bet'); d.example=true; d.call='17:00'; d.camCall='17:30'; d.wrap='01:00';
  d.rows=D.map(a=>{ if(a==='DINNER')return newBreak('dinner');
   const r=newShot(); K.forEach((k,i)=>r[k]=typeof a[i]==='number'&&k!=='setup'&&k!=='shoot'?String(a[i]):a[i]);
   r.lens='DZO 21mm'; r.location='Base Foods'; return r;});
@@ -646,6 +648,8 @@ function compute(d){
  const S=state.settings,res={},warnings=[];
  const call=parseT(d.call), noCall=call==null;
  let cur=noCall?0:call; let wrap=parseT(d.wrap); if(wrap!=null&&!noCall&&wrap<=call) wrap+=1440;
+ /* camera call: the first shot rolls here; call → camera call is that shot's setup */
+ let cam=noCall?null:parseT(d.camCall); if(cam!=null&&cam<call) cam+=1440; let camDone=cam==null;
  const sr=parseT(d.sunrise), ss=parseT(d.sunset);
  const tot={setup:0,shoot:0,brk:0,shots:0,cut:0,got:0,niceN:0,niceM:0,saved:0};
  let prev=null,lastMaj=null,order=0,sinceBreak=0,warnedBreak=false; const seen=new Set();
@@ -659,8 +663,10 @@ function compute(d){
   const L=String(r.lighting??'').trim(), M=major(L);
   if(S.smart&&prev&&L){const pL=String(prev.lighting??'').trim();
    if(pL===L) eff=Math.min(setup,num(S.sameMins)); else if(M&&major(pL)===M) eff=Math.min(setup,num(S.relMins));}
+  if(!camDone){camDone=true;o.camFirst=true;eff=Math.max(0,cam-cur);
+   if(cur>cam)o.flags.push(`Can't roll at camera call (${fmt(cam)}): rows above it run until ${fmt(cur)}`);}
   o.setup=setup;o.eff=eff;o.setupStart=cur;o.start=cur+eff;o.end=o.start+shoot;cur=o.end;
-  tot.setup+=eff;tot.shoot+=shoot;tot.shots++;tot.saved+=setup-eff;
+  tot.setup+=eff;tot.shoot+=shoot;tot.shots++;if(!o.camFirst)tot.saved+=setup-eff;
   if(r.status==='Got it')tot.got++;
   if(r.priority==='Nice to have'&&r.status!=='Got it'){tot.niceN++;tot.niceM+=eff+shoot}
   if(M){if(lastMaj!==null&&M!==lastMaj&&seen.has(M))o.flags.push(`Goes back to lighting setup ${M}, which has already been struck`);seen.add(M);lastMaj=M;}
@@ -681,7 +687,7 @@ function compute(d){
   prev=r;
  }
  const scriptRank={}; d.rows.filter(r=>r.type==='shot').sort(cmpScript).forEach((r,i)=>scriptRank[r.id]=i+1);
- return {res,warnings,tot,call,wrap,finish:cur,noCall,scriptRank,sr,ss};
+ return {res,warnings,tot,call,cam,wrap,finish:cur,noCall,scriptRank,sr,ss};
 }
 
 /* ---------- colour ---------- */
@@ -731,7 +737,7 @@ function renderTable(){
   return `<tr data-id="${r.id}"><td class="h">${grip}</td>${cols.map(c=>`<td>${cellHTML(c,r)}</td>`).join('')}<td class="act"><button data-a="dup" title="Duplicate">⧉</button><button data-a="del" title="Delete">✕</button></td></tr>`;
  }).join(''):`<tr><td colspan="${cols.length+2}" class="empty">No shots yet. Use “＋ New shot” below, or Import a spreadsheet.</td></tr>`;
  $$('#tbody textarea').forEach(autosize);
- $('#hint').textContent=shooting?'Use ＋ on any row to insert below it. Drag ⠿ to reorder. Times run top to bottom from the call time.':'Script order view: times still follow shooting order. Switch back to drag rows.';
+ $('#hint').textContent=shooting?'Use ＋ on any row to insert below it. Drag ⠿ to reorder. Times run top to bottom from the '+(day().camCall?'camera call; the first shot is set up between call and camera call.':'call time.'):'Script order view: times still follow shooting order. Switch back to drag rows.';
  recompute();
 }
 function autosize(t){t.style.height='auto';t.style.height=t.scrollHeight+2+'px'}
@@ -748,7 +754,10 @@ function recompute(){
   const fl=o.flags&&o.flags.length?`<span class="flag" title="${esc(o.flags.join('\n'))}">⚠</span>`:'';
   set('start',showT?fmtH(o.start)+fl:'—');set('end',showT?fmtH(o.end):'—');
   const e=tr.querySelector('[data-c="eff"]');
-  if(e){if(!o.cut&&o.eff<o.setup){e.textContent=`→${o.eff}`;e.title=`Setup capped to ${o.eff} mins because the previous shot uses the same or a related lighting setup. Turn off in Settings.`}else{e.textContent='';e.title=''}}
+  const si=tr.querySelector('[data-k="setup"]');if(si)si.hidden=!!o.camFirst;
+  if(e)e.classList.toggle('cam',!!o.camFirst);
+  if(e&&o.camFirst){e.textContent=`Call → Cam`;e.title=`No setup time needed: this first shot is set up between call (${fmt(C.call)}) and camera call (${fmt(C.cam)}), ${fmtDur(o.eff)}. Change the camera call to adjust it.`}
+  else if(e){if(!o.cut&&o.eff<o.setup){e.textContent=`→${o.eff}`;e.title=`Setup capped to ${o.eff} mins because the previous shot uses the same or a related lighting setup. Turn off in Settings.`}else{e.textContent='';e.title=''}}
   tr.classList.toggle('cut',!!o.cut);tr.classList.toggle('got',r.status==='Got it');
   tr.classList.toggle('nice',r.priority==='Nice to have');tr.classList.toggle('over',!!o.over);
   const h=hueFor(r);tr.classList.toggle('tinted',h!=null);if(h!=null)tr.style.setProperty('--h',h);
@@ -769,7 +778,7 @@ function renderSummary(C){
   let sub='',cls='';
   if(C.wrap!=null){const diff=C.finish-C.wrap;sub=diff>0?`<span class="bad">${fmtDur(diff)} over</span> planned ${fmt(C.wrap)}`:`<span class="good">${fmtDur(-diff)} spare</span> before ${fmt(C.wrap)}`;cls=diff>0?'bad':'good'}
   stats.push(st('Projected wrap',fmtH(C.finish),sub,cls));
-  stats.push(st('Shoot day',fmtDur(C.finish-C.call),`Call ${fmt(C.call)}`));
+  stats.push(st('Shoot day',fmtDur(C.finish-C.call),`Call ${fmt(C.call)}${C.cam!=null?` · Camera ${fmt(C.cam)}`:''}`));
  }
  if(t.niceN)stats.push(st('Nice-to-haves',`${t.niceN}`,`${fmtDur(t.niceM)} you could drop`));
  if(live&&!C.noCall)stats.push(liveStat(C));
@@ -925,10 +934,10 @@ document.addEventListener('input',e=>{
  const dk=e.target.dataset.d;if(dk!=null){const d=day();d[dk]=e.target.value;if(dk==='name')renderTabs();
   if(dk==='sunrise'||dk==='sunset'){if(d.sunPlace!=='manual'){d.sunPlace='manual';toast('Switched to manual sun times for this day.')}}
   if(['date','sunPlace','lat','lon','sunrise','sunset'].includes(dk)){updateSun(d);renderSun()}
-  recompute();save()}
+  if(dk==='camCall')renderTable();else recompute();save()}
 });
 $('#tabs').addEventListener('click',e=>{
- if(e.target.closest('#dayAdd')){const d=newDay(`Day ${workDays().length+1}`);const cur=day().example?(workDays().slice(-1)[0]||day()):day();d.call=cur.call;d.wrap=cur.wrap;d.sunPlace=cur.sunPlace;d.lat=cur.lat;d.lon=cur.lon;const wi=state.days.indexOf(workDays().slice(-1)[0]);state.days.splice(wi+1,0,d);state.activeDay=d.id;renderAll();save();return}
+ if(e.target.closest('#dayAdd')){const d=newDay(`Day ${workDays().length+1}`);const cur=day().example?(workDays().slice(-1)[0]||day()):day();d.call=cur.call;d.camCall=cur.camCall||'';d.wrap=cur.wrap;d.sunPlace=cur.sunPlace;d.lat=cur.lat;d.lon=cur.lon;const wi=state.days.indexOf(workDays().slice(-1)[0]);state.days.splice(wi+1,0,d);state.activeDay=d.id;renderAll();save();return}
  const b=e.target.closest('[data-day]');if(b){state.activeDay=b.dataset.day;renderAll();save()}
 });
 $('#dayDup').onclick=()=>{const c=clone(day());c.id=uid();c.name=(c.name||'Day')+' (copy)';delete c.example;c.rows.forEach(r=>{r.id=uid();if(r.type==='shot')r.status='To do'});state.days.splice(state.days.indexOf(day())+1,0,c);state.activeDay=c.id;renderAll();save()};
@@ -988,7 +997,7 @@ function plainVal(c,r,o,C){
   case 'scriptOrder':return C.scriptRank[r.id]??'';
   case 'start':return o.cut||C.noCall||o.start==null?'':fmt(o.start)+(o.start>=1440?' (+1)':'');
   case 'end':return o.cut||C.noCall||o.end==null?'':fmt(o.end)+(o.end>=1440?' (+1)':'');
-  case 'setup':return o.eff!=null&&o.eff<o.setup?o.eff:(r.setup??'');
+  case 'setup':return o.camFirst?'':o.eff!=null&&o.eff<o.setup?o.eff:(r.setup??'');
   case 'image':return r.image?'[image]':'';
  }
  return r[c.key]??'';
@@ -1005,7 +1014,7 @@ function buildPrint(){
  pv.innerHTML=days.map(d=>{
   const C=compute(d);
   const date=d.date?new Date(d.date+'T12:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
-  const info=[[d.name,'',1],['Date',date],['Call',C.noCall?'':fmt(C.call),1],['Planned wrap',d.wrap],['Projected wrap',C.noCall?'':fmt(C.finish),1],['Sunrise',d.sunrise],['Sunset',d.sunset],['Shots',`${C.tot.shots}${C.tot.cut&&!S.printCut?'':''}`],['Setup / shoot',`${fmtDur(C.tot.setup)} / ${fmtDur(C.tot.shoot)}`]].filter(x=>x[1]||x[0]===d.name);
+  const info=[[d.name,'',1],['Date',date],['Call',C.noCall?'':fmt(C.call),1],['Camera call',C.cam==null?'':fmt(C.cam),1],['Planned wrap',d.wrap],['Projected wrap',C.noCall?'':fmt(C.finish),1],['Sunrise',d.sunrise],['Sunset',d.sunset],['Shots',`${C.tot.shots}${C.tot.cut&&!S.printCut?'':''}`],['Setup / shoot',`${fmtDur(C.tot.setup)} / ${fmtDur(C.tot.shoot)}`]].filter(x=>x[1]||x[0]===d.name);
   const body=d.rows.filter(r=>r.type!=='shot'||r.status!=='Cut'||S.printCut).map(r=>{
    const o=C.res[r.id]||{};
    if(r.type!=='shot')return `<tr class="brk"><td colspan="${cols.length}">${KINDS[kindOf(r)].icon} ${KINDS[kindOf(r)].name}${r.label&&r.label!==KINDS[kindOf(r)].name?' — '+esc(r.label):''} · ${num(r.duration)} mins${C.noCall?'':` · ${fmt(o.start)}–${fmt(o.end)}`}</td></tr>`;
