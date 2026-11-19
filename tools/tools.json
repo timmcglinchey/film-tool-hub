@@ -508,6 +508,25 @@
       "file": "tools/pattern-lab.html"
     },
     {
+      "id": "ratio-lab",
+      "name": "Lighting Ratio Lab",
+      "desc": "Plan lighting ratios on a lit frame. Set key, fill, backlight and background in stops, read the ratios by meter or spot, and build a deck of looks to compare and export.",
+      "category": "learn",
+      "tags": [
+        "DP",
+        "Gaffer",
+        "Learning"
+      ],
+      "icon": "ratios",
+      "fileName": "Lighting Ratio Lab.html",
+      "origTitle": "Lighting Ratio Lab",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611191627,
+      "file": "tools/ratio-lab.html"
+    },
+    {
       "id": "exposure",
       "name": "Exposure Lab",
       "category": "learn",
