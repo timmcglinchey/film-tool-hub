@@ -393,7 +393,7 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
       <div>Upload a script PDF to begin lining.</div>
       <button class="fth-btn primary" onclick="pickFile()">↑ Upload PDF</button>
       <div class="hints mouse-only">Drag down the script to draw a shot line · Click a line to edit it<br>On Screen / Off Screen for straight or zig-zag (Shift flips it)</div>
-      <div class="hints touch-only">Draw down the script with a finger or Apple Pencil<br>Two fingers scroll and pinch to zoom · Tap a line to edit it</div>
+      <div class="hints touch-only">Scroll with one finger · Press and hold, then draw down the script<br>Apple Pencil draws straight away · Pinch to zoom · Tap a line to edit it</div>
     </div>
   </div>
 </div>
@@ -489,8 +489,8 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
   </div>
   <div class="sec">Drawing</div>
   <ul class="help-list">
-    <li class="touch-only">Draw down the script with one finger or an Apple Pencil. Two fingers scroll; pinch to zoom.</li>
-    <li class="touch-only">✏️ / ✋ switches whether one finger draws or scrolls. Using an Apple Pencil switches fingers to scrolling for you.</li>
+    <li class="touch-only">One finger scrolls. To draw, press and hold for a moment, then draw down the script. An Apple Pencil draws straight away.</li>
+    <li class="touch-only">Pinch with two fingers to zoom. The ✋ / ✏️ button makes one finger draw straight away instead (then two fingers scroll).</li>
     <li class="mouse-only">Drag down the script to draw a shot line. Hold Shift to flip On / Off Screen while drawing.</li>
     <li>Tap a line to edit it. Drag its square handles to change where it starts and ends; drag the line to move it.</li>
     <li><b>+ Add Segment</b> carries a shot on to another page. <b>✂ Split</b> cuts a line in two so part of it can be off screen.</li>
@@ -536,7 +536,7 @@ const COLOURS = [
 // ── Global visual settings (affect all lines) ─────────────────────────────────
 let G = { weight: 1, zzAmp: 1 };
 // ── Preferences (saved with the lines) ───────────────────────────────────────
-const settings = { snap:true, apart:true, autoScene:true, autoNum:true, wake:true, drawMode:'draw', penSeen:false };
+const settings = { snap:true, apart:true, autoScene:true, autoNum:true, wake:true, drawMode:'pan', penSeen:false, touchV:2 };
 
 // ── App state ─────────────────────────────────────────────────────────────────
 let activeColour  = COLOURS[0].hex;
@@ -719,16 +719,16 @@ function setDrawMode(m,quiet){
   settings.drawMode = m==='pan' ? 'pan' : 'draw';
   const b=$('drawModeBtn'), pan=settings.drawMode==='pan';
   b.querySelector('.i').textContent = pan ? '✋' : '✏️';
-  b.querySelector('.t').textContent = pan ? 'Finger scrolls' : 'Finger draws';
-  b.title = pan ? 'One finger scrolls; draw with an Apple Pencil. Tap to draw with a finger.' : 'One finger draws; two fingers scroll. Tap to make one finger scroll.';
+  b.querySelector('.t').textContent = pan ? 'Hold to draw' : 'Finger draws';
+  b.title = pan ? 'One finger scrolls. To draw, press and hold for a moment, then draw (or use an Apple Pencil). Tap to draw straight away instead.' : 'One finger draws straight away; two fingers scroll. Tap to make one finger scroll.';
   b.setAttribute('aria-label', b.title);
-  if(!quiet) toast(pan ? 'One finger now scrolls. Draw with an Apple Pencil, or tap ✏️ to draw with a finger.' : 'One finger now draws. Use two fingers to scroll.');
+  if(!quiet) toast(pan ? 'One finger scrolls. Press and hold, then draw.' : 'One finger draws straight away. Two fingers scroll.');
 }
 function toggleDrawMode(){ setDrawMode(settings.drawMode==='pan'?'draw':'pan'); }
 function penSeen(){
   if(settings.penSeen) return;
   settings.penSeen=true;
-  if(settings.drawMode!=='pan'){ setDrawMode('pan',true); toast('Apple Pencil found: the pencil draws and one finger scrolls. Change this with ✋ / ✏️.'); }
+  if(settings.drawMode!=='pan'){ setDrawMode('pan',true); toast('Apple Pencil found: the pencil draws and one finger scrolls.'); }
 }
 
 // ── Focus mode: hide the headers (and the hub's bars) so the script fills the screen ──
@@ -967,13 +967,32 @@ function onAnyDown(e){
   const inMain=e.target.closest && e.target.closest('#main');
   if(!inMain || !pageWrappers.length) return;
   if(touches.size>=2){
+    if(gesture) clearTimeout(gesture.holdT);
     cancelGesture();
-    gesture={type:'pinch', d0:spread(), z0:zoomPct, last:midpoint()};
+    /* two fingers: scroll, and only zoom once they clearly pinch (mode decided by the first movement) */
+    gesture={type:'pinch', d0:spread(), z0:zoomPct, last:midpoint(), start:midpoint(), mode:null};
     return;
   }
   const onPage=e.target.closest('.ps'), onHandle=e.target.dataset && e.target.dataset.handle;
   if(!onPage || (settings.drawMode==='pan' && !onHandle)){
-    gesture={type:'pan', id:e.pointerId, start:{x:e.clientX,y:e.clientY}, last:{x:e.clientX,y:e.clientY}, moved:false, target:e.target, samples:[]};
+    const g={type:'pan', id:e.pointerId, start:{x:e.clientX,y:e.clientY}, last:{x:e.clientX,y:e.clientY}, moved:false, target:e.target, samples:[]};
+    gesture=g;
+    /* press and hold (without moving) on the script, then draw */
+    if(onPage) g.holdT=setTimeout(()=>holdToDraw(g,onPage),320);
+  }
+}
+function holdToDraw(g,svg){
+  if(gesture!==g || g.moved || touches.size!==1) return;
+  const pi=pageWrappers.findIndex(p=>p.svg===svg); if(pi<0) return;
+  gesture=null;
+  try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
+  const ev={clientX:g.start.x, clientY:g.start.y, button:0, shiftKey:false, pointerType:'touch', fromHold:true, preventDefault(){}};
+  const tapId=(hitTest(ev,pi)||{}).id || (g.target && g.target.dataset && g.target.dataset.shot);
+  onDrawMouseDown(ev,pi,tapId||undefined);
+  if(drawActive && drawState){   // show where the line starts
+    if(previewGroup) previewGroup.remove();
+    const y=drawState.startNY;
+    previewGroup=renderSeg(pageWrappers[pi].svg,{pageIndex:pi,nx:drawState.nx,ny1:y,ny2:y,zigzag:false},activeColour,'dot','dot',null,0.6,null,true);
   }
 }
 let pinchRaf=0, pinchNext=null;
@@ -982,15 +1001,20 @@ function onPointerMove(e){
     touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(gesture && gesture.type==='pinch'){
       if(touches.size<2) return;
-      const m=midpoint(), main=$('main');
+      const m=midpoint(), main=$('main'), ratio=spread()/gesture.d0;
       main.scrollLeft-=m.x-gesture.last.x; main.scrollTop-=m.y-gesture.last.y; gesture.last=m;
+      if(!gesture.mode){
+        if(Math.abs(ratio-1)>0.18) { gesture.mode='zoom'; gesture.d0=spread(); gesture.z0=zoomPct; }
+        else if(Math.hypot(m.x-gesture.start.x,m.y-gesture.start.y)>14) gesture.mode='scroll';
+      }
+      if(gesture.mode!=='zoom') return;
       pinchNext={z:gesture.z0*spread()/gesture.d0, x:m.x, y:m.y};
       if(!pinchRaf) pinchRaf=requestAnimationFrame(()=>{ pinchRaf=0; if(pinchNext){ zoomFit=false; setZoom(pinchNext.z,pinchNext.x,pinchNext.y); } });
       return;
     }
     if(gesture && gesture.type==='pan' && gesture.id===e.pointerId){
       const g=gesture, dx=e.clientX-g.last.x, dy=e.clientY-g.last.y;
-      if(!g.moved && Math.hypot(e.clientX-g.start.x,e.clientY-g.start.y)>8) g.moved=true;
+      if(!g.moved && Math.hypot(e.clientX-g.start.x,e.clientY-g.start.y)>8){ g.moved=true; clearTimeout(g.holdT); }
       if(g.moved){ const main=$('main'); main.scrollLeft-=dx; main.scrollTop-=dy; }
       g.last={x:e.clientX,y:e.clientY};
       g.samples.push({t:performance.now(),x:e.clientX,y:e.clientY}); if(g.samples.length>6) g.samples.shift();
@@ -1046,7 +1070,7 @@ function handleTap(target,e){
   const svg=target.closest && target.closest('.ps'); if(!svg) return;
   const pi=pageWrappers.findIndex(p=>p.svg===svg); if(pi<0) return;
   if(splitMode && selectedId){ trySplit(e,pi); return; }
-  const id=(target.dataset && target.dataset.shot) || (hitTest(e,pi)||{}).id;
+  const id=(hitTest(e,pi)||{}).id || (target.dataset && target.dataset.shot);
   if(id){ selectShot(id); return; }
   if(selectedId && !extendMode) closeEditPanel();
 }
@@ -1074,7 +1098,7 @@ function toSVG(nx,ny){ return {x:nx*VB_W, y:ny*VB_H}; }
 function onDrawMouseDown(e, pi, tapId){
   if(e.button!==0) return;
   if(gesture){ e.preventDefault(); return; }
-  if(e.pointerType==='touch' && settings.drawMode==='pan') return;
+  if(e.pointerType==='touch' && settings.drawMode==='pan' && !e.fromHold) return;
   if(e.pointerType==='pen' && COARSE) penSeen();
   hideChip();
   if(splitMode && selectedId){ trySplit(e,pi); e.preventDefault(); return; }
@@ -1616,6 +1640,7 @@ addEventListener('load',panelTop); document.addEventListener('DOMContentLoaded',
           if (lines.G) Object.assign(G, lines.G);
           if (lines.activeColour) setColour(lines.activeColour);
           if (lines.settings) for (const k in settings) if (k in lines.settings) settings[k] = lines.settings[k];
+          if (!lines.settings || lines.settings.touchV !== 2) { settings.drawMode = 'pan'; settings.touchV = 2; }
           if (lines.next) { $('sceneInput').value = lines.next.scene || ''; $('shotNumInput').value = lines.next.shotNum || ''; $('customInput').value = lines.next.custom || ''; }
           shots = Array.isArray(lines.shots) ? lines.shots : [];
           /* older saves could have a segment drawn bottom-to-top, and segments in drawing order */
