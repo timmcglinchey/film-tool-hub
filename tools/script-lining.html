@@ -260,6 +260,10 @@ body.focus .fth-head{display:none}
 .help-list{padding-left:18px;color:var(--fth-text);font-size:13.5px;line-height:1.55}
 .help-list li{margin-bottom:5px}
 kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-bottom-width:2px;border-radius:5px;padding:1px 5px;background:var(--fth-bg2)}
+#termToggle{display:inline-flex;border:1px solid var(--fth-line2);border-radius:8px;overflow:hidden;flex:none}
+#termToggle button{border:0;background:transparent;color:var(--fth-muted);font:600 12.5px var(--fth-display);padding:7px 12px;cursor:pointer}
+#termToggle button+button{border-left:1px solid var(--fth-line2)}
+#termToggle button.on{background:var(--fth-accent-soft);color:var(--fth-text);box-shadow:inset 0 0 0 1px var(--fth-accent-line)}
 #shotList .grp{font:500 10px var(--fth-mono);color:var(--fth-muted);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 4px}
 #shotList button{display:flex;align-items:center;gap:10px;width:100%;padding:8px;border:0;border-radius:9px;background:none;color:var(--fth-text);text-align:left;cursor:pointer;font:500 14px var(--fth-display)}
 #shotList button:hover{background:var(--fth-surface2)}
@@ -355,7 +359,7 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
   <div class="vsep"></div>
   <span class="slot" id="slotMode"></span>
   <span class="slot" id="slotDraw"></span>
-  <div id="extBadge">Adding to shot</div>
+  <div id="extBadge">Adding to <span class="term-l">shot</span></div>
   <div class="vsep"></div>
   <div id="zoomCtl">
     <button onclick="zoomBy(1/1.2)" title="Zoom out (−)" aria-label="Zoom out">−</button>
@@ -365,7 +369,7 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
   </div>
   <span class="tb-spacer"></span>
   <button class="fth-btn sm focus-only" onclick="toggleFocus(false)">✕ Exit focus</button>
-  <button class="fth-btn sm ghost" onclick="openSheet('list')">☰ Shots</button>
+  <button class="fth-btn sm ghost" onclick="openSheet('list')">☰ <span class="term-p">Shots</span></button>
   <button class="fth-btn sm ghost" onclick="openSheet('settings')">⚙ Settings</button>
   <button class="fth-btn sm ghost" onclick="openSheet('help')" aria-label="Help">?</button>
 </div>
@@ -374,8 +378,8 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
 <div id="nextBox" data-wide="slotNext" data-compact="nextSlotA">
   <label class="lbl" for="sceneInput">Scene</label>
   <input class="tb" id="sceneInput" placeholder="Auto" autocomplete="off" title="Leave blank to take the scene number from the script">
-  <label class="lbl" for="shotNumInput">Shot</label>
-  <input class="tb" id="shotNumInput" placeholder="Auto" autocomplete="off" title="Leave blank to letter the shots A, B, C… in each scene. Type one (e.g. 3A) and the next line gets 3B.">
+  <label class="lbl" for="shotNumInput"><span class="term">Shot</span></label>
+  <input class="tb" id="shotNumInput" placeholder="Auto" autocomplete="off">
   <label class="lbl" for="customInput">Custom</label>
   <input class="tb wide" id="customInput" placeholder="optional label" autocomplete="off">
 </div>
@@ -400,7 +404,7 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
 
 <nav id="dock" aria-label="Lining tools">
   <button class="dk" id="dockUndo" onclick="undoLast()" aria-label="Undo">↶</button>
-  <button class="dk" id="nextChip" onclick="openSheet('next')" aria-label="Next shot: scene, shot and colour"><span class="dot"></span><span class="txt">Next shot</span><span class="car">▾</span></button>
+  <button class="dk" id="nextChip" onclick="openSheet('next')" aria-label="Next line: scene, number and colour"><span class="dot"></span><span class="txt">Next shot</span><span class="car">▾</span></button>
   <span class="slot" id="dockMode"></span>
   <span class="slot" id="dockDraw"></span>
   <button class="dk" onclick="openSheet('more')" aria-label="More">⋯</button>
@@ -408,11 +412,11 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
 
 <!-- Edit panel -->
 <div id="editPanel">
-  <div class="ep-head"><h2>Edit Shot</h2><button class="ep-x" onclick="closeEditPanel()" aria-label="Close">✕</button></div>
+  <div class="ep-head"><h2>Edit <span class="term">Shot</span></h2><button class="ep-x" onclick="closeEditPanel()" aria-label="Close">✕</button></div>
   <div id="extendBanner"><span id="bannerTxt"></span><button class="fth-btn sm primary" onclick="endModes()">Done</button></div>
   <div class="ep-grid">
     <div><label for="ep_scene">Scene</label><input id="ep_scene" placeholder="e.g. 12" autocomplete="off"></div>
-    <div><label for="ep_shot">Shot</label><input id="ep_shot" placeholder="e.g. 3A" autocomplete="off"></div>
+    <div><label for="ep_shot"><span class="term">Shot</span></label><input id="ep_shot" placeholder="e.g. 3A" autocomplete="off"></div>
     <div class="span"><label for="ep_custom">Custom label</label><input id="ep_custom" placeholder="optional" autocomplete="off"></div>
   </div>
   <div><label>Colour</label><div class="ep-swatches" id="ep_swatches"></div></div>
@@ -422,7 +426,7 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
     <button class="ep-btn" id="splitBtn" onclick="setSplit(!splitMode)">✂ Split</button>
   </div>
   <div><label for="ep_notes">Annotations</label><textarea id="ep_notes" placeholder="Notes / feedback…"></textarea></div>
-  <button class="ep-btn" id="deleteShot" onclick="deleteSelected()">Delete Shot Line</button>
+  <button class="ep-btn" id="deleteShot" onclick="deleteSelected()">Delete Line</button>
   <button class="ep-btn" id="closeEdit" onclick="closeEditPanel()">Close</button>
 </div>
 
@@ -441,7 +445,7 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
     <button data-act="fit"><span class="i">↔</span>Fit page to width<span class="k mouse-only">0</span></button>
     <button data-act="focus"><span class="i">⛶</span><span id="focusLbl">Focus mode</span><span class="k mouse-only">F</span></button>
     <hr>
-    <button data-act="list"><span class="i">☰</span>Shot list</button>
+    <button data-act="list"><span class="i">☰</span><span class="term">Shot</span> list</button>
     <button data-act="settings"><span class="i">⚙</span>Settings</button>
     <button data-act="help"><span class="i">?</span>Help and legend</button>
     <hr>
@@ -450,10 +454,10 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
 </section>
 
 <section class="sheet" id="sh-next" hidden aria-label="Next shot">
-  <div class="sheet-h"><h2>Next shot</h2><button class="ep-x" onclick="closeSheets()" aria-label="Close">✕</button></div>
+  <div class="sheet-h"><h2>Next <span class="term-l">shot</span></h2><button class="ep-x" onclick="closeSheets()" aria-label="Close">✕</button></div>
   <div id="nextSlotA"></div>
   <div id="nextSlotB"></div>
-  <p class="hint">Leave Scene and Shot blank and they're filled in as you draw: the scene from the script's headings, the shot as A, B, C… Type a shot such as 3A and the next line becomes 3B.</p>
+  <p class="hint" id="nextHint"></p>
   <button class="fth-btn primary" style="width:100%;height:44px" onclick="closeSheets()">Done</button>
 </section>
 
@@ -463,8 +467,10 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
   <label class="opt"><input type="checkbox" id="optSnap"><span>Snap to lines of text<small>Lines start at the top of a line of the script and end at the bottom of one.</small></span></label>
   <label class="opt"><input type="checkbox" id="optApart"><span>Keep lines apart<small>A new line drawn on top of another moves over a little.</small></span></label>
   <div class="sec">Labels</div>
+  <div class="opt" style="cursor:default;align-items:center"><span style="flex:1">Number lines by<small id="termHint"></small></span>
+    <span id="termToggle" role="group" aria-label="Number lines by"><button type="button" data-term="slate">Slate</button><button type="button" data-term="shot">Shot</button></span></div>
   <label class="opt"><input type="checkbox" id="optAutoScene"><span>Scene numbers from the script<small>When Scene is blank, use the scene heading above the line.</small></span></label>
-  <label class="opt"><input type="checkbox" id="optAutoNum"><span>Number shots automatically<small>Blank Shot gives A, B, C… per scene; 3A moves on to 3B.</small></span></label>
+  <label class="opt"><input type="checkbox" id="optAutoNum"><span>Number <span class="term-lp">shots</span> automatically<small id="autoNumHint"></small></span></label>
   <div class="sec">Look</div>
   <div class="sl-row"><label class="lbl" for="weightSlider">Line weight</label><input type="range" id="weightSlider" min="1" max="10" value="1" step="0.5"><span id="weightVal">1</span></div>
   <div class="sl-row"><label class="lbl" for="zzSlider">Zig-zag size</label><input type="range" id="zzSlider" min="1" max="8" value="1" step="0.5"><span id="zzVal">1</span></div>
@@ -474,7 +480,7 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
 </section>
 
 <section class="sheet" id="sh-list" hidden aria-label="Shot list">
-  <div class="sheet-h"><h2>Shots</h2><button class="ep-x" onclick="closeSheets()" aria-label="Close">✕</button></div>
+  <div class="sheet-h"><h2><span class="term-p">Shots</span></h2><button class="ep-x" onclick="closeSheets()" aria-label="Close">✕</button></div>
   <div id="shotList"></div>
 </section>
 
@@ -494,7 +500,7 @@ kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-botto
     <li class="mouse-only">Drag down the script to draw a shot line. Hold Shift to flip On / Off Screen while drawing.</li>
     <li>Tap a line to edit it. Drag its square handles to change where it starts and ends; drag the line to move it.</li>
     <li><b>+ Add Segment</b> carries a shot on to another page. <b>✂ Split</b> cuts a line in two so part of it can be off screen.</li>
-    <li>Leave Scene and Shot blank to have them filled in for you.</li>
+    <li>Leave Scene and <span class="term">Shot</span> blank to have them filled in for you.</li>
   </ul>
   <div class="mouse-only">
     <div class="sec">Keyboard</div>
@@ -536,7 +542,7 @@ const COLOURS = [
 // ── Global visual settings (affect all lines) ─────────────────────────────────
 let G = { weight: 1, zzAmp: 1 };
 // ── Preferences (saved with the lines) ───────────────────────────────────────
-const settings = { snap:true, apart:true, autoScene:true, autoNum:true, wake:true, drawMode:'pan', penSeen:false, touchV:2 };
+const settings = { snap:true, apart:true, autoScene:true, autoNum:true, wake:true, drawMode:'pan', penSeen:false, touchV:2, term:'slate' };
 
 // ── App state ─────────────────────────────────────────────────────────────────
 let activeColour  = COLOURS[0].hex;
@@ -571,7 +577,7 @@ if (COARSE) document.body.classList.add('coarse');
 function shotLabel(sh){
   const p=[];
   if(sh.scene) p.push('Sc.'+sh.scene);
-  if(sh.shotNum) p.push(sh.shotNum);
+  if(sh.shotNum) p.push(settings.term==='slate' ? 'Sl.'+sh.shotNum : sh.shotNum);
   if(sh.custom) p.push(sh.custom);
   return p.join(' ')||'?';
 }
@@ -703,11 +709,30 @@ $('sh-more').addEventListener('click',e=>{
 
 // ── Settings ──────────────────────────────────────────────────────────────────
 const OPTS={optSnap:'snap',optApart:'apart',optAutoScene:'autoScene',optAutoNum:'autoNum',optWake:'wake'};
+/* Shot or Slate: the word used for each line's number, and how blank numbers are filled in */
+function applyTerm(){
+  const sl=settings.term==='slate', W=sl?'Slate':'Shot', w=sl?'slate':'shot';
+  document.querySelectorAll('.term').forEach(e=>e.textContent=W);
+  document.querySelectorAll('.term-l').forEach(e=>e.textContent=w);
+  document.querySelectorAll('.term-p').forEach(e=>e.textContent=W+'s');
+  document.querySelectorAll('.term-lp').forEach(e=>e.textContent=w+'s');
+  document.querySelectorAll('#termToggle button').forEach(b=>{ const on=b.dataset.term===settings.term; b.classList.toggle('on',on); b.setAttribute('aria-pressed',String(on)); });
+  const how = sl ? 'a blank Slate counts on from the highest so far (1, 2, 3…); type 14 and the next is 15'
+                 : 'a blank Shot is lettered A, B, C… in each scene; type 3A and the next is 3B';
+  $('termHint').textContent = sl ? 'Slates run on through the shoot (on set).' : 'Shots from a shot list (pre-production).';
+  $('autoNumHint').textContent = how.charAt(0).toUpperCase()+how.slice(1)+'.';
+  $('shotNumInput').title = 'Leave blank: '+how+'.';
+  $('ep_shot').placeholder = sl ? 'e.g. 14' : 'e.g. 3A';
+  $('nextHint').textContent = 'Leave Scene and '+W+' blank and they’re filled in as you draw: the scene from the script’s headings; '+how+'.';
+  $('nextChip').setAttribute('aria-label','Next '+w+': scene, '+w+' and colour');
+}
+$('termToggle').addEventListener('click',e=>{ const b=e.target.closest('button[data-term]'); if(!b) return; settings.term=b.dataset.term; applyTerm(); redrawAll(); });
 function syncSettingsUI(){
   for(const id in OPTS) $(id).checked=!!settings[OPTS[id]];
   $('weightSlider').value=G.weight; $('weightVal').textContent=G.weight;
   $('zzSlider').value=G.zzAmp; $('zzVal').textContent=G.zzAmp;
   setDrawMode(settings.drawMode,true);
+  applyTerm();
 }
 for(const id in OPTS) $(id).addEventListener('change',function(){ settings[OPTS[id]]=this.checked; if(id==='optWake') wake(); });
 $('weightSlider').addEventListener('input', function(){ G.weight=parseFloat(this.value); $('weightVal').textContent=this.value; redrawAll(); });
@@ -931,6 +956,11 @@ function nudgeX(pi,nx,t,b){
   return clamp(x,0.02,0.98);
 }
 function letterFor(n){ let s=''; n++; while(n>0){ const r=(n-1)%26; s=String.fromCharCode(65+r)+s; n=Math.floor((n-1)/26); } return s; }
+/* Slate numbers run on through the whole shoot: the next one after the highest so far */
+function nextSlate(){
+  let max=0; shots.forEach(s=>{ const m=/^\d+/.exec(s.shotNum||''); if(m) max=Math.max(max,+m[0]); });
+  return String(max+1);
+}
 function nextLetter(scene){
   const used=new Set(shots.filter(s=>(s.scene||'')===scene).map(s=>s.shotNum));
   let n=0; while(used.has(letterFor(n))) n++; return letterFor(n);
@@ -1171,7 +1201,7 @@ function onMouseUp(e){
   let shotNum=$('shotNumInput').value.trim();
   if(settings.autoNum){
     if(shotNum) $('shotNumInput').value=incShot(shotNum);
-    else shotNum=nextLetter(scene);
+    else shotNum = settings.term==='slate' ? nextSlate() : nextLetter(scene);
   }
   const sh={ id:newId(), colour:activeColour, scene, shotNum, custom:$('customInput').value.trim(),
     segments:[{pageIndex:pi,nx,ny1:t,ny2:b,zigzag:isZigzag()}] };
