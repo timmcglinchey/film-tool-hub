@@ -125,207 +125,399 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 <!--/fth-standalone-->
 
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Script Lining Tool</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font:13px/1.4 var(--fth-display);height:100vh;display:flex;flex-direction:column;overflow:hidden}
-#topbar{background:var(--fth-bg2);border-bottom:1px solid var(--fth-line);padding:8px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0}
+html,body{height:100%}
+body{font:13px/1.4 var(--fth-display);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+button{font-family:inherit;touch-action:manipulation}
+#fileInput{display:none}
 .vsep{width:1px;height:22px;background:var(--fth-line2);flex-shrink:0}
-label.lbl,#topbar label{font:500 10px/1 var(--fth-mono)!important;color:var(--fth-muted)!important;text-transform:uppercase;letter-spacing:.08em!important;white-space:nowrap}
+.lbl{font:500 10px/1 var(--fth-mono);color:var(--fth-muted);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
 input.tb{background:var(--fth-surface);border:1px solid var(--fth-line2);color:var(--fth-text);padding:5px 8px;border-radius:7px;font:13px var(--fth-display);width:70px;outline:none}
 input.tb:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
 input.tb.wide{width:120px}
-#fileInput{display:none}
-/* On Screen / Off Screen toggle (Shift temporarily flips it) */
+input.tb::placeholder{color:var(--fth-faint)}
+.slot{display:contents}
+body:not(.touch) .touch-only{display:none!important}
+body.coarse .mouse-only{display:none!important}
+body:not(.focus) .focus-only{display:none!important}
+
+/* ── header ── */
+.fth-head .ico{width:34px;padding:0;font-size:16px}
+body.focus .fth-head{display:none}
+#focusExit{display:none;position:fixed;top:8px;right:8px;z-index:160;height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--fth-line2);background:color-mix(in srgb,var(--fth-surface) 88%,transparent);color:var(--fth-text);font:600 12.5px var(--fth-display);box-shadow:var(--fth-shadow);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+
+/* ── toolbar (wider screens) ── */
+#topbar{background:var(--fth-bg2);border-bottom:1px solid var(--fth-line);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex-shrink:0}
+#nextBox{display:flex;align-items:center;gap:7px}
+.tb-spacer{flex:1}
 #modeToggle{display:inline-flex;border:1px solid var(--fth-line2);border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--fth-surface)}
-#modeToggle button{font:500 10px/1 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;padding:0 12px;height:30px;border:0;background:transparent;color:var(--fth-muted);cursor:pointer;white-space:nowrap;touch-action:manipulation}
+#modeToggle button{font:500 10px/1 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;padding:0 12px;height:30px;border:0;background:transparent;color:var(--fth-muted);cursor:pointer;white-space:nowrap}
 #modeToggle button+button{border-left:1px solid var(--fth-line2)}
 #modeToggle button:hover{color:var(--fth-text)}
 #modeToggle button.on{background:var(--fth-accent-soft);color:var(--fth-text);box-shadow:inset 0 0 0 1px var(--fth-accent-line)}
 #modeToggle button.off.on{background:rgba(212,143,0,.16);color:#d48f00;box-shadow:inset 0 0 0 1px rgba(212,143,0,.6)}
 :root[data-theme="light"] #modeToggle button.off.on{color:#8a5d00}
+#modeToggle .short{display:none}
+#drawModeBtn{height:30px;padding:0 11px;border-radius:8px;border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);font:600 12px var(--fth-display);display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+#drawModeBtn .i{font-size:15px}
 #extBadge{font:500 10px/1 var(--fth-mono);padding:6px 9px;border:1px solid #2aa3cf;border-radius:7px;color:#2aa3cf;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;display:none}
 #extBadge.on{display:inline-block}
-.swatch{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:transform .1s}
+.swatch{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:transform .1s;padding:0}
 .swatch:hover{transform:scale(1.2)}
 .swatch.active{border-color:var(--fth-text);transform:scale(1.2)}
 #swatches{display:flex;gap:5px;align-items:center}
-.sl-row{display:flex;align-items:center;gap:6px}
-.sl-row input[type=range]{width:74px;cursor:pointer}
-.sl-row span{font:500 11px var(--fth-mono);color:var(--fth-muted);width:34px;text-align:right}
-/* the script pages sit on a neutral backdrop like paper on a desk */
-#main{flex:1;overflow:auto;background:var(--fth-paper-backdrop);display:flex;justify-content:center;padding:28px}
-#pagesContainer{display:flex;flex-direction:column;align-items:center;gap:28px}
-#dropZone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--fth-muted);font-size:14px;text-align:center;padding:48px;border:2px dashed var(--fth-line2);border-radius:var(--fth-radius);background:var(--fth-bg);min-width:440px;min-height:280px}
+#zoomCtl{display:inline-flex;align-items:center;gap:2px}
+#zoomCtl button{height:28px;min-width:28px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--fth-muted);font:600 15px/1 var(--fth-display);cursor:pointer;padding:0 6px}
+#zoomCtl button:hover{background:var(--fth-surface2);border-color:var(--fth-line2);color:var(--fth-text)}
+#zoomCtl .fit{font:500 10px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase}
+#zoomVal{font:500 11px var(--fth-mono);color:var(--fth-muted);min-width:42px;text-align:center}
+
+/* ── the script ── */
+#main{flex:1;min-height:0;overflow:auto;background:var(--fth-paper-backdrop);padding:28px;position:relative;overscroll-behavior:contain}
+#main.has-pages{touch-action:none}
+#pagesContainer{width:max-content;min-width:100%;display:flex;flex-direction:column;align-items:center;gap:28px}
+#dropZone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--fth-muted);font-size:14px;text-align:center;padding:40px;border:2px dashed var(--fth-line2);border-radius:var(--fth-radius);background:var(--fth-bg);width:min(520px,100%);min-height:280px;margin:0 auto}
 #dropZone .ico{font-size:44px}
-#dropZone strong{color:var(--fth-accent-ink);font-weight:700}
-#dropZone div[style]{color:var(--fth-faint)!important;font:12px/1.8 var(--fth-mono)!important}
-#dropZone em[style]{color:var(--fth-accent-ink)!important;font-style:normal}
-.pw{position:relative;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55);flex-shrink:0;display:block}
-.pc{display:block}
-.ps{position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible;
-  /* touch: one finger or Apple Pencil draws, two fingers scroll (handled in script) */
-  touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-#editPanel{position:fixed;right:0;top:var(--fth-panel-top,120px);bottom:0;width:240px;background:var(--fth-surface);border-left:1px solid var(--fth-line);padding:16px 14px;display:none;flex-direction:column;gap:12px;z-index:200;overflow-y:auto;box-shadow:var(--fth-shadow)}
+#dropZone .hints{color:var(--fth-faint);font:12px/1.8 var(--fth-mono)}
+.pw{position:relative;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55);flex-shrink:0}
+.pc{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ps{position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+
+/* ── edit panel (side panel; a bottom sheet on phones) ── */
+#editPanel{position:fixed;right:0;top:var(--fth-panel-top,120px);bottom:0;width:260px;background:var(--fth-surface);border-left:1px solid var(--fth-line);padding:14px;display:none;flex-direction:column;gap:12px;z-index:200;overflow-y:auto;box-shadow:var(--fth-shadow)}
 #editPanel.open{display:flex}
+.ep-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 #editPanel h2{font:800 17px/1 var(--fth-display);font-variation-settings:"wdth" 74;text-transform:uppercase;letter-spacing:.02em;color:var(--fth-text)}
+.ep-x{width:32px;height:32px;border-radius:8px;border:1px solid transparent;background:transparent;color:var(--fth-muted);font-size:15px;cursor:pointer}
+.ep-x:hover{background:var(--fth-surface2);color:var(--fth-text)}
 #editPanel label{font:500 10px var(--fth-mono);color:var(--fth-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;display:block}
-#editPanel input,#ep_notes{background:var(--fth-bg2)!important;border:1px solid var(--fth-line2)!important;color:var(--fth-text)!important;padding:6px 8px!important;border-radius:7px;font:13px var(--fth-display)!important;width:100%;outline:none}
-#editPanel input:focus,#ep_notes:focus{border-color:var(--fth-accent)!important}
-.ep-swatches{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
-.ep-swatch{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+#editPanel input,#ep_notes{background:var(--fth-bg2);border:1px solid var(--fth-line2);color:var(--fth-text);padding:6px 8px;border-radius:7px;font:13px var(--fth-display);width:100%;outline:none}
+#ep_notes{height:80px;resize:vertical;line-height:1.45}
+#editPanel input:focus,#ep_notes:focus{border-color:var(--fth-accent)}
+.ep-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ep-grid .span{grid-column:1/-1}
+.ep-swatches{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px}
+.ep-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;padding:0}
 .ep-swatch.active{border-color:var(--fth-text)}
 .segs-list{display:flex;flex-direction:column;gap:5px;margin-top:3px}
-.seg-row{display:flex;align-items:center;gap:6px;font:11px var(--fth-mono);color:var(--fth-muted)}
-.seg-row .seg-type-btn{background:var(--fth-bg2);border:1px solid var(--fth-line2);color:var(--fth-muted);padding:3px 7px;border-radius:6px;font:500 10px var(--fth-mono);cursor:pointer;text-transform:uppercase}
-.seg-row .seg-type-btn.zzbtn{border-color:#d48f00;color:#d48f00}
-.seg-row .seg-del-btn{background:none;border:none;color:var(--fth-faint);font-size:12px;cursor:pointer;padding:0 3px;line-height:1}
-.seg-row .seg-del-btn:hover{color:var(--fth-bad)}
-#extendBanner{background:var(--fth-accent-soft);border:1px solid var(--fth-accent-line);color:var(--fth-text);font-size:12px;padding:8px 10px;border-radius:8px;line-height:1.5;display:none}
-#extendBanner.on{display:block}
-#addSegBtn,#deleteShot,#closeEdit{border-radius:8px;padding:7px 10px;font:600 12.5px var(--fth-display);cursor:pointer;text-align:center;border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text)}
-#addSegBtn{background:var(--fth-accent-soft);border-color:var(--fth-accent-line)}
-#addSegBtn:hover{filter:brightness(1.08)}
+.seg-row{display:flex;align-items:center;gap:8px;font:11px var(--fth-mono);color:var(--fth-muted)}
+.seg-row span{flex:1}
+.seg-type-btn{background:var(--fth-accent-soft);border:1px solid var(--fth-accent-line);color:var(--fth-text);padding:4px 9px;border-radius:6px;font:500 10px var(--fth-mono);cursor:pointer;text-transform:uppercase;letter-spacing:.06em;min-width:52px}
+.seg-type-btn.zzbtn{background:rgba(212,143,0,.14);border-color:#d48f00;color:#d48f00}
+.seg-del-btn{background:none;border:none;color:var(--fth-faint);font-size:12px;cursor:pointer;padding:2px 5px;line-height:1}
+.seg-del-btn:hover{color:var(--fth-bad)}
+#extendBanner{background:var(--fth-accent-soft);border:1px solid var(--fth-accent-line);color:var(--fth-text);font-size:12.5px;padding:8px 10px;border-radius:8px;line-height:1.45;display:none;align-items:center;gap:10px}
+#extendBanner.on{display:flex}
+#extendBanner span{flex:1}
+.ep-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ep-btn{border-radius:8px;padding:7px 10px;font:600 12.5px var(--fth-display);cursor:pointer;text-align:center;border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text)}
+.ep-btn:hover{border-color:var(--fth-line3)}
+.ep-btn.on{background:var(--fth-accent-soft);border-color:var(--fth-accent-line)}
 #deleteShot{color:var(--fth-bad)}
 #deleteShot:hover{border-color:var(--fth-bad)}
 #closeEdit{margin-top:auto}
-#closeEdit:hover{border-color:var(--fth-line3)}
-#legend{background:var(--fth-bg2);border-top:1px solid var(--fth-line);padding:7px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;flex-shrink:0;font:500 10.5px var(--fth-mono);color:var(--fth-muted)}
-#legend span{display:flex;align-items:center;gap:5px}
-#legend span[style],#legend [style*="color:#"]{color:var(--fth-faint)!important}
-/* bigger targets on touch screens (iPad etc.) */
+
+/* ── bottom dock (phones) ── */
+#dock{display:none}
+.dk{height:48px;min-width:48px;border-radius:12px;border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);font:600 20px/1 var(--fth-display);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;padding:0 8px}
+.dk:disabled{opacity:.4}
+#nextChip{flex:1;min-width:0;justify-content:flex-start;gap:8px;font:600 14px/1 var(--fth-display);padding:0 10px}
+#nextChip .dot{width:16px;height:16px;border-radius:50%;flex:none;box-shadow:0 0 0 2px var(--fth-surface),0 0 0 3px var(--fth-line3)}
+#nextChip .txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+#nextChip .car{color:var(--fth-muted);font-size:12px}
+
+/* ── sheets (floating panels; bottom sheets on phones) ── */
+#sheetBack{position:fixed;inset:0;z-index:290;background:transparent}
+#sheetBack[hidden],.sheet[hidden]{display:none}
+.sheet{position:fixed;z-index:300;top:calc(var(--fth-panel-top,110px) + 8px);right:12px;width:350px;max-width:calc(100% - 24px);max-height:calc(100% - var(--fth-panel-top,110px) - 20px);overflow:auto;background:var(--fth-surface);border:1px solid var(--fth-line2);border-radius:14px;box-shadow:var(--fth-shadow);padding:12px 16px 16px;overscroll-behavior:contain}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;position:sticky;top:-12px;background:var(--fth-surface);padding:12px 0 6px;margin-top:-12px;z-index:1}
+.sheet-h h2{font:800 17px/1 var(--fth-display);font-variation-settings:"wdth" 74;text-transform:uppercase;letter-spacing:.02em}
+.menu{display:flex;flex-direction:column;gap:2px}
+.menu button{display:flex;align-items:center;gap:12px;width:100%;min-height:42px;padding:8px 10px;border:0;border-radius:9px;background:none;color:var(--fth-text);font:500 14px var(--fth-display);text-align:left;cursor:pointer}
+.menu button:hover{background:var(--fth-surface2)}
+.menu button .i{width:22px;text-align:center;font-size:16px;flex:none}
+.menu button .k{margin-left:auto;font:500 10.5px var(--fth-mono);color:var(--fth-faint)}
+.menu button.danger{color:var(--fth-bad)}
+.menu hr{border:0;border-top:1px solid var(--fth-line);margin:4px 2px}
+.opt{display:flex;align-items:flex-start;gap:10px;padding:9px 2px;cursor:pointer;font-size:14px;line-height:1.35}
+.opt input{width:18px;height:18px;margin-top:1px;flex:none;cursor:pointer}
+.opt small{display:block;color:var(--fth-muted);font-size:12px;margin-top:2px}
+.sl-row{display:grid;grid-template-columns:96px 1fr 34px;align-items:center;gap:10px;padding:8px 2px}
+.sl-row input[type=range]{width:100%;cursor:pointer}
+.sl-row span{font:500 11px var(--fth-mono);color:var(--fth-muted);text-align:right}
+.sheet .hint{color:var(--fth-muted);font-size:12.5px;line-height:1.5;margin:10px 0}
+.sheet .sec{font:500 10px var(--fth-mono);color:var(--fth-muted);text-transform:uppercase;letter-spacing:.08em;margin:14px 0 4px}
+.sheet .sec:first-of-type{margin-top:4px}
+#sh-next #nextBox{display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center}
+#sh-next input.tb{width:100%}
+#sh-next #swatches{flex-wrap:wrap;gap:10px;margin-top:14px}
+.legend{display:grid;grid-template-columns:28px 1fr;gap:8px 10px;align-items:center;font-size:13.5px}
+.help-list{padding-left:18px;color:var(--fth-text);font-size:13.5px;line-height:1.55}
+.help-list li{margin-bottom:5px}
+kbd{font:500 11px var(--fth-mono);border:1px solid var(--fth-line2);border-bottom-width:2px;border-radius:5px;padding:1px 5px;background:var(--fth-bg2)}
+#shotList .grp{font:500 10px var(--fth-mono);color:var(--fth-muted);text-transform:uppercase;letter-spacing:.08em;margin:12px 0 4px}
+#shotList button{display:flex;align-items:center;gap:10px;width:100%;padding:8px;border:0;border-radius:9px;background:none;color:var(--fth-text);text-align:left;cursor:pointer;font:500 14px var(--fth-display)}
+#shotList button:hover{background:var(--fth-surface2)}
+#shotList .dot{width:12px;height:12px;border-radius:50%;flex:none}
+#shotList .meta{margin-left:auto;font:500 10.5px var(--fth-mono);color:var(--fth-faint);white-space:nowrap}
+#shotList .nt{display:block;color:var(--fth-muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:210px}
+#shotList .empty{color:var(--fth-muted);font-size:13px}
+
+/* ── little pop-up after drawing ── */
+#chip{position:fixed;left:50%;bottom:calc(var(--dock-h,0px) + 22px);transform:translate(-50%,12px);opacity:0;pointer-events:none;z-index:150;display:flex;align-items:center;gap:10px;background:var(--fth-surface2);border:1px solid var(--fth-line2);border-radius:999px;padding:5px 5px 5px 14px;box-shadow:var(--fth-shadow);transition:opacity .2s,transform .2s;font:600 13.5px var(--fth-display);color:var(--fth-text);max-width:calc(100% - 24px);white-space:nowrap}
+#chip.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+#chip .dot{width:12px;height:12px;border-radius:50%;flex:none}
+#chip .txt{overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+#chip button{height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--fth-accent-line);background:var(--fth-accent-soft);color:var(--fth-text);font:600 12.5px var(--fth-display);cursor:pointer}
+.fth-toast{bottom:calc(var(--dock-h,0px) + 70px)}
+#exportOverlay{position:fixed;inset:0;background:color-mix(in srgb,var(--fth-bg) 90%,transparent);display:none;align-items:center;justify-content:center;z-index:999;font:600 14px var(--fth-mono);color:var(--fth-text);letter-spacing:.12em;text-transform:uppercase}
+
+/* bigger targets on touch screens (iPad etc.); 16px text stops iPhones zooming in on fields */
 @media (pointer:coarse){
   .swatch{width:28px;height:28px}
   #swatches{gap:8px}
-  .sl-row input[type=range]{width:110px;height:28px}
-  #modeToggle button{height:38px;padding:0 16px;font-size:11px}
-  input.tb{padding:9px 10px;font-size:15px}
-  #topbar{gap:12px;padding:10px 16px}
-  #showNotes{width:20px;height:20px}
-  .ep-swatch{width:30px;height:30px}
-  .ep-swatches{gap:8px}
-  .seg-row .seg-type-btn{padding:8px 12px;font-size:11px}
-  .seg-row .seg-del-btn{font-size:18px;padding:6px 10px}
-  #addSegBtn,#deleteShot,#closeEdit{padding:12px 10px;font-size:14px}
-  #editPanel{width:280px}
-  #editPanel input,#ep_notes{font-size:16px!important}
+  #modeToggle button,#drawModeBtn{height:40px;padding:0 15px;font-size:11px}
+  #drawModeBtn{font-size:13px}
+  input.tb,#editPanel input,#ep_notes{font-size:16px}
+  input.tb{padding:8px 10px}
+  #topbar{gap:12px;padding:10px 14px}
+  #zoomCtl button{height:38px;min-width:38px}
+  .ep-swatch{width:32px;height:32px}
+  .ep-swatches{gap:9px}
+  .seg-type-btn{padding:9px 12px;font-size:11px;min-width:64px}
+  .seg-del-btn{font-size:18px;padding:6px 10px}
+  .ep-btn{padding:12px 10px;font-size:14px}
+  #editPanel{width:300px}
+  .menu button{min-height:50px;font-size:15px}
+  .opt input{width:22px;height:22px}
 }
-#exportOverlay{position:fixed;inset:0;background:color-mix(in srgb,var(--fth-bg) 90%,transparent);display:none;align-items:center;justify-content:center;z-index:999;font:600 14px var(--fth-mono);color:var(--fth-text);letter-spacing:.12em;text-transform:uppercase}
+
+/* ── phones and narrow windows ── */
+@media (max-width:899px){
+  .fth-head{padding:6px 10px;gap:6px;flex-wrap:nowrap}
+  .fth-head .fth-eyebrow{display:none}
+  .fth-head .fth-title{font-size:18px}
+  .fth-head .wide-only{display:none!important}
+  .fth-head .ico{width:40px;height:40px;font-size:18px}
+  #topbar{display:none}
+  body.has-pdf #dock{display:flex;flex-shrink:0;gap:6px;align-items:center;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:var(--fth-bg2);border-top:1px solid var(--fth-line)}
+  #dock #modeToggle{border-radius:12px}
+  #dock #modeToggle button{height:48px;padding:0 12px;font-size:12px;font-weight:600}
+  #dock #modeToggle .long{display:none}
+  #dock #modeToggle .short{display:inline}
+  #dock #drawModeBtn{height:48px;width:48px;padding:0;justify-content:center;border-radius:12px}
+  #dock #drawModeBtn .t{display:none}
+  #dock #drawModeBtn .i{font-size:20px}
+  #main{padding:10px}
+  #pagesContainer{gap:12px}
+  #dropZone{padding:28px 18px;min-height:240px}
+  body.focus #focusExit{display:inline-flex;align-items:center}
+  #editPanel{top:auto;left:0;right:0;bottom:0;width:auto;max-height:58%;border-left:0;border-top:1px solid var(--fth-line2);border-radius:16px 16px 0 0;padding:10px 14px calc(14px + env(safe-area-inset-bottom))}
+  #editPanel.mini{gap:0}
+  #editPanel.mini > :not(#extendBanner){display:none}
+  .ep-grid{grid-template-columns:1fr 1fr 1.4fr}
+  .ep-grid .span{grid-column:auto}
+  #closeEdit{display:none}
+  #sheetBack{background:rgba(0,0,0,.45)}
+  .fth-toast{top:10px;bottom:auto}
+  .sheet{top:auto;left:0;right:0;bottom:0;width:auto;max-width:none;max-height:82%;border-radius:18px 18px 0 0;padding:12px 16px calc(18px + env(safe-area-inset-bottom));border-bottom:0}
+}
+@media (prefers-reduced-motion:reduce){#chip{transition:none}}
 </style>
 </head>
 <body>
 
 <header class="fth-head">
   <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>02 · Prep</span><h1 class="fth-title">Script Lining</h1></div>
-  
   <div class="fth-actions">
-    <button class="fth-btn ghost" onclick="undoLast()">↩ Undo</button>
-    <button class="fth-btn ghost danger" onclick="clearAll()">✕ Clear</button>
-    <span class="fth-vsep"></span>
-    <button class="fth-btn" id="uploadBtn" onclick="document.getElementById('fileInput').click()">↑ Upload PDF</button>
-    <button class="fth-btn" id="docBtn" data-fth-doc hidden></button>
-    <button class="fth-btn primary" id="exportBtn" onclick="exportPDF()">⬇ Export PDF</button>
+    <button class="fth-btn ghost wide-only" id="undoBtn" onclick="undoLast()" title="Undo (Ctrl+Z)">↩ Undo</button>
+    <button class="fth-btn ghost wide-only" id="redoBtn" onclick="redoLast()" title="Redo (Ctrl+Shift+Z)">↪ Redo</button>
+    <span class="fth-vsep wide-only"></span>
+    <button class="fth-btn wide-only" id="uploadBtn" onclick="pickFile()">↑ Upload PDF</button>
+    <button class="fth-btn wide-only" id="docBtn" data-fth-doc hidden></button>
+    <button class="fth-btn primary wide-only" id="exportBtn" onclick="exportPDF()">⬇ Export PDF</button>
+    <button class="fth-btn ghost ico" id="focusBtn" onclick="toggleFocus()" title="Focus mode: hide everything but the script and the tools you need (F)" aria-label="Focus mode">⛶</button>
+    <button class="fth-btn ghost ico" id="moreBtn" onclick="openSheet('more')" title="More" aria-label="More">⋯</button>
   </div>
 </header>
+<button id="focusExit" onclick="toggleFocus(false)">✕ Exit focus</button>
 <input type="file" id="fileInput" accept="application/pdf">
+
 <div id="topbar">
-  <label class="lbl">Scene</label>
-  <input class="tb" id="sceneInput" placeholder="e.g. 12">
-  <label class="lbl">Shot</label>
-  <input class="tb" id="shotNumInput" placeholder="e.g. 3A">
-  <label class="lbl">Custom</label>
-  <input class="tb wide" id="customInput" placeholder="optional label">
+  <span class="slot" id="slotNext"></span>
   <div class="vsep"></div>
-  <div id="swatches"></div>
+  <span class="slot" id="slotSw"></span>
   <div class="vsep"></div>
-  <div id="modeToggle" role="group" aria-label="Line type" title="On Screen = straight line, Off Screen = zig-zag. Holding Shift while drawing flips it.">
-    <button type="button" class="onscr on" aria-pressed="true" onclick="setOffScreen(false)">On Screen</button>
-    <button type="button" class="off" aria-pressed="false" onclick="setOffScreen(true)">Off Screen</button>
-  </div>
-  <div id="extBadge">Extend mode</div>
+  <span class="slot" id="slotMode"></span>
+  <span class="slot" id="slotDraw"></span>
+  <div id="extBadge">Adding to shot</div>
   <div class="vsep"></div>
-  <!-- Global visual sliders -->
-  <div class="sl-row">
-    <label class="lbl">Weight</label>
-    <input type="range" id="weightSlider" min="1" max="10" value="1" step="0.5">
-    <span id="weightVal">1</span>
-  </div>
-  <div class="sl-row">
-    <label class="lbl">ZZ Amp</label>
-    <input type="range" id="zzSlider" min="1" max="8" value="1" step="0.5">
-    <span id="zzVal">1</span>
-  </div>
-  <div class="sl-row">
-    <label class="lbl">Zoom</label>
-    <input type="range" id="zoomSlider" min="50" max="200" value="50" step="5">
+  <div id="zoomCtl">
+    <button onclick="zoomBy(1/1.2)" title="Zoom out (−)" aria-label="Zoom out">−</button>
     <span id="zoomVal">50%</span>
+    <button onclick="zoomBy(1.2)" title="Zoom in (+)" aria-label="Zoom in">+</button>
+    <button class="fit" onclick="fitWidth()" title="Fit the page to the width (0)">Fit</button>
   </div>
-  <div class="vsep"></div>
-  <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.07em;white-space:nowrap">
-    <input type="checkbox" id="showNotes" style="cursor:pointer">
-    Show Notes
-  </label>
+  <span class="tb-spacer"></span>
+  <button class="fth-btn sm focus-only" onclick="toggleFocus(false)">✕ Exit focus</button>
+  <button class="fth-btn sm ghost" onclick="openSheet('list')">☰ Shots</button>
+  <button class="fth-btn sm ghost" onclick="openSheet('settings')">⚙ Settings</button>
+  <button class="fth-btn sm ghost" onclick="openSheet('help')" aria-label="Help">?</button>
 </div>
+
+<!-- These move between the toolbar (wider screens) and the dock / "Next shot" sheet (phones) -->
+<div id="nextBox" data-wide="slotNext" data-compact="nextSlotA">
+  <label class="lbl" for="sceneInput">Scene</label>
+  <input class="tb" id="sceneInput" placeholder="Auto" autocomplete="off" title="Leave blank to take the scene number from the script">
+  <label class="lbl" for="shotNumInput">Shot</label>
+  <input class="tb" id="shotNumInput" placeholder="Auto" autocomplete="off" title="Leave blank to letter the shots A, B, C… in each scene. Type one (e.g. 3A) and the next line gets 3B.">
+  <label class="lbl" for="customInput">Custom</label>
+  <input class="tb wide" id="customInput" placeholder="optional label" autocomplete="off">
+</div>
+<div id="swatches" data-wide="slotSw" data-compact="nextSlotB"></div>
+<div id="modeToggle" role="group" aria-label="Line type" data-wide="slotMode" data-compact="dockMode" title="On Screen = straight line, Off Screen = zig-zag. Holding Shift while drawing flips it. (O)">
+  <button type="button" class="onscr on" aria-pressed="true" onclick="setOffScreen(false)"><span class="long">On Screen</span><span class="short">On</span></button>
+  <button type="button" class="off" aria-pressed="false" onclick="setOffScreen(true)"><span class="long">Off Screen</span><span class="short">Off</span></button>
+</div>
+<button id="drawModeBtn" class="touch-only" data-wide="slotDraw" data-compact="dockDraw" onclick="toggleDrawMode()"><span class="i">✏️</span><span class="t">Finger draws</span></button>
 
 <div id="main">
   <div id="pagesContainer">
     <div id="dropZone">
       <div class="ico">🎬</div>
       <div>Upload a script PDF to begin lining.</div>
-      <div><strong>Click "Upload PDF"</strong> above.</div>
-      <div style="font-size:10px;margin-top:8px;color:#2e2e2e;line-height:1.8">
-        Drag vertically → new shot line &nbsp;|&nbsp; On Screen / Off Screen → straight or zig-zag (Shift flips it)<br>
-        On a touch screen: one finger or pencil draws, two fingers scroll<br>
-        Click a line → select &amp; edit &nbsp;|&nbsp; Drag handles → resize<br>
-        Select a shot, then click <em style="color:#4cc9f0">+ Add Segment</em> → extend it
-      </div>
+      <button class="fth-btn primary" onclick="pickFile()">↑ Upload PDF</button>
+      <div class="hints mouse-only">Drag down the script to draw a shot line · Click a line to edit it<br>On Screen / Off Screen for straight or zig-zag (Shift flips it)</div>
+      <div class="hints touch-only">Draw down the script with a finger or Apple Pencil<br>Two fingers scroll and pinch to zoom · Tap a line to edit it</div>
     </div>
   </div>
 </div>
 
+<nav id="dock" aria-label="Lining tools">
+  <button class="dk" id="dockUndo" onclick="undoLast()" aria-label="Undo">↶</button>
+  <button class="dk" id="nextChip" onclick="openSheet('next')" aria-label="Next shot: scene, shot and colour"><span class="dot"></span><span class="txt">Next shot</span><span class="car">▾</span></button>
+  <span class="slot" id="dockMode"></span>
+  <span class="slot" id="dockDraw"></span>
+  <button class="dk" onclick="openSheet('more')" aria-label="More">⋯</button>
+</nav>
+
 <!-- Edit panel -->
 <div id="editPanel">
-  <h2>Edit Shot</h2>
-  <div><label>Scene</label><input id="ep_scene" placeholder="e.g. 12"></div>
-  <div><label>Shot</label><input id="ep_shot" placeholder="e.g. 3A"></div>
-  <div><label>Custom label</label><input id="ep_custom" placeholder="optional"></div>
-  <div>
-    <label>Colour</label>
-    <div class="ep-swatches" id="ep_swatches"></div>
+  <div class="ep-head"><h2>Edit Shot</h2><button class="ep-x" onclick="closeEditPanel()" aria-label="Close">✕</button></div>
+  <div id="extendBanner"><span id="bannerTxt"></span><button class="fth-btn sm primary" onclick="endModes()">Done</button></div>
+  <div class="ep-grid">
+    <div><label for="ep_scene">Scene</label><input id="ep_scene" placeholder="e.g. 12" autocomplete="off"></div>
+    <div><label for="ep_shot">Shot</label><input id="ep_shot" placeholder="e.g. 3A" autocomplete="off"></div>
+    <div class="span"><label for="ep_custom">Custom label</label><input id="ep_custom" placeholder="optional" autocomplete="off"></div>
   </div>
-  <div>
-    <label>Annotations</label>
-    <textarea id="ep_notes" placeholder="Notes / feedback…" style="background:#1a1a1a;border:1px solid #252525;color:#ddd;padding:5px 6px;font-family:'Courier New',monospace;font-size:11px;width:100%;height:90px;resize:vertical;line-height:1.5;letter-spacing:.02em"></textarea>
+  <div><label>Colour</label><div class="ep-swatches" id="ep_swatches"></div></div>
+  <div><label>Segments</label><div class="segs-list" id="ep_segs"></div></div>
+  <div class="ep-actions">
+    <button class="ep-btn" id="addSegBtn" onclick="setExtend(!extendMode)">+ Add Segment</button>
+    <button class="ep-btn" id="splitBtn" onclick="setSplit(!splitMode)">✂ Split</button>
   </div>
-  <div>
-    <label>Segments</label>
-    <div class="segs-list" id="ep_segs"></div>
-  </div>
-  <!-- Extend mode -->
-  <div id="extendBanner" class="">
-    Draw on the script to add a segment to this shot. Use On Screen / Off Screen (or hold Shift) for straight or zig-zag. Click <em>Done Adding</em> when finished.
-  </div>
-  <button id="addSegBtn" onclick="toggleExtendMode()">+ Add Segment</button>
-  <button id="deleteShot" onclick="deleteSelected()">Delete Shot Line</button>
-  <button id="closeEdit" onclick="closeEditPanel()">Close</button>
+  <div><label for="ep_notes">Annotations</label><textarea id="ep_notes" placeholder="Notes / feedback…"></textarea></div>
+  <button class="ep-btn" id="deleteShot" onclick="deleteSelected()">Delete Shot Line</button>
+  <button class="ep-btn" id="closeEdit" onclick="closeEditPanel()">Close</button>
 </div>
 
-<div id="legend">
-  <strong style="color:#555;text-transform:uppercase;letter-spacing:.08em">Legend:</strong>
-  <span><svg width="12" height="12"><circle cx="6" cy="6" r="3.5" fill="#f0e68c"/></svg> Same-page start/end</span>
-  <span><svg width="12" height="12"><polygon points="6,11 1,2 11,2" fill="#f0e68c"/></svg> Continues across page</span>
-  <span><svg width="12" height="12"><line x1="6" y1="1" x2="6" y2="11" stroke="#f0e68c" stroke-width="1.5"/></svg> On-screen (straight)</span>
-  <span><svg width="20" height="12"><polyline points="2,1 8,4 2,8 8,11" stroke="#f0e68c" stroke-width="1.5" fill="none"/></svg> Off-screen (zig-zag)</span>
-  <span style="margin-left:auto;color:#222;font-size:9px">Shift flips On/Off Screen &nbsp;|&nbsp; two fingers=scroll &nbsp;|&nbsp; tap/click=select &nbsp;|&nbsp; handles=resize &nbsp;|&nbsp; + Add Segment=extend</span>
-</div>
+<!-- Sheets -->
+<div id="sheetBack" hidden onclick="closeSheets()"></div>
 
+<section class="sheet" id="sh-more" hidden aria-label="More">
+  <div class="sheet-h"><h2>More</h2><button class="ep-x" onclick="closeSheets()" aria-label="Close">✕</button></div>
+  <div class="menu">
+    <button data-act="upload"><span class="i">↑</span>Upload a script PDF</button>
+    <button data-act="doc" id="moreDoc" hidden><span class="i">🗂</span>Save to Documentation</button>
+    <button data-act="export"><span class="i">⬇</span>Export lined PDF</button>
+    <hr>
+    <button data-act="undo"><span class="i">↶</span>Undo<span class="k mouse-only">Ctrl Z</span></button>
+    <button data-act="redo"><span class="i">↷</span>Redo<span class="k mouse-only">Ctrl ⇧ Z</span></button>
+    <button data-act="fit"><span class="i">↔</span>Fit page to width<span class="k mouse-only">0</span></button>
+    <button data-act="focus"><span class="i">⛶</span><span id="focusLbl">Focus mode</span><span class="k mouse-only">F</span></button>
+    <hr>
+    <button data-act="list"><span class="i">☰</span>Shot list</button>
+    <button data-act="settings"><span class="i">⚙</span>Settings</button>
+    <button data-act="help"><span class="i">?</span>Help and legend</button>
+    <hr>
+    <button data-act="clear" class="danger"><span class="i">✕</span>Clear all lines</button>
+  </div>
+</section>
+
+<section class="sheet" id="sh-next" hidden aria-label="Next shot">
+  <div class="sheet-h"><h2>Next shot</h2><button class="ep-x" onclick="closeSheets()" aria-label="Close">✕</button></div>
+  <div id="nextSlotA"></div>
+  <div id="nextSlotB"></div>
+  <p class="hint">Leave Scene and Shot blank and they're filled in as you draw: the scene from the script's headings, the shot as A, B, C… Type a shot such as 3A and the next line becomes 3B.</p>
+  <button class="fth-btn primary" style="width:100%;height:44px" onclick="closeSheets()">Done</button>
+</section>
+
+<section class="sheet" id="sh-settings" hidden aria-label="Settings">
+  <div class="sheet-h"><h2>Settings</h2><button class="ep-x" onclick="closeSheets()" aria-label="Close">✕</button></div>
+  <div class="sec">Drawing</div>
+  <label class="opt"><input type="checkbox" id="optSnap"><span>Snap to lines of text<small>Lines start at the top of a line of the script and end at the bottom of one.</small></span></label>
+  <label class="opt"><input type="checkbox" id="optApart"><span>Keep lines apart<small>A new line drawn on top of another moves over a little.</small></span></label>
+  <div class="sec">Labels</div>
+  <label class="opt"><input type="checkbox" id="optAutoScene"><span>Scene numbers from the script<small>When Scene is blank, use the scene heading above the line.</small></span></label>
+  <label class="opt"><input type="checkbox" id="optAutoNum"><span>Number shots automatically<small>Blank Shot gives A, B, C… per scene; 3A moves on to 3B.</small></span></label>
+  <div class="sec">Look</div>
+  <div class="sl-row"><label class="lbl" for="weightSlider">Line weight</label><input type="range" id="weightSlider" min="1" max="10" value="1" step="0.5"><span id="weightVal">1</span></div>
+  <div class="sl-row"><label class="lbl" for="zzSlider">Zig-zag size</label><input type="range" id="zzSlider" min="1" max="8" value="1" step="0.5"><span id="zzVal">1</span></div>
+  <label class="opt"><input type="checkbox" id="showNotes"><span>Show notes on the script<small>Also decides whether notes go into the exported PDF.</small></span></label>
+  <div class="sec">On set</div>
+  <label class="opt"><input type="checkbox" id="optWake"><span>Keep the screen awake<small>While a script is open, so the phone or tablet doesn't lock mid-take.</small></span></label>
+</section>
+
+<section class="sheet" id="sh-list" hidden aria-label="Shot list">
+  <div class="sheet-h"><h2>Shots</h2><button class="ep-x" onclick="closeSheets()" aria-label="Close">✕</button></div>
+  <div id="shotList"></div>
+</section>
+
+<section class="sheet" id="sh-help" hidden aria-label="Help">
+  <div class="sheet-h"><h2>Help</h2><button class="ep-x" onclick="closeSheets()" aria-label="Close">✕</button></div>
+  <div class="sec">Legend</div>
+  <div class="legend">
+    <svg width="20" height="20"><circle cx="10" cy="10" r="4" fill="#e9c46a"/></svg><span>Shot starts or ends here</span>
+    <svg width="20" height="20"><polygon points="10,16 4,5 16,5" fill="#e9c46a"/></svg><span>Shot carries on over the page</span>
+    <svg width="20" height="20"><line x1="10" y1="2" x2="10" y2="18" stroke="#e9c46a" stroke-width="2"/></svg><span>On screen (straight line)</span>
+    <svg width="20" height="20"><polyline points="10,2 15,6 5,10 15,14 10,18" stroke="#e9c46a" stroke-width="2" fill="none"/></svg><span>Off screen (zig-zag)</span>
+  </div>
+  <div class="sec">Drawing</div>
+  <ul class="help-list">
+    <li class="touch-only">Draw down the script with one finger or an Apple Pencil. Two fingers scroll; pinch to zoom.</li>
+    <li class="touch-only">✏️ / ✋ switches whether one finger draws or scrolls. Using an Apple Pencil switches fingers to scrolling for you.</li>
+    <li class="mouse-only">Drag down the script to draw a shot line. Hold Shift to flip On / Off Screen while drawing.</li>
+    <li>Tap a line to edit it. Drag its square handles to change where it starts and ends; drag the line to move it.</li>
+    <li><b>+ Add Segment</b> carries a shot on to another page. <b>✂ Split</b> cuts a line in two so part of it can be off screen.</li>
+    <li>Leave Scene and Shot blank to have them filled in for you.</li>
+  </ul>
+  <div class="mouse-only">
+    <div class="sec">Keyboard</div>
+    <ul class="help-list">
+      <li><kbd>Ctrl</kbd> <kbd>Z</kbd> undo · <kbd>Ctrl</kbd> <kbd>⇧</kbd> <kbd>Z</kbd> redo</li>
+      <li><kbd>O</kbd> On / Off Screen · <kbd>1</kbd>–<kbd>8</kbd> colour</li>
+      <li><kbd>Delete</kbd> delete the selected line · <kbd>E</kbd> add a segment</li>
+      <li><kbd>+</kbd> <kbd>−</kbd> zoom · <kbd>0</kbd> fit to width · <kbd>F</kbd> focus mode · <kbd>Esc</kbd> close</li>
+    </ul>
+  </div>
+</section>
+
+<div id="chip"><span class="dot"></span><span class="txt"></span><button type="button"></button></div>
+<div class="fth-toast" id="toast" role="status"></div>
 <div id="exportOverlay">Exporting… please wait</div>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc =
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc =
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs){ const n=document.createElementNS(NS,tag); for(const k in attrs) n.setAttribute(k,attrs[k]); return n; }
 
 // ── Fixed SVG logical space (viewBox). Normalised coords 0..1 map to 0..VB_W / 0..VB_H.
 const VB_W = 1000, VB_H = 1414;
@@ -343,163 +535,528 @@ const COLOURS = [
 
 // ── Global visual settings (affect all lines) ─────────────────────────────────
 let G = { weight: 1, zzAmp: 1 };
+// ── Preferences (saved with the lines) ───────────────────────────────────────
+const settings = { snap:true, apart:true, autoScene:true, autoNum:true, wake:true, drawMode:'draw', penSeen:false };
 
 // ── App state ─────────────────────────────────────────────────────────────────
 let activeColour  = COLOURS[0].hex;
-let renderScale   = 1.6 * 0.5; // zoom slider starts at its minimum (50%)
+const scaleOf     = pct => 1.6 * pct / 100;   // zoom % → pdf.js scale (100% = the old full size)
+let zoomPct       = 50, zoomFit = false;
+let renderScale   = scaleOf(zoomPct);
 let pdfDoc        = null;
 let origFileName  = 'script';
-let pageWrappers  = [];   // [{wrap, canvas, svg}]
-let shots         = [];   // Shot[]
+let pageWrappers  = [];   // [{wrap, canvas, svg, pageIndex, baseW, baseH}]
+let shots         = [];   // Shot[]  {id, colour, scene, shotNum, custom, notes, segments:[{pageIndex,nx,ny1,ny2,zigzag}]}
 let selectedId    = null;
-let extendMode    = false; // when true, next draw adds a segment to selectedId
+let extendMode    = false; // next draw adds a segment to the selected shot
+let splitMode     = false; // next tap on the selected line splits it there
 let shiftHeld     = false;
-let offScreen     = false; // On Screen (straight) / Off Screen (zig-zag) toggle; Shift flips it while held
+let offScreen     = false; // On Screen (straight) / Off Screen (zig-zag); Shift flips it while held
 const isZigzag    = () => offScreen !== shiftHeld;
 const COARSE      = matchMedia('(pointer:coarse)').matches; // touch screen: larger grab targets
-let drawActive    = false;
-let drawState     = null; // {shotId, pageIndex, nx, startNY}
-let dragActive    = false;
-let dragState     = null; // {shotId, segIdx, handle}
-let moveActive    = false;
-let moveState     = null; // {shotId, startNX, startNY, pageIndex, origSegs}
+const MQ          = matchMedia('(max-width:899px)');       // phones / narrow windows: dock + bottom sheets
+let compact       = MQ.matches;
+let drawActive=false, drawState=null, dragActive=false, dragState=null, moveActive=false, moveState=null;
 let previewGroup  = null;
 let listenersOn   = false;
+let textLines     = [];   // per page: [{top, bot}] lines of text, for snapping
+let headings      = [];   // [{page, ny, num}] scene headings found in the script
+let undoStack = [], redoStack = [];
+let exporting = false;
+
+if (COARSE || navigator.maxTouchPoints > 0) document.body.classList.add('touch');
+if (COARSE) document.body.classList.add('coarse');
+
+// ── Small helpers ─────────────────────────────────────────────────────────────
+function shotLabel(sh){
+  const p=[];
+  if(sh.scene) p.push('Sc.'+sh.scene);
+  if(sh.shotNum) p.push(sh.shotNum);
+  if(sh.custom) p.push(sh.custom);
+  return p.join(' ')||'?';
+}
+function getShot(id){ return shots.find(s=>s.id===id); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function newId(){ return 'S'+Date.now()+Math.random().toString(36).slice(2,5); }
+function sortSegs(sh){ sh.segments.sort((a,b)=>a.pageIndex-b.pageIndex||a.ny1-b.ny1); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+let toastT=0;
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),3200); }
+let chipT=0;
+function showChip(o){
+  const c=$('chip');
+  c.querySelector('.dot').style.background=o.dot||'transparent';
+  c.querySelector('.dot').style.display=o.dot?'':'none';
+  const t=c.querySelector('.txt'); t.textContent=o.text; t.onclick=o.onText||null;
+  const b=c.querySelector('button'); b.textContent=o.btn; b.onclick=()=>{ hideChip(); o.onBtn(); };
+  c.classList.add('show'); clearTimeout(chipT); chipT=setTimeout(hideChip,o.ms||4000);
+}
+function hideChip(){ $('chip').classList.remove('show'); }
+
+// ── Undo / redo (whole-state snapshots) ───────────────────────────────────────
+const snapshot = () => JSON.stringify(shots);
+function pushPre(s){ undoStack.push(s); if(undoStack.length>150) undoStack.shift(); redoStack=[]; updateUndoUI(); }
+function pushHistory(){ pushPre(snapshot()); }
+function restore(s){
+  shots=JSON.parse(s);
+  if(selectedId && !getShot(selectedId)) closeEditPanel();
+  else if(selectedId) fillEdit(getShot(selectedId));
+  redrawAll(); renderList();
+}
+function undoLast(){
+  if(!undoStack.length){ toast('Nothing to undo'); return; }
+  redoStack.push(snapshot()); restore(undoStack.pop()); updateUndoUI();
+}
+function redoLast(){
+  if(!redoStack.length){ toast('Nothing to redo'); return; }
+  undoStack.push(snapshot()); restore(redoStack.pop()); updateUndoUI();
+}
+function updateUndoUI(){
+  $('undoBtn').disabled=$('dockUndo').disabled=!undoStack.length;
+  $('redoBtn').disabled=!redoStack.length;
+}
 
 // ── Swatches ──────────────────────────────────────────────────────────────────
 (function buildSwatches(){
-  const tb = document.getElementById('swatches');
-  const ep = document.getElementById('ep_swatches');
-  COLOURS.forEach(col => {
-    const s = document.createElement('div');
-    s.className = 'swatch' + (col.hex === activeColour ? ' active' : '');
-    s.style.background = col.hex; s.title = col.name;
-    s.onclick = () => { document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));
-      s.classList.add('active'); activeColour = col.hex; };
+  const tb = $('swatches'), ep = $('ep_swatches');
+  COLOURS.forEach((col,i) => {
+    const s = document.createElement('button');
+    s.type='button'; s.className = 'swatch'; s.dataset.hex=col.hex;
+    s.style.background = col.hex; s.title = col.name+' ('+(i+1)+')'; s.setAttribute('aria-label',col.name);
+    s.onclick = () => setColour(col.hex);
     tb.appendChild(s);
 
-    const e = document.createElement('div');
-    e.className = 'ep-swatch'; e.style.background = col.hex; e.title = col.name;
-    e.onclick = () => { const sh = getShot(selectedId); if(!sh) return;
-      sh.colour = col.hex;
+    const e = document.createElement('button');
+    e.type='button'; e.className = 'ep-swatch'; e.style.background = col.hex; e.title = col.name; e.setAttribute('aria-label',col.name);
+    e.onclick = () => { const sh = getShot(selectedId); if(!sh||sh.colour===col.hex) return;
+      pushHistory(); sh.colour = col.hex;
       document.querySelectorAll('.ep-swatch').forEach(x=>x.classList.remove('active'));
       e.classList.add('active'); redrawAll(); };
     ep.appendChild(e);
   });
 })();
+function setColour(hex){
+  activeColour=hex;
+  document.querySelectorAll('.swatch').forEach(x=>x.classList.toggle('active',x.dataset.hex===hex));
+  updateNext();
+}
 
-// ── Global sliders ────────────────────────────────────────────────────────────
-document.getElementById('weightSlider').addEventListener('input', function(){
-  G.weight = parseFloat(this.value);
-  document.getElementById('weightVal').textContent = this.value;
-  redrawAll();
+// ── Layout: move the controls between the toolbar (wide) and the dock / sheets (phones) ──
+function place(){
+  compact=MQ.matches;
+  document.body.classList.toggle('compact',compact);
+  document.querySelectorAll('[data-wide]').forEach(el=>{
+    const slot=$(compact?el.dataset.compact:el.dataset.wide);
+    if(slot && el.parentNode!==slot) slot.appendChild(el);
+  });
+  if(!compact && $('sh-next') && !$('sh-next').hidden) closeSheets();
+  panelTop();
+}
+function panelTop(){
+  const m=$('main'); if(!m) return;
+  document.documentElement.style.setProperty('--fth-panel-top',m.getBoundingClientRect().top+'px');
+  const d=$('dock');
+  document.documentElement.style.setProperty('--dock-h',(d&&d.offsetHeight?d.offsetHeight:0)+'px');
+}
+MQ.addEventListener('change',()=>{ place(); if(zoomFit) fitWidth(); else redrawAll(); });
+addEventListener('resize',()=>{ panelTop(); if(zoomFit && pageWrappers.length){ clearTimeout(window.__fitT); window.__fitT=setTimeout(fitWidth,120); } });
+
+// "Next shot" summary on the phone dock
+function updateNext(){
+  const sc=$('sceneInput').value.trim(), sn=$('shotNumInput').value.trim(), cu=$('customInput').value.trim();
+  const chip=$('nextChip');
+  chip.querySelector('.dot').style.background=activeColour;
+  let t;
+  if(!sc && !sn) t = cu ? 'Auto · '+cu : 'Auto';
+  else t = [sc?'Sc '+sc:'Sc auto', sn||'auto', cu].filter(Boolean).join(' · ');
+  chip.querySelector('.txt').textContent=t;
+}
+['sceneInput','shotNumInput','customInput'].forEach(id=>$(id).addEventListener('input',updateNext));
+
+// ── Sheets ────────────────────────────────────────────────────────────────────
+function openSheet(name){
+  const target=$('sh-'+name); if(!target) return;
+  const wasOpen=!target.hidden;
+  closeSheets();
+  if(wasOpen) return;           // pressing the same button again closes it
+  if(name==='list') renderList();
+  if(name==='more'){
+    const db=$('docBtn'); $('moreDoc').hidden=!db||db.hidden;
+    $('focusLbl').textContent=document.body.classList.contains('focus')?'Leave focus mode':'Focus mode';
+  }
+  target.hidden=false; $('sheetBack').hidden=false;
+}
+function closeSheets(){ document.querySelectorAll('.sheet').forEach(s=>s.hidden=true); $('sheetBack').hidden=true; }
+$('sh-more').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-act]'); if(!b) return;
+  const a=b.dataset.act; closeSheets();
+  if(a==='upload') pickFile();
+  else if(a==='doc') $('docBtn').click();
+  else if(a==='export') exportPDF();
+  else if(a==='undo') undoLast();
+  else if(a==='redo') redoLast();
+  else if(a==='fit') fitWidth();
+  else if(a==='focus') toggleFocus();
+  else if(a==='list'||a==='settings'||a==='help') openSheet(a);
+  else if(a==='clear') clearAll();
 });
-document.getElementById('zzSlider').addEventListener('input', function(){
-  G.zzAmp = parseFloat(this.value);
-  document.getElementById('zzVal').textContent = this.value;
-  redrawAll();
-});
-document.getElementById('zoomSlider').addEventListener('input', async function(){
-  const pct = parseInt(this.value);
-  document.getElementById('zoomVal').textContent = pct + '%';
-  renderScale = 1.6 * (pct / 100);
-  if(pdfDoc) await rerenderPages();
-});
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+const OPTS={optSnap:'snap',optApart:'apart',optAutoScene:'autoScene',optAutoNum:'autoNum',optWake:'wake'};
+function syncSettingsUI(){
+  for(const id in OPTS) $(id).checked=!!settings[OPTS[id]];
+  $('weightSlider').value=G.weight; $('weightVal').textContent=G.weight;
+  $('zzSlider').value=G.zzAmp; $('zzVal').textContent=G.zzAmp;
+  setDrawMode(settings.drawMode,true);
+}
+for(const id in OPTS) $(id).addEventListener('change',function(){ settings[OPTS[id]]=this.checked; if(id==='optWake') wake(); });
+$('weightSlider').addEventListener('input', function(){ G.weight=parseFloat(this.value); $('weightVal').textContent=this.value; redrawAll(); });
+$('zzSlider').addEventListener('input', function(){ G.zzAmp=parseFloat(this.value); $('zzVal').textContent=this.value; redrawAll(); });
+$('showNotes').addEventListener('change', redrawAll);
+
+// ── Finger draws / finger scrolls (touch screens) ─────────────────────────────
+function setDrawMode(m,quiet){
+  settings.drawMode = m==='pan' ? 'pan' : 'draw';
+  const b=$('drawModeBtn'), pan=settings.drawMode==='pan';
+  b.querySelector('.i').textContent = pan ? '✋' : '✏️';
+  b.querySelector('.t').textContent = pan ? 'Finger scrolls' : 'Finger draws';
+  b.title = pan ? 'One finger scrolls; draw with an Apple Pencil. Tap to draw with a finger.' : 'One finger draws; two fingers scroll. Tap to make one finger scroll.';
+  b.setAttribute('aria-label', b.title);
+  if(!quiet) toast(pan ? 'One finger now scrolls. Draw with an Apple Pencil, or tap ✏️ to draw with a finger.' : 'One finger now draws. Use two fingers to scroll.');
+}
+function toggleDrawMode(){ setDrawMode(settings.drawMode==='pan'?'draw':'pan'); }
+function penSeen(){
+  if(settings.penSeen) return;
+  settings.penSeen=true;
+  if(settings.drawMode!=='pan'){ setDrawMode('pan',true); toast('Apple Pencil found: the pencil draws and one finger scrolls. Change this with ✋ / ✏️.'); }
+}
+
+// ── Focus mode: hide the headers (and the hub's bars) so the script fills the screen ──
+function toggleFocus(on){
+  if(on===undefined) on=!document.body.classList.contains('focus');
+  document.body.classList.toggle('focus',on);
+  $('focusBtn').setAttribute('aria-pressed',String(on));
+  let hub=null; try{ if(window.parent!==window && window.parent.__fthHub) hub=window.parent.__fthHub; }catch(e){}
+  if(hub && hub.focusMode){ try{ hub.focusMode(on,window); }catch(e){} }
+  else {   // opened on its own: use the browser's full screen where it has one
+    try{
+      if(on && document.documentElement.requestFullscreen && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+      else if(!on && document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+    }catch(e){}
+  }
+  requestAnimationFrame(()=>{ panelTop(); if(zoomFit) fitWidth(); });
+}
+// the hub forgets a Focus mode left over from before this page was (re)loaded
+try{ if(window.parent!==window && window.parent.__fthHub && window.parent.__fthHub.focusMode) window.parent.__fthHub.focusMode(false,window); }catch(e){}
+
+// ── Keep the screen awake on set ──────────────────────────────────────────────
+let wakeLock=null;
+async function wake(){
+  if(!settings.wake || !pdfDoc){ if(wakeLock){ try{ await wakeLock.release(); }catch(e){} wakeLock=null; } return; }
+  if(wakeLock || document.visibilityState!=='visible' || !navigator.wakeLock) return;
+  try{ wakeLock=await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release',()=>{ wakeLock=null; }); }catch(e){}
+}
+document.addEventListener('visibilitychange',wake);
 
 // ── File upload ───────────────────────────────────────────────────────────────
-document.getElementById('fileInput').addEventListener('change', async e => {
-  const file = e.target.files[0]; if(!file) return;
+function pickFile(){ $('fileInput').click(); }
+$('fileInput').addEventListener('change', async e => {
+  const file = e.target.files[0]; e.target.value=''; if(!file) return;
+  if(!window.pdfjsLib){ toast('The PDF reader didn’t load. Check the connection and reload the tool.'); return; }
+  if(shots.length && !confirm('Open this script instead? The lines drawn on the current script will be cleared.')) return;
   origFileName = file.name.replace(/\.pdf$/i,'');
   const ab = await file.arrayBuffer();
   if (window.fthStore) fthStore.set('pdf', {name: file.name, bytes: ab.slice(0)});
   pdfDoc = await pdfjsLib.getDocument({data:ab}).promise;
-  shots=[]; selectedId=null; extendMode=false; closeEditPanel();
+  shots=[]; undoStack=[]; redoStack=[]; selectedId=null; closeEditPanel();
+  if(compact || COARSE) zoomFit=true;
   await buildPages();
-  e.target.value='';
 });
 
+// ── Pages: sized up front, drawn only when near the screen (keeps phones from running out of memory) ──
+let io=null; const visible=new Set();
 async function buildPages(){
-  const container = document.getElementById('pagesContainer');
+  const container = $('pagesContainer');
+  if(io) io.disconnect(); visible.clear();
   container.innerHTML=''; pageWrappers=[];
   for(let i=1;i<=pdfDoc.numPages;i++){
     const page = await pdfDoc.getPage(i);
-    const vp   = page.getViewport({scale:renderScale});
-    const wrap = document.createElement('div');
-    wrap.className='pw'; wrap.style.width=vp.width+'px'; wrap.style.height=vp.height+'px';
-    const canvas=document.createElement('canvas'); canvas.className='pc';
-    canvas.width=vp.width; canvas.height=vp.height;
-    await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
-    wrap.appendChild(canvas);
-    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    const vp   = page.getViewport({scale:1});
+    const wrap = document.createElement('div'); wrap.className='pw';
+    const canvas=document.createElement('canvas'); canvas.className='pc'; canvas.width=canvas.height=0;
+    const svg=svgEl('svg',{viewBox:`0 0 ${VB_W} ${VB_H}`,preserveAspectRatio:'none'});
     svg.classList.add('ps');
-    svg.setAttribute('viewBox',`0 0 ${VB_W} ${VB_H}`);
-    svg.setAttribute('preserveAspectRatio','none');
-    wrap.appendChild(svg);
+    wrap.appendChild(canvas); wrap.appendChild(svg);
     container.appendChild(wrap);
-    pageWrappers.push({wrap,canvas,svg,pageIndex:i-1});
+    const pw={wrap,canvas,svg,pageIndex:i-1,baseW:vp.width,baseH:vp.height,rs:0,task:null};
+    wrap._pw=pw; pageWrappers.push(pw);
   }
+  document.body.classList.add('has-pdf'); $('main').classList.add('has-pages');
+  place();
+  if(zoomFit) fitWidth(); else sizePages();
+  io=new IntersectionObserver(entries=>{
+    entries.forEach(en=>{ const pw=en.target._pw; if(!pw) return;
+      if(en.isIntersecting){ visible.add(pw); renderPage(pw); } else { visible.delete(pw); freePage(pw); } });
+  },{root:$('main'),rootMargin:'120% 0px'});
+  pageWrappers.forEach(pw=>io.observe(pw.wrap));
   attachListeners();
-  redrawAll();
+  redrawAll(); updateNext(); updateUndoUI(); wake();
+  extractText();
 }
+function sizePages(){
+  pageWrappers.forEach(pw=>{ pw.wrap.style.width=pw.baseW*renderScale+'px'; pw.wrap.style.height=pw.baseH*renderScale+'px'; });
+}
+async function renderPage(pw){
+  const doc=pdfDoc, s=renderScale; if(!doc || pw.rs===s) return;
+  if(pw.task){ try{ pw.task.cancel(); }catch(e){} pw.task=null; }
+  const page=await doc.getPage(pw.pageIndex+1);
+  const cssW=pw.baseW*s, cssH=pw.baseH*s;
+  let k=Math.min(window.devicePixelRatio||1,2);
+  const MAX=8e6; if(cssW*cssH*k*k>MAX) k=Math.sqrt(MAX/(cssW*cssH));   // phones refuse very large canvases
+  const vp=page.getViewport({scale:s*k});
+  const c=document.createElement('canvas'); c.className='pc'; c.width=Math.floor(vp.width); c.height=Math.floor(vp.height);
+  const task=page.render({canvasContext:c.getContext('2d'),viewport:vp}); pw.task=task;
+  try{ await task.promise; }catch(e){ return; }
+  if(pw.task!==task || doc!==pdfDoc) return;
+  pw.task=null;
+  const old=pw.canvas; pw.wrap.replaceChild(c,old); old.width=old.height=0;
+  pw.canvas=c; pw.rs=s;
+}
+function freePage(pw){
+  if(pw.task){ try{ pw.task.cancel(); }catch(e){} pw.task=null; }
+  if(pw.rs){ pw.canvas.width=pw.canvas.height=0; pw.rs=0; }
+}
+let renderT=0;
+function scheduleRender(){ clearTimeout(renderT); renderT=setTimeout(()=>{ visible.forEach(renderPage); redrawAll(); },160); }
 
-async function rerenderPages(){
-  for(let i=0;i<pageWrappers.length;i++){
-    const pw=pageWrappers[i];
-    const page=await pdfDoc.getPage(i+1);
-    const vp=page.getViewport({scale:renderScale});
-    pw.wrap.style.width=vp.width+'px'; pw.wrap.style.height=vp.height+'px';
-    pw.canvas.width=vp.width; pw.canvas.height=vp.height;
-    await page.render({canvasContext:pw.canvas.getContext('2d'),viewport:vp}).promise;
+// ── Zoom (buttons, Ctrl+wheel / trackpad pinch, two-finger pinch) ─────────────
+function updateZoomUI(){ $('zoomVal').textContent=Math.round(zoomPct)+'%'; }
+function setZoom(pct, cx, cy){
+  pct=clamp(pct,20,400);
+  const main=$('main'), mr=main.getBoundingClientRect();
+  if(cx==null){ cx=mr.left+mr.width/2; cy=mr.top+mr.height/2; }
+  let anchor=null, best=Infinity;
+  for(const pw of pageWrappers){
+    const r=pw.wrap.getBoundingClientRect();
+    const d = cy<r.top ? r.top-cy : cy>r.bottom ? cy-r.bottom : 0;
+    if(d<best){ best=d; anchor={pw, rx:(cx-r.left)/(r.width||1), ry:(cy-r.top)/(r.height||1)}; }
+    if(d===0) break;
   }
-  redrawAll();
+  zoomPct=pct; renderScale=scaleOf(pct);
+  sizePages();
+  if(anchor){ const r=anchor.pw.wrap.getBoundingClientRect(); main.scrollLeft+=r.left+anchor.rx*r.width-cx; main.scrollTop+=r.top+anchor.ry*r.height-cy; }
+  updateZoomUI(); scheduleRender();
+}
+function zoomBy(f){ zoomFit=false; setZoom(zoomPct*f); }
+function fitWidth(){
+  zoomFit=true;
+  if(!pageWrappers.length) return;
+  const main=$('main'), cs=getComputedStyle(main);
+  const avail=main.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+  const maxW=Math.max(...pageWrappers.map(p=>p.baseW));
+  const pct=Math.floor(avail/(maxW*1.6)*1000)/10;
+  if(!pageWrappers[0].wrap.style.width){   // first time: nothing to keep in place yet
+    zoomPct=clamp(pct,20,400); renderScale=scaleOf(zoomPct); sizePages(); updateZoomUI(); scheduleRender(); return;
+  }
+  if(Math.abs(pct-zoomPct)<0.05) return;
+  setZoom(pct, null, null);
+}
+$('main').addEventListener('wheel',e=>{
+  if(!(e.ctrlKey||e.metaKey) || !pageWrappers.length) return;
+  e.preventDefault(); zoomFit=false;
+  setZoom(zoomPct*Math.exp(-e.deltaY*0.01), e.clientX, e.clientY);
+},{passive:false});
+
+// ── Read the script's text: lines (for snapping) and scene headings (for scene numbers) ──
+const HEAD_RE=/^\s*(\d+[A-Z]{0,3})?\s*[.):-]?\s*(?:INT\.?\s*\/\s*EXT|EXT\.?\s*\/\s*INT|I\/E|E\/I|INT|EXT|EST)\b/i;
+async function extractText(){
+  const doc=pdfDoc; textLines=[]; headings=[];
+  let ord=0;
+  for(let i=0;i<doc.numPages;i++){
+    if(doc!==pdfDoc) return;
+    try{
+      const page=await doc.getPage(i+1), vp=page.getViewport({scale:1}), tc=await page.getTextContent();
+      const rows=[];
+      for(const it of tc.items){
+        if(!it.str || !it.str.trim()) continue;
+        const [x,y]=vp.convertToViewportPoint(it.transform[4],it.transform[5]);
+        const fs=Math.hypot(it.transform[2],it.transform[3])||it.height||10;
+        const base=y/vp.height, h=fs/vp.height;
+        let r=rows.find(r=>Math.abs(r.base-base)<Math.max(h,r.h)*0.4);
+        if(!r){ r={base,h,parts:[]}; rows.push(r); }
+        r.h=Math.max(r.h,h); r.parts.push({x,s:it.str});
+      }
+      rows.sort((a,b)=>a.base-b.base);
+      textLines[i]=rows.map(r=>({top:r.base-r.h*0.85, bot:r.base+r.h*0.3}));
+      for(const r of rows){
+        const txt=r.parts.sort((a,b)=>a.x-b.x).map(p=>p.s).join(' ').replace(/\s+/g,' ').trim();
+        const m=HEAD_RE.exec(txt), head=txt.slice(0,30);
+        if(m && head===head.toUpperCase()){ ord++; headings.push({page:i, ny:r.base-r.h, num:m[1]||String(ord)}); }
+      }
+    }catch(e){ textLines[i]=[]; }
+  }
+}
+function sceneAt(pi,ny){
+  let s='';
+  for(const h of headings){ if(h.page<pi || (h.page===pi && h.ny<=ny+0.01)) s=h.num; else break; }
+  return s;
+}
+// Snap a line's top to the top of a line of text, and its bottom to the bottom of one
+function snapY(pi,y,which){
+  if(!settings.snap || y<=0.012 || y>=0.988) return y;
+  const L=textLines[pi]; if(!L || !L.length) return y;
+  let best=null, bd=0.018;
+  for(const l of L){
+    const d = y<l.top ? l.top-y : y>l.bot ? y-l.bot : 0;
+    if(d<bd || (d===0 && bd>0)){ bd=d; best=l; }
+  }
+  return best ? (which==='top'?best.top:best.bot) : y;
+}
+// Snap a split point into the gap between two lines of text
+function snapGap(pi,y){
+  const L=textLines[pi]; if(!settings.snap || !L || L.length<2) return y;
+  let best=y, bd=0.02;
+  for(let i=0;i<L.length-1;i++){ const g=(L[i].bot+L[i+1].top)/2, d=Math.abs(g-y); if(d<bd){ bd=d; best=g; } }
+  return best;
+}
+// Move a new line sideways if it would sit on top of another one
+function nudgeX(pi,nx,t,b){
+  const GAP=0.03; let x=nx, dir=nx>0.9?-1:1;
+  for(let k=0;k<60;k++){
+    const clash=shots.some(s=>s.segments.some(g=>g.pageIndex===pi && g.ny1<b && g.ny2>t && Math.abs(g.nx-x)<GAP));
+    if(!clash) break;
+    x+=dir*GAP*0.5;
+    if(x>0.98||x<0.02){ if(dir<0) { x=nx; break; } dir=-1; x=nx; }
+  }
+  return clamp(x,0.02,0.98);
+}
+function letterFor(n){ let s=''; n++; while(n>0){ const r=(n-1)%26; s=String.fromCharCode(65+r)+s; n=Math.floor((n-1)/26); } return s; }
+function nextLetter(scene){
+  const used=new Set(shots.filter(s=>(s.scene||'')===scene).map(s=>s.shotNum));
+  let n=0; while(used.has(letterFor(n))) n++; return letterFor(n);
+}
+function incShot(s){
+  let m=/^(.*?)(\d+)$/.exec(s);
+  if(m) return m[1]+String(+m[2]+1).padStart(m[2].length,'0');
+  m=/^(.*?)([A-Za-z])$/.exec(s);
+  if(m){ const c=m[2]; if(c==='Z') return m[1]+'AA'; if(c==='z') return m[1]+'aa'; return m[1]+String.fromCharCode(c.charCodeAt(0)+1); }
+  return s;
 }
 
 // ── Listeners ─────────────────────────────────────────────────────────────────
 function attachListeners(){
   if(listenersOn) return; listenersOn=true;
-  document.addEventListener('pointerdown',   trackTouchDown, true);
-  document.addEventListener('pointermove',   onMouseMove);
+  document.addEventListener('pointerdown',   onAnyDown, true);
+  document.addEventListener('pointermove',   onPointerMove);
   document.addEventListener('pointerup',     onPointerUp);
   document.addEventListener('pointercancel', onPointerUp);
-  document.addEventListener('keydown', e=>{ if(e.key==='Shift'){shiftHeld=true; updateBadge();} });
-  document.addEventListener('keyup',   e=>{ if(e.key==='Shift'){shiftHeld=false; updateBadge();} });
 }
 
-// ── Touch: track fingers so two fingers scroll instead of draw ───────────────
+// ── Touch: one finger draws (or scrolls), two fingers scroll and pinch-zoom ───
 const touches = new Map(); // pointerId -> {x,y}
-let panState  = null;      // {x,y} last midpoint while two-finger scrolling
-function midpoint(){ let x=0,y=0; touches.forEach(p=>{x+=p.x;y+=p.y;}); return {x:x/touches.size,y:y/touches.size}; }
-// Runs (capture phase) before any page handler: a second finger anywhere turns the gesture into a scroll.
-function trackTouchDown(e){
+let gesture  = null;       // {type:'pinch'|'pan', …}
+let momentum = 0;
+function midpoint(){ let x=0,y=0,n=0; for(const p of touches.values()){ if(n===2) break; x+=p.x;y+=p.y;n++; } return {x:x/n,y:y/n}; }
+function spread(){ const [a,b]=[...touches.values()]; return Math.hypot(a.x-b.x,a.y-b.y)||1; }
+function stopMomentum(){ cancelAnimationFrame(momentum); momentum=0; }
+// Runs (capture phase) before any page handler
+function onAnyDown(e){
+  stopMomentum();
   if(e.pointerType!=='touch') return;
   touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(touches.size===2 && pageWrappers.length){ cancelGesture(); panState=midpoint(); }
+  const inMain=e.target.closest && e.target.closest('#main');
+  if(!inMain || !pageWrappers.length) return;
+  if(touches.size>=2){
+    cancelGesture();
+    gesture={type:'pinch', d0:spread(), z0:zoomPct, last:midpoint()};
+    return;
+  }
+  const onPage=e.target.closest('.ps'), onHandle=e.target.dataset && e.target.dataset.handle;
+  if(!onPage || (settings.drawMode==='pan' && !onHandle)){
+    gesture={type:'pan', id:e.pointerId, start:{x:e.clientX,y:e.clientY}, last:{x:e.clientX,y:e.clientY}, moved:false, target:e.target, samples:[]};
+  }
 }
-// Abandon whatever the first finger started (draw / resize / move)
-function cancelGesture(){
+let pinchRaf=0, pinchNext=null;
+function onPointerMove(e){
+  if(e.pointerType==='touch' && touches.has(e.pointerId)){
+    touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(gesture && gesture.type==='pinch'){
+      if(touches.size<2) return;
+      const m=midpoint(), main=$('main');
+      main.scrollLeft-=m.x-gesture.last.x; main.scrollTop-=m.y-gesture.last.y; gesture.last=m;
+      pinchNext={z:gesture.z0*spread()/gesture.d0, x:m.x, y:m.y};
+      if(!pinchRaf) pinchRaf=requestAnimationFrame(()=>{ pinchRaf=0; if(pinchNext){ zoomFit=false; setZoom(pinchNext.z,pinchNext.x,pinchNext.y); } });
+      return;
+    }
+    if(gesture && gesture.type==='pan' && gesture.id===e.pointerId){
+      const g=gesture, dx=e.clientX-g.last.x, dy=e.clientY-g.last.y;
+      if(!g.moved && Math.hypot(e.clientX-g.start.x,e.clientY-g.start.y)>8) g.moved=true;
+      if(g.moved){ const main=$('main'); main.scrollLeft-=dx; main.scrollTop-=dy; }
+      g.last={x:e.clientX,y:e.clientY};
+      g.samples.push({t:performance.now(),x:e.clientX,y:e.clientY}); if(g.samples.length>6) g.samples.shift();
+      return;
+    }
+  }
+  // Only mice/keyboards can report Shift; don't let a finger/pen move reset it
+  if((e.pointerType==='mouse' || e.shiftKey) && shiftHeld!==e.shiftKey){ shiftHeld=e.shiftKey; updateBadge(); }
+  if(dragActive && dragState){ doDrag(e); return; }
+  if(moveActive && moveState){ doMove(e); return; }
+  if(!drawActive||!drawState) return;
+  const pi=drawState.pageIndex;
+  const {ny}=normCoords(e,pi);
+  const [t,b]=segRange(drawState,clamp(ny,0.005,0.995));
   if(previewGroup){previewGroup.remove();previewGroup=null;}
-  if(drawActive&&drawState&&!extendMode){
-    const sh=getShot(drawState.shotId);
-    if(sh&&!sh.segments.length) shots=shots.filter(s=>s.id!==sh.id);
-  }
-  if(moveActive&&moveState){ // put the line back where it was
-    const sh=getShot(moveState.shotId);
-    if(sh) sh.segments.forEach((seg,i)=>Object.assign(seg,moveState.origSegs[i]));
-  }
-  if(dragActive&&dragState&&dragState.orig){
-    const sh=getShot(dragState.shotId), seg=sh&&sh.segments[dragState.segIdx];
-    if(seg) Object.assign(seg,dragState.orig);
-  }
-  drawActive=dragActive=moveActive=false; drawState=dragState=moveState=null;
-  redrawAll();
+  const seg={pageIndex:pi,nx:drawState.nx,ny1:t,ny2:b,zigzag:isZigzag()};
+  const sh=drawState.extend?getShot(selectedId):null;
+  previewGroup=renderSeg(pageWrappers[pi].svg,seg,sh?sh.colour:activeColour,
+    t<=0.012?'arrow':'dot', b>=0.988?'arrow':'dot', null, 0.45, null, false);
 }
 function onPointerUp(e){
   if(e.pointerType==='touch'){
     touches.delete(e.pointerId);
-    if(panState){ if(!touches.size) panState=null; else panState=midpoint(); return; }
+    if(gesture && gesture.type==='pinch'){
+      if(touches.size===1){ const [id,p]=[...touches.entries()][0]; gesture={type:'pan',id,start:p,last:{...p},moved:true,target:null,samples:[]}; }
+      else if(!touches.size) gesture=null;
+      return;
+    }
+    if(gesture && gesture.type==='pan' && gesture.id===e.pointerId){
+      const g=gesture; gesture=null;
+      if(e.type==='pointercancel') return;
+      if(!g.moved){ if(g.target) handleTap(g.target,e); }
+      else glide(g);
+      return;
+    }
   }
   if(e.type==='pointercancel'){ cancelGesture(); return; }
   onMouseUp(e);
+}
+// a little momentum after a one-finger scroll
+function glide(g){
+  const s=g.samples; if(s.length<2) return;
+  const a=s[0], b=s[s.length-1], dt=b.t-a.t; if(dt<=0 || performance.now()-b.t>80) return;
+  let vx=(b.x-a.x)/dt, vy=(b.y-a.y)/dt, last=performance.now();
+  const main=$('main');
+  const step=now=>{ const d=now-last; last=now; main.scrollLeft-=vx*d; main.scrollTop-=vy*d;
+    const f=Math.pow(0.94,d/16); vx*=f; vy*=f;
+    momentum = (Math.abs(vx)+Math.abs(vy)>0.02) ? requestAnimationFrame(step) : 0; };
+  momentum=requestAnimationFrame(step);
+}
+// a tap while one finger scrolls: select a line, split, or let go of the selection
+function handleTap(target,e){
+  const svg=target.closest && target.closest('.ps'); if(!svg) return;
+  const pi=pageWrappers.findIndex(p=>p.svg===svg); if(pi<0) return;
+  if(splitMode && selectedId){ trySplit(e,pi); return; }
+  const id=(target.dataset && target.dataset.shot) || (hitTest(e,pi)||{}).id;
+  if(id){ selectShot(id); return; }
+  if(selectedId && !extendMode) closeEditPanel();
+}
+// Abandon whatever the first finger started (draw / resize / move)
+function cancelGesture(){
+  if(previewGroup){previewGroup.remove();previewGroup=null;}
+  if(moveActive&&moveState){ shots=JSON.parse(moveState.pre); }
+  if(dragActive&&dragState){ shots=JSON.parse(dragState.pre); }
+  drawActive=dragActive=moveActive=false; drawState=dragState=moveState=null;
+  redrawAll();
 }
 
 // ── Coords ────────────────────────────────────────────────────────────────────
@@ -512,127 +1069,107 @@ function normCoords(e, pi){
 }
 function toSVG(nx,ny){ return {x:nx*VB_W, y:ny*VB_H}; }
 
-// ── Draw mousedown (fires from SVG bg rect) ───────────────────────────────────
-function onDrawMouseDown(e, pi){
+// ── Draw (fires from the page's background rect) ──────────────────────────────
+// tapId: the line under the pointer, if any. A tap selects it; a drag draws a new line beside it.
+function onDrawMouseDown(e, pi, tapId){
   if(e.button!==0) return;
-  if(panState){ e.preventDefault(); return; }
-  // Hit-test existing lines
-  const hit = hitTest(e,pi);
-  if(hit){
-    selectShot(hit.id);
-    e.preventDefault(); return;
-  }
-
+  if(gesture){ e.preventDefault(); return; }
+  if(e.pointerType==='touch' && settings.drawMode==='pan') return;
+  if(e.pointerType==='pen' && COARSE) penSeen();
+  hideChip();
+  if(splitMode && selectedId){ trySplit(e,pi); e.preventDefault(); return; }
+  // Hit-test existing lines (not while adding a segment: then every stroke draws)
+  const tapSel = extendMode ? null : (tapId || (hitTest(e,pi)||{}).id || null);
   // Clicked empty space — deselect
-  if(selectedId && !extendMode){
-    closeEditPanel();
-    e.preventDefault(); return;
-  }
+  if(!tapSel && selectedId && !extendMode){ closeEditPanel(); e.preventDefault(); return; }
 
   shiftHeld=e.shiftKey; updateBadge();
   const {nx,ny}=normCoords(e,pi);
-
-  let shotId, lockedNX=nx, snappedNY=ny;
-  if(extendMode && selectedId){
-    shotId = selectedId;
-    const sh=getShot(shotId);
-    // Lock X to the shot's existing x (all segs share same nx)
-    if(sh.segments.length) lockedNX=sh.segments[0].nx;
-    // Snap startNY to nearest segment endpoint on this page
-    snappedNY=snapToNearestEndpoint(sh,pi,ny);
-  } else {
-    const sh={
-      id:'S'+Date.now()+Math.random().toString(36).slice(2,5),
-      colour:activeColour,
-      scene:  document.getElementById('sceneInput').value.trim(),
-      shotNum:document.getElementById('shotNumInput').value.trim(),
-      custom: document.getElementById('customInput').value.trim(),
-      segments:[]
-    };
-    shots.push(sh);
-    shotId=sh.id;
+  let lockedNX=nx, startNY=ny, fixedStart=false;
+  const extend=!!(extendMode && selectedId);
+  if(extend){
+    const sh=getShot(selectedId);
+    if(sh.segments.length) lockedNX=sh.segments[0].nx;   // all segments share the same x
+    const s=snapToNearestEndpoint(sh,pi,ny);
+    if(s!==ny){ startNY=s; fixedStart=true; }
   }
-
-  drawState={shotId, pageIndex:pi, nx:lockedNX, startNY:snappedNY};
+  drawState={pageIndex:pi, nx:lockedNX, startNY, fixedStart, extend, tapSel};
   drawActive=true;
   e.preventDefault();
+}
+// The top and bottom of the line being drawn, snapped to the text
+function segRange(ds,end){
+  const a=ds.startNY;
+  let top=Math.min(a,end), bot=Math.max(a,end);
+  if(bot-top<0.015) return [top,bot];
+  const pi=ds.pageIndex;
+  if(!(ds.fixedStart && top===a)) top=snapY(pi,top,'top');
+  if(!(ds.fixedStart && bot===a)) bot=snapY(pi,bot,'bot');
+  if(bot-top<0.01) bot=top+0.01;
+  return [top,bot];
 }
 
 // Find the nearest segment endpoint (ny1 or ny2) on the given page, within snap threshold
 function snapToNearestEndpoint(sh, pi, ny){
-  const SNAP=0.03; // normalised snap radius
+  const SNAP=0.03;
   let best=ny, bestDist=SNAP;
   sh.segments.forEach(seg=>{
     if(seg.pageIndex!==pi) return;
-    [seg.ny1,seg.ny2].forEach(ey=>{
-      const d=Math.abs(ey-ny);
-      if(d<bestDist){ bestDist=d; best=ey; }
-    });
+    [seg.ny1,seg.ny2].forEach(ey=>{ const d=Math.abs(ey-ny); if(d<bestDist){ bestDist=d; best=ey; } });
   });
   return best;
 }
 
-function onMouseMove(e){
-  if(e.pointerType==='touch' && touches.has(e.pointerId)){
-    touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
-    if(panState){
-      const m=midpoint(), main=document.getElementById('main');
-      main.scrollLeft-=m.x-panState.x; main.scrollTop-=m.y-panState.y;
-      panState=m; return;
-    }
-  }
-  // Only mice/keyboards can report Shift; don't let a finger/pen move reset it
-  if(e.pointerType==='mouse' || e.shiftKey) shiftHeld=e.shiftKey;
-  updateBadge();
-  if(dragActive && dragState){ doDrag(e); return; }
-  if(moveActive && moveState){ doMove(e); return; }
-  if(!drawActive||!drawState) return;
-  const pi=drawState.pageIndex;
-  const {ny}=normCoords(e,pi);
-  const endNY=clamp(ny,0.005,0.995);
-  const atBot=endNY>=0.988;
-  if(previewGroup){previewGroup.remove();previewGroup=null;}
-  // Use locked X from drawState
-  const seg={pageIndex:pi,nx:drawState.nx,ny1:drawState.startNY,ny2:endNY,zigzag:isZigzag()};
-  const sh=getShot(drawState.shotId);
-  previewGroup=renderSeg(pageWrappers[pi].svg,seg,sh?sh.colour:activeColour,
-    'dot',atBot?'arrow':'dot',null,0.4,null);
-}
-
 function onMouseUp(e){
-  if(dragActive){dragActive=false;dragState=null;redrawAll();return;}
-  if(moveActive){moveActive=false;moveState=null;redrawAll();return;}
+  if(dragActive){ const pre=dragState&&dragState.pre; dragActive=false; dragState=null; if(pre && pre!==snapshot()) pushPre(pre); redrawAll(); return; }
+  if(moveActive){ const pre=moveState&&moveState.pre; moveActive=false; moveState=null; if(pre && pre!==snapshot()) pushPre(pre); redrawAll(); return; }
   if(!drawActive||!drawState) return;
   drawActive=false;
   if(previewGroup){previewGroup.remove();previewGroup=null;}
-  const pi=drawState.pageIndex;
+  const ds=drawState; drawState=null;
+  const pi=ds.pageIndex;
   const {ny}=normCoords(e,pi);
   const endNY=clamp(ny,0.005,0.995);
-  if(Math.abs(endNY-drawState.startNY)<0.015){
-    if(!extendMode) shots=shots.filter(s=>s.id!==drawState.shotId);
-    drawState=null; return;
+  if(Math.abs(endNY-ds.startNY)<0.015){ if(ds.tapSel) selectShot(ds.tapSel); return; }
+  const [t,b]=segRange(ds,endNY);
+  pushHistory();
+  if(ds.extend){
+    const sh=getShot(selectedId); if(!sh) return;
+    sh.segments.push({pageIndex:pi,nx:ds.nx,ny1:t,ny2:b,zigzag:isZigzag()});
+    sortSegs(sh); buildSegList(sh); redrawAll();
+    return;
   }
-  const sh=getShot(drawState.shotId);
-  sh.segments.push({pageIndex:pi,nx:drawState.nx,ny1:drawState.startNY,ny2:endNY,zigzag:isZigzag()});
-  drawState=null;
-  if(!extendMode) selectShot(sh.id);
-  else { buildSegList(sh); redrawAll(); }
+  // New shot: label it automatically where the fields are blank
+  if(selectedId) closeEditPanel();
+  const nx = settings.apart ? nudgeX(pi,ds.nx,t,b) : ds.nx;
+  const sceneTyped=$('sceneInput').value.trim();
+  const scene = sceneTyped || (settings.autoScene ? sceneAt(pi,t) : '');
+  let shotNum=$('shotNumInput').value.trim();
+  if(settings.autoNum){
+    if(shotNum) $('shotNumInput').value=incShot(shotNum);
+    else shotNum=nextLetter(scene);
+  }
+  const sh={ id:newId(), colour:activeColour, scene, shotNum, custom:$('customInput').value.trim(),
+    segments:[{pageIndex:pi,nx,ny1:t,ny2:b,zigzag:isZigzag()}] };
+  shots.push(sh);
+  redrawAll(); updateNext();
+  showChip({dot:sh.colour, text:shotLabel(sh)+(sh.segments[0].zigzag?' · off screen':''), btn:'Edit', onBtn:()=>selectShot(sh.id), onText:()=>{ hideChip(); selectShot(sh.id); }});
 }
 
 // ── Handle drag ───────────────────────────────────────────────────────────────
 function startHandleDrag(e,shotId,segIdx,handle){
   e.stopPropagation(); e.preventDefault();
-  if(panState) return;
-  const seg=getShot(shotId).segments[segIdx];
-  dragState={shotId,segIdx,handle,orig:{ny1:seg.ny1,ny2:seg.ny2}}; dragActive=true;
+  if(gesture && gesture.type==='pinch') return;
+  dragState={shotId,segIdx,handle,pre:snapshot()}; dragActive=true;
 }
 function doDrag(e){
   const {shotId,segIdx,handle}=dragState;
   const sh=getShot(shotId); if(!sh) return;
   const seg=sh.segments[segIdx]; if(!seg) return;
   const {ny}=normCoords(e,seg.pageIndex);
-  const c=clamp(ny,0.005,0.995);
-  if(handle==='top') seg.ny1=c; else seg.ny2=c;
+  let c=clamp(ny,0.005,0.995);
+  if(handle==='top'){ c=snapY(seg.pageIndex,c,'top'); seg.ny1=Math.min(c,seg.ny2-0.01); }
+  else { c=snapY(seg.pageIndex,c,'bot'); seg.ny2=Math.max(c,seg.ny1+0.01); }
   redrawAll();
 }
 
@@ -640,12 +1177,9 @@ function doDrag(e){
 function startMove(e, shotId){
   e.stopPropagation(); e.preventDefault();
   const sh=getShot(shotId); if(!sh||!sh.segments.length) return;
-  // Use the page of the first segment as the reference page for mouse tracking
   const pi=sh.segments[0].pageIndex;
   const {nx,ny}=normCoords(e,pi);
-  // Deep-copy original segment coords
-  const origSegs=sh.segments.map(s=>({...s}));
-  moveState={shotId, pageIndex:pi, startNX:nx, startNY:ny, origSegs};
+  moveState={shotId, pageIndex:pi, startNX:nx, startNY:ny, origSegs:sh.segments.map(s=>({...s})), pre:snapshot()};
   moveActive=true;
 }
 function doMove(e){
@@ -662,42 +1196,57 @@ function doMove(e){
   redrawAll();
 }
 
+// ── Split: cut the selected line in two where it's tapped ─────────────────────
+function trySplit(e,pi){
+  const sh=getShot(selectedId); if(!sh) return;
+  const {ny}=normCoords(e,pi);
+  const si=sh.segments.findIndex(g=>g.pageIndex===pi && ny>g.ny1+0.008 && ny<g.ny2-0.008);
+  if(si<0){ toast('Tap on the selected line, where it should be split.'); return; }
+  const g=sh.segments[si];
+  const y=clamp(snapGap(pi,ny),g.ny1+0.006,g.ny2-0.006);
+  pushHistory();
+  sh.segments.splice(si,1,{...g,ny2:y},{...g,ny1:y});
+  setSplit(false);
+  buildSegList(sh); redrawAll();
+  toast('Line split. Set each part to On or Off in Segments.');
+}
+
 // ── Hit test ──────────────────────────────────────────────────────────────────
 function hitTest(e,pi){
   const {nx,ny}=normCoords(e,pi);
-  const TX=COARSE?0.035:0.018, TY=COARSE?0.015:0.008;
+  const r=pageWrappers[pi].wrap.getBoundingClientRect();
+  const TX=(COARSE?22:9)/(r.width||1), TY=(COARSE?14:6)/(r.height||1);
+  let best=null, bd=Infinity;   // the nearest line, so a tap between two close lines picks the right one
   for(let i=shots.length-1;i>=0;i--){
     for(const seg of shots[i].segments){
       if(seg.pageIndex!==pi) continue;
-      const t=Math.min(seg.ny1,seg.ny2), b=Math.max(seg.ny1,seg.ny2);
-      if(ny>=t-TY&&ny<=b+TY&&Math.abs(nx-seg.nx)<=TX) return shots[i];
+      const d=Math.abs(nx-seg.nx);
+      if(ny>=seg.ny1-TY&&ny<=seg.ny2+TY&&d<=TX&&d<bd){ bd=d; best=shots[i]; }
     }
   }
-  return null;
+  return best;
 }
 
 // ── Cap logic ─────────────────────────────────────────────────────────────────
 function segCaps(sh,si){
-  const seg=sh.segments[si];
-  const isFirst=si===0, isLast=si===sh.segments.length-1;
-  const atBot=Math.max(seg.ny1,seg.ny2)>=0.988;
-  const atTop=Math.min(seg.ny1,seg.ny2)<=0.012;
+  const S=sh.segments, seg=S[si], prev=S[si-1], next=S[si+1];
+  const joined=(a,b)=>a&&b&&a.pageIndex===b.pageIndex&&Math.abs(a.ny2-b.ny1)<0.004&&Math.abs(a.nx-b.nx)<0.002;
+  const atBot=seg.ny2>=0.988, atTop=seg.ny1<=0.012;
   return {
-    topCap: (isFirst&&!atTop)?'dot':'arrow',
-    botCap: (isLast&&!atBot)?'dot':'arrow'
+    topCap: joined(prev,seg)?'none':(si===0&&!atTop)?'dot':'arrow',
+    botCap: joined(seg,next)?'none':(si===S.length-1&&!atBot)?'dot':'arrow'
   };
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
 function redrawAll(){
+  const showN=$('showNotes').checked;
   pageWrappers.forEach((pw,pi)=>{
     pw.svg.innerHTML='';
-    // Background rect — catches draw mousedown below all other SVG elements
-    const bg=document.createElementNS('http://www.w3.org/2000/svg','rect');
-    bg.setAttribute('x',0); bg.setAttribute('y',0);
-    bg.setAttribute('width',VB_W); bg.setAttribute('height',VB_H);
-    bg.setAttribute('fill','transparent');
-    bg.style.pointerEvents='all'; bg.style.cursor='crosshair';
+    pw.ux=VB_W/(pw.wrap.clientWidth||1); pw.uy=VB_H/(pw.wrap.clientHeight||1);   // SVG units per screen pixel
+    pw.svg._ux=pw.ux;
+    const bg=svgEl('rect',{x:0,y:0,width:VB_W,height:VB_H,fill:'transparent'});
+    bg.style.pointerEvents='all'; bg.style.cursor=splitMode?'copy':'crosshair';
     bg.addEventListener('pointerdown',e=>onDrawMouseDown(e,pi));
     pw.svg.appendChild(bg);
   });
@@ -707,38 +1256,38 @@ function redrawAll(){
     sh.segments.forEach((seg,si)=>{
       const pw=pageWrappers[seg.pageIndex]; if(!pw) return;
       const {topCap,botCap}=segCaps(sh,si);
-      const showN = document.getElementById('showNotes').checked;
       const segNotes = (si===0 && sh.notes && showN) ? sh.notes : null;
-      const g=renderSeg(pw.svg,seg,sh.colour,topCap,botCap,shotLabel(sh),isSel?1:0.8,segNotes);
+      const g=renderSeg(pw.svg,seg,sh.colour,topCap,botCap,topCap==='none'?null:shotLabel(sh),isSel?1:0.8,segNotes,isSel);
 
-      // Wide transparent hit-line — click to select, drag to move whole line
-      const {x:sx,y:sy1}=toSVG(seg.nx,Math.min(seg.ny1,seg.ny2));
-      const {y:sy2}=toSVG(seg.nx,Math.max(seg.ny1,seg.ny2));
-      const hit=document.createElementNS('http://www.w3.org/2000/svg','line');
-      hit.setAttribute('x1',sx);hit.setAttribute('y1',sy1);
-      hit.setAttribute('x2',sx);hit.setAttribute('y2',sy2);
-      hit.setAttribute('stroke','transparent');hit.setAttribute('stroke-width',COARSE?'70':'36');
+      // Wide transparent hit-line — tap to select, drag to move the whole line
+      const {x:sx,y:sy1}=toSVG(seg.nx,seg.ny1);
+      const {y:sy2}=toSVG(seg.nx,seg.ny2);
+      const hit=svgEl('line',{x1:sx,y1:sy1,x2:sx,y2:sy2,stroke:'transparent','stroke-width':(COARSE?40:16)*pw.ux});
+      hit.dataset.shot=sh.id;
       hit.style.pointerEvents='all';
-      hit.style.cursor = isSel ? 'grab' : 'pointer';
+      hit.style.cursor = splitMode&&isSel ? 'copy' : isSel ? 'grab' : 'pointer';
       hit.addEventListener('pointerdown',e=>{
+        if(gesture) return;
+        if(e.pointerType==='touch' && settings.drawMode==='pan') return;
         e.stopPropagation(); e.preventDefault();
-        if(panState) return;
-        if(isSel){ startMove(e, sh.id); }
-        else { selectShot(sh.id); }
+        hideChip();
+        if(splitMode && selectedId){ trySplit(e,seg.pageIndex); return; }
+        if(extendMode && selectedId){ onDrawMouseDown(e,seg.pageIndex); return; }
+        const near=(hitTest(e,seg.pageIndex)||sh).id;
+        if(near===selectedId){ startMove(e, near); }
+        else { onDrawMouseDown(e,seg.pageIndex,near); }
       });
       g.appendChild(hit);
 
-      // Resize handles (visible only when selected)
-      if(isSel){
-        const topNY=Math.min(seg.ny1,seg.ny2), botNY=Math.max(seg.ny1,seg.ny2);
-        [['top',topNY],['bot',botNY]].forEach(([handle,hy])=>{
+      // Resize handles (only on the selected line), a steady size on screen at any zoom
+      if(isSel && !splitMode){
+        const SZ=COARSE?14:11, GRAB=COARSE?40:18;   // what's seen, and the area that can be grabbed (screen pixels)
+        [['top',seg.ny1],['bot',seg.ny2]].forEach(([handle,hy])=>{
           const {x:hx,y:hy2}=toSVG(seg.nx,hy);
-          const SZ=COARSE?52:26;
-          const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
-          r.setAttribute('x',hx-SZ/2); r.setAttribute('y',hy2-SZ/2);
-          r.setAttribute('width',SZ); r.setAttribute('height',SZ);
-          r.setAttribute('rx',3); r.setAttribute('fill',sh.colour);
-          r.setAttribute('stroke','#fff'); r.setAttribute('stroke-width','2.5');
+          const w=SZ*pw.ux, h=SZ*pw.uy, gw=GRAB*pw.ux, gh=GRAB*pw.uy;
+          g.appendChild(svgEl('rect',{x:hx-w/2,y:hy2-h/2,width:w,height:h,rx:2.5*pw.ux,fill:sh.colour,stroke:'#fff','stroke-width':2*pw.ux}));
+          const r=svgEl('rect',{x:hx-gw/2,y:hy2-gh/2,width:gw,height:gh,fill:'transparent'});
+          r.dataset.handle=handle;
           r.style.cursor='ns-resize'; r.style.pointerEvents='all';
           r.addEventListener('pointerdown',e=>startHandleDrag(e,sh.id,si,handle));
           g.appendChild(r);
@@ -750,21 +1299,16 @@ function redrawAll(){
   if(selectedId){ const sh=getShot(selectedId); if(sh) buildSegList(sh); }
 }
 
-function renderSeg(svg,seg,colour,topCap,botCap,label,opacity,notes){
-  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+function renderSeg(svg,seg,colour,topCap,botCap,label,opacity,notes,selected){
+  const g=svgEl('g',{});
   if(opacity!==undefined) g.style.opacity=opacity;
   const {x,y:y1}=toSVG(seg.nx,Math.min(seg.ny1,seg.ny2));
   const {y:y2}=toSVG(seg.nx,Math.max(seg.ny1,seg.ny2));
-
-  const sw = G.weight * 1.4;
-
-  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-  path.setAttribute('d', seg.zigzag ? buildZZ(x,y1,y2) : `M${x} ${y1} L${x} ${y2}`);
-  path.setAttribute('stroke',colour);
-  path.setAttribute('stroke-width',sw);
-  path.setAttribute('fill','none');
-  path.setAttribute('stroke-linecap','round');
-  g.appendChild(path);
+  // at least ~1.5 screen pixels wide so thin lines stay visible on a phone (the export uses the real weight)
+  const sw = exporting ? G.weight*1.4 : Math.max(G.weight*1.4, 1.5*(svg._ux||0));
+  const d = seg.zigzag ? buildZZ(x,y1,y2) : `M${x} ${y1} L${x} ${y2}`;
+  if(selected) g.appendChild(svgEl('path',{d,stroke:colour,'stroke-width':sw*4+8,'stroke-opacity':0.22,fill:'none','stroke-linecap':'round','stroke-linejoin':'round'}));
+  g.appendChild(svgEl('path',{d,stroke:colour,'stroke-width':sw,fill:'none','stroke-linecap':'round'}));
 
   drawCap(g,x,y1,colour,topCap,sw);
   drawCap(g,x,y2,colour,botCap,sw);
@@ -772,68 +1316,23 @@ function renderSeg(svg,seg,colour,topCap,botCap,label,opacity,notes){
   if(label){
     const midY=(y1+y2)/2, lx=x-16;
     const fs=Math.max(14,11+G.weight*1.5);
-    const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
-    txt.setAttribute('x',lx); txt.setAttribute('y',midY);
-    txt.setAttribute('fill',colour);
-    txt.setAttribute('font-size',fs);
-    txt.setAttribute('font-family','Courier New,monospace');
-    txt.setAttribute('text-anchor','middle');
-    txt.setAttribute('dominant-baseline','middle');
-    txt.setAttribute('transform',`rotate(-90,${lx},${midY})`);
+    const txt=svgEl('text',{x:lx,y:midY,fill:colour,'font-size':fs,'font-family':'Courier New,monospace','text-anchor':'middle','dominant-baseline':'middle',transform:`rotate(-90,${lx},${midY})`});
     txt.textContent=label;
     g.appendChild(txt);
   }
 
   // Annotation bubble — sits to the right of the line at the midpoint
   if(notes && notes.trim()){
-    const midY=(y1+y2)/2;
-    const bx=x+22;           // offset right of line
-    const fs=18;
-    const lineH=fs*1.35;
-    const words=notes.trim().split(/\s+/);
-    const maxChars=28;        // wrap width
-    const lines=[];
-    let cur='';
-    words.forEach(w=>{
-      if((cur+' '+w).trim().length>maxChars){ lines.push(cur.trim()); cur=w; }
-      else cur=(cur+' '+w).trim();
-    });
+    const midY=(y1+y2)/2, bx=x+22, fs=18, lineH=fs*1.35, maxChars=28;
+    const words=notes.trim().split(/\s+/), lines=[]; let cur='';
+    words.forEach(w=>{ if((cur+' '+w).trim().length>maxChars){ lines.push(cur.trim()); cur=w; } else cur=(cur+' '+w).trim(); });
     if(cur) lines.push(cur.trim());
-
-    const padX=10, padY=8;
-    const boxW=maxChars*fs*0.54+padX*2;
-    const boxH=lines.length*lineH+padY*2;
-    const boxY=midY-boxH/2;
-
-    // Background pill
-    const rect=document.createElementNS('http://www.w3.org/2000/svg','rect');
-    rect.setAttribute('x',bx); rect.setAttribute('y',boxY);
-    rect.setAttribute('width',boxW); rect.setAttribute('height',boxH);
-    rect.setAttribute('rx',6); rect.setAttribute('ry',6);
-    rect.setAttribute('fill','#111');
-    rect.setAttribute('fill-opacity','0.82');
-    rect.setAttribute('stroke',colour);
-    rect.setAttribute('stroke-width','2');
-    g.appendChild(rect);
-
-    // Connector tick from line to box
-    const tick=document.createElementNS('http://www.w3.org/2000/svg','line');
-    tick.setAttribute('x1',x+sw/2); tick.setAttribute('y1',midY);
-    tick.setAttribute('x2',bx);     tick.setAttribute('y2',midY);
-    tick.setAttribute('stroke',colour); tick.setAttribute('stroke-width','1.5');
-    tick.setAttribute('stroke-dasharray','4,3');
-    g.appendChild(tick);
-
-    // Text lines
+    const padX=10, padY=8, boxW=maxChars*fs*0.54+padX*2, boxH=lines.length*lineH+padY*2, boxY=midY-boxH/2;
+    g.appendChild(svgEl('rect',{x:bx,y:boxY,width:boxW,height:boxH,rx:6,ry:6,fill:'#111','fill-opacity':'0.82',stroke:colour,'stroke-width':'2'}));
+    g.appendChild(svgEl('line',{x1:x+sw/2,y1:midY,x2:bx,y2:midY,stroke:colour,'stroke-width':'1.5','stroke-dasharray':'4,3'}));
     lines.forEach((ln,i)=>{
-      const t=document.createElementNS('http://www.w3.org/2000/svg','text');
-      t.setAttribute('x',bx+padX);
-      t.setAttribute('y',boxY+padY+fs*0.85+i*lineH);
-      t.setAttribute('fill','#f0e68c');
-      t.setAttribute('font-size',fs);
-      t.setAttribute('font-family','Courier New,monospace');
-      t.textContent=ln;
-      g.appendChild(t);
+      const t=svgEl('text',{x:bx+padX,y:boxY+padY+fs*0.85+i*lineH,fill:'#f0e68c','font-size':fs,'font-family':'Courier New,monospace'});
+      t.textContent=ln; g.appendChild(t);
     });
   }
 
@@ -842,7 +1341,7 @@ function renderSeg(svg,seg,colour,topCap,botCap,label,opacity,notes){
 }
 
 function buildZZ(x,top,bot){
-  // G.zzAmp 1–8 maps to SVG logical units 8–64 (much narrower range)
+  // G.zzAmp 1–8 maps to SVG logical units 8–64
   const amp = G.zzAmp * 8;
   const step = amp * 2.5;
   let d=`M${x} ${top}`, y=top+step/2, dir=1;
@@ -851,55 +1350,84 @@ function buildZZ(x,top,bot){
 }
 
 function drawCap(g,x,y,colour,type,sw){
+  if(type==='none') return;
   const r=sw*1.6; // cap size proportional to line weight
-  if(type==='dot'){
-    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
-    c.setAttribute('cx',x); c.setAttribute('cy',y); c.setAttribute('r',r);
-    c.setAttribute('fill',colour); g.appendChild(c);
-  } else {
-    const sz=r*1.4;
-    const tri=document.createElementNS('http://www.w3.org/2000/svg','polygon');
-    tri.setAttribute('points',`${x},${y+sz} ${x-sz},${y-sz*0.5} ${x+sz},${y-sz*0.5}`);
-    tri.setAttribute('fill',colour); g.appendChild(tri);
-  }
+  if(type==='dot') g.appendChild(svgEl('circle',{cx:x,cy:y,r,fill:colour}));
+  else { const sz=r*1.4; g.appendChild(svgEl('polygon',{points:`${x},${y+sz} ${x-sz},${y-sz*0.5} ${x+sz},${y-sz*0.5}`,fill:colour})); }
 }
 
-// ── Extend mode ───────────────────────────────────────────────────────────────
-function toggleExtendMode(){
-  extendMode=!extendMode;
-  document.getElementById('extendBanner').className=extendMode?'on':'';
-  document.getElementById('addSegBtn').textContent=extendMode?'✓ Done Adding':'+ Add Segment';
+// ── Extend / split modes ──────────────────────────────────────────────────────
+function setExtend(on){
+  extendMode=!!on && !!selectedId; if(extendMode) splitMode=false;
+  modesUI();
+}
+function setSplit(on){
+  splitMode=!!on && !!selectedId; if(splitMode) extendMode=false;
+  modesUI(); redrawAll();
+}
+function endModes(){ extendMode=splitMode=false; modesUI(); redrawAll(); }
+function modesUI(){
+  const on=extendMode||splitMode;
+  $('extendBanner').classList.toggle('on',on);
+  $('bannerTxt').textContent = extendMode
+    ? 'Draw on the script to add a segment to this shot (another page, or more of this one).'
+    : splitMode ? 'Tap the line where it should be split.' : '';
+  $('editPanel').classList.toggle('mini',on);
+  $('addSegBtn').classList.toggle('on',extendMode);
+  $('addSegBtn').textContent=extendMode?'✓ Done Adding':'+ Add Segment';
+  $('splitBtn').classList.toggle('on',splitMode);
   updateBadge();
 }
 
 // ── Edit panel ────────────────────────────────────────────────────────────────
-function selectShot(id){
-  selectedId=id;
-  const sh=getShot(id); if(!sh) return;
-  document.getElementById('ep_scene').value=sh.scene||'';
-  document.getElementById('ep_shot').value=sh.shotNum||'';
-  document.getElementById('ep_custom').value=sh.custom||'';
-  document.getElementById('ep_notes').value=sh.notes||'';
-  document.querySelectorAll('.ep-swatch').forEach((s,i)=>
-    s.classList.toggle('active',COLOURS[i].hex===sh.colour));
+function fillEdit(sh){
+  $('ep_scene').value=sh.scene||'';
+  $('ep_shot').value=sh.shotNum||'';
+  $('ep_custom').value=sh.custom||'';
+  $('ep_notes').value=sh.notes||'';
+  document.querySelectorAll('.ep-swatch').forEach((s,i)=>s.classList.toggle('active',COLOURS[i].hex===sh.colour));
   buildSegList(sh);
-  document.getElementById('editPanel').classList.add('open');
+}
+function selectShot(id){
+  const sh=getShot(id); if(!sh) return;
+  if(selectedId!==id){ extendMode=splitMode=false; modesUI(); }
+  selectedId=id;
+  fillEdit(sh);
+  $('editPanel').classList.add('open');
   redrawAll();
+  if(compact) requestAnimationFrame(()=>keepInView(sh));
+}
+// on a phone, scroll so the selected line isn't hidden under the edit sheet
+function keepInView(sh){
+  const main=$('main'), mr=main.getBoundingClientRect(), panel=$('editPanel').getBoundingClientRect();
+  const seg=sh.segments.find(g=>{ const r=pageWrappers[g.pageIndex].wrap.getBoundingClientRect(); const y=r.top+g.ny1*r.height; return y>mr.top-40&&y<mr.bottom; })||sh.segments[0];
+  if(!seg) return;
+  const r=pageWrappers[seg.pageIndex].wrap.getBoundingClientRect();
+  const y1=r.top+seg.ny1*r.height;
+  if(y1>panel.top-60) main.scrollTop+=y1-(mr.top+60);
+}
+function gotoShot(id){
+  const sh=getShot(id); if(!sh||!sh.segments.length) return;
+  const seg=sh.segments[0], main=$('main'), mr=main.getBoundingClientRect(), r=pageWrappers[seg.pageIndex].wrap.getBoundingClientRect();
+  main.scrollTop+=r.top+seg.ny1*r.height-mr.top-70;
+  main.scrollLeft+=r.left+seg.nx*r.width-mr.left-mr.width/2;
+  selectShot(id);
 }
 
 function buildSegList(sh){
-  const el=document.getElementById('ep_segs'); el.innerHTML='';
+  const el=$('ep_segs'); el.innerHTML='';
   sh.segments.forEach((seg,i)=>{
     const row=document.createElement('div'); row.className='seg-row';
     const typeBtn=document.createElement('button');
     typeBtn.className='seg-type-btn'+(seg.zigzag?' zzbtn':'');
     typeBtn.textContent=seg.zigzag?'Off':'On';
     typeBtn.title=seg.zigzag?'Off screen (zig-zag) — tap to make On screen':'On screen (straight) — tap to make Off screen';
-    typeBtn.onclick=()=>{ seg.zigzag=!seg.zigzag; buildSegList(sh); redrawAll(); };
+    typeBtn.onclick=()=>{ pushHistory(); seg.zigzag=!seg.zigzag; buildSegList(sh); redrawAll(); };
     const delBtn=document.createElement('button');
     delBtn.className='seg-del-btn'; delBtn.textContent='✕';
-    delBtn.title='Remove segment';
+    delBtn.title='Remove segment'; delBtn.setAttribute('aria-label','Remove segment '+(i+1));
     delBtn.onclick=()=>{
+      pushHistory();
       sh.segments.splice(i,1);
       if(!sh.segments.length){ shots=shots.filter(s=>s.id!==sh.id); closeEditPanel(); return; }
       buildSegList(sh); redrawAll();
@@ -911,44 +1439,69 @@ function buildSegList(sh){
   });
 }
 
+let editPre=null;
+['ep_scene','ep_shot','ep_custom','ep_notes'].forEach(id=>{
+  const f=$(id);
+  f.addEventListener('focus',()=>{ editPre=snapshot(); });
+  f.addEventListener('blur',()=>{ if(editPre && editPre!==snapshot()) pushPre(editPre); editPre=null; });
+});
 ['ep_scene','ep_shot','ep_custom'].forEach(id=>{
-  document.getElementById(id).addEventListener('input',()=>{
+  $(id).addEventListener('input',()=>{
     const sh=getShot(selectedId); if(!sh) return;
-    sh.scene=document.getElementById('ep_scene').value.trim();
-    sh.shotNum=document.getElementById('ep_shot').value.trim();
-    sh.custom=document.getElementById('ep_custom').value.trim();
+    sh.scene=$('ep_scene').value.trim();
+    sh.shotNum=$('ep_shot').value.trim();
+    sh.custom=$('ep_custom').value.trim();
     redrawAll();
   });
 });
-document.getElementById('ep_notes').addEventListener('input',()=>{
+$('ep_notes').addEventListener('input',()=>{
   const sh=getShot(selectedId); if(!sh) return;
-  sh.notes=document.getElementById('ep_notes').value;
+  sh.notes=$('ep_notes').value;
+  if($('showNotes').checked) redrawAll();
 });
 
 function closeEditPanel(){
-  selectedId=null; extendMode=false;
-  document.getElementById('extendBanner').className='';
-  document.getElementById('addSegBtn').textContent='+ Add Segment';
-  document.getElementById('editPanel').classList.remove('open');
-  updateBadge(); redrawAll();
+  if(document.activeElement && document.activeElement.closest && document.activeElement.closest('#editPanel')) document.activeElement.blur();
+  selectedId=null; extendMode=splitMode=false; modesUI();
+  $('editPanel').classList.remove('open');
+  redrawAll();
 }
 function deleteSelected(){
-  if(!selectedId||!confirm('Delete this shot line?')) return;
+  if(!selectedId) return;
+  pushHistory();
   shots=shots.filter(s=>s.id!==selectedId); closeEditPanel();
+  showChip({text:'Shot line deleted', btn:'Undo', onBtn:undoLast});
 }
 
-// ── Undo / Clear ──────────────────────────────────────────────────────────────
-function undoLast(){
-  if(!shots.length) return;
-  if(selectedId===shots[shots.length-1].id) closeEditPanel();
-  shots.pop(); redrawAll();
-}
+// ── Clear ─────────────────────────────────────────────────────────────────────
 function clearAll(){
   if(!shots.length||!confirm('Clear all shot lines?')) return;
-  shots=[]; selectedId=null; extendMode=false; closeEditPanel();
+  pushHistory();
+  shots=[]; selectedId=null; closeEditPanel();
+  showChip({text:'All lines cleared', btn:'Undo', onBtn:undoLast, ms:6000});
 }
 
-// ── Badge ─────────────────────────────────────────────────────────────────────
+// ── Shot list ─────────────────────────────────────────────────────────────────
+function renderList(){
+  const box=$('shotList'); if(!box) return;
+  const list=shots.filter(s=>s.segments.length);
+  if(!list.length){ box.innerHTML='<p class="empty">No shot lines yet. Draw down the script to add one.</p>'; return; }
+  const pos=s=>s.segments[0].pageIndex+s.segments[0].ny1;
+  list.sort((a,b)=>pos(a)-pos(b));
+  let html='', last=null;
+  list.forEach(s=>{
+    const grp=s.scene?'Scene '+s.scene:'No scene';
+    if(grp!==last){ html+=`<div class="grp">${esc(grp)}</div>`; last=grp; }
+    const p1=s.segments[0].pageIndex+1, p2=s.segments[s.segments.length-1].pageIndex+1;
+    const off=s.segments.filter(g=>g.zigzag).length;
+    const meta=(p1===p2?'p'+p1:'p'+p1+'–'+p2)+(off?` · ${off} off`:'');
+    html+=`<button data-id="${esc(s.id)}"><span class="dot" style="background:${esc(s.colour)}"></span><span>${esc(shotLabel(s))}${s.notes?`<span class="nt">${esc(s.notes)}</span>`:''}</span><span class="meta">${esc(meta)}</span></button>`;
+  });
+  box.innerHTML=html;
+}
+$('shotList').addEventListener('click',e=>{ const b=e.target.closest('button[data-id]'); if(!b) return; closeSheets(); gotoShot(b.dataset.id); });
+
+// ── Badge / On-Off toggle ─────────────────────────────────────────────────────
 function setOffScreen(v){ offScreen=!!v; updateBadge(); }
 function updateBadge(){
   // The toggle shows what the next line will be (Shift flips it while held)
@@ -956,74 +1509,104 @@ function updateBadge(){
   const [onB,offB]=document.querySelectorAll('#modeToggle button');
   onB.classList.toggle('on',!zz);  onB.setAttribute('aria-pressed',String(!offScreen));
   offB.classList.toggle('on',zz);  offB.setAttribute('aria-pressed',String(offScreen));
-  document.getElementById('extBadge').classList.toggle('on',extendMode);
+  $('extBadge').classList.toggle('on',extendMode);
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function shotLabel(sh){
-  const p=[];
-  if(sh.scene) p.push('Sc.'+sh.scene);
-  if(sh.shotNum) p.push(sh.shotNum);
-  if(sh.custom) p.push(sh.custom);
-  return p.join(' ')||'?';
-}
-function getShot(id){ return shots.find(s=>s.id===id); }
-function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
-
-document.getElementById('showNotes').addEventListener('change', redrawAll);
+// ── Keyboard ──────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e=>{
+  if(e.key==='Shift'){ shiftHeld=true; updateBadge(); }
+  const tg=e.target, typing=/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)||tg.isContentEditable;
+  const mod=e.ctrlKey||e.metaKey;
+  if(mod && !e.altKey && (e.key==='z'||e.key==='Z')){ if(typing) return; e.preventDefault(); if(e.shiftKey) redoLast(); else undoLast(); return; }
+  if(mod && !e.altKey && (e.key==='y'||e.key==='Y')){ if(typing) return; e.preventDefault(); redoLast(); return; }
+  if(e.key==='Escape'){
+    if(!$('sheetBack').hidden) closeSheets();
+    else if(extendMode||splitMode) endModes();
+    else if(selectedId) closeEditPanel();
+    else if(document.body.classList.contains('focus')) toggleFocus(false);
+    return;
+  }
+  if(typing || mod || e.altKey) return;
+  const k=e.key;
+  if(k==='o'||k==='O'){ setOffScreen(!offScreen); }
+  else if((k==='Delete'||k==='Backspace') && selectedId){ e.preventDefault(); deleteSelected(); }
+  else if(k==='+'||k==='='){ zoomBy(1.2); }
+  else if(k==='-'||k==='_'){ zoomBy(1/1.2); }
+  else if(k==='0'){ fitWidth(); }
+  else if(k==='f'||k==='F'){ toggleFocus(); }
+  else if((k==='e'||k==='E') && selectedId){ setExtend(!extendMode); }
+  else if(/^[1-8]$/.test(k)){ setColour(COLOURS[+k-1].hex); }
+});
+document.addEventListener('keyup', e=>{ if(e.key==='Shift'){ shiftHeld=false; updateBadge(); } });
+addEventListener('blur',()=>{ if(shiftHeld){ shiftHeld=false; updateBadge(); } });
 
 // ── Export ────────────────────────────────────────────────────────────────────
 async function exportPDF(){
-  if(!pageWrappers.length){ alert('No script loaded.'); return; }
-  const notesOn = document.getElementById('showNotes').checked;
+  if(!pageWrappers.length || !pdfDoc){ toast('Upload a script PDF first.'); return; }
+  const notesOn = $('showNotes').checked;
   const msg = notesOn
     ? 'Show Notes is ON — annotations will be included in this export. Continue?'
     : 'Show Notes is OFF — annotations will NOT be included in this export. Continue?';
   if(!confirm(msg)) return;
-  const ov=document.getElementById('exportOverlay');
+  const ov=$('exportOverlay');
   ov.style.display='flex';
   await new Promise(r=>setTimeout(r,60));
+  // export without the selection handles
+  const keepSel=selectedId, keepSplit=splitMode; selectedId=null; splitMode=false; exporting=true; redrawAll();
   const {jsPDF}=window.jspdf; let pdf=null;
-  for(let i=0;i<pageWrappers.length;i++){
-    const pw=pageWrappers[i];
-    const w=pw.canvas.width, h=pw.canvas.height;
-    const out=document.createElement('canvas'); out.width=w; out.height=h;
-    const ctx=out.getContext('2d'); ctx.drawImage(pw.canvas,0,0);
-    const svgClone=pw.svg.cloneNode(true);
-    svgClone.setAttribute('width',w); svgClone.setAttribute('height',h);
-    const blob=new Blob([new XMLSerializer().serializeToString(svgClone)],{type:'image/svg+xml;charset=utf-8'});
-    const url=URL.createObjectURL(blob);
-    await new Promise(res=>{
-      const img=new Image();
-      img.onload=()=>{ ctx.drawImage(img,0,0,w,h); URL.revokeObjectURL(url); res(); };
-      img.src=url;
-    });
-    const imgData=out.toDataURL('image/jpeg',0.93);
-    const ptW=w*0.75, ptH=h*0.75;
-    if(!pdf) pdf=new jsPDF({orientation:ptW>ptH?'landscape':'portrait',unit:'pt',format:[ptW,ptH]});
-    else pdf.addPage([ptW,ptH],ptW>ptH?'landscape':'portrait');
-    pdf.addImage(imgData,'JPEG',0,0,ptW,ptH);
+  try{
+    for(let i=0;i<pageWrappers.length;i++){
+      const pw=pageWrappers[i];
+      const page=await pdfDoc.getPage(i+1);
+      const vp=page.getViewport({scale:2});
+      const w=Math.floor(vp.width), h=Math.floor(vp.height);
+      const out=document.createElement('canvas'); out.width=w; out.height=h;
+      const ctx=out.getContext('2d');
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h);
+      await page.render({canvasContext:ctx,viewport:vp}).promise;
+      const svgClone=pw.svg.cloneNode(true);
+      svgClone.setAttribute('width',w); svgClone.setAttribute('height',h);
+      const blob=new Blob([new XMLSerializer().serializeToString(svgClone)],{type:'image/svg+xml;charset=utf-8'});
+      const url=URL.createObjectURL(blob);
+      await new Promise(res=>{
+        const img=new Image();
+        img.onload=()=>{ ctx.drawImage(img,0,0,w,h); URL.revokeObjectURL(url); res(); };
+        img.onerror=()=>{ URL.revokeObjectURL(url); res(); };
+        img.src=url;
+      });
+      const imgData=out.toDataURL('image/jpeg',0.92);
+      out.width=out.height=0;
+      const ptW=pw.baseW, ptH=pw.baseH;   // the script's real page size
+      if(!pdf) pdf=new jsPDF({orientation:ptW>ptH?'landscape':'portrait',unit:'pt',format:[ptW,ptH]});
+      else pdf.addPage([ptW,ptH],ptW>ptH?'landscape':'portrait');
+      pdf.addImage(imgData,'JPEG',0,0,ptW,ptH);
+    }
+  } finally {
+    ov.style.display='none'; exporting=false;
+    selectedId=keepSel && getShot(keepSel) ? keepSel : null; splitMode=keepSplit && !!selectedId; redrawAll();
   }
-  ov.style.display='none';
   /* Documentation (Film Tool Hub): the export is also filed in the project's Documentation folder.
      save() returns true when "Save to Documentation" was chosen, so there's no download. */
   const name=origFileName+'_Lined.pdf';
   if(!(window.fthDocs && window.fthDocs.save({type:'Lined Script PDF', filename:name, blob:pdf.output('blob')}))) pdf.save(name);
 }
-if(window.fthDocs) window.fthDocs.attach(document.getElementById('docBtn'), [{label:'Lined Script PDF', fn:exportPDF}]);
-</script>
-<script>
-(function(){function f(){var m=document.getElementById('main');if(m)document.documentElement.style.setProperty('--fth-panel-top',m.getBoundingClientRect().top+'px')}
-addEventListener('resize',f);addEventListener('load',f);document.addEventListener('DOMContentLoaded',f);f()})();
+if(window.fthDocs) window.fthDocs.attach($('docBtn'), [{label:'Lined Script PDF', fn:exportPDF}]);
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+place(); setColour(activeColour); syncSettingsUI(); updateBadge(); updateNext(); updateUndoUI(); updateZoomUI();
+addEventListener('load',panelTop); document.addEventListener('DOMContentLoaded',panelTop);
 </script>
 <script>/* fth-adapter */
 (function(){
   if (!window.fthStore) return;
   let ready = false;
-  const save = () => { if (!ready || !pdfDoc) return; fthStore.set('lines', {shots: shots, G: G, activeColour: activeColour, origFileName: origFileName}); };
+  const save = () => { if (!ready || !pdfDoc) return; fthStore.set('lines', {
+    shots: shots, G: G, activeColour: activeColour, origFileName: origFileName, settings: settings,
+    next: {scene: $('sceneInput').value, shotNum: $('shotNumInput').value, custom: $('customInput').value} }); };
   fthAutosave(save, 800);
   const _clear = clearAll; clearAll = function(){ _clear.apply(this, arguments); save(); };
   const _undo = undoLast; undoLast = function(){ _undo.apply(this, arguments); save(); };
+  const _redo = redoLast; redoLast = function(){ _redo.apply(this, arguments); save(); };
   Promise.all([fthStore.get('pdf'), fthStore.get('lines')]).then(async ([pdf, lines]) => {
     try {
       if (pdf && pdf.bytes && window.pdfjsLib) {
@@ -1031,12 +1614,15 @@ addEventListener('resize',f);addEventListener('load',f);document.addEventListene
         pdfDoc = await pdfjsLib.getDocument({data: pdf.bytes.slice(0)}).promise;
         if (lines) {
           if (lines.G) Object.assign(G, lines.G);
-          if (lines.activeColour) activeColour = lines.activeColour;
+          if (lines.activeColour) setColour(lines.activeColour);
+          if (lines.settings) for (const k in settings) if (k in lines.settings) settings[k] = lines.settings[k];
+          if (lines.next) { $('sceneInput').value = lines.next.scene || ''; $('shotNumInput').value = lines.next.shotNum || ''; $('customInput').value = lines.next.custom || ''; }
           shots = Array.isArray(lines.shots) ? lines.shots : [];
-          const w = document.getElementById('weightSlider'), z = document.getElementById('zzSlider');
-          if (w) { w.value = G.weight; document.getElementById('weightVal').textContent = G.weight; }
-          if (z) { z.value = G.zzAmp; document.getElementById('zzVal').textContent = G.zzAmp; }
+          /* older saves could have a segment drawn bottom-to-top, and segments in drawing order */
+          shots.forEach(s => { (s.segments || (s.segments = [])).forEach(g => { if (g.ny1 > g.ny2) { const t = g.ny1; g.ny1 = g.ny2; g.ny2 = t; } }); sortSegs(s); });
+          syncSettingsUI();
         }
+        if (compact || COARSE) zoomFit = true;
         await buildPages();
       }
     } catch (e) {}

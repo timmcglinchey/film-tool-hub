@@ -405,7 +405,15 @@ window.__fthHub = {
   /* Documentation: every tool hands its exports to this one helper (through window.fthDocs in the tool) */
   saveDoc(tool, pid, o) { return saveDoc(tool, pid, o || {}); },
   /* a personal tool (My Research) changed: send it to the person's own Drive shortly */
-  personalChanged() { researchChanged(); }
+  personalChanged() { researchChanged(); },
+  /* a tool's Focus mode (e.g. Script Lining on a phone): hide the top bar and tab strip while that tool is showing.
+     The tool passes its own window; a tool that (re)loads calls focusMode(false, window) so a lost Focus mode never sticks */
+  focusMode(on, win) {
+    let id = null; frames.forEach((f, k) => { if (f.contentWindow === win) id = k; });
+    if (!id) return;
+    if (on) focusTool = id; else if (focusTool === id) focusTool = null;
+    applyFocus();
+  }
 };
 
 
@@ -2264,13 +2272,15 @@ function card(t) {
 const ws = $('#workspace');
 const frames = new Map();
 let openTabs = [], active = null;
+let focusTool = null;   /* the tool in Focus mode, if any (see __fthHub.focusMode) */
+function applyFocus() { document.body.classList.toggle('tool-focus', !!focusTool && focusTool === active); }
 
 function frameFor(t) {
   let f = frames.get(t.id);
   if (!f) {
     f = document.createElement('iframe');
     f.title = t.name; f.dataset.tool = t.id;
-    f.setAttribute('allow', 'fullscreen; clipboard-read; clipboard-write; geolocation; camera; microphone; autoplay');
+    f.setAttribute('allow', 'fullscreen; clipboard-read; clipboard-write; geolocation; camera; microphone; autoplay; screen-wake-lock');
     if (t.html != null) f.srcdoc = themed(t);
     else {
       f.srcdoc = LOADING;
@@ -2291,6 +2301,7 @@ function activate(id) {
   } else active = null;
   frames.forEach((f, k) => f.classList.toggle('active', k === active));
   ws.hidden = !active;
+  applyFocus();
   document.body.classList.toggle('tool-open', !!active);
   document.title = active ? `${t.name} · Film Tool Hub` : 'Film Tool Hub';
   if (convTool != null && active && isPersonal(active)) closeConv();
@@ -2359,6 +2370,7 @@ function closeTab(id) {
   const i = openTabs.indexOf(id); if (i < 0) return;
   openTabs.splice(i, 1);
   const f = frames.get(id); if (f) { f.remove(); frames.delete(id); }
+  if (focusTool === id) { focusTool = null; applyFocus(); }
   if (active === id) {
     /* the next tab along, or the one before; never a page (Task Board, My Research), which has no tab */
     const next = isPage(id) ? null : openTabs.slice(i).find(t => !isPage(t)) || openTabs.slice(0, i).reverse().find(t => !isPage(t));
