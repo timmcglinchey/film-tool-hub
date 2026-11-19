@@ -1069,6 +1069,7 @@ async function syncDown(p, meta, quiet) {
   const by = remote.savedBy;
   if (!quiet && r.changed && by && account && by.email !== account.email) toast(`Updated with ${firstName(by)}’s saved changes`);
   renderProjUI();
+  if (r.changed && p.id === curId) { renderBar(); renderMe(); }   /* someone may have given me a task: update My work and its dot */
 }
 /* Save for a shared project */
 function sharedSave(p, snap) {
@@ -2311,7 +2312,7 @@ function activate(id) {
   if (active && sharedCur() && !held.has(active)) kickTick();
   /* the Task Board is a page, not a tab: leaving it closes it (saving my work and freeing it for the crew).
      My Research stays loaded in the background, so it keeps its place; it's never locked, so that frees nothing. */
-  if (prev === TASKS && active !== TASKS) closeTab(TASKS);
+  if (prev === TASKS && active !== TASKS) { tasksSeen(cur()); closeTab(TASKS); }
 }
 
 /* The Task Board is hub-wide: a button in the top bar, not one of the tools. Its frame works like any
@@ -2994,6 +2995,11 @@ const liveMsgs = tool => msgCache.filter(m => !m.deleted && (tool == null || m.t
 const msgSeen = tool => ((cur() || {}).msgSeen || {})[tool] || 0;
 const unreadIn = tool => liveMsgs(tool).filter(m => !byMe(m) && m.at > msgSeen(tool));
 const unreadForMe = () => liveMsgs().filter(m => !byMe(m) && forMe(m) && m.at > msgSeen(m.tool));
+/* a conversation I'm part of: I've written in it, or someone has tagged me in it */
+const partOf = tool => liveMsgs(tool).some(m => byMe(m) || forMe(m));
+/* new comments in those conversations that don't tag me (the ones that do are unreadForMe) */
+const unreadReplies = () => { const mine = new Map(); return liveMsgs().filter(m => !byMe(m) && !forMe(m) && m.at > msgSeen(m.tool) && (mine.has(m.tool) ? mine.get(m.tool) : mine.set(m.tool, partOf(m.tool)).get(m.tool))); };
+const isNewMsg = m => !byMe(m) && m.at > msgSeen(m.tool) && (forMe(m) || partOf(m.tool));
 const convName = tool => tool === '*' ? 'Whole project' : toolName(tool);
 /* the name the crew list gives someone, falling back to the name saved with their comment or document */
 function whoName(by) {
@@ -3011,8 +3017,10 @@ async function msgsMergeIn(p, list) {
   }
   if (!ch || p.id !== curId) return;
   await msgsLoad(); renderConv(); renderBar(); renderMe();
-  const mine = fresh.filter(m => !byMe(m) && forMe(m) && Date.now() - m.at < 3 * 60e3 && m.tool !== convTool);
+  const recent = fresh.filter(m => !byMe(m) && Date.now() - m.at < 3 * 60e3 && m.tool !== convTool);
+  const mine = recent.filter(forMe), reply = recent.filter(m => !forMe(m) && partOf(m.tool));
   if (mine.length) toastLong(`${whoName(mine[0].by)} left you a comment in ${convName(mine[0].tool)}. Open My work to read it.`);
+  else if (reply.length) toastLong(`${whoName(reply[0].by)} added a comment to ${convName(reply[0].tool)}, a conversation you’re in. Open My work to read it.`);
 }
 async function markSeen(tool) {
   const p = cur(); if (!p || !unreadIn(tool).length) return;
@@ -3089,18 +3097,41 @@ function myTasks(p) {
   return {mineOnly, list: (mineOnly ? all.filter(t => (t.who || []).some(w => names.some(n => sameName(n, w)))) : all).sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999'))};
 }
 const tasksDue = p => { if (!p || !p.shared) return 0; const t = today(), m = myTasks(p); return m.mineOnly ? m.list.filter(x => x.due && x.due <= t).length : 0; };
+/* Tasks given to me that I haven't looked at yet. p.taskSeen (kept per browser, like msgSeen) lists the ids
+   of my open tasks as they were when I last looked, on My work or the Task Board. The first time, the tasks
+   already there count as seen, so nobody is greeted by a dot on every old task. */
+const myTaskIds = p => { const m = myTasks(p); return m.mineOnly ? m.list.map(t => String(t.id)).sort() : []; };
+function newTasks(p) {
+  if (!p || !p.shared || !account) return [];
+  const ids = myTaskIds(p);
+  if (!Array.isArray(p.taskSeen)) { p.taskSeen = ids; persistProjectSoon(p); return []; }
+  const seen = new Set(p.taskSeen); return ids.filter(id => !seen.has(id));
+}
+let meFresh = new Set();   /* tasks that were new when this visit to My work began: they keep their dot until I leave */
+function tasksSeen(p) {
+  if (!p || !p.shared || !account) return;
+  const fresh = newTasks(p), ids = myTaskIds(p);
+  if (meOpen) fresh.forEach(id => meFresh.add(id));
+  if (ids.join() === (p.taskSeen || []).join()) return;
+  p.taskSeen = ids; persistProjectSoon(p);
+}
 const fmtDue = d => { const t = today(); if (!d) return ''; if (d === t) return 'Due today'; const x = new Date(d + 'T12:00:00'); return (d < t ? 'Overdue · ' : 'Due ') + x.toLocaleDateString(undefined, {weekday: 'short', day: 'numeric', month: 'short'}); };
 function showMe(on) {
-  meOpen = on; document.body.classList.toggle('me-open', on);
+  meOpen = on; meFresh.clear(); document.body.classList.toggle('me-open', on);
   $('#mePage').hidden = !on; $('#meBtn').classList.toggle('on', on); $('#meBtn').setAttribute('aria-pressed', on);
   if (!on) return;
   document.title = 'My work · Film Tool Hub'; window.scrollTo(0, 0); renderMe();
 }
 function renderMeBtn() {
   const b = $('#meBtn'); if (!b) return;
-  const p = cur(), n = convOn() ? unreadForMe().length : 0, due = tasksDue(p), tot = n + due;
+  const p = cur();
+  if (meOpen || active === TASKS) tasksSeen(p);   /* looking at My work or the Task Board means I've seen my tasks */
+  const on = convOn(), n = on ? unreadForMe().length : 0, r = on ? unreadReplies().length : 0, nt = newTasks(p);
+  const t = today(), m = myTasks(p), due = p && p.shared && m.mineOnly ? m.list.filter(x => x.due && x.due <= t && !nt.includes(String(x.id))).length : 0;
+  const tot = n + r + nt.length + due, pl = (k, w) => k + ' ' + w + (k === 1 ? '' : 's');
   const badge = b.querySelector('.badge'); badge.hidden = !tot; badge.textContent = tot;
-  b.title = 'My work: your tasks, comments left for you and your documents' + (tot ? ` (${[n ? n + ' new comment' + (n === 1 ? '' : 's') : '', due ? due + ' task' + (due === 1 ? '' : 's') + ' due' : ''].filter(Boolean).join(', ')})` : '');
+  b.classList.toggle('notify', !!tot);
+  b.title = 'My work: your tasks, comments left for you and your documents' + (tot ? ` (${[n && pl(n, 'mention'), r && pl(r, 'new comment') + ' in your conversations', nt.length && pl(nt.length, 'new task') + ' for you', due && pl(due, 'task') + ' due'].filter(Boolean).join(', ')})` : '');
 }
 function renderMe() {
   renderMeBtn();
@@ -3111,22 +3142,23 @@ function renderMe() {
     <p class="lede">${me ? `${esc(me.name)}${me.role ? ', ' + esc(me.role) : ''}: your` : 'Your'} tasks, the comments left for you and the documents you’ve saved in this project.</p></section>`;
   /* tasks */
   const mt = myTasks(p), tc = catOf((byId('tasks') || {}).category);
-  const taskRows = mt.list.map(x => `<a class="mrow${x.due && x.due < t ? ' late' : ''}" href="#/tool/tasks">
+  const taskRows = mt.list.map(x => `<a class="mrow${x.due && x.due < t ? ' late' : ''}${meFresh.has(String(x.id)) ? ' new' : ''}" href="#/tool/tasks"${meFresh.has(String(x.id)) ? ' title="New: just given to you"' : ''}>
       <span class="mst ${esc(x.status)}">${x.status === 'doing' ? 'Doing' : 'To do'}</span>
       <div class="mmain"><b>${esc(x.title)}</b><small>${esc([(x.depts || []).join(', '), !mt.mineOnly && (x.who || []).length ? x.who.join(', ') : ''].filter(Boolean).join(' · '))}</small></div>
       <span class="mdue">${esc(fmtDue(x.due))}</span></a>`).join('');
   const tasks = byId('tasks') ? `<section class="section" style="--cat:${tc.color}"><div class="sec-head"><div class="sec-num">01</div><h2>${mt.mineOnly ? 'My tasks' : 'Open tasks'}</h2>
-      <p>${mt.list.length ? `${mt.list.length} still to do` + (mt.list.some(x => x.due && x.due <= t) ? ` · ${mt.list.filter(x => x.due && x.due <= t).length} due now` : '') : mt.mineOnly ? 'Nothing waiting on you.' : 'No open tasks.'}${mt.mineOnly ? '' : p.shared ? '' : ' In a shared project this shows only the tasks with your name on.'}</p></div>
+      <p>${mt.list.length ? (meFresh.size && mt.mineOnly ? `${mt.list.filter(x => meFresh.has(String(x.id))).length} new for you · ` : '') + `${mt.list.length} still to do` + (mt.list.some(x => x.due && x.due <= t) ? ` · ${mt.list.filter(x => x.due && x.due <= t).length} due now` : '') : mt.mineOnly ? 'Nothing waiting on you.' : 'No open tasks.'}${mt.mineOnly ? '' : p.shared ? '' : ' In a shared project this shows only the tasks with your name on.'}</p></div>
       ${taskRows ? `<div class="mlist">${taskRows}</div>` : `<div class="empty msmall">Tasks ${mt.mineOnly ? 'given to you' : ''} on the <a href="#/tool/tasks">Task Board</a> appear here.</div>`}</section>` : '';
   /* conversations */
   let conv;
   if (convOn()) {
-    const list = liveMsgs().filter(m => !byMe(m) && (forMe(m) || !(m.to || []).length)).sort((a, b) => b.at - a.at).slice(0, 40), nNew = unreadForMe().length;
+    const ins = new Map(), inConv = tool => ins.has(tool) ? ins.get(tool) : ins.set(tool, partOf(tool)).get(tool);
+    const list = liveMsgs().filter(m => !byMe(m) && (forMe(m) || !(m.to || []).length || inConv(m.tool))).sort((a, b) => b.at - a.at).slice(0, 40), nNew = unreadForMe().length + unreadReplies().length;
     conv = `<section class="section" style="--cat:var(--accent)"><div class="sec-head"><div class="sec-num">02</div><h2>My conversations</h2>
-      <p>${list.length ? (nNew ? `${nNew} new for you` : 'Nothing new') + ' · comments that tag you, or are for everyone' : 'Comments that tag you appear here.'}</p></div>
+      <p>${list.length ? (nNew ? `${nNew} new for you` : 'Nothing new') + ' · comments that tag you, are for everyone, or are in a conversation you’re part of' : 'Comments that tag you, and new comments in conversations you’re part of, appear here.'}</p></div>
       <div class="dtop"><button type="button" class="btn" data-mc="*">${CONVI}Whole-project conversation${unreadIn('*').length ? ` <b class="badge">${unreadIn('*').length}</b>` : ''}</button></div>
-      ${list.length ? `<div class="mlist">${list.map(m => `<button type="button" class="mrow mconv${m.at > msgSeen(m.tool) ? ' new' : ''}" data-mc="${esc(m.tool)}">
-        <span class="mst ${forMe(m) ? 'you' : ''}">${forMe(m) ? 'For you' : 'Everyone'}</span>
+      ${list.length ? `<div class="mlist">${list.map(m => `<button type="button" class="mrow mconv${isNewMsg(m) ? ' new' : ''}" data-mc="${esc(m.tool)}">
+        <span class="mst ${forMe(m) ? 'you' : ''}">${forMe(m) ? 'For you' : (m.to || []).length ? 'Reply' : 'Everyone'}</span>
         <div class="mmain"><b>${esc(whoName(m.by))} <i>in ${esc(convName(m.tool))}</i></b><small>${esc(m.text.length > 180 ? m.text.slice(0, 180) + '…' : m.text)}</small></div>
         <span class="mdue">${esc(fmtWhen(m.at))}</span></button>`).join('')}</div>`
       : `<div class="empty msmall">Open any tool and press <b>Conversation</b> in the top bar to leave a comment for your crew.</div>`}</section>`;
