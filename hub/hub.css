@@ -452,7 +452,10 @@ body.me-open #home{display:none}
 .mrow .mst.done{color:#3fbf8f;border-color:color-mix(in srgb,#3fbf8f 55%,transparent)}
 .mrow .mdue{flex:none;font:500 12px var(--mono);color:var(--muted);white-space:nowrap}
 .mrow.late .mdue{color:#ff7a66;font-weight:700}
-.mrow.mconv.new .mmain b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:1px}
+/* red notification dots: the My work badge, and each new row on the page (a mention, a new comment in a
+   conversation I'm part of, a task just given to me) */
+.mebtn.notify .badge{background:var(--notify,#e5484d);color:#fff}
+.mrow.new .mmain b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--notify,#e5484d);margin-right:8px;vertical-align:1px}
 .empty.msmall{padding:26px 20px}
 .empty.msmall a{color:var(--accent-ink)}
 @media (max-width:640px){.mrow{flex-wrap:wrap;gap:8px 12px}.mrow .mmain{flex-basis:100%;order:3}}
