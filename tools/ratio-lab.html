@@ -1,0 +1,2164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<!--fth-standalone-->
+<!-- Film Tool Hub: this block is only used when this file is opened on its own (for example while working on it).
+     Inside the hub it is removed and the hub supplies the same look from hub/kit.css. Keep it, but don't edit it here. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Caveat:wght@700&display=swap" rel="stylesheet">
+<style>
+/* ═════════ Film Tool Hub kit ═════════
+   Shared look for every tool. The hub injects this at the top of each tool's <head>,
+   sets data-theme="light|dark" on the tool's <html>, and sets --fth-cat to the tool's
+   category colour. Tools use the --fth-* tokens and the .fth-* components. */
+:root{
+  --fth-bg:#0b0c0e; --fth-bg2:#101216; --fth-surface:#15181d; --fth-surface2:#1b1f26; --fth-surface3:#232831;
+  --fth-line:#242931; --fth-line2:#333a45; --fth-line3:#46505e;
+  --fth-text:#f0ece5; --fth-muted:#9aa0aa; --fth-faint:#666c77;
+  --fth-good:#5cc98a; --fth-bad:#ff8f7a; --fth-warn:#f2bd5c;
+  /* accent tokens (--fth-cat, --fth-accent, --fth-accent-ink, --fth-accent-soft, --fth-accent-line, --fth-on-accent)
+     are written by the hub for each tool's category, as plain colours for both themes */
+  --fth-cat:#ffb547; --fth-accent:#ffb547; --fth-accent-ink:#ffb547; --fth-accent-soft:rgba(255,181,71,.14); --fth-accent-line:rgba(255,181,71,.45); --fth-on-accent:#14110b;
+  --fth-paper-backdrop:#07080a;
+  --fth-shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --fth-shadow-sm:none;
+  --fth-radius:14px; --fth-radius-sm:9px;
+  --fth-display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --fth-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --fth-script:"Courier Prime","Courier New",Courier,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --fth-bg:#f3f0ea; --fth-bg2:#f9f7f3; --fth-surface:#ffffff; --fth-surface2:#f1ede5; --fth-surface3:#e6e1d6;
+  --fth-line:#e3ded4; --fth-line2:#d2ccc0; --fth-line3:#b4ad9f;
+  --fth-text:#16181c; --fth-muted:#565c66; --fth-faint:#878c95;
+  --fth-good:#22804a; --fth-bad:#c0392b; --fth-warn:#9a6200;
+  --fth-paper-backdrop:#e4dfd5;
+  --fth-shadow:0 14px 30px -16px rgba(70,50,20,.30);
+  --fth-shadow-sm:0 1px 2px rgba(60,45,20,.05),0 4px 14px rgba(60,45,20,.05);
+  color-scheme:light;
+}
+
+/* base */
+html{background:var(--fth-bg)}
+body{background:var(--fth-bg);color:var(--fth-text);font-family:var(--fth-display);-webkit-font-smoothing:antialiased}
+::selection{background:var(--fth-accent-line)}
+:focus-visible{outline:2px solid var(--fth-accent);outline-offset:2px}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--fth-line2);border-radius:6px;border:2px solid var(--fth-bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--fth-line3)}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+
+/* tool header: category eyebrow, tool name, then actions on the right */
+.fth-head{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 20px;
+  background:color-mix(in srgb,var(--fth-bg) 88%,transparent);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  border-bottom:1px solid var(--fth-line)}
+.fth-head::before{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:linear-gradient(90deg,var(--fth-cat),transparent 38%);opacity:.75;pointer-events:none}
+.fth-id{display:flex;flex-direction:column;gap:5px;min-width:0;flex:none}
+.fth-eyebrow{display:flex;align-items:center;gap:8px;font:500 10.5px/1 var(--fth-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fth-accent-ink);white-space:nowrap}
+.fth-eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fth-cat);box-shadow:0 0 0 3px var(--fth-accent-soft);flex:none}
+.fth-title{margin:0;font-weight:800;font-variation-settings:"wdth" 68;font-size:23px;line-height:1;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap}
+.fth-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.fth-vsep{width:1px;height:22px;background:var(--fth-line2);margin:0 3px;flex:none}
+
+/* buttons */
+.fth-btn{height:34px;padding:0 13px;border-radius:var(--fth-radius-sm);border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);
+  font:600 13px/1 var(--fth-display);display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  transition:background-color .15s,border-color .15s,color .15s}
+.fth-btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.fth-btn:disabled{opacity:.45;cursor:default}
+.fth-btn.primary{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.fth-btn.primary:hover{filter:brightness(1.08)}
+.fth-btn.ghost{background:transparent;border-color:transparent;color:var(--fth-muted)}
+.fth-btn.ghost:hover{background:var(--fth-surface2);border-color:var(--fth-line2);color:var(--fth-text)}
+.fth-btn.danger{color:var(--fth-bad)}
+.fth-btn.sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.fth-btn.icon{width:30px;height:30px;padding:0}
+
+/* labels, fields */
+.fth-label{font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.fth-input{width:100%;min-width:0;background:var(--fth-bg2);border:1px solid var(--fth-line2);border-radius:8px;padding:7px 10px;color:var(--fth-text);font:14px/1.35 var(--fth-display);outline:none;transition:border-color .15s,box-shadow .15s}
+.fth-input:hover{border-color:var(--fth-line3)}
+.fth-input:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+select.fth-input{cursor:pointer}
+textarea.fth-input{resize:vertical;line-height:1.45}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-accent)}
+
+/* sections & surfaces */
+.fth-card{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);box-shadow:var(--fth-shadow-sm)}
+.fth-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.fth-sec::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+.fth-sec .fth-num{font:600 11px var(--fth-mono);color:var(--fth-accent-ink);letter-spacing:.08em}
+.fth-muted{color:var(--fth-muted)}
+.fth-mono{font-family:var(--fth-mono)}
+
+/* notes */
+.fth-tip{background:var(--fth-accent-soft);border-left:2px solid var(--fth-accent);color:var(--fth-text);padding:7px 10px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.45}
+.fth-warn{background:color-mix(in srgb,var(--fth-warn) 10%,var(--fth-surface));border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent);color:var(--fth-text);border-radius:10px;padding:10px 12px;font-size:13px}
+.fth-warn b:first-child{color:var(--fth-warn)}
+.fth-info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--fth-line3);color:var(--fth-muted);font:600 10px/1 var(--fth-mono);text-transform:none;letter-spacing:0;cursor:pointer;user-select:none;vertical-align:1px;margin-left:5px;transition:.15s}
+.fth-info:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+
+/* toast */
+.fth-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;z-index:200;background:var(--fth-text);color:var(--fth-bg);padding:10px 16px;border-radius:10px;font:500 13.5px var(--fth-display);box-shadow:var(--fth-shadow);transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.fth-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* paper: a printable page shown on screen stays paper-white in both themes */
+.fth-paper-wrap{background:var(--fth-paper-backdrop)}
+.fth-paper{background:#fff;color:#000;color-scheme:light;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55)}
+
+@media print{
+  html,body{background:#fff!important;color:#000}
+  .fth-head{display:none!important}
+  .fth-paper-wrap{background:#fff!important}
+  .fth-paper{box-shadow:none!important}
+}
+@media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
+@media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
+
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
+:root{--fth-cat:#e889c8;--fth-accent:#e889c8;--fth-accent-ink:#e889c8;--fth-accent-soft:rgba(232,137,200,0.14);--fth-accent-line:rgba(232,137,200,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#874f74;--fth-accent-ink:#874f74;--fth-accent-soft:rgba(232,137,200,0.16);--fth-accent-line:rgba(232,137,200,0.6);--fth-on-accent:#ffffff}
+</style>
+<script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
+<!--/fth-standalone-->
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lighting Ratio Lab</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-size:14px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+.proj{flex:1;min-width:180px;max-width:380px;height:36px}
+
+.app{max-width:1640px;margin:0 auto;padding:16px 20px 48px;display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:16px;align-items:start}
+.left{min-width:0;display:flex;flex-direction:column;gap:12px}
+.rail{display:flex;flex-direction:column;gap:12px;min-width:0}
+
+.card{background:var(--fth-surface);border:1px solid var(--fth-line);border-radius:var(--fth-radius);padding:14px 16px;box-shadow:var(--fth-shadow-sm)}
+.card h2{margin:0 0 12px;font:700 11px/1 var(--fth-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--fth-muted);display:flex;align-items:baseline;gap:8px}
+.card h2 .r{margin-left:auto;font-weight:500;letter-spacing:.04em;text-transform:none;color:var(--fth-faint);font-size:11px}
+.lbl{font:600 10.5px/1.2 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.srcnote{margin:12px 0 0;font-size:12px;line-height:1.5;color:var(--fth-muted)}
+.srcnote b{color:var(--fth-text);font-weight:600}
+
+/* stage */
+.stage{position:relative;aspect-ratio:2.39/1;border-radius:var(--fth-radius);overflow:hidden;background:#0a0b0d;border:1px solid var(--fth-line);user-select:none;-webkit-user-select:none}
+#view{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.marks{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.marks .m{pointer-events:auto;cursor:grab}
+.marks .m:active{cursor:grabbing}
+.marks.off{display:none}
+.sbar{position:absolute;left:10px;right:10px;display:flex;gap:8px;align-items:center;pointer-events:none}
+.sbar>*{pointer-events:auto}
+.sbar.top{top:10px}
+.sbar.bot{bottom:10px;justify-content:space-between}
+.seg{display:inline-flex;background:rgba(12,13,16,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:2px;gap:2px}
+.seg button{border:0;background:transparent;color:#cfcbc3;padding:5px 11px;border-radius:7px;font-size:12.5px;font-weight:600}
+.seg button:hover{color:#fff}
+.seg button.on{background:var(--fth-cat);color:#14110b}
+.pill{font:500 11.5px/1.3 var(--fth-mono);color:#e4e0d8;background:rgba(12,13,16,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.1);padding:6px 10px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%}
+.pill b{color:#fff;font-weight:600}
+button.pill{cursor:pointer;margin-left:auto}
+button.pill.on{border-color:rgba(255,255,255,.35);color:#fff}
+.prog{position:relative;min-width:150px;text-align:center;max-width:none}
+.prog i{position:absolute;left:0;top:0;bottom:0;background:rgba(255,255,255,.1);width:0}
+.prog span{position:relative}
+.prog.done{opacity:.55}
+.glerr{position:absolute;inset:0;display:grid;place-items:center;padding:30px;text-align:center;color:#e9e6df;background:#111;font-size:14px}
+
+/* false colour key */
+.legend{display:flex;gap:2px;align-items:stretch;border-radius:9px;overflow:hidden;font:600 10.5px/1 var(--fth-mono)}
+.legend div{flex:1;padding:7px 0 6px;text-align:center;color:#111;position:relative}
+.legend div.dk{color:#f1efe9}
+.legend div.cap{flex:1.6}
+
+.lower{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px}
+.plan{width:100%;aspect-ratio:1.55/1;display:block;border-radius:10px;background:var(--fth-bg2);border:1px solid var(--fth-line)}
+.ltab{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
+.ltab td{padding:6px 4px;border-top:1px solid var(--fth-line);vertical-align:top}
+.ltab td:first-child{white-space:nowrap;font-weight:700}
+.ltab td.n{font-family:var(--fth-mono);white-space:nowrap;text-align:right}
+.ltab small{display:block;color:var(--fth-muted);font-size:11.5px;font-weight:400}
+.ltab .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);margin-right:7px;vertical-align:0}
+.notes{display:flex;flex-direction:column}
+.notes textarea{flex:1;min-height:200px;width:100%;resize:vertical;background:var(--fth-bg2);border:1px solid var(--fth-line2);border-radius:9px;padding:10px 12px;font:14px/1.5 var(--fth-display);color:var(--fth-text);outline:none}
+.notes textarea:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+
+/* ratios */
+.hero{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;align-items:center;padding:2px 0 12px;border-bottom:1px solid var(--fth-line)}
+.hero .big{font:800 46px/0.95 var(--fth-display);font-stretch:75%;letter-spacing:-.01em;color:var(--fth-text)}
+.hero .big small{display:block;font:600 10.5px/1 var(--fth-mono);letter-spacing:.1em;text-transform:uppercase;color:#ffb547;margin-bottom:7px}
+.hero .why{font-size:13px;color:var(--fth-muted)}
+.hero .why strong{display:block;color:var(--fth-text);font-size:14.5px;margin-bottom:2px}
+.hero .why .rd{display:block;margin-top:5px;font:500 12px/1.4 var(--fth-mono);color:var(--fth-text)}
+.plist{list-style:none;margin:0;padding:0}
+.plist li{display:grid;grid-template-columns:1fr 84px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--fth-line)}
+.plist li.ph{padding:10px 0 4px;font:600 9.5px/1 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted);text-align:right}
+.plist .pv{font:700 14px/1.1 var(--fth-mono);text-align:right;white-space:nowrap}
+.plist .pv small{display:block;font:500 10.5px/1.3 var(--fth-mono);color:var(--fth-muted);margin-top:2px}
+.plist .pv.cam{font-weight:500;color:var(--fth-muted)}
+.plist .pn{font-weight:600;font-size:13px}
+.plist .pn small{display:block;color:var(--fth-muted);font-weight:400;font-size:11.5px}
+.plist .pr{font:700 15px/1 var(--fth-mono)}
+.plist .ps{font:500 11.5px/1 var(--fth-mono);color:var(--fth-muted);text-align:right;white-space:nowrap;min-width:74px}
+.reads{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.reads li{border:1px solid var(--fth-line);border-radius:9px;padding:7px 8px 6px;border-top:3px solid var(--c)}
+.reads b{display:block;font:700 13px/1.2 var(--fth-mono)}
+.reads span{font:600 10px/1 var(--fth-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--fth-muted)}
+.reads i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-left:5px;vertical-align:0}
+
+/* lights */
+.light{padding:11px 0 12px;border-bottom:1px solid var(--fth-line)}
+.light:first-child{padding-top:0}
+.light:last-child{border-bottom:0;padding-bottom:0}
+.light .hd{display:flex;align-items:center;gap:9px}
+.chip{display:inline-grid;place-items:center;min-width:26px;height:22px;padding:0 5px;border-radius:6px;background:var(--c);color:#14110b;font:700 11px/1 var(--fth-mono)}
+.light .nm{font-weight:700;font-size:14px;line-height:1.15}
+.light .nm small{display:block;font-weight:400;font-size:11.5px;color:var(--fth-muted)}
+.light .tv{margin-left:auto;text-align:right;font:700 15px/1.1 var(--fth-mono)}
+.light .tv small{display:block;font:500 11px/1.2 var(--fth-mono);color:var(--fth-muted)}
+.light.off .tv,.light.off .nm{opacity:.45}
+.mini{width:28px;height:24px;border-radius:7px;border:1px solid var(--fth-line2);background:var(--fth-surface);display:inline-grid;place-items:center;color:var(--fth-muted);padding:0}
+.mini:hover{border-color:var(--fth-line3);color:var(--fth-text)}
+.mini.on{background:var(--fth-accent-soft);border-color:var(--fth-accent-line);color:var(--fth-accent-ink)}
+.mini svg{width:15px;height:15px}
+.sl{display:grid;grid-template-columns:1fr;gap:3px;margin-top:9px}
+.ticks{display:flex;justify-content:space-between;font:500 9.5px/1 var(--fth-mono);color:var(--fth-faint);padding:0 2px}
+.krow{display:grid;grid-template-columns:auto 1fr 54px;gap:8px;align-items:center;margin-top:8px}
+.krow .val{font:600 11.5px/1 var(--fth-mono);text-align:right;color:var(--fth-muted)}
+.kbar{height:4px;border-radius:2px;background:linear-gradient(90deg,#ff9a3c,#ffd9a8 35%,#fff 52%,#cfe0ff 75%,#9bbcff)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:var(--fth-line2)}
+input[type=range]::-moz-range-track{height:4px;border-radius:2px;background:var(--fth-line2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--c,var(--fth-accent));border:2px solid var(--fth-surface);margin-top:-6px;box-shadow:0 0 0 1px var(--fth-line3)}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--c,var(--fth-accent));border:2px solid var(--fth-surface)}
+input[type=range].k::-webkit-slider-runnable-track{background:linear-gradient(90deg,#ff9a3c,#ffd9a8 30%,#fff 45%,#cfe0ff 70%,#9bbcff)}
+input[type=range].k::-moz-range-track{background:linear-gradient(90deg,#ff9a3c,#ffd9a8 30%,#fff 45%,#cfe0ff 70%,#9bbcff)}
+input[type=range].k{height:16px}
+input[type=range].k::-webkit-slider-thumb{width:12px;height:12px;margin-top:-4px;background:var(--fth-text)}
+
+/* chips, rows */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{border:1px solid var(--fth-line2);background:var(--fth-surface);border-radius:9px;padding:7px 10px;font-size:12.5px;font-weight:600;text-align:left;line-height:1.2}
+.chips button small{display:block;font-weight:400;color:var(--fth-muted);font-size:11px}
+.chips button:hover{border-color:var(--fth-line3)}
+.chips button.on{border-color:var(--fth-accent);background:var(--fth-accent-soft)}
+.chips.sm button{padding:5px 9px;font:600 12px/1 var(--fth-mono)}
+.kfrow{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.row{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:center;margin-bottom:10px}
+.row.slide{grid-template-columns:96px 1fr 58px}
+.row .val{font:600 12px/1 var(--fth-mono);text-align:right}
+.sel{height:34px;padding:0 8px}
+.skins{display:flex;gap:6px;flex-wrap:wrap}
+.skins button{width:34px;height:34px;border-radius:50%;border:2px solid var(--fth-surface);background:var(--sk);box-shadow:0 0 0 1px var(--fth-line2);padding:0}
+.skins button.on{box-shadow:0 0 0 2px var(--fth-accent)}
+
+@media (max-width:1180px){.app{grid-template-columns:1fr}.lower{grid-template-columns:1fr}}
+@media (max-width:640px){.app{padding:12px}.hero .big{font-size:38px}.pill{max-width:60%}}
+@media print{.rail,.sbar{display:none}}
+.lnk{margin-left:auto;border:0;background:none;padding:0;font:500 11px/1 var(--fth-mono);letter-spacing:.02em;text-transform:none;color:var(--fth-accent-ink);text-decoration:underline;text-underline-offset:3px}
+.kfp{margin:0 auto;max-width:none}
+.seg2{display:inline-flex;border:1px solid var(--fth-line2);border-radius:9px;padding:2px;gap:2px;justify-self:start}
+.seg2 button{border:0;background:none;padding:5px 14px;border-radius:7px;font-weight:600;font-size:12.5px;color:var(--fth-muted)}
+.seg2 button.on{background:var(--fth-accent-soft);color:var(--fth-accent-ink)}
+.light{padding:9px 0 9px}
+.light .sl{margin-top:5px}
+.light .krow{margin-top:3px}
+.light .tv{display:flex;gap:7px;align-items:baseline}
+.light .tv small{display:inline}
+
+/* capture + deck */
+button.pill.capb{display:inline-flex;align-items:center;gap:6px;color:#fff;font-weight:600}
+button.pill.capb svg{width:15px;height:15px}
+#marksBtn{margin-left:0}
+.deckc h2{flex-wrap:wrap}
+.dcount{font-weight:500;letter-spacing:.04em;text-transform:none;color:var(--fth-faint)}
+.dkact{margin-left:auto;display:flex;align-items:center;gap:12px;text-transform:none;letter-spacing:0;font:500 12.5px/1 var(--fth-display);color:var(--fth-text)}
+.sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.sw input{position:absolute;opacity:0;pointer-events:none}
+.sw i{width:30px;height:18px;border-radius:9px;background:var(--fth-line2);position:relative;transition:background .15s}
+.sw i::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.sw input:checked+i{background:var(--fth-accent)}
+.sw input:checked+i::after{transform:translateX(12px)}
+.sw input:focus-visible+i{outline:2px solid var(--fth-accent);outline-offset:2px}
+.deck{display:flex;gap:12px;overflow-x:auto;padding:2px 2px 6px;scroll-snap-type:x proximity}
+.dcard{margin:0;flex:0 0 300px;scroll-snap-align:start;border:1px solid var(--fth-line);border-radius:11px;overflow:hidden;background:var(--fth-bg2)}
+.dimg{aspect-ratio:2.39/1;background:#0a0b0d}
+.dimg img{width:100%;height:100%;display:block;object-fit:cover}
+.dcard figcaption{padding:8px 10px 10px;display:flex;flex-direction:column;gap:6px}
+.dlabel{border:1px solid transparent;background:transparent;border-radius:6px;padding:3px 5px;margin:0 -5px;font-weight:700;font-size:13.5px;color:var(--fth-text);outline:none;width:calc(100% + 10px)}
+.dlabel:hover{border-color:var(--fth-line2)}
+.dlabel:focus{border-color:var(--fth-accent);background:var(--fth-surface)}
+.dsub{font:500 11px/1.35 var(--fth-mono);color:var(--fth-muted)}
+.dsub b{color:var(--fth-text)}
+.dbtns{display:flex;gap:5px}
+.mini.wide{width:auto;padding:0 9px;font-size:12px;font-weight:600;color:var(--fth-text);margin-right:auto}
+.dadd{flex:0 0 220px;min-height:150px;border:1.5px dashed var(--fth-line3);border-radius:11px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;color:var(--fth-text);font-weight:600;font-size:13px;text-align:center}
+.dadd:hover{border-color:var(--fth-accent);background:var(--fth-accent-soft)}
+.dadd svg{width:26px;height:26px;color:var(--fth-muted)}
+.dadd small{font-weight:400;font-size:11.5px;color:var(--fth-muted);line-height:1.4}
+.deck:has(.dcard) .dadd{min-height:auto;flex-basis:130px}
+.fth-toast.show{pointer-events:auto}
+.fth-toast .lnk{color:inherit;font:700 13px/1 var(--fth-display)}
+
+.rmode{margin-left:auto;display:flex;align-items:center;gap:12px;text-transform:none;letter-spacing:0}
+.seg2.sm button{padding:4px 11px;font:600 11.5px/1.2 var(--fth-display)}
+
+button.dimg{display:block;width:100%;padding:0;border:0;cursor:zoom-in}
+button.dimg:focus-visible{outline:2px solid var(--fth-accent);outline-offset:-2px}
+.lb{position:fixed;inset:0;z-index:150;background:rgba(6,7,9,.97);display:flex;flex-direction:column;color:#ece9e2}
+.lb-top{display:flex;align-items:center;gap:16px;padding:14px 18px}
+.lb-n{font:600 12px/1 var(--fth-mono);letter-spacing:.08em;color:#bdb8ae}
+.lb-sw{margin-left:auto;font-size:13px}
+.lb-sw i{background:rgba(255,255,255,.2)}
+.lb-x,.lb-nav{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;border-radius:50%;display:grid;place-items:center;padding:0}
+.lb-x{width:38px;height:38px}
+.lb-x svg{width:18px;height:18px}
+.lb-mid{flex:1;min-height:0;display:flex;align-items:center;gap:14px;padding:0 16px}
+.lb-nav{width:48px;height:48px;flex:0 0 48px}
+.lb-nav svg{width:22px;height:22px}
+.lb-nav:hover,.lb-x:hover{background:rgba(255,255,255,.14)}
+.lb-nav:disabled{opacity:.25;pointer-events:none}
+.lb-fig{flex:1;min-width:0;height:100%;margin:0;display:flex;align-items:center;justify-content:center}
+.lb-fig img{width:min(100%, calc((100vh - 190px) * 2.39));height:auto;aspect-ratio:2.39/1;object-fit:contain;border-radius:6px;box-shadow:0 20px 60px rgba(0,0,0,.5);background:#000}
+.lb-cap{padding:14px 18px 18px;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;max-width:1400px;width:100%;margin:0 auto}
+.lb-t{display:flex;flex-direction:column;gap:4px;min-width:200px}
+.lb-t>b{font-size:17px}
+.lb-t span{font:500 12.5px/1.3 var(--fth-mono);color:#bdb8ae}
+.lb-t span b{color:#fff}
+.lb-l{display:flex;flex-wrap:wrap;gap:6px 18px;font:500 12px/1.3 var(--fth-mono);color:#bdb8ae}
+.lb-l b{color:#fff}
+.lb-l i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:6px}
+.lb-b{margin-left:auto;display:flex;gap:8px}
+.lb .fth-btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.16);color:#fff}
+@media (max-width:700px){.lb-nav{width:38px;height:38px;flex-basis:38px}.lb-mid{padding:0 6px;gap:6px}}
+</style>
+</head>
+<body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>Learn</span><h1 class="fth-title">Lighting Ratio Lab</h1></div>
+  <span class="fth-vsep"></span><input id="proj" class="proj fth-input" placeholder="Project or scene (used on exports)" aria-label="Project or scene title">
+  <div class="fth-actions">
+    <button class="fth-btn" id="openBtn" title="Open a saved .json lighting plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5V18a1.5 1.5 0 0 0 1.5 1.5h15A1.5 1.5 0 0 0 21 18V9a1.5 1.5 0 0 0-1.5-1.5H12L10 5H4.5A1.5 1.5 0 0 0 3 6.5z"/></svg>Open .json</button>
+    <button class="fth-btn" id="saveBtn" title="Save this lighting plan as a .json file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M4.5 19.5h15"/></svg>Download .json</button>
+    <button class="fth-btn" id="pngBtn" title="Save the frame as a PNG"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="1.8"/><path d="M3 15l4.5-4.5 3.5 3.5 4-5 6 6"/></svg>Frame PNG</button>
+    <button class="fth-btn primary" id="pdfBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 13h6M9 16.5h4"/></svg><span id="pdfLbl">Export PDF</span></button>
+  </div>
+</header>
+
+<div class="app">
+  <main class="left">
+    <section class="stage" id="stage">
+      <canvas id="view" aria-label="Rendered frame: a man in a suit in a classroom office, lit by key, fill, backlight and background"></canvas>
+      <svg id="marks" class="marks" aria-hidden="true"></svg>
+      <div class="sbar top">
+        <div class="seg" id="viewSeg" role="group" aria-label="View">
+          <button data-view="img">Picture</button>
+          <button data-view="fc">False colour</button>
+          <button data-view="split" title="Drag on the frame to move the split">Split</button>
+        </div>
+        <span class="pill kfp" id="kfPill"></span>
+        <button class="pill capb" id="capBtn" title="Capture this frame into the deck (C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2.2l1.5-2h5.6l1.5 2h2.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.4"/></svg>Capture</button>
+        <button class="pill tog" id="marksBtn" title="Show or hide the meter spots (M)">Spots</button>
+      </div>
+      <div class="sbar bot">
+        <span class="pill" id="meter">Hover the frame to meter any point</span>
+        <span class="pill prog" id="prog"><i id="progBar"></i><span id="progTxt">Starting…</span></span>
+      </div>
+      <div id="glErr" class="glerr" hidden></div>
+    </section>
+
+    <div class="legend" id="legend" aria-label="False colour key: stops above or below middle grey"></div>
+
+    <section class="card deckc">
+      <h2>Deck<span class="dcount" id="deckCount"></span>
+        <span class="dkact">
+          <label class="sw"><input type="checkbox" id="ovl"><i></i>Ratios on images</label>
+          <button class="fth-btn sm" id="deckPdf">Export deck PDF</button>
+          <button class="lnk" id="deckClear">Clear</button>
+        </span></h2>
+      <div class="deck" id="deck"></div>
+    </section>
+
+    <div class="lower">
+      <section class="card">
+        <h2>Lighting plan<span class="r">top view · fixed rig</span></h2>
+        <canvas id="plan" class="plan" aria-label="Top-down plan of the set showing the camera, subject and the four lights"></canvas>
+        <table class="ltab" id="ltab"></table>
+        <p class="srcnote" id="meterNote"></p>
+      </section>
+      <section class="card notes">
+        <h2>Notes<span class="r">printed on the PDF</span></h2>
+        <textarea id="notes" placeholder="Intent, references, kit, gaffer notes… e.g. ‘Keep it soft and warm; let the board fall off into shadow on the left.’"></textarea>
+      </section>
+    </div>
+  </main>
+
+  <aside class="rail">
+
+    <section class="card">
+      <h2>Lights<span class="r">stops vs your shooting stop</span></h2>
+      <div id="lights"></div>
+    </section>
+    <section class="card">
+      <h2>Ratios<span class="rmode"><span class="seg2 sm" id="rmodeSeg" role="group" aria-label="How readings are taken"><button data-m="meter" title="Incident readings of each light, as you’d take on set">Meter</button><button data-m="spot" title="Reflected readings at the spots on the frame">Spot</button></span><button class="lnk" id="spotReset" title="Put the four meter spots back in their starting places">Reset spots</button></span></h2>
+      <div id="hero"></div>
+      <ul class="plist" id="plist"></ul>
+      <ul class="reads" id="reads"></ul>
+      <p class="srcnote" data-mnote="meter"><b>Meter</b> is what you’d use on set: each light’s incident reading on its own, meter facing the light (the background on the wall, facing camera). Two lights at the same level are 1:1, and every stop doubles the light, so 1 stop = 2:1. The ratio buttons set the fill by level. Switch to <b>Spot</b> to see what the camera records on the frame.</p>
+      <p class="srcnote" data-mnote="spot" hidden><b>Spot</b> compares reflected readings at the spots on the frame, so it takes in skin and wardrobe tone, surface angle and spill: a rim on a dark jacket reads lower than the light hitting it. Key : Fill is K spot against F spot, the two cheeks. In this mode the ratio buttons set the fill so the face reads that ratio. Drag a spot to measure somewhere else.</p>
+    </section>
+
+    <section class="card">
+      <h2>Starting points</h2>
+      <div class="chips" id="looks"></div>
+      <div class="kfrow"><span class="lbl">Key : Fill</span><div class="chips sm" id="kfChips"></div></div>
+    </section>
+
+    <section class="card">
+      <h2>Subject &amp; camera</h2>
+      <div class="row"><span class="lbl">Skin tone</span><div class="skins" id="skins"></div></div>
+      <div class="row"><span class="lbl">Room bounce</span><div class="seg2" id="bounceSeg" role="group" aria-label="Room bounce"><button data-b="0">Off</button><button data-b="1">On</button></div></div>
+      <div class="row"><span class="lbl">Shooting stop</span><select id="tstop" class="sel fth-input" aria-label="Shooting stop"></select></div>
+      <div class="row slide"><span class="lbl">Exposure</span><input type="range" id="expo" min="-3" max="3" step="0.3333333" aria-label="Camera exposure in stops"><span class="val" id="expoVal"></span></div>
+      <div class="row slide"><span class="lbl">White balance</span><input type="range" id="wb" min="2500" max="10000" step="100" aria-label="Camera white balance in kelvin"><span class="val" id="wbVal"></span></div>
+      <div class="row"><span class="lbl">Clips at</span><select id="clip" class="sel fth-input" aria-label="Where the camera clips, in stops over middle grey">
+        <option value="6">+6 stops (large-format / LogC)</option><option value="5">+5 stops (most cinema cameras)</option><option value="4">+4 stops (mirrorless log)</option><option value="2.5">+2½ stops (Rec 709 video)</option></select></div>
+      <p class="srcnote"><b>Room bounce</b> adds the light each lamp would bounce back off a real room. Leave it off to see each light on its own; switch it on for a truer picture of how dark the shadows will get. The camera settings don’t change the light, only how it’s recorded: the ratios stay the same. Spots and false colour read the frame after exposure.</p>
+    </section>
+  </aside>
+</div>
+
+<div id="toast" class="fth-toast" role="status" aria-live="polite"></div>
+<input type="file" id="fileJson" accept=".json,application/json" hidden>
+
+<script type="x-shader/x-fragment" id="sceneFS">
+#version 300 es
+/* Scene pass. One sample per pixel per frame; each light's contribution goes to its own buffer
+   and is averaged with the previous frames. Units: 1 = 10 cm. Light is normalised so that an
+   18% card facing a light at its reference point records 0.18 (middle grey) at gain 1. */
+precision highp float;
+precision highp int;
+uniform vec2 uRes;
+uniform int uFrame;
+uniform sampler2D uA0, uA1, uA2, uA3;
+uniform vec3 uCamPos, uCamR, uCamU, uCamF;
+uniform float uTanHalf, uAper, uFocus;
+uniform vec3 uSkin, uHair;
+uniform vec4 uLP[4];   // light centre, disk radius
+uniform vec4 uLN[4];   // light axis, normalisation
+uniform vec2 uLC[4];   // grid / cone: cos inner, cos outer
+uniform vec2 uYawCS, uTiltCS, uBodyCS;
+uniform float uWin;
+layout(location = 0) out vec4 o0;
+layout(location = 1) out vec4 o1;
+layout(location = 2) out vec4 o2;
+layout(location = 3) out vec4 o3;
+
+const vec3 PIVOT = vec3(0.0, -0.7, -0.1);
+const vec3 EYE_C = vec3(0.29, 0.115, 0.625);
+const float EYE_R = 0.125;
+const float WZ = -20.0;
+#define F(a,b,c) (a)
+
+uint seed;
+uint pcg(uint v){ uint s = v*747796405u + 2891336453u; uint w = ((s >> ((s >> 28u) + 4u)) ^ s)*277803737u; return (w >> 22u) ^ w; }
+float rnd(){ seed = pcg(seed); return float(seed)*(1.0/4294967296.0); }
+
+float sdEll(vec3 p, vec3 r){ float k0 = length(p/r); float k1 = length(p/(r*r)); return k0*(k0-1.0)/k1; }
+float smin(float a, float b, float k){ float h = clamp(0.5+0.5*(b-a)/k, 0.0, 1.0); return mix(b,a,h) - k*h*(1.0-h); }
+float smax(float a, float b, float k){ return -smin(-a,-b,k); }
+float sdCap(vec3 p, vec3 a, vec3 b, float r){ vec3 pa=p-a, ba=b-a; float h=clamp(dot(pa,ba)/dot(ba,ba),0.0,1.0); return length(pa-ba*h)-r; }
+float sdBox(vec3 p, vec3 b){ vec3 q = abs(p)-b; return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0); }
+float sdRoundCone(vec3 p, vec3 a, vec3 b, float r1, float r2){
+  vec3 ba = b-a; float l2 = dot(ba,ba); float rr = r1-r2; float a2 = l2-rr*rr; float il2 = 1.0/l2;
+  vec3 pa = p-a; float y = dot(pa,ba); float z = y-l2; vec3 xv = pa*l2-ba*y; float x2 = dot(xv,xv);
+  float y2 = y*y*l2; float z2 = z*z*l2; float k = sign(rr)*rr*rr*x2;
+  if (sign(z)*a2*z2 > k) return sqrt(x2+z2)*il2 - r2;
+  if (sign(y)*a2*y2 < k) return sqrt(x2+y2)*il2 - r1;
+  return (sqrt(x2*a2*il2)+y*rr)*il2 - r1;
+}
+float hash1(float n){ return fract(sin(n*127.1)*43758.5453); }
+float hash3(vec3 p){ p = fract(p*0.3183099 + 0.1); p *= 17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
+float vnoise(vec3 x){
+  vec3 i = floor(x), f = fract(x); f = f*f*(3.0-2.0*f);
+  return mix(mix(mix(hash3(i), hash3(i+vec3(1,0,0)), f.x), mix(hash3(i+vec3(0,1,0)), hash3(i+vec3(1,1,0)), f.x), f.y),
+             mix(mix(hash3(i+vec3(0,0,1)), hash3(i+vec3(1,0,1)), f.x), mix(hash3(i+vec3(0,1,1)), hash3(i+vec3(1,1,1)), f.x), f.y), f.z);
+}
+float fbm(vec3 p){ float a = 0.5, s = 0.0; for (int i = 0; i < 4; i++){ s += a*vnoise(p); p = p*2.03 + 7.1; a *= 0.5; } return s; }
+
+/* ───────── head (from the Lighting Pattern Lab) ───────── */
+vec3 toLocal(vec3 p){
+  vec3 q = p - PIVOT;
+  float c = uYawCS.x, s = uYawCS.y;
+  q = vec3(c*q.x - s*q.z, q.y, s*q.x + c*q.z);
+  float ct = uTiltCS.x, st = uTiltCS.y;
+  q = vec3(q.x, ct*q.y - st*q.z, st*q.y + ct*q.z);
+  return q + PIVOT;
+}
+float eyeOpen(vec3 e, out float up, out float lo, out float y){
+  y = e.y - 0.1*e.x;
+  float hw = 0.118;
+  float t = clamp(e.x/hw, -1.0, 1.0);
+  float w = 1.0 - t*t;
+  up = F(0.043, 0.048, 0.04)*w*(1.0 - 0.18*t) + 0.003;
+  lo = -F(0.036, 0.038, 0.034)*w*(1.0 + 0.2*t) - 0.002;
+  return max(max(y - up, lo - y), abs(e.x) - hw);
+}
+float lids(vec3 s){
+  vec3 e = s - EYE_C;
+  float up, lo, y;
+  float o = eyeOpen(e, up, lo, y);
+  float shell = length(e) - (EYE_R + 0.014 + 0.008*smoothstep(0.0, 0.07, e.y));
+  float lid = max(shell, -o);
+  return smax(lid, sdEll(e - vec3(0.0, 0.0, 0.075), vec3(0.15, 0.12, 0.11)), 0.025);
+}
+float lipsD(vec3 q){
+  float uy = -0.605, ly = -0.71, lz = 0.85;
+  vec3 ur = vec3(0.16,0.048,0.07);
+  vec3 lr = vec3(0.142,0.055,0.07);
+  float ax = abs(q.x);
+  vec3 uq = q - vec3(0.0, uy, lz);
+  uq.y -= 0.014*exp(-pow((ax - 0.04)/0.03, 2.0))*smoothstep(-0.02, 0.03, uq.y);
+  float l = sdEll(uq, ur);
+  l = smin(l, sdEll(q - vec3(0.0, uy - 0.022, lz + 0.03), vec3(0.04, 0.028, 0.04)), 0.03);
+  l = smin(l, sdEll(q - vec3(0.0, ly, lz - 0.012), lr), 0.03);
+  return l;
+}
+float headSkin(vec3 q){
+  vec3 s = vec3(sqrt(q.x*q.x + 0.0006), q.y, q.z);
+  float d = sdEll(q - vec3(0.0,0.35,-0.15), vec3(0.78,0.95,0.98));
+  d = smin(d, sdEll(q - vec3(0.0,-0.4,0.12), vec3(0.57,0.74,0.76)), 0.32);
+  d = smin(d, sdEll(s - vec3(0.39,-0.64,-0.02), vec3(0.15,0.24,0.38)), 0.24);
+  d = smin(d, sdEll(q - vec3(0.0,-1.0,0.52), vec3(0.23,0.18,0.24)), 0.2);
+  d = smin(d, sdEll(q - vec3(0.0,-0.85,0.6), vec3(0.18,0.11,0.17)), 0.14);
+  d = smin(d, sdEll(s - vec3(0.37,-0.07,0.47), vec3(0.19,0.12,0.21)), 0.3);
+  d = smin(d, sdEll(s - vec3(0.24,-0.37,0.6), vec3(0.17,0.17,0.18)), 0.3);
+  d = smin(d, sdCap(s, vec3(0.07,0.33,0.75), vec3(0.4,0.31,0.6), 0.07), 0.16);
+  d = smin(d, sdEll(q - vec3(0.0,0.27,0.79), vec3(0.09,0.09,0.06)), 0.1);
+  d = smax(d, -sdEll(s - vec3(0.275,0.12,0.86), vec3(0.16,0.115,0.2)), 0.11);
+  d = smin(d, lids(s), 0.03);
+  float ny = -0.27, nz = 1.0;
+  float n = sdRoundCone(q, vec3(0.0,0.24,0.8), vec3(0.0,ny,nz), 0.05, 0.07);
+  n = smin(n, length(q - vec3(0.0,ny-0.005,nz+0.02)) - 0.068, 0.05);
+  n = smin(n, sdEll(s - vec3(0.1, ny-0.06, nz-0.11), vec3(0.072,0.062,0.082)), 0.05);
+  n = smax(n, -sdEll(s - vec3(0.05, ny-0.135, nz-0.045), vec3(0.03,0.017,0.04)), 0.02);
+  d = smin(d, n, 0.06);
+  d = smin(d, lipsD(q), 0.08);
+  d = smax(d, -sdEll(q - vec3(0.0,-0.66,0.92), vec3(0.13,0.008,0.08)), 0.014);
+  float ear = sdEll(s - vec3(0.77,0.02,-0.18), vec3(0.075,0.28,0.17));
+  ear = smax(ear, -sdEll(s - vec3(0.84,0.05,-0.17), vec3(0.045,0.19,0.11)), 0.025);
+  ear = smin(ear, sdEll(s - vec3(0.805,0.01,-0.17), vec3(0.025,0.13,0.07)), 0.03);
+  ear = smax(ear, -sdEll(s - vec3(0.83,-0.06,-0.12), vec3(0.04,0.055,0.05)), 0.02);
+  ear = smin(ear, sdEll(s - vec3(0.78,-0.06,-0.035), vec3(0.025,0.04,0.025)), 0.02);
+  d = smin(d, ear, 0.05);
+  return d;
+}
+float headHair(vec3 q){
+  vec3 cr = q - vec3(0.0,0.35,-0.15);
+  // side parting, a little volume on top, tapered at the back and sides
+  float line = (0.8 - q.y) - 0.95*clamp(0.35 - q.z, 0.0, 1.3);
+  line += 0.025*(vnoise(q*vec3(7.0, 3.0, 7.0)) - 0.5);
+  float th = 0.09*smoothstep(0.0, 0.22, -line) + 0.09*smoothstep(0.45, 1.15, q.y)*smoothstep(-0.5, 0.5, q.z) + 0.03*smoothstep(0.0, 0.4, q.x)*smoothstep(0.5, 0.9, q.y);
+  float h = max(sdEll(cr, vec3(0.78,0.95,0.98)) - th + 0.004, line*0.7);
+  return h - 0.006*vnoise(q*vec3(14.0, 40.0, 14.0));
+}
+
+/* ───────── body and suit ───────── */
+vec3 bodyLocal(vec3 p){
+  vec3 q = p - vec3(0.0, 0.0, -0.3);
+  float c = uBodyCS.x, s = uBodyCS.y;
+  return vec3(c*q.x - s*q.z, q.y - 0.22, s*q.x + c*q.z) + vec3(0.0, 0.0, -0.3);
+}
+float torso(vec3 p){
+  vec3 a = vec3(abs(p.x), p.y, p.z);
+  float sh = sdCap(a, vec3(0.3,-2.0,-0.42), vec3(1.82,-2.6,-0.4), 0.44);
+  float ch = sdEll(p - vec3(0.0,-3.8,-0.3), vec3(1.72,1.7,0.95));
+  float arm = sdCap(a, vec3(1.9,-2.95,-0.42), vec3(2.08,-8.5,-0.3), 0.5);
+  float low = sdEll(p - vec3(0.0,-6.4,-0.3), vec3(1.8,3.0,1.0));
+  float d = smin(sh, ch, 0.6);
+  d = smin(d, arm, 0.35);
+  return smin(d, low, 0.6);
+}
+float neckD(vec3 b){ return sdRoundCone(b, vec3(0.0,-2.4,-0.32), vec3(0.0,-0.75,-0.28), 0.5, 0.43); }
+
+// returns distance, material: 1 skin, 4 jacket, 5 shirt, 6 tie
+vec2 bodyMap(vec3 b){
+  float T = torso(b);
+  float S = T - 0.05;
+  float w = clamp(0.5 - (-2.05 - b.y)*0.085, 0.0, 0.5) + 0.18*smoothstep(-1.8, -2.15, b.y)*smoothstep(-2.5, -2.15, b.y);
+  float ex = abs(b.x) - w;
+  float inV = max(ex, -(b.z + 0.05));
+  float lw = 0.5 + 0.12*clamp(-2.3 - b.y, 0.0, 1.5);
+  // lapel, with a notch where it meets the collar
+  float notch = 1.0 - smoothstep(0.03, 0.06, abs(b.y + 2.45 - 0.35*(ex - 0.3)))*0.0;
+  float lap = smoothstep(0.0, 0.012, ex)*(1.0 - smoothstep(lw, lw + 0.02, ex))*smoothstep(-0.3, 0.2, b.z)*smoothstep(-1.75, -2.0, b.y);
+  lap *= 1.0 - (1.0 - smoothstep(0.0, 0.025, abs(b.y + 2.42 + 0.25*ex) - 0.025))*step(0.25, ex);
+  float J = T - 0.17 - 0.075*lap;
+  float jacket = max(J, -inV);
+  // a low stand collar around the back and sides of the neck
+  float cr = length((b.xz - vec2(0.0,-0.34))*vec2(1.0,1.1));
+  float yT = -1.62 - 0.4*smoothstep(-0.4, 0.3, b.z);
+  float jc = max(abs(cr - 0.64) - 0.055, max(b.y - yT, -2.3 - b.y));
+  jc = max(jc, b.z - 0.12);
+  jacket = smin(jacket, jc, 0.06);
+  // shirt collar
+  float yb = -1.55 - 0.3*smoothstep(-0.3, 0.45, b.z);
+  float hh = 0.2 + 0.3*smoothstep(0.1, 0.45, b.z)*(1.0 - smoothstep(0.1, 0.45, abs(b.x)));
+  float sc = max(abs(cr - 0.55 - 0.22*clamp(yb - b.y, 0.0, 0.6)) - 0.028, max(b.y - yb, yb - hh - b.y));
+  float shirt = min(S, sc);
+  // tie
+  float knot = sdEll(b - vec3(0.0,-2.0,0.33), vec3(0.14,0.17,0.11));
+  float tb = max(S - 0.05, max(abs(b.x) - (0.1 + 0.075*clamp(-2.1 - b.y, 0.0, 3.0)), b.y + 2.08));
+  float tie = min(knot, tb);
+  float neck = neckD(b);
+  vec2 r = vec2(neck, 1.0);
+  if (shirt < r.x) r = vec2(shirt, 5.0);
+  if (tie < r.x) r = vec2(tie, 6.0);
+  if (jacket < r.x) r = vec2(jacket, 4.0);
+  return r;
+}
+
+vec2 subject(vec3 p){
+  vec3 b = bodyLocal(p);
+  float bb = length((b - vec3(0.0,-5.0,-0.3))*vec3(1.0,0.6,1.0)) - 3.3;
+  vec2 res = bb > 0.5 ? vec2(bb, 4.0) : bodyMap(b);
+  vec3 q = toLocal(p);
+  float bound = length(q - vec3(0.0,0.05,0.05)) - 1.5;
+  if (bound > 0.3) return vec2(min(bound, res.x), res.x < bound ? res.y : 1.0);
+  float hs = headSkin(q);
+  if (res.y < 1.5) res.x = smin(hs, res.x, 0.12); else if (hs < res.x) res = vec2(hs, 1.0);
+  vec3 s = vec3(abs(q.x), q.y, q.z);
+  float e = length(s - EYE_C) - EYE_R;
+  if (e < res.x) res = vec2(e, 2.0);
+  float h = headHair(q);
+  if (h < res.x) res = vec2(h, 3.0);
+  return res;
+}
+
+/* ───────── the room ───────── */
+const vec3 BB_C = vec3(-3.6, 1.7, WZ);  // blackboard centre
+const vec3 BB_H = vec3(6.4, 4.5, 0.0);   // half size of the writing surface
+const vec3 WIN_C = vec3(-14.6, 1.2, WZ);
+const vec3 PIC_C = vec3(10.4, 1.3, WZ);
+const vec3 CAB_C = vec3(11.6, -8.1, WZ + 2.6);
+
+vec2 room(vec3 p){
+  if (p.z > -14.3) return vec2(p.z + 14.75, 10.0);
+  // back wall with a window opening
+  float hole = sdBox(p - WIN_C, vec3(3.0, 6.0, 1.6));
+  vec2 r = vec2(max(p.z - WZ, -hole), 10.0);
+  // window frame, glazing bars, glass, sill
+  vec3 wp = p - (WIN_C + vec3(0.0, 0.0, -1.0));
+  float fr = sdBox(wp, vec3(3.0, 6.0, 0.13));
+  vec2 pq = vec2(abs(wp.x) - 1.5, abs(wp.y) - 3.0);
+  float pane = sdBox(vec3(pq, wp.z), vec3(1.3, 2.8, 0.3));
+  fr = max(fr, -pane);
+  if (fr < r.x) r = vec2(fr, 14.0);
+  float glass = sdBox(wp - vec3(0.0, 0.0, -0.06), vec3(3.0, 6.0, 0.01));
+  if (glass < r.x) r = vec2(glass, 15.0);
+  float sill = sdBox(p - vec3(WIN_C.x, WIN_C.y - 6.1, WZ + 0.1), vec3(3.4, 0.11, 0.42));
+  if (sill < r.x) r = vec2(sill, 14.0);
+  // dado rail
+  float rail = sdBox(p - vec3(0.0, -4.7, WZ + 0.07), vec3(60.0, 0.1, 0.07));
+  rail = max(rail, -hole);
+  if (rail < r.x) r = vec2(rail, 14.0);
+  // blackboard: slate, oak frame, chalk tray
+  float slate = sdBox(p - (BB_C + vec3(0.0, 0.0, 0.1)), vec3(BB_H.xy, 0.1));
+  if (slate < r.x) r = vec2(slate, 11.0);
+  float frame = sdBox(p - (BB_C + vec3(0.0, 0.0, 0.15)), vec3(BB_H.xy + 0.32, 0.15));
+  frame = max(frame, -sdBox(p - (BB_C + vec3(0.0, 0.0, 0.3)), vec3(BB_H.xy, 0.12)));
+  float tray = sdBox(p - vec3(BB_C.x, BB_C.y - BB_H.y - 0.3, WZ + 0.45), vec3(BB_H.x + 0.3, 0.06, 0.3));
+  tray = min(tray, sdBox(p - vec3(BB_C.x, BB_C.y - BB_H.y - 0.22, WZ + 0.73), vec3(BB_H.x + 0.3, 0.1, 0.03)));
+  frame = min(frame, tray);
+  if (frame < r.x) r = vec2(frame, 12.0);
+  // chalk sticks and a felt eraser on the tray
+  float chalk = sdCap(p, vec3(BB_C.x + 3.2, BB_C.y - BB_H.y - 0.19, WZ + 0.4), vec3(BB_C.x + 3.75, BB_C.y - BB_H.y - 0.19, WZ + 0.52), 0.05);
+  chalk = min(chalk, sdCap(p, vec3(BB_C.x + 4.3, BB_C.y - BB_H.y - 0.19, WZ + 0.5), vec3(BB_C.x + 4.75, BB_C.y - BB_H.y - 0.19, WZ + 0.45), 0.05));
+  if (chalk < r.x) r = vec2(chalk, 18.0);
+  float eraser = sdBox(p - vec3(BB_C.x - 4.0, BB_C.y - BB_H.y - 0.06, WZ + 0.45), vec3(0.6, 0.16, 0.2)) - 0.03;
+  if (eraser < r.x) r = vec2(eraser, 19.0);
+  // framed print
+  float pf = sdBox(p - (PIC_C + vec3(0.0, 0.0, 0.1)), vec3(2.3, 1.75, 0.1));
+  pf = max(pf, -sdBox(p - (PIC_C + vec3(0.0, 0.0, 0.2)), vec3(2.05, 1.5, 0.14)));
+  if (pf < r.x) r = vec2(pf, 16.0);
+  float pr = sdBox(p - (PIC_C + vec3(0.0, 0.0, 0.075)), vec3(2.05, 1.5, 0.012));
+  if (pr < r.x) r = vec2(pr, 17.0);
+  // light switch
+  float sw = sdBox(p - vec3(4.2, 0.3, WZ + 0.03), vec3(0.2, 0.22, 0.03)) - 0.01;
+  if (sw < r.x) r = vec2(sw, 14.0);
+  // cabinet with a top that overhangs
+  float cab = sdBox(p - CAB_C, vec3(5.5, 4.2, 2.6));
+  cab = min(cab, sdBox(p - vec3(CAB_C.x, -3.86, CAB_C.z + 0.05), vec3(5.7, 0.09, 2.7)));
+  if (cab < r.x) r = vec2(cab, 12.0);
+  // a row of books, upright
+  float x0 = 8.4, cw = 0.42;
+  float ci = clamp(floor((p.x - x0)/cw), 0.0, 13.0);
+  for (int k = -1; k <= 1; k++){
+    float c = ci + float(k);
+    if (c < 0.0 || c > 13.0) continue;
+    float h1 = hash1(c*7.31 + 1.0), h2 = hash1(c*3.17 + 5.0);
+    float th = 0.17 + 0.035*h2, h = 1.85 + 0.85*h1, dp = 0.8 + 0.18*h2;
+    vec3 bc = vec3(x0 + (c + 0.5)*cw, -3.77 + h*0.5, WZ + 1.9);
+    float d = sdBox(p - bc, vec3(th, h*0.5, dp)) - 0.02;
+    if (d < r.x) r = vec2(d, 13.0 + c*0.01);
+  }
+  // and a stack lying flat
+  for (int j = 0; j < 4; j++){
+    float fj = float(j);
+    float a = (hash1(fj*5.3 + 2.0) - 0.5)*0.35;
+    vec3 q = p - vec3(6.6 + 0.15*(hash1(fj + 9.0) - 0.5), -3.77 + 0.17 + 0.34*fj, WZ + 2.4);
+    q.xz = mat2(cos(a), -sin(a), sin(a), cos(a))*q.xz;
+    float d = sdBox(q, vec3(1.05 - 0.12*fj + 0.1*hash1(fj*2.1), 0.15 - 0.02*hash1(fj*4.7), 0.75 - 0.06*fj)) - 0.02;
+    if (d < r.x) r = vec2(d, 13.5 + fj*0.01);
+  }
+  return r;
+}
+
+vec2 map(vec3 p){
+  vec2 a = subject(p), b = room(p);
+  return a.x < b.x ? a : b;
+}
+// written as a loop so the scene is compiled once here rather than four times
+vec3 calcNormal(vec3 p, float t){
+  float e = 0.0012 + 0.00025*t; vec3 n = vec3(0.0);
+  for (int i = 0; i < 4; i++){
+    vec3 k = 2.0*vec3(float(((i + 3) >> 1) & 1), float((i >> 1) & 1), float(i & 1)) - 1.0;
+    n += k*map(p + k*e).x;
+  }
+  return normalize(n);
+}
+float shadowRay(vec3 ro, vec3 rd, float maxt){
+  float res = 1.0, t = 0.015;
+  for (int i = 0; i < 110; i++){
+    float h = map(ro + rd*t).x;
+    res = min(res, h/(0.012*t));
+    t += clamp(h, 0.004, 1.2);
+    if (res < -1.0 || t > maxt) break;
+  }
+  res = max(res, -1.0);
+  return 0.25*(1.0+res)*(1.0+res)*(2.0-res);
+}
+float calcAO(vec3 p, vec3 n){
+  float occ = 0.0, sca = 1.0;
+  for (int i = 0; i < 5; i++){
+    float h = 0.02 + 0.11*float(i);
+    occ += (h - map(p + n*h).x)*sca; sca *= 0.75;
+  }
+  return clamp(1.0 - 1.6*occ, 0.0, 1.0);
+}
+
+/* ───────── materials ───────── */
+float segD(vec2 p, vec2 a, vec2 b){ vec2 pa = p-a, ba = b-a; return length(pa - ba*clamp(dot(pa,ba)/dot(ba,ba), 0.0, 1.0)); }
+// chalk handwriting: rows of glyph-like strokes
+float chalkText(vec2 u){
+  float ink = 0.0;
+  float row = floor(u.y/0.62);
+  if (row < -1.0 || row > 5.0) return 0.0;
+  float ry = u.y - row*0.62 - 0.31;
+  float rs = row*13.7;
+  float lineLen = 3.0 + 6.0*hash1(rs + 1.0);
+  float x = u.x - 0.6*hash1(rs + 3.0);
+  if (x < 0.0 || x > lineLen) return 0.0;
+  float gi = floor(x/0.27);
+  float gx = x - gi*0.27 - 0.135;
+  float hs = hash1(gi*1.7 + rs);
+  if (hash1(gi*0.37 + rs*0.11) < 0.16) return 0.0;  // word gaps
+  vec2 g = vec2(gx*1.15, ry - 0.03*sin(x*1.3 + rs));
+  float d = 1e3;
+  vec2 P[6] = vec2[6](vec2(-0.09,0.15), vec2(0.09,0.15), vec2(-0.09,0.0), vec2(0.09,0.0), vec2(-0.09,-0.15), vec2(0.09,-0.15));
+  for (int k = 0; k < 3; k++){
+    float h = hash1(hs*91.0 + float(k)*17.3);
+    int a = int(h*6.0), b = int(fract(h*7.13)*6.0);
+    if (a == b) b = (b + 2) % 6;
+    d = min(d, segD(g, P[a], P[b]));
+  }
+  if (hs > 0.7) d = min(d, abs(length(g - vec2(0.0, -0.05)) - 0.08));
+  ink = 1.0 - smoothstep(0.012, 0.03, d);
+  return ink;
+}
+float chalkDiagram(vec2 u){
+  // a little worked diagram: axes, a curve, a circle
+  vec2 o = vec2(3.0, -1.4);
+  vec2 v = u - o;
+  float d = min(segD(v, vec2(0.0), vec2(2.6, 0.0)), segD(v, vec2(0.0), vec2(0.0, 2.2)));
+  d = min(d, segD(v, vec2(2.6,0.0), vec2(2.45,0.1))); d = min(d, segD(v, vec2(2.6,0.0), vec2(2.45,-0.1)));
+  d = min(d, segD(v, vec2(0.0,2.2), vec2(0.1,2.05))); d = min(d, segD(v, vec2(0.0,2.2), vec2(-0.1,2.05)));
+  float cx = clamp(v.x, 0.05, 2.4);
+  d = min(d, abs(v.y - 1.8*(1.0 - exp(-1.6*cx)))*0.8 + max(abs(v.x - 1.22) - 1.18, 0.0));
+  d = min(d, abs(length(u - vec2(-2.6, -2.2)) - 0.75));
+  d = min(d, segD(u, vec2(-2.6,-2.2), vec2(-2.05,-1.7)));
+  return 1.0 - smoothstep(0.012, 0.032, d);
+}
+
+struct Mat { vec3 alb; float rough; float f0; vec3 wrap; vec3 n; bool hair; vec3 T; float emit; };
+
+Mat material(vec3 pos, vec3 gn, float m){
+  Mat M; M.alb = vec3(0.5); M.rough = 0.8; M.f0 = 0.03; M.wrap = vec3(0.0); M.n = gn; M.hair = false; M.T = vec3(0.0); M.emit = 0.0;
+  vec3 q = toLocal(pos);
+  vec3 s = vec3(abs(q.x), q.y, q.z);
+  if (m < 1.5) {
+    M.alb = uSkin; M.rough = 0.42; M.f0 = 0.028; M.wrap = vec3(0.26,0.11,0.06);
+    float lip = 1.0 - smoothstep(0.0, 0.022, lipsD(q));
+    M.alb *= mix(vec3(1.0), vec3(0.9,0.62,0.6), lip);
+    float red = 0.55*smoothstep(0.26, 0.0, length((s - vec3(0.3,-0.3,0.66))*vec3(1.0,1.0,1.3)))
+              + 0.5*smoothstep(0.12, 0.0, length(q - vec3(0.0,-0.26,1.0)))
+              + 0.45*smoothstep(0.7, 0.8, s.x)*smoothstep(-0.4, -0.1, s.z);
+    M.alb *= mix(vec3(1.0), vec3(1.0,0.86,0.85), clamp(red, 0.0, 1.0));
+    // stubble shadow on jaw and upper lip
+    float jaw = smoothstep(-0.55, -0.85, q.y)*smoothstep(0.25, 0.6, q.z + 0.3*s.x)*(1.0 - lip);
+    jaw += 0.7*smoothstep(-0.5, -0.56, q.y)*smoothstep(-0.66, -0.6, q.y)*smoothstep(0.2, 0.05, s.x);
+    M.alb *= mix(1.0, 0.72 + 0.2*vnoise(q*180.0), clamp(jaw, 0.0, 1.0)*0.8);
+    float bx = (s.x - 0.27)/0.18;
+    float arch = 0.375 + 0.03*(1.0 - bx*bx) - 0.02*max(-bx, 0.0);
+    float thick = mix(0.034, 0.013, clamp((s.x - 0.12)/0.33, 0.0, 1.0));
+    float brow = (1.0 - smoothstep(thick*0.5, thick, abs(s.y - arch)))*(1.0 - smoothstep(0.85, 1.0, abs(bx)))*smoothstep(0.5, 0.6, s.z);
+    brow *= 0.72 + 0.28*vnoise(vec3(s.x*140.0 + s.y*60.0, s.y*30.0, 0.0));
+    M.alb *= mix(1.0, 0.22, brow);
+    vec3 e = s - EYE_C; float up, lo, ly;
+    float o = eyeOpen(e, up, lo, ly);
+    float nearEye = 1.0 - smoothstep(EYE_R + 0.03, EYE_R + 0.045, length(e));
+    float lashU = (1.0 - smoothstep(0.0, 0.012, ly - up))*step(up - 0.004, ly);
+    float lashL = (1.0 - smoothstep(0.0, 0.006, lo - ly))*step(ly, lo + 0.003)*0.5;
+    float lash = nearEye*max(lashU, lashL)*(1.0 - smoothstep(0.1, 0.125, abs(e.x)));
+    M.alb *= mix(1.0, 0.12, lash*0.85);
+    M.rough = mix(0.42, 0.32, lip);
+    vec3 pp = q*95.0; float n0 = vnoise(pp);
+    vec3 g = vec3(vnoise(pp + vec3(0.3,0.0,0.0)), vnoise(pp + vec3(0.0,0.3,0.0)), vnoise(pp + vec3(0.0,0.0,0.3))) - n0;
+    M.n = normalize(gn - 0.13*(g - gn*dot(g, gn)));
+    M.rough *= 0.9 + 0.25*vnoise(q*30.0);
+  } else if (m < 2.5) {
+    vec3 e = s - EYE_C; vec3 en = normalize(e);
+    float r = sqrt(max(1.0 - en.z*en.z, 0.0));
+    float ang = atan(en.y, en.x);
+    vec3 sclera = mix(vec3(0.63,0.6,0.57), vec3(0.6,0.42,0.4), smoothstep(0.55, 0.95, abs(en.x)));
+    vec3 irisC = vec3(0.05,0.075,0.11);
+    float fib = 0.6 + 0.6*vnoise(vec3(cos(ang)*5.0, sin(ang)*5.0, r*22.0));
+    vec3 iris = irisC*fib*mix(1.6, 0.75, smoothstep(0.22, 0.4, r));
+    iris *= 1.0 - 0.7*smoothstep(0.36, 0.425, r);
+    M.alb = mix(sclera, iris, 1.0 - smoothstep(0.42, 0.43, r));
+    M.alb = mix(M.alb, vec3(0.004), 1.0 - smoothstep(0.2, 0.21, r));
+    M.rough = 0.05; M.f0 = 0.04;
+  } else if (m < 3.5) {
+    M.hair = true;
+    vec3 dir = vec3(0.35, 0.25, -1.0);
+    M.T = normalize(dir - gn*dot(dir, gn) + 1e-4);
+    float str = vnoise(q*vec3(170.0, 170.0, 10.0))*0.7 + 0.3*vnoise(q*vec3(40.0, 40.0, 4.0));
+    M.alb = uHair*(0.45 + 1.0*str);
+    M.wrap = vec3(0.05);
+  } else if (m < 4.5) {
+    // wool suiting, a faint twill
+    vec3 b = bodyLocal(pos);
+    float tw = sin((b.x + b.y)*95.0)*0.5 + 0.5;
+    M.alb = vec3(0.034,0.038,0.05)*(0.86 + 0.18*tw + 0.2*vnoise(pos*40.0));
+    M.rough = 0.78; M.f0 = 0.035; M.wrap = vec3(0.04);
+  } else if (m < 5.5) {
+    vec3 b = bodyLocal(pos);
+    float st = smoothstep(0.35, 0.5, abs(fract(b.x*9.0) - 0.5));
+    M.alb = mix(vec3(0.5,0.58,0.7), vec3(0.62,0.66,0.72), st)*(0.95 + 0.08*vnoise(pos*60.0));
+    M.rough = 0.65; M.wrap = vec3(0.12);
+  } else if (m < 6.5) {
+    vec3 b = bodyLocal(pos);
+    float st = step(0.82, fract((b.y - b.x*0.9)*3.4));
+    M.alb = mix(vec3(0.07,0.035,0.04), vec3(0.32,0.22,0.12), st);
+    M.rough = 0.45; M.f0 = 0.04;
+  } else if (m < 10.5) {
+    // painted plaster, two tone below the rail
+    float n = fbm(pos*vec3(1.2,1.2,0.5));
+    vec3 upper = vec3(0.34,0.33,0.29), lower = vec3(0.16,0.2,0.18);
+    M.alb = mix(lower, upper, step(-4.6, pos.y))*(0.9 + 0.18*n);
+    M.rough = 0.9;
+  } else if (m < 11.5) {
+    vec2 u = pos.xy - BB_C.xy;
+    float smear = fbm(vec3(u.x*0.5, u.y*1.6, 3.0));
+    float wipes = smoothstep(0.45, 0.8, vnoise(vec3(u.x*0.35, u.y*0.9, 1.0)))*0.6;
+    vec3 slate = vec3(0.028,0.042,0.036)*(0.85 + 0.3*smear);
+    slate = mix(slate, vec3(0.1,0.11,0.105), wipes*0.45 + 0.12*smear);
+    float ink = max(chalkText(vec2(u.x + 5.8, u.y - 0.6)*vec2(1.0,1.0))*step(u.x, 1.6), chalkDiagram(u));
+    ink *= 0.55 + 0.45*vnoise(vec3(pos.xy*30.0, 0.0));
+    M.alb = mix(slate, vec3(0.62,0.62,0.6), ink*0.85);
+    M.rough = 0.75; M.f0 = 0.03;
+  } else if (m < 12.5) {
+    // oak / walnut with grain
+    float g = fbm(vec3(pos.x*0.4, pos.y*9.0, pos.z*9.0));
+    float g2 = fbm(vec3(pos.x*9.0, pos.y*0.4, pos.z*3.0));
+    bool vert = abs(gn.x) > 0.5 || (pos.z < WZ + 1.0 && abs(pos.x - BB_C.x) > BB_H.x);
+    float gr = vert ? g2 : g;
+    M.alb = vec3(0.13,0.075,0.04)*(0.7 + 0.6*gr);
+    if (pos.x > 5.0) {   // the cabinet: darker, door panels
+      M.alb *= 0.75;
+      vec2 dp = vec2(abs(pos.x - CAB_C.x), pos.y);
+      float groove = (1.0 - smoothstep(0.02, 0.05, abs(dp.x - 0.02)))*step(pos.y, -4.0);
+      groove = max(groove, (1.0 - smoothstep(0.02, 0.05, abs(dp.x - 2.7)))*step(pos.y, -4.0));
+      M.alb *= 1.0 - 0.6*groove*step(WZ + 5.1, pos.z);
+    }
+    M.rough = 0.38; M.f0 = 0.04;
+  } else if (m < 14.0) {
+    // books: cloth and leather spines, gilt bands
+    float id = floor((m - 13.0)*100.0 + 0.5) + (m > 13.45 ? 50.0 : 0.0);
+    float h = hash1(id*3.7 + 0.3);
+    vec3 pal[6] = vec3[6](vec3(0.22,0.04,0.035), vec3(0.04,0.06,0.13), vec3(0.06,0.11,0.06), vec3(0.32,0.25,0.15), vec3(0.4,0.37,0.3), vec3(0.12,0.07,0.04));
+    M.alb = pal[int(h*6.0)]*(0.85 + 0.3*vnoise(pos*25.0));
+    float band = 0.0;
+    if (m < 13.45) {
+      float yb = pos.y + 3.77;
+      band = (1.0 - smoothstep(0.03, 0.05, abs(yb - 0.28)))+(1.0 - smoothstep(0.03, 0.05, abs(yb - 1.55)));
+      band *= step(0.5, gn.z);
+    } else {
+      // page block on the sides of the flat stack
+      M.alb = mix(M.alb, vec3(0.55,0.5,0.4), step(0.5, abs(gn.x))*0.9);
+    }
+    M.alb = mix(M.alb, vec3(0.45,0.33,0.12), clamp(band, 0.0, 1.0));
+    M.rough = mix(0.7, 0.3, clamp(band, 0.0, 1.0)); M.f0 = mix(0.03, 0.4, clamp(band, 0.0, 1.0));
+  } else if (m < 14.5) {
+    M.alb = vec3(0.56,0.55,0.51)*(0.95 + 0.1*vnoise(pos*8.0)); M.rough = 0.5; M.f0 = 0.04;
+  } else if (m < 15.5) {
+    M.emit = 1.0; M.alb = vec3(0.0);
+  } else if (m < 16.5) {
+    M.alb = vec3(0.02,0.018,0.016); M.rough = 0.35; M.f0 = 0.04;
+  } else if (m < 17.5) {
+    vec2 u = pos.xy - PIC_C.xy;
+    bool inner = abs(u.x) < 1.55 && abs(u.y) < 1.05;
+    vec3 c = vec3(0.6,0.58,0.52);
+    if (inner) {
+      float h = fbm(vec3(u*0.9, 4.0));
+      float cont = 1.0 - smoothstep(0.0, 0.08, abs(fract(h*9.0) - 0.5) - 0.42);
+      vec3 land = mix(vec3(0.45,0.38,0.24), vec3(0.32,0.36,0.3), smoothstep(0.45, 0.6, h));
+      land = mix(vec3(0.3,0.38,0.42), land, smoothstep(0.36, 0.4, h));
+      c = mix(land, vec3(0.2,0.14,0.08), cont*0.6);
+    }
+    M.alb = c; M.rough = 0.15; M.f0 = 0.04;   // under glass
+  } else if (m < 18.5) {
+    M.alb = vec3(0.7); M.rough = 0.9;
+  } else {
+    M.alb = vec3(0.09,0.06,0.04); M.rough = 0.9;
+  }
+  return M;
+}
+
+vec3 windowView(vec3 p){
+  vec2 u = p.xy - WIN_C.xy;
+  float sky = smoothstep(-2.0, 6.0, u.y);
+  vec3 c = mix(vec3(0.85,0.88,0.9), vec3(1.0,1.02,1.05), sky);
+  float tree = smoothstep(0.55, 0.45, fbm(vec3(u*0.55, 1.0)) - 0.12*u.y + 0.2);
+  c = mix(c, vec3(0.32,0.38,0.3), tree*0.75);
+  return c;
+}
+
+vec3 brdf(Mat M, vec3 V, vec3 L, float sh, float sinA){
+  vec3 n = M.n;
+  float ndl = dot(n, L);
+  vec3 diff = clamp((vec3(ndl) + M.wrap)/(1.0 + M.wrap), 0.0, 1.0);
+  vec3 shc = pow(vec3(max(sh, 1e-4)), vec3(1.0) - M.wrap*1.3);
+  vec3 col = M.alb*diff*shc;
+  vec3 H = normalize(L + V);
+  float nol = max(ndl, 0.0);
+  if (M.hair) {
+    float th = dot(M.T, H);
+    float s1 = pow(sqrt(max(1.0 - th*th, 0.0)), 90.0);
+    float th2 = dot(M.T, normalize(H - 0.25*n));
+    float s2 = pow(sqrt(max(1.0 - th2*th2, 0.0)), 22.0);
+    col += (vec3(0.16)*s1 + uHair*3.0*s2)*nol*sh;
+  } else {
+    float noh = max(dot(n,H), 0.0), loh = max(dot(L,H), 0.0);
+    float a = M.rough*M.rough;
+    float ap = clamp(a + 0.5*sinA, 0.0, 1.0);
+    float a2 = ap*ap; float dd = noh*noh*(a2-1.0) + 1.0;
+    float D = a2/(3.14159*dd*dd);
+    float Fr = M.f0 + (1.0-M.f0)*pow(1.0-loh, 5.0);
+    col += vec3(1.9*D*Fr*0.25/max(loh*loh, 0.05)*nol)*sh;
+  }
+  return col;
+}
+
+vec3 lightIn(int i, vec3 p, vec3 gn, Mat M, vec3 V){
+  vec3 C = uLP[i].xyz, ax = uLN[i].xyz;
+  vec3 t1 = normalize(cross(ax, abs(ax.y) < 0.9 ? vec3(0,1,0) : vec3(1,0,0)));
+  vec3 t2 = cross(ax, t1);
+  float rr = uLP[i].w*sqrt(rnd()), aa = 6.2831853*rnd();
+  vec3 lp = C + (t1*cos(aa) + t2*sin(aa))*rr;
+  vec3 toL = lp - p; float d = length(toL); vec3 L = toL/d;
+  float cl = dot(-L, ax);
+  float cone = smoothstep(uLC[i].y, uLC[i].x, dot(normalize(p - C), ax));
+  float E = uLN[i].w*max(cl, 0.0)*cone/(d*d);
+  if (E <= 0.0) return vec3(0.0);
+  if (dot(gn, L) < -0.3) return vec3(0.0);
+  float sh = shadowRay(p + gn*0.012, L, d - 0.05);
+  if (sh <= 0.0 && dot(M.wrap, vec3(1.0)) < 0.01) return vec3(0.0);
+  return brdf(M, V, L, sh, 0.25*uLP[i].w/d)*E;
+}
+
+void main(){
+  ivec2 ip = ivec2(gl_FragCoord.xy);
+  seed = pcg(uint(ip.x) + pcg(uint(ip.y) + pcg(uint(uFrame) + 7u)));
+  vec2 jit = vec2(rnd(), rnd()) - 0.5;
+  vec2 uv = (2.0*(gl_FragCoord.xy + jit) - uRes)/uRes.y;
+  vec3 dir = normalize(uCamF + uv.x*uTanHalf*uCamR + uv.y*uTanHalf*uCamU);
+  float lr = uAper*sqrt(rnd()), la = 6.2831853*rnd();
+  vec3 ro = uCamPos + (cos(la)*uCamR + sin(la)*uCamU)*lr;
+  vec3 fp = uCamPos + dir*(uFocus/dot(dir, uCamF));
+  vec3 rd = normalize(fp - ro);
+
+  float t = 0.0, m = -1.0;
+  for (int i = 0; i < 240; i++){
+    vec2 h = map(ro + rd*t);
+    if (h.x < 0.0003*t + 0.0004) { m = h.y; break; }
+    t += h.x*0.92;
+    if (t > 90.0) break;
+  }
+  vec3 c0 = vec3(0.0), c1 = vec3(0.0), c2 = vec3(0.0), c3 = vec3(0.0), amb = vec3(0.0);
+  if (m > 0.0) {
+    vec3 p = ro + rd*t;
+    vec3 gn = calcNormal(p, t);
+    Mat M = material(p, gn, m);
+    if (M.emit > 0.0) {
+      c3 = windowView(p)*uWin;
+    } else {
+      vec3 V = -rd;
+      float ao = calcAO(p, gn);
+      amb = M.alb*ao*(0.65 + 0.35*gn.y);   // room bounce, kept apart so it can be switched off
+      // one loop over the lights, so the shadow test is compiled once rather than four times
+      for (int i = 0; i < 4; i++){
+        vec3 c = lightIn(i, p, gn, M, V);
+        if (i == 0) c0 = c; else if (i == 1) c1 = c; else if (i == 2) c2 = c; else c3 = c;
+      }
+    }
+  }
+  c0 = min(c0, vec3(40.0)); c1 = min(c1, vec3(40.0)); c2 = min(c2, vec3(40.0)); c3 = min(c3, vec3(40.0));
+  float w = 1.0/float(uFrame + 1);
+  o0 = mix(texelFetch(uA0, ip, 0), vec4(c0, amb.r), w);
+  o1 = mix(texelFetch(uA1, ip, 0), vec4(c1, amb.g), w);
+  o2 = mix(texelFetch(uA2, ip, 0), vec4(c2, amb.b), w);
+  o3 = vec4(mix(texelFetch(uA3, ip, 0).rgb, c3, w), 1.0);
+}
+</script>
+<script type="x-shader/x-fragment" id="compFS">
+#version 300 es
+/* Mix the four light passes with their levels and colours, then show them as a picture or as false colour. */
+precision highp float;
+uniform sampler2D uA0, uA1, uA2, uA3;
+uniform vec3 uG0, uG1, uG2, uG3;   // level × colour × exposure for each light
+uniform vec3 uAmbG;                // room bounce: Σ light × its bounce share (0 when switched off)
+uniform vec2 uRes;
+uniform float uMode;               // 0 picture, 1 false colour, 2 split
+uniform float uSplit;              // split position, 0..1 across
+uniform float uClip;               // stops over middle grey where the camera clips
+out vec4 o;
+
+vec3 palette(float s){
+  s = clamp(s, -5.0, 3.0);
+  vec3 c;
+  if (s < -4.0) c = mix(vec3(0.30,0.16,0.52), vec3(0.20,0.28,0.70), s + 5.0);
+  else if (s < -3.0) c = mix(vec3(0.20,0.28,0.70), vec3(0.13,0.47,0.82), s + 4.0);
+  else if (s < -2.0) c = mix(vec3(0.13,0.47,0.82), vec3(0.16,0.66,0.74), s + 3.0);
+  else if (s < -1.0) c = mix(vec3(0.16,0.66,0.74), vec3(0.38,0.76,0.44), s + 2.0);
+  else if (s < 0.0)  c = mix(vec3(0.38,0.76,0.44), vec3(0.80,0.80,0.76), s + 1.0);
+  else if (s < 1.0)  c = mix(vec3(0.80,0.80,0.76), vec3(0.97,0.84,0.30), s);
+  else if (s < 2.0)  c = mix(vec3(0.97,0.84,0.30), vec3(0.97,0.55,0.20), s - 1.0);
+  else               c = mix(vec3(0.97,0.55,0.20), vec3(0.90,0.20,0.20), s - 2.0);
+  return c;
+}
+// film-like display curve in stops: middle grey lands near 42%, the camera clip near white
+float curve(float x){
+  float s = log2(max(x, 1e-6)/0.18);
+  float k = 0.56, s0 = 0.58;
+  float v = 1.0/(1.0 + exp(-k*(s - s0)));
+  float lo = 1.0/(1.0 + exp(-k*(-12.0 - s0)));
+  float hi = 1.0/(1.0 + exp(-k*(uClip - s0)));
+  return clamp((v - lo)/(hi - lo), 0.0, 1.0);
+}
+void main(){
+  ivec2 ip = ivec2(gl_FragCoord.xy);
+  vec4 a0 = texelFetch(uA0, ip, 0), a1 = texelFetch(uA1, ip, 0), a2 = texelFetch(uA2, ip, 0);
+  vec3 c = a0.rgb*uG0 + a1.rgb*uG1 + a2.rgb*uG2 + texelFetch(uA3, ip, 0).rgb*uG3 + vec3(a0.a, a1.a, a2.a)*uAmbG;
+  float fx = gl_FragCoord.x/uRes.x;
+  bool fc = uMode > 0.5 && (uMode < 1.5 || fx > uSplit);
+  vec3 col;
+  if (fc) {
+    float lum = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    float st = log2(max(lum, 1e-7)/0.18);
+    float k = floor(st + 0.5);
+    vec3 pc = palette(k);
+    float g = curve(lum);
+    if (st < -5.5) pc = vec3(0.07, 0.07, 0.08);
+    pc *= 0.78 + 0.32*g;
+    if (st >= uClip) pc = vec3(0.95, 0.2, 0.75);
+    col = pc;
+  } else {
+    col = vec3(curve(c.r), curve(c.g), curve(c.b));
+    // keep hue when one channel runs into the shoulder
+    float m = max(col.r, max(col.g, col.b));
+    col += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898,78.233)))*43758.5453) - 0.5)/255.0;
+  }
+  if (uMode > 1.5 && abs(fx - uSplit) < 0.75/uRes.x) col = vec3(1.0);
+  o = vec4(col, 1.0);
+}
+</script>
+<script>
+'use strict';
+/* ───────────── Lighting Ratio Lab ─────────────
+   One fixed frame, four lights. The renderer draws each light into its own buffer at its reference
+   level (an 18% card facing the light at the subject reads middle grey). Light adds up, so the picture
+   for any set of levels is the sum of the buffers × 2^stops × colour, and the spot readings are exact. */
+
+const ROLES = [
+  { id: 'key', n: 'Key', s: 'K', c: '#ffb547' },
+  { id: 'fill', n: 'Fill', s: 'F', c: '#5ab0ff' },
+  { id: 'back', n: 'Backlight', s: 'B', c: '#c9a7ff' },
+  { id: 'bg', n: 'Background', s: 'BG', c: '#7fd6a2' }];
+const PAIRS = [
+  ['key', 'back', 'Key : Backlight', 'How hard the rim or edge reads'],
+  ['key', 'bg', 'Key : Background', 'Subject against the background'],
+  ['fill', 'bg', 'Fill : Background', 'Shadow side against the background'],
+  ['back', 'bg', 'Backlight : Background', 'Edge against the background']];
+
+/* the set, in units of 10 cm. Camera looks down −z; the subject's head is at the origin. */
+const HEAD = [0, 0.15, 0.1];
+const WALL = [-1.5, 0, -20];
+const RIG = {
+  key:  { pos: [-12.6, 6.4, 3.4], r: 4.0, aim: HEAD, cone: [18, 33], amb: 0.045, src: '80 cm soft box, grid, flagged off the wall',
+          where: 'Camera left, about 75° off the lens and 25° up, 1.4 m from the face. Lights the side of the face turned away from camera (short lighting).' },
+  fill: { pos: [5.6, -0.6, 13.6], r: 5.0, aim: HEAD, cone: [70, 100], amb: 0.035, src: '1 m bounce',
+          where: 'Camera right, close to the lens at eye level, 1.5 m away. Soft enough to lift the shadow side without a second shadow.' },
+  back: { pos: [4.2, 8.2, -10.6], r: 1.0, aim: HEAD, cone: [14, 30], amb: 0.012, src: '20 cm hard source, snooted',
+          where: 'Behind the subject, a little camera right and high, 1.4 m away. Edges the hair and the shoulder.' },
+  bg:   { pos: [-1.5, 14.5, -13.8], r: 5.0, aim: WALL, cone: [36, 62], amb: 0.04, src: '1 m top light with a grid', wall: true,
+          where: 'Over the back wall, aimed down at the blackboard. Kept off the subject; the window reads with it.' }
+};
+const CAM = { pos: [0.45, -0.95, 14.5], tanHalf: 0.152, focus: 13.95, aper: 0.085, yaw: -22, body: -9, tilt: -4 };
+const SKINS = [
+  { name: 'Fair', css: '#e6b9a0', lin: [0.62, 0.43, 0.34], hair: [0.032, 0.021, 0.015] },
+  { name: 'Medium', css: '#c99470', lin: [0.46, 0.29, 0.20], hair: [0.026, 0.018, 0.014] },
+  { name: 'Tan', css: '#a06a47', lin: [0.33, 0.19, 0.12], hair: [0.028, 0.022, 0.018] },
+  { name: 'Deep', css: '#6b4430', lin: [0.17, 0.095, 0.06], hair: [0.02, 0.017, 0.015] },
+  { name: 'Very deep', css: '#4a2e22', lin: [0.09, 0.052, 0.034], hair: [0.016, 0.014, 0.013] }];
+const TS = ['1', '1.1', '1.2', '1.4', '1.6', '1.8', '2', '2.2', '2.5', '2.8', '3.2', '3.5', '4', '4.5', '5', '5.6', '6.3', '7.1', '8', '9', '10', '11', '13', '14', '16', '18', '20', '22'];
+const LOOKS = [
+  { id: 'high', n: 'High key', sub: '2:1 · bright room', kf: 2, L: { key: 0, back: -0.333, bg: 0 } },
+  { id: 'std', n: 'Standard', sub: '3:1 · natural', kf: 3, L: { key: 0, back: 0, bg: -1 } },
+  { id: 'int', n: 'Interview', sub: '4:1 · separated', kf: 4, L: { key: 0, back: 0.667, bg: -1.667 } },
+  { id: 'drama', n: 'Drama', sub: '8:1 · moody', kf: 8, L: { key: 0, back: 0.333, bg: -2.667 } },
+  { id: 'low', n: 'Low key', sub: '16:1 · dark room', kf: 16, L: { key: 0, back: 0.667, bg: -4.333 } },
+  { id: 'sil', n: 'Silhouette', sub: 'edge only, bright wall', L: { key: null, fill: -5, back: 1.333, bg: 1.333 } }];
+const KF = [2, 3, 4, 6, 8, 16];
+const LUMW = [0.2126, 0.7152, 0.0722];
+const LMIN = -6, LMAX = 3;
+
+const DEF = () => ({
+  v: 1, title: '', notes: '', skin: 0, bounce: false, look: null, rmode: 'meter', tstop: 9, expo: 0, wb: 5600, clip: 5, view: 'img', split: 0.5, marks: true,
+  L: { key: { on: true, s: 0, k: 5600 }, fill: { on: true, s: -1.667, k: 5600 }, back: { on: true, s: 0, k: 5600 }, bg: { on: true, s: -1, k: 5600 } },
+  spots: null, autoBack: true, autoKey: false, solo: null });
+let S = DEF();
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const QS = new URLSearchParams(location.search);
+let toastT;
+function toast(msg, ms = 2600) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms); }
+
+/* ───────────── numbers ───────────── */
+const FR = ['', '⅓', '⅔'];
+function fmtThird(s, plus = true) {
+  if (Math.abs(s * 3 - Math.round(s * 3)) > 0.03) return (s >= 0 ? (plus ? '+' : '') : '−') + Math.abs(s).toFixed(1);
+  const r = Math.round(s * 3); if (r === 0) return '0';
+  const a = Math.abs(r), w = Math.floor(a / 3), f = a % 3;
+  return (r > 0 ? (plus ? '+' : '') : '−') + (w ? w : '') + FR[f] + (!w && !f ? '0' : '');
+}
+const fmtStops = s => Math.abs(s) < 0.05 ? '0.0 stops' : (s >= 0 ? '+' : '−') + Math.abs(s).toFixed(1) + (Math.abs(s).toFixed(1) === '1.0' ? ' stop' : ' stops');
+const ratioTxt = r => { const a = r >= 1 ? r : 1 / r, f = a < 9.95 ? a.toFixed(1).replace(/\.0$/, '') : Math.round(a) + ''; return r >= 1 ? `${f}:1` : `1:${f}`; };
+const kfMood = s => { const a = Math.abs(s); return a < 0.5 ? 'Flat, almost no modelling' : a < 1.5 ? 'Soft, high-key' : a < 2.5 ? 'Classic portrait contrast' : a < 3.5 ? 'Dramatic' : 'Low-key, chiaroscuro'; };
+function tLabel(s) {
+  const i = S.tstop + Math.round(s * 3);
+  if (i < 0) return `T1 ${fmtThird(i / 3)}`;
+  if (i >= TS.length) return `T22 +${fmtThird((i - TS.length + 1) / 3, false)}`;
+  return 'T' + TS[i];
+}
+const srgbLin = v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+function kelvinRGB(K) {
+  const t = K / 100; let r, g, b;
+  if (t <= 66) { r = 255; g = 99.4708025861 * Math.log(t) - 161.1195681661; } else { r = 329.698727446 * (t - 60) ** -0.1332047592; g = 288.1221695283 * (t - 60) ** -0.0755148492; }
+  if (t >= 66) b = 255; else if (t <= 19) b = 0; else b = 138.5177312231 * Math.log(t - 10) - 305.0447927307;
+  return [r, g, b].map(v => srgbLin(clamp(v, 0, 255) / 255));
+}
+function tintOf(K) {
+  const a = kelvinRGB(K), w = kelvinRGB(S.wb), c = a.map((v, i) => v / Math.max(w[i], 1e-4));
+  const y = c[0] * LUMW[0] + c[1] * LUMW[1] + c[2] * LUMW[2];
+  return c.map(v => v / y);
+}
+function gains() {
+  const ex = 2 ** S.expo;
+  return ROLES.map(r => {
+    const l = S.L[r.id];
+    const live = S.solo ? S.solo === r.id : l.on;
+    const g = live ? 2 ** l.s * ex : 0;
+    return tintOf(l.k).map(v => v * g);
+  });
+}
+
+function ambGains(G) { return ROLES.map((r, i) => G[i].map(v => S.bounce ? v * RIG[r.id].amb : 0)); }
+
+/* ───────────── vector maths for the rig ───────────── */
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const len = a => Math.hypot(a[0], a[1], a[2]);
+const nrm = a => { const l = len(a); return [a[0] / l, a[1] / l, a[2] / l]; };
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+function rigUniforms() {
+  const LP = [], LN = [], LC = [], AK = [];
+  ROLES.forEach(r => {
+    const L = RIG[r.id], ax = nrm(sub(L.aim, L.pos)), d0 = len(sub(L.aim, L.pos));
+    let norm = d0 * d0;
+    if (L.wall) norm /= Math.max(0.2, dot([0, 0, 1], nrm(sub(L.pos, L.aim))));   // incident on the wall, dome facing camera
+    LP.push(...L.pos, L.r); LN.push(...ax, norm);
+    LC.push(Math.cos(L.cone[0] * Math.PI / 180), Math.cos(L.cone[1] * Math.PI / 180)); AK.push(L.amb);
+  });
+  return { LP, LN, LC, AK };
+}
+/* head-local point → world, then → frame position (0..1, y down) */
+function headToWorld(l) {
+  const P = [0, -0.7, -0.1]; let q = sub(l, P);
+  const t = CAM.tilt * Math.PI / 180, ct = Math.cos(t), st = Math.sin(t);
+  q = [q[0], ct * q[1] + st * q[2], -st * q[1] + ct * q[2]];
+  const y = CAM.yaw * Math.PI / 180, c = Math.cos(y), s = Math.sin(y);
+  q = [c * q[0] + s * q[2], q[1], -s * q[0] + c * q[2]];
+  return [q[0] + P[0], q[1] + P[1], q[2] + P[2]];
+}
+function project(w) {
+  const d = sub(w, CAM.pos), z = -d[2];
+  const asp = 2.39;
+  return { x: 0.5 + (d[0] / z) / (CAM.tanHalf * asp) * 0.5, y: 0.5 - (d[1] / z) / CAM.tanHalf * 0.5 };
+}
+function defaultSpots() {
+  return {
+    key: project(headToWorld([-0.4, -0.24, 0.6])),
+    fill: project(headToWorld([0.44, -0.22, 0.6])),
+    back: { x: 0.535, y: 0.6 },
+    bg: project([5.6, -1.2, -20])
+  };
+}
+
+/* ───────────── WebGL ───────────── */
+const SCENE_SRC = document.getElementById('sceneFS').textContent.trim();
+const COMP_SRC = document.getElementById('compFS').textContent.trim();
+const VS = `#version 300 es
+in vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
+const cv = $('#view');
+let gl = null, progScene, progComp, U = {}, UC = {}, tex = [[], []], fbo = [], cur = 0, W = 0, H = 0, spp = 0, needReset = true;
+const SPP = +QS.get('spp') || 320;
+let rdy = false, maxW = 1680, slowN = 0, lastT = 0, NS = 1, stripI = 0, ema = 0;   // NS: strips per pass, more on slow graphics
+
+function glFail(msg) { const e = $('#glErr'); e.hidden = false; e.innerHTML = msg; $('#prog').hidden = true; }
+/* compile and link without waiting, so the page stays responsive while the graphics driver works */
+function startProgram(fs) {
+  const p = gl.createProgram(), sh = [[VS, gl.VERTEX_SHADER], [fs, gl.FRAGMENT_SHADER]].map(([src, type]) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); gl.attachShader(p, s); return s; });
+  gl.bindAttribLocation(p, 0, 'p'); gl.linkProgram(p);
+  return { p, sh };
+}
+function finishProgram(o) {
+  if (!gl.getProgramParameter(o.p, gl.LINK_STATUS)) {
+    const log = o.sh.map(s => gl.getShaderInfoLog(s)).filter(Boolean).join('\n') || gl.getProgramInfoLog(o.p);
+    console.error(log); throw new Error(log);
+  }
+  return o.p;
+}
+async function initGL() {
+  gl = cv.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
+  if (!gl) return glFail('This tool needs WebGL 2, which this browser hasn’t made available. Try a recent Chrome, Edge, Firefox or Safari, and check hardware acceleration is switched on.');
+  if (!gl.getExtension('EXT_color_buffer_float')) return glFail('This browser can’t render to floating-point buffers (EXT_color_buffer_float), which the light passes need. Try a recent Chrome, Edge or Firefox.');
+  $('#progTxt').textContent = 'Preparing the renderer…';
+  try {
+    const t0 = performance.now();
+    const a = startProgram(SCENE_SRC), b = startProgram(COMP_SRC), pc = gl.getExtension('KHR_parallel_shader_compile');
+    if (pc) await new Promise(res => { const poll = () => (gl.getProgramParameter(a.p, pc.COMPLETION_STATUS_KHR) && gl.getProgramParameter(b.p, pc.COMPLETION_STATUS_KHR)) ? res() : setTimeout(poll, 60); poll(); });
+    progScene = finishProgram(a); progComp = finishProgram(b);
+    window.__lrsCompileMs = Math.round(performance.now() - t0);
+  }
+  catch (e) { return glFail('The renderer couldn’t start on this graphics card.<br><small>' + esc(String(e.message || e).slice(0, 300)) + '</small>'); }
+  const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  ['uRes', 'uFrame', 'uA0', 'uA1', 'uA2', 'uA3', 'uCamPos', 'uCamR', 'uCamU', 'uCamF', 'uTanHalf', 'uAper', 'uFocus', 'uSkin', 'uHair', 'uLP', 'uLN', 'uLC', 'uYawCS', 'uTiltCS', 'uBodyCS', 'uWin']
+    .forEach(n => U[n] = gl.getUniformLocation(progScene, n));
+  ['uA0', 'uA1', 'uA2', 'uA3', 'uG0', 'uG1', 'uG2', 'uG3', 'uAmbG', 'uRes', 'uMode', 'uSplit', 'uClip'].forEach(n => UC[n] = gl.getUniformLocation(progComp, n));
+  cv.addEventListener('webglcontextlost', e => { e.preventDefault(); rdy = false; glFail('The graphics card reset. Reload the tool to carry on; your settings are kept.'); });
+  // no graphics card (software rendering): fewer pixels, and each pass split into strips from the start
+  const dbg = gl.getExtension('WEBGL_debug_renderer_info'), rname = String(gl.getParameter(dbg ? dbg.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
+  if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(rname)) { maxW = 760; NS = 16; }
+  rdy = true;
+  resize();
+}
+function makeTargets(w, h) {
+  [0, 1].forEach(k => { tex[k].forEach(t => gl.deleteTexture(t)); if (fbo[k]) gl.deleteFramebuffer(fbo[k]); tex[k] = []; });
+  for (let k = 0; k < 2; k++) {
+    fbo[k] = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[k]);
+    for (let i = 0; i < 4; i++) {
+      const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA32F, w, h);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, t, 0);
+      tex[k].push(t);
+    }
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2, gl.COLOR_ATTACHMENT3]);
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) { glFail('Couldn’t set up the render buffers on this graphics card.'); rdy = false; return; }
+    gl.clearBufferfv(gl.COLOR, 0, [0, 0, 0, 0]); gl.clearBufferfv(gl.COLOR, 1, [0, 0, 0, 0]); gl.clearBufferfv(gl.COLOR, 2, [0, 0, 0, 0]); gl.clearBufferfv(gl.COLOR, 3, [0, 0, 0, 0]);
+  }
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+function resize() {
+  if (!rdy) return;
+  const r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+  if ((!r.width || !onScreen()) && !QS.get('w')) return;   // hidden (another tab in the hub): keep the render as it is
+  let w = +QS.get('w') || Math.round(clamp(r.width * dpr, 560, maxW));
+  w = Math.round(w / 8) * 8; const h = Math.round(w / 2.39);
+  if (w === W && h === H) return;
+  W = w; H = h; cv.width = W; cv.height = H;
+  makeTargets(W, H); spp = 0; cur = 0; stripI = 0; needReset = false; readT = 0;
+}
+/* one strip of a pass; returns true when the pass is complete. Splitting a pass keeps each piece of graphics
+   work short, so a slow computer never holds up the page or the other tools for long. */
+function renderSample() {
+  const src = cur, dst = 1 - cur;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[dst]); gl.viewport(0, 0, W, H);
+  gl.useProgram(progScene);
+  for (let i = 0; i < 4; i++) { gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, tex[src][i]); gl.uniform1i(U['uA' + i], i); }
+  const sk = SKINS[S.skin], R = rigUniforms(), rad = d => d * Math.PI / 180;
+  gl.uniform2f(U.uRes, W, H); gl.uniform1i(U.uFrame, spp);
+  gl.uniform3fv(U.uCamPos, CAM.pos); gl.uniform3f(U.uCamR, 1, 0, 0); gl.uniform3f(U.uCamU, 0, 1, 0); gl.uniform3f(U.uCamF, 0, 0, -1);
+  gl.uniform1f(U.uTanHalf, CAM.tanHalf); gl.uniform1f(U.uAper, CAM.aper); gl.uniform1f(U.uFocus, CAM.focus);
+  gl.uniform3fv(U.uSkin, sk.lin); gl.uniform3fv(U.uHair, sk.hair);
+  gl.uniform4fv(U.uLP, R.LP); gl.uniform4fv(U.uLN, R.LN); gl.uniform2fv(U.uLC, R.LC);
+  gl.uniform2f(U.uYawCS, Math.cos(rad(CAM.yaw)), Math.sin(rad(CAM.yaw)));
+  gl.uniform2f(U.uTiltCS, Math.cos(rad(CAM.tilt)), Math.sin(rad(CAM.tilt)));
+  gl.uniform2f(U.uBodyCS, Math.cos(rad(CAM.body)), Math.sin(rad(CAM.body)));
+  gl.uniform1f(U.uWin, 0.18 * 2 ** 3.6);
+  if (NS > 1) { const y0 = Math.floor(H * stripI / NS), y1 = Math.floor(H * (stripI + 1) / NS); gl.enable(gl.SCISSOR_TEST); gl.scissor(0, y0, W, y1 - y0); }
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  gl.disable(gl.SCISSOR_TEST);
+  if (++stripI < NS) return false;
+  stripI = 0; cur = dst; spp++;
+  return true;
+}
+function composite(mode) {
+  if (!rdy) return;
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, W, H);
+  gl.useProgram(progComp);
+  for (let i = 0; i < 4; i++) { gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, tex[cur][i]); gl.uniform1i(UC['uA' + i], i); }
+  const G = gains(); G.forEach((g, i) => gl.uniform3fv(UC['uG' + i], g));
+  const AG = ambGains(G); gl.uniform3fv(UC.uAmbG, [0, 1, 2].map(c => AG.reduce((s, g) => s + g[c], 0)));
+  const m = mode || S.view;
+  gl.uniform2f(UC.uRes, W, H); gl.uniform1f(UC.uMode, m === 'fc' ? 1 : m === 'split' ? 2 : 0);
+  gl.uniform1f(UC.uSplit, S.split); gl.uniform1f(UC.uClip, S.clip);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+/* ───────────── readings ───────────── */
+let RAW = {};          // per spot: [pass][rgb], linear, at reference level
+let readT = 0;
+const pxBuf = new Float32Array(4 * 41 * 41);
+function readRegion(x, y, r) {
+  // average of each pass over a disc of radius r (pixels) around (x, y) in render pixels, y from the bottom
+  const x0 = clamp(Math.round(x - r), 0, W - 1), y0 = clamp(Math.round(y - r), 0, H - 1);
+  const x1 = clamp(Math.round(x + r), 0, W - 1), y1 = clamp(Math.round(y + r), 0, H - 1);
+  const w = x1 - x0 + 1, h = y1 - y0 + 1;
+  const out = [];
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, fbo[cur]);
+  for (let i = 0; i < 4; i++) {
+    gl.readBuffer(gl.COLOR_ATTACHMENT0 + i);
+    gl.readPixels(x0, y0, w, h, gl.RGBA, gl.FLOAT, pxBuf);
+    let s = [0, 0, 0, 0], n = 0;
+    for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) {
+      const dx = x0 + xx - x, dy = y0 + yy - y; if (dx * dx + dy * dy > r * r + 0.5) continue;
+      const k = 4 * (yy * w + xx); s[0] += pxBuf[k]; s[1] += pxBuf[k + 1]; s[2] += pxBuf[k + 2]; s[3] += pxBuf[k + 3]; n++;
+    }
+    out.push(n ? s.map(v => v / n) : [0, 0, 0, 0]);
+  }
+  out.push([out[0][3], out[1][3], out[2][3]]);   // room bounce (albedo × occlusion), stored in the alpha of passes 0–2
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+  return out;
+}
+function updateRaw() {
+  if (!rdy || !spp) return;
+  const r = Math.max(2, Math.min(18, Math.round(W * 0.0065)));
+  ROLES.forEach(o => { const p = S.spots[o.id]; RAW[o.id] = readRegion(p.x * W, (1 - p.y) * H, r); });
+}
+function partsOf(raw, G) {
+  const A = ambGains(G), am = raw[4] || [0, 0, 0];
+  return [0, 1, 2, 3].map(i => { let y = 0; for (let c = 0; c < 3; c++) y += (raw[i][c] * G[i][c] + am[c] * A[i][c]) * LUMW[c]; return y; });
+}
+function lumOf(raw, G) { return partsOf(raw, G).reduce((a, b) => a + b, 0); }
+const BLACK = -9;   // stops under grey we call black
+function readings() {
+  const G = gains(), out = {};
+  ROLES.forEach(o => { const raw = RAW[o.id]; if (raw) { const lin = lumOf(raw, G), st = Math.log2(Math.max(lin, 1e-9) / 0.18); out[o.id] = { lin, st, black: st < BLACK }; } });
+  return out;
+}
+const PAL = [[-5, [0.30, 0.16, 0.52]], [-4, [0.20, 0.28, 0.70]], [-3, [0.13, 0.47, 0.82]], [-2, [0.16, 0.66, 0.74]], [-1, [0.38, 0.76, 0.44]], [0, [0.80, 0.80, 0.76]], [1, [0.97, 0.84, 0.30]], [2, [0.97, 0.55, 0.20]], [3, [0.90, 0.20, 0.20]]];
+function bandCol(st) {
+  if (st >= S.clip) return 'rgb(242,51,191)';
+  if (st < -5.5) return 'rgb(18,18,20)';
+  const k = clamp(Math.round(st), -5, 3); const c = PAL.find(p => p[0] === k)[1];
+  return `rgb(${c.map(v => Math.round(v * 255)).join(',')})`;
+}
+
+/* the rim is a thin edge, so put the backlight spot where the backlight is brightest on the subject */
+function findRim() {
+  const buf = new Float32Array(W * H * 4);
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, fbo[cur]);
+  const Y = (i) => buf[i] * LUMW[0] + buf[i + 1] * LUMW[1] + buf[i + 2] * LUMW[2];
+  const r = Math.max(2, Math.round(W * 0.0065));
+  const best = (x0, x1, y0, y1) => {
+    let b = -1, bx = 0, by = 0;
+    for (let y = Math.max(r + 1, y0); y < Math.min(H - r - 1, y1); y += 2) for (let x = Math.max(r + 1, x0); x < Math.min(W - r - 1, x1); x += 2) {
+      let s = 0, n = 0;
+      for (let dy = -r; dy <= r; dy += 2) for (let dx = -r; dx <= r; dx += 2) { if (dx * dx + dy * dy > r * r) continue; s += Y(4 * ((y + dy) * W + x + dx)); n++; }
+      s /= n; if (s > b) { b = s; bx = x; by = y; }
+    }
+    return b > 0 ? { x: bx / W, y: 1 - by / H } : null;
+  };
+  if (S.autoBack) {   // the rim is a thin edge: find where the backlight is brightest on the subject
+    gl.readBuffer(gl.COLOR_ATTACHMENT2); gl.readPixels(0, 0, W, H, gl.RGBA, gl.FLOAT, buf);
+    const p = best(Math.round(W * 0.3), Math.round(W * 0.8), 0, H); if (p) S.spots.back = p;
+  }
+  if (S.autoKey) {    // the brightest key on the cheek near the starting spot
+    gl.readBuffer(gl.COLOR_ATTACHMENT0); gl.readPixels(0, 0, W, H, gl.RGBA, gl.FLOAT, buf);
+    const d = defaultSpots().key, cx = d.x * W, cy = (1 - d.y) * H, R = W * 0.022;
+    const p = best(Math.round(cx - R), Math.round(cx + R), Math.round(cy - R), Math.round(cy + R)); if (p) S.spots.key = p;
+  }
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+  drawMarks();
+}
+
+/* ───────────── UI ───────────── */
+const ICON_EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/><circle cx="12" cy="12" r="3.6"/></svg>';
+const ICON_SOLO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>';
+function buildLights() {
+  $('#lights').innerHTML = ROLES.map(r => `<div class="light" data-l="${r.id}" style="--c:${r.c}">
+    <div class="hd"><span class="chip">${r.s}</span><div class="nm" title="${esc(RIG[r.id].src)}">${r.n}</div>
+      <span class="tv"><span data-v></span><small data-t></small></span>
+      <button class="mini" data-act="solo" title="Solo: show only this light">${ICON_SOLO}</button>
+      <button class="mini" data-act="on" title="Switch this light on or off">${ICON_EYE}</button></div>
+    <div class="sl"><input type="range" min="${LMIN}" max="${LMAX}" step="0.3333333" data-s aria-label="${r.n} level in stops">
+      <div class="ticks"><span>−6</span><span>−4</span><span>−2</span><span>0</span><span>+2</span><span>+3</span></div></div>
+    <div class="krow"><span class="lbl">Colour</span><input type="range" class="k" min="2500" max="10000" step="100" data-k aria-label="${r.n} colour temperature"><span class="val" data-kv></span></div>
+  </div>`).join('');
+  $('#looks').innerHTML = LOOKS.map(l => `<button data-look="${l.id}">${l.n}<small>${l.sub}</small></button>`).join('');
+  $('#kfChips').innerHTML = KF.map(k => `<button data-kf="${k}" title="Set the fill for a ${k}:1 lighting ratio">${k}:1</button>`).join('');
+  $('#skins').innerHTML = SKINS.map((s, i) => `<button data-skin="${i}" style="--sk:${s.css}" title="${s.name}" aria-label="${s.name} skin"></button>`).join('');
+  $('#tstop').innerHTML = TS.slice(0, 22).map((t, i) => `<option value="${i}">T${t}</option>`).join('');
+  // legend
+  const st = []; for (let s = -5; s <= 3; s++) st.push(s);
+  $('#legend').innerHTML = `<div class="cap dk" style="background:rgb(18,18,20)">&lt; −5½</div>` + st.map(s => { const c = bandCol(s); const dk = s <= -3 || s >= 3; return `<div class="${dk ? 'dk' : ''}" style="background:${c}">${s > 0 ? '+' + s : s === 0 ? '18%' : '−' + Math.abs(s)}</div>`; }).join('') + `<div class="cap dk" id="clipLg" style="background:rgb(242,51,191)">clip</div>`;
+}
+function syncUI() {
+  ROLES.forEach(r => {
+    const l = S.L[r.id], el = document.querySelector(`.light[data-l="${r.id}"]`);
+    el.classList.toggle('off', !l.on || (S.solo && S.solo !== r.id));
+    el.querySelector('[data-s]').value = l.s;
+    el.querySelector('[data-v]').textContent = l.on ? fmtThird(l.s) : 'Off';
+    el.querySelector('[data-t]').textContent = l.on ? tLabel(l.s) : '';
+    el.querySelector('[data-k]').value = l.k;
+    el.querySelector('[data-kv]').textContent = l.k + 'K';
+    el.querySelector('[data-act="on"]').classList.toggle('on', l.on);
+    el.querySelector('[data-act="solo"]').classList.toggle('on', S.solo === r.id);
+  });
+  document.querySelectorAll('#viewSeg button').forEach(b => b.classList.toggle('on', b.dataset.view === S.view));
+  document.querySelectorAll('#skins button').forEach(b => b.classList.toggle('on', +b.dataset.skin === S.skin));
+  $('#marksBtn').classList.toggle('on', S.marks); $('#marks').classList.toggle('off', !S.marks || !spotMode());
+  $('#marksBtn').hidden = !spotMode(); $('#spotReset').hidden = !spotMode(); $('#reads').hidden = !spotMode();
+  document.querySelectorAll('#rmodeSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === S.rmode));
+  document.querySelectorAll('[data-mnote]').forEach(p => p.hidden = p.dataset.mnote !== S.rmode);
+  document.querySelectorAll('#bounceSeg button').forEach(b => b.classList.toggle('on', (b.dataset.b === '1') === S.bounce));
+  $('#tstop').value = S.tstop; $('#expo').value = S.expo; $('#expoVal').textContent = fmtThird(S.expo);
+  $('#wb').value = S.wb; $('#wbVal').textContent = S.wb + 'K'; $('#clip').value = String(S.clip);
+  $('#legend').hidden = S.view === 'img';
+  $('#proj').value = S.title; if (document.activeElement !== $('#notes')) $('#notes').value = S.notes;
+  document.querySelectorAll('#looks button').forEach(b => b.classList.toggle('on', b.dataset.look === S.look));
+  const kf = kfNow();
+  document.querySelectorAll('#kfChips button').forEach(b => b.classList.toggle('on', !!kf && Math.abs(Math.log2(kf / +b.dataset.kf)) < 0.06));
+  renderRatios(); drawMarks(); drawPlan(); renderTable();
+}
+/* Key : Fill is measured on the face: the key-side spot against the shadow-side spot, as you'd spot-meter
+   the two cheeks. It's the same as the incident ratio there, since both spots are skin. */
+function faceKF() {
+  const R = readings();
+  if (!S.L.key.on || !S.L.fill.on || !R.key || !R.fill || R.key.black || R.fill.black) return null;
+  return R.key.lin / R.fill.lin;
+}
+const levelKF = () => 2 ** (S.L.key.s - S.L.fill.s);   // the two lights' own meter readings
+const spotMode = () => S.rmode === 'spot';
+/* Key : Fill in the chosen reading: the meter (each light's incident reading) or the spots on the face */
+function kfNow() { if (!S.L.key.on || !S.L.fill.on) return null; return spotMode() ? faceKF() : levelKF(); }
+/* fill level (stops) that makes the face read `ratio`, with everything else as it is. Light adds, so this is exact. */
+function solveFill(ratio) {
+  const fallback = S.L.key.s - Math.log2(ratio);
+  if (!RAW.key || !RAW.fill) return fallback;
+  const keep = JSON.stringify(S.L), solo = S.solo; S.solo = null;
+  const at = id => lumOf(RAW[id], gains());
+  S.L.fill.on = false; const bk = at('key'), bf = at('fill');
+  S.L.fill.on = true; S.L.fill.s = 0; const uk = at('key') - bk, uf = at('fill') - bf;
+  S.L = JSON.parse(keep); S.solo = solo;
+  const f = (bk - ratio * bf) / (ratio * uf - uk);
+  return f > 0 && isFinite(f) ? Math.log2(f) : null;
+}
+function renderRatios() {
+  const R = readings(), sp = spotMode(), kf = kfNow(), both = S.L.key.on && S.L.fill.on;
+  const sKF = kf ? Math.log2(kf) : null;
+  const other = !both ? '' : sp ? `Meter: key ${fmtThird(S.L.key.s)}, fill ${fmtThird(S.L.fill.s)} · ${ratioTxt(levelKF())}` : (faceKF() ? `Spot meter on the face reads ${ratioTxt(faceKF())}` : '');
+  const tag = sp ? 'spot meter' : 'meter';
+  $('#kfPill').innerHTML = S.solo ? `Solo: <b>${ROLES.find(r => r.id === S.solo).n}</b>` : kf ? `Key : Fill <b>${ratioTxt(kf)}</b> · ${tag}` : 'Key : Fill <b>—</b>';
+  $('#hero').innerHTML = `<div class="hero"><div class="big"><small>Key : Fill · ${sp ? 'spot, on the face' : 'meter'}</small>${kf ? ratioTxt(kf) : '—'}</div>
+    <div class="why"><strong>${kf ? kfMood(sKF) : !S.L.key.on ? 'Key is off' : !S.L.fill.on ? 'Fill is off' : 'Measuring…'}</strong>${kf ? (sp ? `Key side ${fmtStops(sKF)} over the shadow side.` : `Key ${fmtStops(sKF)} over the fill.`) : both ? 'Waiting for the frame to render.' : 'Switch both on to see the lighting ratio.'}
+    <span class="rd">${other}</span></div></div>`;
+  $('#plist').innerHTML = PAIRS.map(p => {
+    const v = sp ? pairCam(R, p) : pairMeter(p);
+    return `<li><span class="pn">${p[2]}<small>${p[3]}</small></span><span class="pv">${v.r}<small>${v.s}</small></span></li>`;
+  }).join('');
+  $('#reads').innerHTML = ROLES.map(r => { const v = R[r.id]; return `<li style="--c:${r.c}"><span>${r.s} spot</span><b>${v ? (v.st >= S.clip ? 'clip' : v.black ? 'black' : fmtStops(v.st).replace(' stops', '').replace(' stop', '')) : '—'}<i style="background:${v ? bandCol(v.st) : 'transparent'}"></i></b></li>`; }).join('');
+}
+/* a pair two ways: the lights' own meter readings, and what the camera records at the two spots */
+function pairMeter(p) {
+  const a = S.L[p[0]], b = S.L[p[1]];
+  if (!a.on || !b.on) return { r: '—', s: `${!a.on ? ROLES.find(r => r.id === p[0]).n : ROLES.find(r => r.id === p[1]).n} off`, v: null };
+  const s = a.s - b.s; return { r: ratioTxt(2 ** s), s: fmtStops(s), v: s };
+}
+function pairCam(R, p) {
+  const a = R[p[0]], b = R[p[1]];
+  if (!a || !b) return { r: '—', s: 'measuring', v: null };
+  if (a.black || b.black) return { r: '—', s: a.black && b.black ? 'both black' : `${a.black ? ROLES.find(r => r.id === p[0]).s : ROLES.find(r => r.id === p[1]).s} spot black`, v: null };
+  const s = Math.log2(a.lin / b.lin); return { r: ratioTxt(2 ** s), s: fmtStops(s), v: s };
+}
+function renderTable() {
+  $('#ltab').innerHTML = ROLES.map(r => { const l = S.L[r.id]; return `<tr><td><span class="dot" style="--c:${r.c}"></span>${r.n}</td>
+    <td>${esc(RIG[r.id].src)}<small>${esc(RIG[r.id].where)}</small></td>
+    <td class="n">${l.on ? fmtThird(l.s) : 'Off'}<small>${l.on ? tLabel(l.s) : ''}</small><small>${l.k}K</small></td></tr>`; }).join('');
+  $('#meterNote').innerHTML = `Readings are incident, with the meter facing each light on its own (the background with the meter on the wall, facing camera), against a shooting stop of <b>T${TS[S.tstop]}</b>. Levels are in stops: +1 is double the light.`;
+}
+
+/* spot markers */
+function drawMarks() {
+  const svg = $('#marks'), r = $('#stage').getBoundingClientRect();
+  if (!S.spots) return;
+  svg.setAttribute('viewBox', `0 0 ${r.width} ${r.height}`);
+  svg.innerHTML = ROLES.map(o => {
+    const p = S.spots[o.id], x = p.x * r.width, y = p.y * r.height, rr = Math.max(7, r.width * 0.0065 + 3);
+    return `<g class="m" data-spot="${o.id}" transform="translate(${x},${y})"><circle r="${rr + 7}" fill="transparent"/><circle r="${rr}" fill="none" stroke="#000" stroke-opacity=".55" stroke-width="3.5"/><circle r="${rr}" fill="none" stroke="${o.c}" stroke-width="1.8"/>
+      <g transform="translate(${rr + 4},${-rr - 4})"><rect x="0" y="-9" width="${o.s.length * 7.5 + 8}" height="15" rx="4" fill="${o.c}"/><text x="4" y="2.5" font-family="JetBrains Mono,monospace" font-size="10.5" font-weight="700" fill="#14110b">${o.s}</text></g></g>`;
+  }).join('');
+}
+
+/* plan view */
+function drawPlan() {
+  const c = $('#plan'); if (!c) return;
+  const cs = getComputedStyle(document.documentElement), col = n => cs.getPropertyValue(n).trim() || '#888';
+  const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  if (!r.width) return;
+  c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr);
+  const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  paintPlan(g, r.width, r.height, { text: col('--fth-text'), muted: col('--fth-muted'), line: col('--fth-line2'), faint: col('--fth-faint'), bg: col('--fth-bg2') });
+}
+function paintPlan(g, w, h, C) {
+  g.clearRect(0, 0, w, h);
+  // world x ∈ [-17, 17], z ∈ [-21.5, 16.5]
+  const xr = [-17, 17], zr = [-21.5, 16.5];
+  const sc = Math.min(w / (xr[1] - xr[0]), h / (zr[1] - zr[0])) * 0.96;
+  const ox = w / 2, oz = h / 2 - ((zr[0] + zr[1]) / 2) * sc;
+  const P = (x, z) => [ox + x * sc, oz + z * sc];
+  g.lineCap = 'round'; g.lineJoin = 'round';
+  // frustum
+  const cp = P(CAM.pos[0], CAM.pos[2]), hw = CAM.tanHalf * 2.39;
+  g.fillStyle = 'rgba(151,163,255,0.08)'; g.beginPath(); g.moveTo(...cp); g.lineTo(...P(CAM.pos[0] - hw * 34.5, -20)); g.lineTo(...P(CAM.pos[0] + hw * 34.5, -20)); g.closePath(); g.fill();
+  // wall, window, board, cabinet
+  g.strokeStyle = C.muted; g.lineWidth = 2.5;
+  g.beginPath(); g.moveTo(...P(-17, -20)); g.lineTo(...P(-17.6 + 0, -20)); g.moveTo(...P(-11.6, -20)); g.lineTo(...P(17, -20)); g.stroke();
+  g.lineWidth = 1.2; g.strokeStyle = C.faint; g.beginPath(); g.moveTo(...P(-17.6, -21)); g.lineTo(...P(-11.6, -21)); g.stroke();
+  g.fillStyle = C.text; g.globalAlpha = .8; g.fillRect(...P(-10.3, -20 + 0.1), 12.8 * sc, 0.25 * sc); g.globalAlpha = 1;
+  g.strokeStyle = C.faint; g.lineWidth = 1; g.strokeRect(...P(6.1, -20), 11 * sc, 5.2 * sc);
+  g.font = `500 ${Math.max(9, 10.5)}px JetBrains Mono, monospace`; g.fillStyle = C.faint; g.textAlign = 'center';
+  g.fillText('window', ...P(-14.6, -18.4)); g.fillText('blackboard', ...P(-3.9, -18.4)); g.fillText('cabinet', ...P(11.6, -16.6));
+  // subject
+  const sp = P(0, 0);
+  g.fillStyle = C.text; g.beginPath(); g.ellipse(sp[0], sp[1] + 0.2 * sc, 2.05 * sc, 1.0 * sc, CAM.body * Math.PI / 180 * -1, 0, Math.PI * 2); g.globalAlpha = .25; g.fill(); g.globalAlpha = 1;
+  g.beginPath(); g.arc(sp[0], sp[1], 0.85 * sc, 0, Math.PI * 2); g.fill();
+  const yaw = CAM.yaw * Math.PI / 180, nd = [Math.sin(yaw), Math.cos(yaw)];
+  g.beginPath(); g.moveTo(sp[0] + nd[0] * 0.85 * sc, sp[1] + nd[1] * 0.85 * sc); g.lineTo(sp[0] + nd[0] * 1.35 * sc, sp[1] + nd[1] * 1.35 * sc); g.lineWidth = 2; g.strokeStyle = C.text; g.stroke();
+  // camera
+  g.save(); g.translate(...cp); g.fillStyle = C.text; g.fillRect(-1.1 * sc, 0, 2.2 * sc, 1.4 * sc); g.beginPath(); g.moveTo(-0.6 * sc, 0); g.lineTo(0.6 * sc, 0); g.lineTo(0.9 * sc, -0.7 * sc); g.lineTo(-0.9 * sc, -0.7 * sc); g.closePath(); g.fill(); g.restore();
+  g.fillStyle = C.muted; g.fillText('camera', cp[0], cp[1] + 2.4 * sc);
+  // lights
+  ROLES.forEach(o => {
+    const L = RIG[o.id], l = S.L[o.id], p = P(L.pos[0], L.pos[2]), a = P(L.aim[0], L.aim[2]);
+    const ang = Math.atan2(a[1] - p[1], a[0] - p[0]);
+    g.save(); g.translate(...p); g.rotate(ang);
+    g.globalAlpha = l.on ? 1 : 0.35;
+    g.fillStyle = o.c; g.strokeStyle = o.c;
+    const half = Math.max(L.r * sc, 5);
+    g.globalAlpha *= 0.18; g.beginPath(); g.moveTo(0, -half); g.lineTo(5 * sc, -half * 1.5); g.lineTo(5 * sc, half * 1.5); g.lineTo(0, half); g.closePath(); g.fill();
+    g.globalAlpha = l.on ? 1 : 0.35; g.fillRect(-0.45 * sc, -half, 0.9 * sc, half * 2);
+    g.restore();
+    g.globalAlpha = l.on ? 1 : 0.5;
+    const lab = `${o.n}${l.on ? ' ' + fmtThird(l.s) : ' off'}`;
+    const off = o.id === 'bg' ? [0, -1.9] : o.id === 'key' ? [-3.2, 2.6] : o.id === 'fill' ? [5.2, -0.6] : [3.6, -0.4];
+    g.font = `700 11px Archivo, system-ui, sans-serif`; g.fillStyle = C.text; g.textAlign = 'center';
+    g.fillText(lab, p[0] + off[0] * sc, p[1] + off[1] * sc);
+    g.font = `500 10px JetBrains Mono, monospace`; g.fillStyle = C.muted;
+    if (l.on) g.fillText(`${tLabel(l.s)} · ${l.k}K`, p[0] + off[0] * sc, p[1] + off[1] * sc + 13);
+    g.globalAlpha = 1;
+  });
+}
+window.drawPlan = drawPlan;
+
+/* ───────────── loop ───────────── */
+let dirty = true, saveT;
+function changed(redrawUI = true) { dirty = true; if (redrawUI) syncUI(); clearTimeout(saveT); saveT = setTimeout(persist, 600); }
+function resetRender() { if (!rdy) return; makeTargets(W, H); spp = 0; cur = 0; stripI = 0; RAW = {}; }
+window.__resetSpots = () => { S.spots = defaultSpots(); S.autoBack = true; if (spp >= 12) findRim(); updateRaw(); changed(); };
+/* in the hub, a tool in another tab sits in a hidden frame: don't render there, so the other tools stay quick */
+const onScreen = () => {
+  if (document.hidden || !innerWidth || !innerHeight) return false;
+  // a hidden frame keeps reporting its old size from the inside, so ask the frame itself
+  try { const fe = window.frameElement; if (fe && !fe.offsetWidth) return false; } catch (e) {}
+  return true;
+};
+function tick() {
+  if (rdy && !onScreen()) { requestAnimationFrame(tick); return; }
+  if (rdy) {
+    if (spp < SPP) {
+      const now = performance.now(), dt = lastT ? Math.min(now - lastT, 2000) : 16;
+      lastT = now; ema = ema ? ema * 0.8 + dt * 0.2 : dt;
+      if (renderSample()) {
+        // keep each frame's share of graphics work short: more strips when slow, fewer when quick
+        if (ema > 45 && NS < 32) NS *= 2; else if (ema < 20 && NS > 1) NS /= 2;
+        if (NS >= 32 && ema > 150 && W > 640 && !QS.get('w')) { if (++slowN >= 3) { maxW = Math.max(640, Math.round(W * 0.7)); slowN = 0; W = 0; resize(); } } else slowN = 0;
+        if ((spp === 12 || spp === 48) && (S.autoBack || S.autoKey)) findRim();
+        if (spp <= 4 || spp % 6 === 0 || spp === SPP) { updateRaw(); renderRatios(); }
+        dirty = true;
+      }
+    }
+    if (dirty) { composite(); dirty = false; }
+    const pr = Math.min(1, spp / SPP);
+    $('#progBar').style.width = (pr * 100).toFixed(1) + '%';
+    $('#progTxt').textContent = spp >= SPP ? `Rendered · ${SPP} passes` : `Refining · ${spp}/${SPP}`;
+    $('#prog').classList.toggle('done', spp >= SPP);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ───────────── persistence ───────────── */
+const KEY = 'lighting-ratio-studio';   // saved-work name: keep as is so earlier work still opens
+function snapshot() { return JSON.parse(JSON.stringify({ app: 'lighting-ratio-studio', ...S, solo: null })); }
+function persist() { try { localStorage.setItem(KEY, JSON.stringify(snapshot())); } catch (e) {} }
+function applyData(d) {
+  const D = DEF();
+  if (!d || typeof d !== 'object') return D;
+  const o = { ...D };
+  ['title', 'notes'].forEach(k => { if (typeof d[k] === 'string') o[k] = d[k].slice(0, 20000); });
+  if (Number.isInteger(d.skin) && SKINS[d.skin]) o.skin = d.skin;
+  if (Number.isInteger(d.tstop) && d.tstop >= 0 && d.tstop < 22) o.tstop = d.tstop;
+  if (isFinite(d.expo)) o.expo = clamp(+d.expo, -3, 3);
+  if (isFinite(d.wb)) o.wb = clamp(Math.round(+d.wb), 2500, 10000);
+  if ([6, 5, 4, 2.5].includes(+d.clip)) o.clip = +d.clip;
+  if (['img', 'fc', 'split'].includes(d.view)) o.view = d.view;
+  if (isFinite(d.split)) o.split = clamp(+d.split, 0.05, 0.95);
+  if (typeof d.marks === 'boolean') o.marks = d.marks;
+  if (typeof d.bounce === 'boolean') o.bounce = d.bounce;
+  o.rmode = d.rmode === 'spot' ? 'spot' : 'meter';
+  o.look = LOOKS.some(l => l.id === d.look) ? d.look : null;
+  if (typeof d.autoBack === 'boolean') o.autoBack = d.autoBack;
+  if (d.L) ROLES.forEach(r => { const l = d.L[r.id]; if (l) o.L[r.id] = { on: l.on !== false, s: isFinite(l.s) ? clamp(+l.s, LMIN, LMAX) : D.L[r.id].s, k: isFinite(l.k) ? clamp(Math.round(+l.k), 2500, 10000) : 5600 }; });
+  if (d.spots) { const sp = defaultSpots(); ROLES.forEach(r => { const p = d.spots[r.id]; if (p && isFinite(p.x) && isFinite(p.y)) sp[r.id] = { x: clamp(+p.x, 0, 1), y: clamp(+p.y, 0, 1) }; }); o.spots = sp; }
+  return o;
+}
+function load() {
+  let d = null; try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+  S = applyData(d); if (!S.spots) S.spots = defaultSpots();
+}
+function fileName(ext) { return ((S.title || 'Lighting ratios').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'Lighting_ratios') + '.' + ext; }
+function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+
+/* ───────────── events ───────────── */
+function bind() {
+  $('#lights').addEventListener('input', e => {
+    const row = e.target.closest('.light'); if (!row) return; const l = S.L[row.dataset.l];
+    if (e.target.matches('[data-s]')) { l.s = +(+e.target.value).toFixed(4); l.on = true; S.look = null; }
+    if (e.target.matches('[data-k]')) l.k = +e.target.value;
+    changed();
+  });
+  $('#lights').addEventListener('click', e => {
+    const b = e.target.closest('button[data-act]'); if (!b) return; const id = b.closest('.light').dataset.l;
+    if (b.dataset.act === 'on') { S.look = null; S.L[id].on = !S.L[id].on; if (!S.L[id].on && S.solo === id) S.solo = null; }
+    if (b.dataset.act === 'solo') { S.solo = S.solo === id ? null : id; if (S.solo) S.L[id].on = true; }
+    changed();
+  });
+  $('#looks').addEventListener('click', e => {
+    const b = e.target.closest('button[data-look]'); if (!b) return; const lk = LOOKS.find(l => l.id === b.dataset.look);
+    ROLES.forEach(r => { const v = lk.L[r.id]; if (v === undefined) return; if (v === null) S.L[r.id].on = false; else { S.L[r.id].on = true; S.L[r.id].s = v; } });
+    S.solo = null;
+    if (lk.kf) { S.L.fill.on = true; setFillFor(lk.kf); } else S.L.fill.s = -5;
+    S.look = lk.id; changed();
+  });
+  $('#kfChips').addEventListener('click', e => {
+    const b = e.target.closest('button[data-kf]'); if (!b) return;
+    S.L.key.on = true; S.L.fill.on = true; S.solo = null; S.look = null; setFillFor(+b.dataset.kf); changed();
+  });
+  function setFillFor(ratio) {
+    const f = spotMode() ? solveFill(ratio) : S.L.key.s - Math.log2(ratio);
+    if (f === null) { S.L.fill.s = LMIN; toast(`The face can’t get to ${ratio}:1 with the other lights where they are; spill from the backlight or background is lifting the shadow side.`, 4500); return; }
+    S.L.fill.s = +clamp(f, LMIN, LMAX).toFixed(4);
+    if (f < LMIN) toast('Fill is at its lowest; raise the key for a higher ratio.');
+    if (f > LMAX) toast('Fill is at its highest; lower the key for a flatter ratio.');
+  }
+  $('#skins').addEventListener('click', e => { const b = e.target.closest('button[data-skin]'); if (!b) return; S.skin = +b.dataset.skin; resetRender(); changed(); });
+  $('#tstop').addEventListener('change', e => { S.tstop = +e.target.value; changed(); });
+  $('#rmodeSeg').addEventListener('click', e => { const b = e.target.closest('button[data-m]'); if (!b) return; S.rmode = b.dataset.m; if (S.rmode === 'spot') { updateRaw(); } changed(); });
+  $('#bounceSeg').addEventListener('click', e => { const b = e.target.closest('button[data-b]'); if (!b) return; S.bounce = b.dataset.b === '1'; changed(); });
+  $('#expo').addEventListener('input', e => { S.expo = +(+e.target.value).toFixed(4); changed(); });
+  $('#wb').addEventListener('input', e => { S.wb = +e.target.value; changed(); });
+  $('#clip').addEventListener('change', e => { S.clip = +e.target.value; changed(); });
+  $('#viewSeg').addEventListener('click', e => { const b = e.target.closest('button[data-view]'); if (!b) return; S.view = b.dataset.view; changed(); });
+  $('#marksBtn').addEventListener('click', () => { S.marks = !S.marks; changed(); });
+  $('#proj').addEventListener('input', e => { S.title = e.target.value; changed(false); });
+  $('#notes').addEventListener('input', e => { S.notes = e.target.value; changed(false); });
+  document.addEventListener('keydown', e => {
+    if (e.target.closest('input,textarea,select')) return;
+    if (e.key === 'm' || e.key === 'M') { S.marks = !S.marks; changed(); }
+    if (e.key === 'f' || e.key === 'F') { S.view = S.view === 'fc' ? 'img' : 'fc'; changed(); }
+  });
+
+  // dragging spots, the split line, and the hover meter
+  const stage = $('#stage');
+  let drag = null;
+  const rel = e => { const r = cv.getBoundingClientRect(); return { x: clamp((e.clientX - r.left) / r.width, 0, 1), y: clamp((e.clientY - r.top) / r.height, 0, 1) }; };
+  $('#marks').addEventListener('pointerdown', e => {
+    const g = e.target.closest('[data-spot]'); if (!g) return;
+    e.preventDefault(); drag = { spot: g.dataset.spot }; stage.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener('pointerdown', e => {
+    if (S.view !== 'split') return; drag = { split: true }; stage.setPointerCapture(e.pointerId); S.split = clamp(rel(e).x, 0.05, 0.95); dirty = true;
+  });
+  stage.addEventListener('pointermove', e => {
+    const p = rel(e);
+    if (drag && drag.spot) { S.spots[drag.spot] = p; if (drag.spot === 'back') S.autoBack = false; if (drag.spot === 'key') S.autoKey = false; drawMarks(); spotMoved = true; }
+    else if (drag && drag.split) { S.split = clamp(p.x, 0.05, 0.95); dirty = true; }
+    hoverAt = p;
+  });
+  const end = () => { if (drag) { if (drag.spot) { updateRaw(); renderRatios(); } drag = null; changed(false); } };
+  stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
+  stage.addEventListener('pointerleave', () => { hoverAt = null; $('#meter').innerHTML = 'Hover the frame to meter any point'; });
+  let spotMoved = false, hoverAt = null;
+  setInterval(() => {
+    if (!rdy || !spp) return;
+    if (spotMoved) { spotMoved = false; updateRaw(); renderRatios(); }
+    if (hoverAt) {
+      const raw = readRegion(hoverAt.x * W, (1 - hoverAt.y) * H, 1.5), G = gains();
+      const parts = partsOf(raw, G);
+      const tot = parts.reduce((a, b) => a + b, 0), st = Math.log2(Math.max(tot, 1e-7) / 0.18);
+      const share = ROLES.map((r, i) => tot > 0 ? Math.round(parts[i] / tot * 100) : 0).map((v, i) => v ? `${ROLES[i].s} ${v}%` : '').filter(Boolean).join(' · ');
+      $('#meter').innerHTML = `<b>${st >= S.clip ? 'Clipped' : st < BLACK ? 'Black' : fmtStops(st)}</b> vs 18% grey${share ? ' · ' + share : ''}`;
+    }
+  }, 90);
+
+  new ResizeObserver(() => { const w0 = W; resize(); if (W !== w0) RAW = {}; drawMarks(); drawPlan(); dirty = true; }).observe(stage);
+  new ResizeObserver(() => drawPlan()).observe($('#plan'));
+
+  // files
+  $('#saveBtn').addEventListener('click', () => download(new Blob([JSON.stringify({ ...snapshot(), deck: deckForFile() }, null, 2)], { type: 'application/json' }), fileName('json')));
+  $('#openBtn').addEventListener('click', () => $('#fileJson').click());
+  $('#fileJson').addEventListener('change', async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    try {
+      const d = JSON.parse(await f.text());
+      if (!d || d.app !== 'lighting-ratio-studio') return toast('That .json wasn’t saved from Lighting Ratio Lab.');
+      const oldSkin = S.skin; S = applyData(d); if (!S.spots) S.spots = defaultSpots();
+      if (S.skin !== oldSkin) resetRender(); RAW = {}; updateRaw(); changed(); if (Array.isArray(d.deck)) deckFromFile(d.deck); toast(`Opened ${S.title ? '“' + S.title + '”' : 'lighting plan'}`);
+    } catch (er) { toast('Couldn’t read that file.'); }
+  });
+  $('#pngBtn').addEventListener('click', () => {
+    if (!rdy) return; composite(); cv.toBlob(b => b && download(b, fileName('png')), 'image/png');
+    if (spp < SPP) toast('Saved while still refining; save again when it finishes for a cleaner frame.');
+  });
+  $('#pdfBtn').addEventListener('click', exportPDF);
+  $('#spotReset').addEventListener('click', () => { window.__resetSpots(); toast('Spots back on the face, rim and wall'); });
+}
+
+/* A Learn lab isn't tied to a project, so its exports download straight away rather than going to
+   the project's Documentation folder (like the other labs). */
+
+/* ───────────── PDF ───────────── */
+let jspdfP;
+function loadJsPDF() {
+  if (window.jspdf) return Promise.resolve(window.jspdf);
+  return jspdfP || (jspdfP = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = () => window.jspdf ? res(window.jspdf) : rej(); s.onerror = () => { jspdfP = null; rej(); }; document.head.appendChild(s);
+  }));
+}
+function frameURL(mode) { composite(mode); const u = cv.toDataURL('image/jpeg', 0.92); dirty = true; return u; }
+const T = s => String(s).replace(/[⅓⅔−·×→’‘“”–—]/g, c => ({ '⅓': ' 1/3', '⅔': ' 2/3', '−': '-', '·': '-', '×': 'x', '→': '->', '’': "'", '‘': "'", '“': '"', '”': '"', '–': '-', '—': '-' }[c]));
+async function exportPDF() {
+  if (!rdy || !spp) return toast('Wait for the frame to render first.');
+  const lbl = $('#pdfLbl'); lbl.textContent = 'Preparing…';
+  let lib; try { lib = await loadJsPDF(); } catch (e) { lbl.textContent = 'Export PDF'; return toast('Couldn’t load the PDF library. Check your connection and try again.', 4000); }
+  try {
+    updateRaw();
+    const { jsPDF } = lib, doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const PW = 297, PH = 210, M = 12, INK = [20, 22, 26], MUTED = [110, 114, 122], LINE = [215, 210, 200];
+    const title = S.title || 'Lighting ratios';
+    doc.setProperties({ title });
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(...INK); doc.text(T(title), M, M + 5);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED);
+    doc.text(T(`Lighting Ratio Lab · ${SKINS[S.skin].name} skin · shooting T${TS[S.tstop]} · exposure ${fmtThird(S.expo)} · WB ${S.wb}K · clips at +${S.clip} stops`), M, M + 10.5);
+    doc.text(new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }), PW - M, M + 5, { align: 'right' });
+    if (spp < SPP) doc.text(T(`draft render · ${spp} passes`), PW - M, M + 10.5, { align: 'right' });
+    // frame and false colour
+    const iw = 182, ih = iw / 2.39, top = M + 15;
+    doc.addImage(frameURL('img'), 'JPEG', M, top, iw, ih);
+    const sw = (iw - 4) / 2, sh = sw / 2.39;
+    doc.addImage(frameURL('fc'), 'JPEG', M, top + ih + 4, sw, sh);
+    // spot markers on the picture
+    if (spotMode()) ROLES.forEach(o => { const p = S.spots[o.id], c = o.c.match(/\w\w/g).map(h => parseInt(h, 16)); doc.setDrawColor(...c); doc.setLineWidth(0.5); doc.circle(M + p.x * iw, top + p.y * ih, 1.6); doc.setFontSize(6.5); doc.setTextColor(...c); doc.setFont('helvetica', 'bold'); doc.text(o.s, M + p.x * iw + 2.3, top + p.y * ih - 1.6); });
+    composite(); dirty = true;
+    // plan
+    const ph = sh, pw = ph * 1.55, cw = 400, chh = cw / 1.55, pc = document.createElement('canvas'); pc.width = cw * 3; pc.height = chh * 3;
+    const pg = pc.getContext('2d'); pg.scale(3, 3); pg.fillStyle = '#f6f4ef'; pg.fillRect(0, 0, cw, chh);
+    paintPlan(pg, cw, chh, { text: '#16181c', muted: '#565c66', line: '#cfc8bb', faint: '#878c95', bg: '#f6f4ef' });
+    doc.addImage(pc.toDataURL('image/png'), 'PNG', M + sw + 4 + (sw - pw) / 2, top + ih + 4, pw, ph);
+    doc.setFontSize(6.5); doc.setTextColor(...MUTED); doc.setFont('helvetica', 'normal');
+    doc.text('FALSE COLOUR - STOPS VS 18% GREY', M, top + ih + 4 + sh + 3.5); doc.text('PLAN - TOP VIEW', M + sw + 4, top + ih + 4 + sh + 3.5);
+    // legend strip
+    let lx = M, ly = top + ih + 4 + sh + 5.5; const st = [-5, -4, -3, -2, -1, 0, 1, 2, 3], bw = iw / (st.length + 1);
+    st.forEach(s => { const c = bandCol(s).match(/\d+/g).map(Number); doc.setFillColor(...c); doc.rect(lx, ly, bw - 0.5, 4, 'F'); doc.setTextColor(s <= -3 || s >= 3 ? 255 : 20); doc.setFontSize(6); doc.text(s === 0 ? '18%' : (s > 0 ? '+' : '-') + Math.abs(s), lx + bw / 2, ly + 2.8, { align: 'center' }); lx += bw; });
+    doc.setFillColor(242, 51, 191); doc.rect(lx, ly, bw - 0.5, 4, 'F'); doc.setTextColor(255); doc.text('clip', lx + bw / 2, ly + 2.8, { align: 'center' });
+    // right column: ratio, lights, readings
+    const rx = M + iw + 8, rw = PW - M - rx; let y = top + 2;
+    const R = readings(), kf = kfNow(), sp = spotMode();
+    doc.setTextColor(...MUTED); doc.setFontSize(7); doc.setFont('helvetica', 'bold'); doc.text(sp ? 'KEY : FILL (SPOT METER, ON THE FACE)' : 'KEY : FILL (METER)', rx, y);
+    doc.setTextColor(...INK); doc.setFontSize(26); doc.text(kf ? ratioTxt(kf) : '-', rx, y + 10);
+    doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.text(T(kf ? `${kfMood(Math.log2(kf))} (${fmtStops(Math.log2(kf))})` : 'Key or fill off'), rx + 30, y + 5);
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(...MUTED); doc.text(T(S.L.key.on && S.L.fill.on ? `Key ${fmtThird(S.L.key.s)} (${tLabel(S.L.key.s)}), fill ${fmtThird(S.L.fill.s)} (${tLabel(S.L.fill.s)})${!sp && faceKF() ? ` - spot on face ${ratioTxt(faceKF())}` : sp ? ` - meter ${ratioTxt(levelKF())}` : ''}` : ''), rx + 30, y + 10);
+    y += 17;
+    doc.setDrawColor(...LINE); doc.setLineWidth(0.25);
+    const head = (t) => { doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...MUTED); doc.text(t, rx, y); y += 2; doc.line(rx, y, rx + rw, y); y += 4; };
+    head('LIGHTS');
+    ROLES.forEach(o => {
+      const l = S.L[o.id], c = o.c.match(/\w\w/g).map(h => parseInt(h, 16));
+      doc.setFillColor(...c); doc.circle(rx + 1.3, y - 1.1, 1.3, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...INK); doc.text(o.n, rx + 4, y);
+      doc.text(T(l.on ? `${fmtThird(l.s)}  ${tLabel(l.s)}` : 'Off'), rx + rw, y, { align: 'right' });
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
+      const lines = doc.splitTextToSize(T(`${RIG[o.id].src}, ${l.k}K. ${RIG[o.id].where}`), rw - 4);
+      doc.text(lines, rx + 4, y + 4); y += 4 + lines.length * 3.2 + 3;
+    });
+    head('ON CAMERA AT THE SPOTS');
+    doc.setFontSize(8.5);
+    ROLES.forEach(o => { const v = R[o.id]; doc.setFont('helvetica', 'normal'); doc.setTextColor(...INK); doc.text(`${o.n} spot`, rx, y); doc.setFont('helvetica', 'bold'); doc.text(T(v ? (v.st >= S.clip ? 'clipped' : v.black ? 'black' : fmtStops(v.st)) : '-'), rx + rw, y, { align: 'right' }); y += 4.6; });
+    y += 1;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(...MUTED); doc.text('METER', rx + rw - 24, y, { align: 'right' }); doc.text('ON CAMERA', rx + rw, y, { align: 'right' }); y += 4; doc.setFontSize(8.5);
+    PAIRS.forEach(p => { const m = pairMeter(p), c = pairCam(R, p); doc.setFont('helvetica', 'normal'); doc.setTextColor(...INK); doc.text(p[2], rx, y); doc.setFont('helvetica', 'bold'); doc.text(T(m.r), rx + rw - 24, y, { align: 'right' }); doc.setFont('helvetica', 'normal'); doc.text(T(c.r), rx + rw, y, { align: 'right' }); y += 4.6; });
+    if (S.notes.trim()) {
+      y += 2; head('NOTES');
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...INK);
+      const lines = doc.splitTextToSize(T(S.notes.trim()), rw); const room = Math.max(1, Math.floor((PH - M - y) / 3.8));
+      doc.text(lines.slice(0, room), rx, y);
+    }
+    doc.setFontSize(6.5); doc.setTextColor(...MUTED); doc.setFont('helvetica', 'normal');
+    doc.text(T(`Incident readings: meter facing each light on its own; background on the wall facing camera. Spot readings are reflected, in stops vs 18% grey.`), M, PH - 6);
+    doc.save(fileName('pdf'));
+  } catch (e) { console.error(e); toast('Something went wrong making the PDF.'); }
+  lbl.textContent = 'Export PDF';
+}
+
+/* ───────────── start ───────────── */
+load();
+buildLights();
+bind();
+if (document.readyState === 'complete') setTimeout(initGL, 0); else addEventListener('load', () => setTimeout(initGL, 0));
+syncUI();
+requestAnimationFrame(tick);
+window.__lrs = { get spp() { return spp; }, get S() { return S; }, apply: f => { f(S); changed(); composite(); }, RAW: () => RAW, readings, composite: m => composite(m), sync: syncUI, SPP };
+
+/* ───────────── deck: captured frames with their settings and ratios ───────────── */
+const DECK_KEY = KEY + ':deck', DECK_MAX = 24;
+let DECK = [], OVL = true;
+const bakedCache = new Map();
+
+function loadDeck() {
+  try { const d = JSON.parse(localStorage.getItem(DECK_KEY) || 'null'); if (d) { DECK = cleanDeck(d.items); OVL = d.ovl !== false; } } catch (e) { DECK = []; }
+}
+function saveDeck() {
+  try { localStorage.setItem(DECK_KEY, JSON.stringify({ items: DECK, ovl: OVL })); return true; }
+  catch (e) { toast('The browser’s storage is full, so the deck couldn’t be saved. Remove a few captures, or Download .json to keep them.', 5000); return false; }
+}
+function cleanDeck(items) {
+  if (!Array.isArray(items)) return [];
+  return items.filter(c => c && typeof c.img === 'string' && /^data:image\/(jpeg|png);base64,[A-Za-z0-9+/=]+$/.test(c.img) && c.info && c.state)
+    .slice(0, DECK_MAX).map(c => ({ id: String(c.id || Math.random().toString(36).slice(2)), t: +c.t || Date.now(), label: String(c.label || 'Frame').slice(0, 80), img: c.img, info: c.info, state: c.state }));
+}
+function deckForFile() { return DECK; }
+function deckFromFile(items) { if (!Array.isArray(items)) return; DECK = cleanDeck(items); bakedCache.clear(); saveDeck(); renderDeck(); }
+
+function capInfo() {
+  updateRaw();
+  const R = readings(), kfS = S.L.key.on && S.L.fill.on ? faceKF() : null, lv = S.L.key.on && S.L.fill.on ? levelKF() : null;
+  return {
+    mode: S.rmode, kf: spotMode() ? kfS : lv, kfS, lv,
+    L: ROLES.map(r => ({ id: r.id, on: S.L[r.id].on, s: S.L[r.id].s, k: S.L[r.id].k, t: S.L[r.id].on ? tLabel(S.L[r.id].s) : '' })),
+    pairs: PAIRS.map(p => ({ n: p[2], m: pairMeter(p).r, c: pairCam(R, p).r })),
+    skin: SKINS[S.skin].name, tstop: 'T' + TS[S.tstop], wb: S.wb, expo: S.expo, bounce: S.bounce,
+    look: S.look ? LOOKS.find(l => l.id === S.look).n : null, view: S.view
+  };
+}
+function capture() {
+  if (!rdy || !spp) return toast('Wait for the frame to start rendering first.');
+  if (DECK.length >= DECK_MAX) return toast(`The deck holds ${DECK_MAX} frames. Remove one to capture another.`);
+  composite();
+  const w = Math.min(1280, W), h = Math.round(w / 2.39), c = document.createElement('canvas');
+  c.width = w; c.height = h; c.getContext('2d').drawImage(cv, 0, 0, w, h);
+  dirty = true;
+  const info = capInfo();
+  const n = DECK.length + 1;
+  const cap = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: Date.now(),
+    label: `${info.look || 'Frame'} ${n}`, img: c.toDataURL('image/jpeg', 0.84), info,
+    state: JSON.parse(JSON.stringify({ rmode: S.rmode, L: S.L, skin: S.skin, expo: S.expo, wb: S.wb, tstop: S.tstop, bounce: S.bounce, clip: S.clip, look: S.look, spots: S.spots, autoBack: S.autoBack, view: S.view }))
+  };
+  DECK.push(cap);
+  if (!saveDeck()) { DECK.pop(); return; }
+  renderDeck();
+  const el = document.querySelector(`.dcard[data-id="${cap.id}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  toast(spp < SPP ? `Captured “${cap.label}” while still refining.` : `Captured “${cap.label}”`);
+}
+function restoreCap(cap) {
+  const st = cap.state, oldSkin = S.skin;
+  ROLES.forEach(r => { const l = st.L && st.L[r.id]; if (l) S.L[r.id] = { on: !!l.on, s: clamp(+l.s || 0, LMIN, LMAX), k: clamp(+l.k || 5600, 2500, 10000) }; });
+  if (SKINS[st.skin]) S.skin = st.skin;
+  ['expo', 'wb', 'tstop', 'clip'].forEach(k => { if (isFinite(st[k])) S[k] = +st[k]; });
+  S.bounce = !!st.bounce; S.look = st.look || null; S.solo = null;
+  if (st.rmode) S.rmode = st.rmode === 'spot' ? 'spot' : 'meter';
+  if (['img', 'fc', 'split'].includes(st.view)) S.view = st.view;
+  if (st.spots) { S.spots = JSON.parse(JSON.stringify(st.spots)); S.autoBack = !!st.autoBack; }
+  if (S.skin !== oldSkin) resetRender(); else { RAW = {}; updateRaw(); }
+  changed(); toast(`Settings from “${cap.label}” are back on the lights`);
+}
+
+/* the ratio panel drawn onto a capture */
+function loadImg(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+async function bake(cap, overlay) {
+  const img = await loadImg(cap.img), w = img.naturalWidth, h = img.naturalHeight, u = w / 1120;
+  const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
+  g.drawImage(img, 0, 0);
+  if (!overlay) return c;
+  const I = cap.info, F = 'Archivo, "Helvetica Neue", Arial, sans-serif', MONO = '"JetBrains Mono", Menlo, monospace';
+  // label, top left
+  g.font = `700 ${15 * u}px ${F}`; const lw = g.measureText(cap.label).width;
+  g.fillStyle = 'rgba(10,11,13,.72)'; rr(g, 16 * u, 16 * u, lw + 22 * u, 30 * u, 7 * u); g.fill();
+  g.fillStyle = '#fff'; g.textBaseline = 'middle'; g.fillText(cap.label, 27 * u, 31.5 * u);
+  // band along the bottom
+  const bh = 104 * u, by = h - bh;
+  const gr = g.createLinearGradient(0, by - 30 * u, 0, h); gr.addColorStop(0, 'rgba(8,9,11,0)'); gr.addColorStop(0.3, 'rgba(8,9,11,.74)'); gr.addColorStop(1, 'rgba(8,9,11,.88)');
+  g.fillStyle = gr; g.fillRect(0, by - 30 * u, w, bh + 30 * u);
+  g.textBaseline = 'alphabetic';
+  const x0 = 24 * u;
+  const spotCap = I.mode ? I.mode === 'spot' : true;   // older captures were spot readings
+  g.font = `600 ${11 * u}px ${MONO}`; g.fillStyle = '#ffb547'; g.fillText(spotCap ? 'KEY : FILL · SPOT, FACE' : 'KEY : FILL · METER', x0, by + 22 * u);
+  g.font = `800 ${46 * u}px ${F}`; g.fillStyle = '#fff'; g.fillText(I.kf ? ratioTxt(I.kf) : '—', x0, by + 70 * u);
+  g.font = `500 ${11.5 * u}px ${MONO}`; g.fillStyle = 'rgba(255,255,255,.72)';
+  const sub = spotCap ? (I.lv ? `meter ${ratioTxt(I.lv)}` : '') : ((I.kfS) ? `spot on face ${ratioTxt(I.kfS)}` : '');
+  g.fillText(I.kf ? sub : 'key or fill off', x0, by + 90 * u);
+  // the four lights
+  const cx0 = 236 * u, cw = 172 * u;
+  I.L.forEach((l, i) => {
+    const r = ROLES.find(o => o.id === l.id), x = cx0 + i * cw;
+    g.fillStyle = r.c; g.globalAlpha = l.on ? 1 : 0.4;
+    g.beginPath(); g.arc(x + 5 * u, by + 18 * u, 5 * u, 0, Math.PI * 2); g.fill();
+    g.font = `700 ${14 * u}px ${F}`; g.fillStyle = '#fff'; g.fillText(r.n, x + 16 * u, by + 23 * u);
+    g.font = `700 ${22 * u}px ${MONO}`; g.fillText(l.on ? fmtThird(l.s) : 'Off', x, by + 56 * u);
+    g.font = `500 ${11.5 * u}px ${MONO}`; g.fillStyle = 'rgba(255,255,255,.72)';
+    if (l.on) { g.fillText(`${l.t}  ${l.k}K`, x, by + 76 * u); }
+    g.globalAlpha = 1;
+  });
+  // the pairs, right
+  const rx = w - 24 * u;
+  g.textAlign = 'right';
+  g.font = `600 ${10 * u}px ${MONO}`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText(spotCap ? 'SPOT' : 'METER', rx, by + 18 * u);
+  g.font = `500 ${11.5 * u}px ${MONO}`;
+  I.pairs.slice(0, 3).forEach((p, i) => { g.fillStyle = 'rgba(255,255,255,.72)'; g.fillText(`${p.n.replace('Backlight', 'Back').replace('Background', 'BG')}  `, rx - 46 * u, by + (38 + i * 17) * u); g.fillStyle = '#fff'; g.fillText(spotCap ? p.c : p.m, rx, by + (38 + i * 17) * u); });
+  g.font = `500 ${10.5 * u}px ${MONO}`; g.fillStyle = 'rgba(255,255,255,.55)';
+  g.fillText(`${I.skin} skin · ${I.tstop} · WB ${I.wb}K${I.bounce ? ' · bounce on' : ''}`, rx, by + 92 * u);
+  g.textAlign = 'left';
+  return c;
+}
+async function bakedURL(cap) {
+  const k = cap.id + (OVL ? ':o' : '');
+  if (!OVL) return cap.img;
+  if (!bakedCache.has(k)) bakedCache.set(k, (await bake(cap, true)).toDataURL('image/jpeg', 0.9));
+  return bakedCache.get(k);
+}
+
+function renderDeck() {
+  const el = $('#deck');
+  $('#deckCount').textContent = DECK.length ? `${DECK.length} frame${DECK.length > 1 ? 's' : ''}` : '';
+  $('#ovl').checked = OVL;
+  $('#deckPdf').disabled = !DECK.length; $('#deckClear').hidden = !DECK.length;
+  el.innerHTML = DECK.map(c => {
+    const I = c.info;
+    return `<figure class="dcard" data-id="${esc(c.id)}">
+      <button class="dimg" data-act="view" title="Open larger"><img alt="${esc(c.label)}" data-img></button>
+      <figcaption>
+        <input class="dlabel" value="${esc(c.label)}" aria-label="Name for this capture" maxlength="80">
+        <span class="dsub">Key : Fill <b>${I.kf ? ratioTxt(I.kf) : '—'}</b> · ${I.L.map(l => `${ROLES.find(r => r.id === l.id).s} ${l.on ? fmtThird(l.s) : 'off'}`).join(' · ')}</span>
+        <span class="dbtns">
+          <button class="mini wide" data-act="restore" title="Put these settings back on the lights">Use settings</button>
+          <button class="mini" data-act="png" title="Save this frame as a PNG"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M4.5 19.5h15"/></svg></button>
+          <button class="mini" data-act="left" title="Move earlier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6l-6 6 6 6"/></svg></button>
+          <button class="mini" data-act="right" title="Move later"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 6l6 6-6 6"/></svg></button>
+          <button class="mini" data-act="del" title="Remove from the deck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M10 7V4.5h4V7M7 7l1 12.5h8L17 7"/></svg></button>
+        </span>
+      </figcaption></figure>`;
+  }).join('') + `<button class="dadd" id="deckAdd" title="Capture the frame as it is now (C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2.2l1.5-2h5.6l1.5 2h2.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.4"/></svg><span>${DECK.length ? 'Capture another' : 'Capture this frame'}</span><small>${DECK.length ? '' : 'Frames you capture line up here with their settings and ratios, ready to compare or export as a deck.'}</small></button>`;
+  DECK.forEach(c => { bakedURL(c).then(u => { const im = el.querySelector(`.dcard[data-id="${c.id}"] [data-img]`); if (im) im.src = u; }); });
+}
+
+async function exportDeckPDF() {
+  if (!DECK.length) return;
+  const btn = $('#deckPdf'), was = btn.textContent; btn.textContent = 'Preparing…';
+  let lib; try { lib = await loadJsPDF(); } catch (e) { btn.textContent = was; return toast('Couldn’t load the PDF library. Check your connection and try again.', 4000); }
+  try {
+    const { jsPDF } = lib, doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const PW = 297, PH = 210, M = 12, G = 8, cw = (PW - 2 * M - G) / 2, ih = cw / 2.39, ch = ih + 22, INK = [20, 22, 26], MUTED = [110, 114, 122];
+    const title = S.title || 'Lighting ratios';
+    const pages = Math.ceil(DECK.length / 4);
+    for (let pi = 0; pi < pages; pi++) {
+      if (pi) doc.addPage();
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(...INK); doc.text(T(title), M, M + 4);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
+      doc.text(T(`Lighting Ratio Lab · lighting deck · ${DECK.length} frame${DECK.length > 1 ? 's' : ''}`), M, M + 9);
+      doc.text(`${pi + 1} / ${pages}`, PW - M, M + 4, { align: 'right' });
+      for (let k = 0; k < 4; k++) {
+        const c = DECK[pi * 4 + k]; if (!c) break;
+        const x = M + (k % 2) * (cw + G), y = M + 15 + Math.floor(k / 2) * (ch + 6), I = c.info;
+        const cnv = await bake(c, OVL);
+        doc.addImage(cnv.toDataURL('image/jpeg', 0.9), 'JPEG', x, y, cw, ih);
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...INK); doc.text(T(c.label), x, y + ih + 5);
+        const spotCap = I.mode ? I.mode === 'spot' : true;
+        doc.text(T(`Key : Fill ${I.kf ? ratioTxt(I.kf) : '-'} ${spotCap ? 'spot, on the face' : 'meter'}`), x + cw, y + ih + 5, { align: 'right' });
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...MUTED);
+        doc.text(T(I.L.map(l => `${ROLES.find(r => r.id === l.id).n} ${l.on ? `${fmtThird(l.s)} (${l.t}${l.k !== 5600 ? ', ' + l.k + 'K' : ''})` : 'off'}`).join('   ')), x, y + ih + 9.5);
+        doc.text(T(`${spotCap ? 'Spot' : 'Meter'}: ${I.pairs.map(p => `${p.n} ${spotCap ? p.c : p.m}`).join(' · ')}`), x, y + ih + 13.5);
+        doc.text(T(`${I.skin} skin · shooting ${I.tstop} · WB ${I.wb}K · exposure ${fmtThird(I.expo)}${I.bounce ? ' · room bounce on' : ''}${spotCap && I.lv ? ` · meter key:fill ${ratioTxt(I.lv)}` : !spotCap && I.kfS ? ` · spot on face ${ratioTxt(I.kfS)}` : ''}`), x, y + ih + 17.5);
+      }
+    }
+    doc.save(fileName('pdf').replace(/\.pdf$/, '_deck.pdf'));
+  } catch (e) { console.error(e); toast('Something went wrong making the deck PDF.'); }
+  btn.textContent = was;
+}
+
+async function savePNG(c) {
+  const cnv = await bake(c, OVL), name = (c.label.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'frame') + '.png';
+  cnv.toBlob(bl => bl && download(bl, name), 'image/png');
+}
+function bindDeck() {
+  $('#capBtn').addEventListener('click', capture);
+  $('#ovl').addEventListener('change', e => { OVL = e.target.checked; saveDeck(); renderDeck(); });
+  $('#deckPdf').addEventListener('click', exportDeckPDF);
+  $('#deckClear').addEventListener('click', () => {
+    if (!DECK.length) return;
+    const keep = DECK; DECK = []; saveDeck(); renderDeck();
+    toast(`Cleared ${keep.length} frame${keep.length > 1 ? 's' : ''}.`, 6000);
+    const t = $('#toast'); const u = document.createElement('button'); u.className = 'lnk'; u.textContent = 'Undo'; u.style.marginLeft = '10px';
+    u.onclick = () => { DECK = keep; saveDeck(); renderDeck(); t.classList.remove('show'); }; t.appendChild(u);
+  });
+  const deck = $('#deck');
+  deck.addEventListener('click', async e => {
+    if (e.target.closest('#deckAdd')) return capture();
+    const b = e.target.closest('button[data-act]'); if (!b) return;
+    const id = b.closest('.dcard').dataset.id, i = DECK.findIndex(c => c.id === id), c = DECK[i]; if (!c) return;
+    const a = b.dataset.act;
+    if (a === 'view') openLB(i);
+    if (a === 'restore') restoreCap(c);
+    if (a === 'png') savePNG(c);
+    if (a === 'del') {
+      DECK.splice(i, 1); saveDeck(); renderDeck();
+      toast(`Removed “${c.label}”.`, 6000);
+      const t = $('#toast'), u = document.createElement('button'); u.className = 'lnk'; u.textContent = 'Undo'; u.style.marginLeft = '10px';
+      u.onclick = () => { DECK.splice(i, 0, c); saveDeck(); renderDeck(); t.classList.remove('show'); }; t.appendChild(u);
+    }
+    if (a === 'left' && i > 0) { [DECK[i - 1], DECK[i]] = [DECK[i], DECK[i - 1]]; saveDeck(); renderDeck(); }
+    if (a === 'right' && i < DECK.length - 1) { [DECK[i + 1], DECK[i]] = [DECK[i], DECK[i + 1]]; saveDeck(); renderDeck(); }
+  });
+  deck.addEventListener('change', e => {
+    if (!e.target.matches('.dlabel')) return;
+    const c = DECK.find(x => x.id === e.target.closest('.dcard').dataset.id); if (!c) return;
+    c.label = e.target.value.trim().slice(0, 80) || 'Frame'; [...bakedCache.keys()].filter(k => k.startsWith(c.id)).forEach(k => bakedCache.delete(k));
+    saveDeck(); renderDeck();
+  });
+  deck.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('.dlabel')) e.target.blur(); });
+  document.addEventListener('keydown', e => { if (e.target.closest('input,textarea,select')) return; if ($('#lb') && !$('#lb').hidden) return; if ((e.key === 'c' || e.key === 'C') && !e.metaKey && !e.ctrlKey) capture(); });
+}
+/* larger view of the deck, with left and right to browse */
+let lbI = -1;
+function lbEl() {
+  let el = $('#lb'); if (el) return el;
+  el = document.createElement('div'); el.id = 'lb'; el.className = 'lb'; el.hidden = true;
+  el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Deck viewer');
+  el.innerHTML = `<div class="lb-top"><span class="lb-n" id="lbN"></span><label class="sw lb-sw"><input type="checkbox" id="lbOvl"><i></i>Ratios on images</label><button class="lb-x" data-lb="close" title="Close (Esc)" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="lb-mid"><button class="lb-nav" data-lb="prev" title="Previous (←)" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <figure class="lb-fig"><img id="lbImg" alt=""></figure>
+      <button class="lb-nav" data-lb="next" title="Next (→)" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button></div>
+    <div class="lb-cap" id="lbCap"></div>`;
+  document.body.appendChild(el);
+  el.addEventListener('click', e => {
+    const b = e.target.closest('[data-lb]');
+    if (b) { const a = b.dataset.lb; if (a === 'close') closeLB(); if (a === 'prev') stepLB(-1); if (a === 'next') stepLB(1);
+      if (a === 'restore') { restoreCap(DECK[lbI]); closeLB(); }
+      if (a === 'png') savePNG(DECK[lbI]);
+      return; }
+    if (e.target === el || e.target.classList.contains('lb-mid')) closeLB();
+  });
+  el.querySelector('#lbOvl').addEventListener('change', e => { OVL = e.target.checked; saveDeck(); renderDeck(); showLB(); });
+  let sx = null;
+  el.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+  el.addEventListener('touchend', e => { if (sx === null) return; const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 50) stepLB(dx < 0 ? 1 : -1); sx = null; });
+  return el;
+}
+let lbFocus = null;
+function openLB(i) { if (!DECK[i]) return; lbFocus = document.activeElement; lbI = i; const el = lbEl(); el.hidden = false; document.body.style.overflow = 'hidden'; showLB(); el.querySelector('.lb-x').focus(); }
+function closeLB() { const el = $('#lb'); if (!el || el.hidden) return; el.hidden = true; document.body.style.overflow = ''; if (lbFocus && lbFocus.focus) lbFocus.focus(); }
+function stepLB(d) { if (!DECK.length) return closeLB(); lbI = (lbI + d + DECK.length) % DECK.length; showLB(); }
+async function showLB() {
+  const el = $('#lb'); if (!el || el.hidden) return;
+  if (!DECK.length) return closeLB();
+  lbI = clamp(lbI, 0, DECK.length - 1);
+  const c = DECK[lbI], I = c.info, spotCap = I.mode ? I.mode === 'spot' : true;
+  el.querySelector('#lbN').textContent = `${lbI + 1} / ${DECK.length}`;
+  el.querySelector('#lbOvl').checked = OVL;
+  el.querySelectorAll('.lb-nav').forEach(b => b.disabled = DECK.length < 2);
+  el.querySelector('#lbCap').innerHTML = `<div class="lb-t"><b>${esc(c.label)}</b><span>Key : Fill <b>${I.kf ? ratioTxt(I.kf) : '—'}</b> · ${spotCap ? 'spot, on the face' : 'meter'}</span></div>
+    <div class="lb-l">${I.L.map(l => { const r = ROLES.find(o => o.id === l.id); return `<span style="--c:${r.c}"><i></i>${r.n} <b>${l.on ? fmtThird(l.s) : 'off'}</b>${l.on ? ` ${l.t} · ${l.k}K` : ''}</span>`; }).join('')}</div>
+    <div class="lb-b"><button class="fth-btn sm" data-lb="restore">Use these settings</button><button class="fth-btn sm" data-lb="png">Save PNG</button></div>`;
+  const img = el.querySelector('#lbImg'), want = c.id;
+  img.alt = c.label;
+  const u = await bakedURL(c); if (DECK[lbI] && DECK[lbI].id === want) img.src = u;
+}
+document.addEventListener('keydown', e => {
+  const el = $('#lb'); if (!el || el.hidden) return;
+  if (e.key === 'ArrowLeft') { e.preventDefault(); stepLB(-1); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); stepLB(1); }
+  else if (e.key === 'Escape') { e.preventDefault(); closeLB(); }
+  else if (e.key === 'Tab') {   // keep focus inside the viewer
+    const f = [...el.querySelectorAll('button:not([disabled]),input')]; const i = f.indexOf(document.activeElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+  }
+  e.stopPropagation();
+}, true);
+
+loadDeck(); bindDeck(); renderDeck();
+</script>
+</body>
+</html>
