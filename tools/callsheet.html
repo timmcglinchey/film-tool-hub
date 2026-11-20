@@ -155,6 +155,12 @@ table.t{border-collapse:collapse;min-width:100%}
 .t td:first-child{padding-left:6px}
 .t input[type=checkbox]{margin:0 8px}
 .x{color:var(--fth-faint)}.x:hover{color:var(--fth-bad)}
+.t input[data-k=n]{min-width:0;width:46px}
+.fs{margin:14px 0 0;padding:14px 16px;border:1px solid var(--fth-accent-line);border-radius:var(--fth-radius-sm);background:var(--fth-accent-soft)}
+.fs-h{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px;margin-bottom:6px}
+.fs .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fs select{flex:1;min-width:220px}
+.fs .pick{display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 0;font-size:13px;color:var(--fth-muted)}.fs .pick label{display:flex;gap:6px;align-items:center;margin:0;font:inherit;letter-spacing:0;text-transform:none;color:inherit;cursor:pointer}
+.fs .note{margin:10px 0 0;font-size:12.5px;color:var(--fth-muted)}.fs .note.stale{color:var(--fth-warn);font-weight:600}
 #warn .fth-warn{margin:14px 0 0}#warn .fth-warn b{display:block;margin-bottom:3px}
 /* preview: the call sheet itself stays a white printed page in both themes */
 .pvlabel{max-width:820px;margin:0 auto 10px;display:flex;justify-content:space-between;gap:10px}
@@ -201,6 +207,7 @@ notes:"Anything the whole team needs to know: parking, access, noise restriction
 scenes:"Each row is a block of the schedule. 'Scenes' are the scene numbers shot, 'Partial' brackets them e.g. (2) when only part of the scene is shot. D/N is Day or Night. Pages is the script length as a fraction of a page, e.g. 1 3/8; the total is added up for you.",
 cast:"Cast working that day. SWHF is the status code: S start, W work, F finish, H hold, SW start/work, WF work/finish. MU is make-up call time, 'Set' is when they are needed on set.",
 shot:"The time you expect the first and last shot to be taken. Last shot must be before camera wrap.",
+fs:"Pick a shoot day from the Production Schedule Builder and the sheet fills in its date, call time, estimated wrap, meal break, scenes (with start and end times) and the cast in them, with S/W/F worked out across the schedule. Make-up times, special instructions and notes you've already typed are kept for cast and scenes that are still there. Producer, director and title are only filled where they're blank, and the set address only if it's blank or came from the schedule. If the Shot List has a Camera Call for the same date, that becomes the first shot. Crew, weather and hospital are left alone.",
 crew:"Edit names and times, or add and remove rows. If someone arrives twice, type both times, e.g. '14:00 / 20:00'."};
 const info=k=>INFO[k]?`<b class="fth-info" title="What is this?" onclick="this.parentNode.nextElementSibling.classList.toggle('on')">i</b>`:"",
 tip=k=>`<div class="tip fth-tip">${INFO[k]||""}</div>`;
@@ -209,6 +216,7 @@ function tbl(n,cols){return `<div class="tw"><table class="t"><tr>${cols.map(c=>
 return `<td>${c[2]=="chk"?`<input type="checkbox" ${a} ${v?"checked":""}>`:c[2]=="sel"?`<select class="fth-input" ${a}>${["",...c[3]].map(o=>`<option ${o==v?"selected":""}>${o}</option>`).join("")}</select>`:`<input class="fth-input" type="${c[2]||"text"}" ${a} value="${esc(v)}">`}</td>`}).join("")}<td><button class="fth-btn ghost icon x" data-del="${n}" data-i="${i}" title="Remove row">✕</button></td></tr>`).join("")+`</table></div><div class="bar"><button class="fth-btn sm" data-add="${n}">＋ Add row</button></div>`}
 function form(){const act=document.activeElement;$("#ed").innerHTML=`
 <p class="intro">Fill in each section and the call sheet builds live on the right. Click the <b class="fth-info">i</b> icons for help. For a PDF, choose “Save as PDF” as the printer. Excel needs an internet connection.</p>
+<div id="fs"></div>
 <div id="warn"></div>
 <h2 class="fth-sec"><span class="fth-num">01</span>Production</h2><div class="g">${F("Title","title","text","title",1)}${F("Studio / company","place","text","place")}${F("Producer","producer","text","producer")}${F("Director","director")}${F("Director phone","dirPhone")}</div>
 <h2 class="fth-sec"><span class="fth-num">02</span>Date</h2><div class="g">${F("Shoot date","date","date","date")}<div><label>Day ${info("day")}</label>${tip("day")}<div class="inline"><input class="fth-input" type="number" min="1" data-k="day" value="${S.day}"> of <input class="fth-input" type="number" min="1" data-k="days" value="${S.days}"></div></div></div>
@@ -219,8 +227,9 @@ ${F("AM temp (°C)","amT","number")}${F("PM temp (°C)","pmT","number")}${F("Hum
 <p class="sub" style="font-size:12px">☀️ Sunrise and sunset are worked out automatically from the date and location.</p>
 <h2 class="fth-sec"><span class="fth-num">06</span>Craft services &amp; notes</h2><div class="g">${F("Craft services","craft","text","craft",1)}${F("Notes","notes","area","notes",1)}</div>
 <h2 class="fth-sec"><span class="fth-num">07</span>Scenes &amp; schedule ${info("scenes")}</h2>${tip("scenes")}${tbl("scenes",[["sc","Scenes"],["part","Partial","chk"],["set","Set"],["desc","Description"],["ch","Char #"],["dn","D/N","sel",["D","N"]],["pg","Pages"],["st","Start","time"],["en","End","time"],["nt","Notes"]])}
-<h2 class="fth-sec"><span class="fth-num">08</span>Cast ${info("cast")}</h2>${tip("cast")}${tbl("cast",[["name","Cast"],["ch","Character"],["sw","SWHF","sel",["S","W","H","F","SW","WF","SWF"]],["mu","MU","time"],["set","Set","time"],["minor","Minor?","sel",["Y","N"]],["si","Special instructions"]])}
+<h2 class="fth-sec"><span class="fth-num">08</span>Cast ${info("cast")}</h2>${tip("cast")}${tbl("cast",[["n","#"],["name","Cast"],["ch","Character"],["sw","SWHF","sel",["S","W","H","F","SW","WF","SWF"]],["mu","MU","time"],["set","Set","time"],["minor","Minor?","sel",["Y","N"]],["si","Special instructions"]])}
 <h2 class="fth-sec"><span class="fth-num">09</span>Crew ${info("crew")}</h2>${tip("crew")}${tbl("crew",[["pos","Position"],["name","Name"],["ph","Phone"],["set","Set (time)"]])}${window.fthPeople&&window.fthPeople().length?`<div class="bar"><button class="fth-btn sm" data-crewfill="1" title="Adds everyone this project is shared with, by the name and role in the project's crew list. You can still type over any of it.">＋ Add project crew</button></div>`:""}`;
+fsRender();
 if(act&&act.dataset&&act.dataset.k){const q=`[data-k="${act.dataset.k}"]`+(act.dataset.a?`[data-a="${act.dataset.a}"][data-i="${act.dataset.i}"]`:":not([data-a])");const n=$(q);n&&n.focus()}}
 // maths
 const pv=v=>{const m=String(v||"").trim().match(/^(?:(\d+)\s+)?(?:(\d+)\/(\d+))?$|^(\d+)$/);if(!m||!String(v).trim())return 0;return m[4]?+m[4]:(+m[1]||0)+(m[2]?m[2]/m[3]:0)};
@@ -255,10 +264,74 @@ $("#pv").innerHTML=`<div class="hd"><span>${esc(S.title)}</span><span>${esc(S.pl
 ${S.scenes.map(r=>`<tr><td class="c">${esc(sc_(r))}</td><td><b>${esc(r.set)}</b><br><i>${esc(r.desc)}</i></td><td class="c">${esc(r.ch)}</td><td class="c">${esc(r.dn)}</td><td>${esc(r.pg)}</td><td class="c">${r.st||""}</td><td class="c">${r.en||""}</td><td>${esc(r.nt)}</td></tr>`).join("")}
 <tr><td colspan="4" style="border:0"></td><td colspan="2"><b>TOTAL PAGES</b></td><td colspan="2"><b>${fp(totals())}</b></td></tr></table><div class="sp"></div>
 <table><tr><th>#</th><th>CAST</th><th>CHARACTER</th><th>SWHF</th><th>MU</th><th>SET</th><th>MINOR?</th><th>SPECIAL INSTRUCTIONS</th></tr>
-${S.cast.map((r,i)=>`<tr class="c"><td>${i+1}</td><td>${esc(r.name)}</td><td>${esc(r.ch)}</td><td>${esc(r.sw)}</td><td>${r.mu||""}</td><td>${r.set||""}</td><td>${esc(r.minor)}</td><td>${esc(r.si)}</td></tr>`).join("")}</table><div class="sp"></div>
+${S.cast.map((r,i)=>`<tr class="c"><td>${esc(r.n||i+1)}</td><td>${esc(r.name)}</td><td>${esc(r.ch)}</td><td>${esc(r.sw)}</td><td>${r.mu||""}</td><td>${r.set||""}</td><td>${esc(r.minor)}</td><td>${esc(r.si)}</td></tr>`).join("")}</table><div class="sp"></div>
 <table><tr><th colspan="2">SHOT INFORMATION</th></tr><tr class="c"><td>FIRST SHOT</td><td>${S.first}</td></tr><tr class="c"><td>LAST SHOT</td><td>${S.last}</td></tr></table><div class="sp"></div>
 <table><tr><th>POSITION</th><th>NAME</th><th>PHONE</th><th>SET</th></tr>${S.crew.map(r=>`<tr class="c"><td>${esc(r.pos)}</td><td>${esc(r.name)}</td><td>${esc(r.ph)}</td><td>${esc(r.set)}</td></tr>`).join("")}</table>`;
 const w=warns();$("#warn").innerHTML=w.length?`<div class="fth-warn"><b>Sense checks</b>${w.map(x=>"• "+esc(x)).join("<br>")}</div>`:""}
+
+/* ---------- Fill from Schedule ----------
+   Reads the Production Schedule Builder's saved work in this project (fth-schedule-v1) and, for the
+   first shot, the Shot List's Camera Call (shot-list-builder-v1). Read only: nothing is written back. */
+const SCHED_KEY="fth-schedule-v1",SHOT_KEY="shot-list-builder-v1",fsPick={when:true,scenes:true,cast:true};
+const rj=k=>{try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}};
+function schedLoad(){const o=rj(SCHED_KEY);if(!o||!o.S||!Array.isArray(o.S.days))return null;const Q=o.S;if(!Q.days.some(d=>(d.items||[]).some(r=>r.t=="s")))return null;return Q}
+const q2m=t=>{if(!t||!/^\d{1,2}:\d{2}/.test(t))return null;const[a,b]=t.split(":").map(Number);return a*60+b};
+const m2q=m=>String(Math.floor(m/60)%24).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+const qMins=r=>Math.max(0,(parseInt(r.h)||0)*60+(parseInt(r.m)||0));
+const qCast=v=>String(v||"").split(/[,\s/]+/).map(x=>x.trim()).filter(Boolean);
+const qCall=(Q,i)=>(Q.days[i]&&Q.days[i].call)||(i?Q.days[0].call:"")||"";
+const qIso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+/* same dating rule as the schedule: a typed date wins, otherwise the day after the previous one (skipping weekends if ticked) */
+function qDates(Q){const out=[];Q.days.forEach((d,i)=>{if(d.date){out.push(d.date);return}const base=i?out[i-1]:Q.start;if(!base){out.push("");return}
+const x=new Date(base+"T12:00");if(i)x.setDate(x.getDate()+1);if(Q.skipWk)while(x.getDay()==0||x.getDay()==6)x.setDate(x.getDate()+1);out.push(qIso(x))});return out}
+const qSig=(Q,i)=>{const t=JSON.stringify([Q.days[i],qDates(Q)[i],qCall(Q,i),Q.cast,Q.locs,Q.title,Q.company,Q.director,Q.producer]);let h=5381;for(let k=0;k<t.length;k++)h=(h*33^t.charCodeAt(k))>>>0;return h.toString(36)};
+function qLabel(Q,i,ds){const d=Q.days[i],n=(d.items||[]).filter(r=>r.t=="s").length,c=qCall(Q,i);
+return `Day ${i+1}`+(ds[i]?" · "+new Date(ds[i]+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}):"")+` · ${n} scene${n==1?"":"s"}`+(c?" · call "+c:"")}
+function fsRender(){const el=$("#fs");if(!el)return;const Q=schedLoad();
+const head=`<div class="fs-h">Fill from Schedule ${info("fs")}</div>${tip("fs")}`;
+if(!Q){el.innerHTML=`<div class="fs">${head}<p class="note" style="margin-top:4px">Nothing to fill from yet. Build your shoot days in the Production Schedule Builder for this project and they'll appear here.</p></div>`;return}
+const ds=qDates(Q),f=S.fs&&Q.days[S.fs.day]?S.fs:null;let sel=f?f.day:ds.indexOf(S.date);if(sel<0)sel=0;
+const stale=f&&f.sig!==qSig(Q,f.day);
+el.innerHTML=`<div class="fs">${head}<div class="row"><select class="fth-input" id="fsDay" aria-label="Shoot day">${Q.days.map((d,i)=>`<option value="${i}" ${i==sel?"selected":""}>${esc(qLabel(Q,i,ds))}</option>`).join("")}</select><button class="fth-btn primary sm" data-fsgo="1">${f?"Fill again":"Fill call sheet"}</button></div>
+<div class="pick"><label><input type="checkbox" data-fspick="when" ${fsPick.when?"checked":""}> Date &amp; times</label><label><input type="checkbox" data-fspick="scenes" ${fsPick.scenes?"checked":""}> Scenes</label><label><input type="checkbox" data-fspick="cast" ${fsPick.cast?"checked":""}> Cast</label></div>
+${f?`<p class="note${stale?" stale":""}">${stale?`⚠ Day ${f.day+1} has changed in the schedule since this sheet was filled. Press Fill again to bring it up to date.`:`Filled from Day ${f.day+1} of the schedule${f.when?" at "+new Date(f.when).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""}.`}</p>`:""}</div>`}
+function fsFill(i){const Q=schedLoad();if(!Q||!Q.days[i])return;const day=Q.days[i],ds=qDates(Q),items=day.items||[],P=fsPick;
+if(!P.when&&!P.scenes&&!P.cast)return alert("Tick at least one of Date & times, Scenes or Cast.");
+const has=S.scenes.some(r=>Object.values(r).some(v=>v))||S.cast.some(r=>Object.values(r).some(v=>v))||S.date||S.call;
+if(has&&!confirm(`Fill this call sheet from Day ${i+1} of the schedule?\n\nThe ${[P.when&&"date and times",P.scenes&&"scenes",P.cast&&"cast"].filter(Boolean).join(", ")} on this sheet will be replaced. Make-up times, special instructions and notes are kept for cast and scenes that are still there. Crew, weather and hospital stay as they are.`))return;
+/* timings: rows run back to back from the day's call, as in the schedule */
+let t=q2m(qCall(Q,i));const tm=items.map(r=>{if(t==null)return{};const s=t;t+=qMins(r);return{st:m2q(s),en:m2q(t)}}),scIdx=items.map((r,k)=>r.t=="s"?k:-1).filter(k=>k>=0);
+/* production details: only where blank */
+[["title","title"],["place","company"],["producer","producer"],["director","director"]].forEach(([a,b])=>{if(!String(S[a]||"").trim()&&Q[b])S[a]=Q[b]});
+if(!String(S.notes||"").trim()&&Q.notes)S.notes=Q.notes;
+/* set address: only if blank or it came from the schedule last time */
+const names=[...new Set(scIdx.map(k=>String(items[k].loc||"").trim()).filter(Boolean))],locs=(Q.locs||[]).filter(l=>l.name),
+lines=names.map(n=>{const l=locs.find(l=>l.name.trim().toUpperCase()==n.toUpperCase());return l&&l.addr?(names.length>1?n+": ":"")+l.addr:""}).filter(Boolean),addr=lines.join("\n");
+const prevAddr=S.fs&&S.fs.addr;if(addr&&(!String(S.addr||"").trim()||S.addr===prevAddr))S.addr=addr;
+if(P.when){if(ds[i])S.date=ds[i];S.day=i+1;S.days=Q.days.length;S.call=qCall(Q,i)||"";
+  S.camWrap=t!=null&&items.length?m2q(t):S.camWrap;
+  const meal=items.findIndex(r=>r.t=="b"&&r.bk=="break"&&/LUNCH|DINNER|MEAL|SUPPER/i.test(r.txt||""));const brk=meal>=0?meal:items.findIndex(r=>r.t=="b"&&r.bk=="break"&&qMins(r)>=30);
+  S.dinner=brk>=0&&tm[brk].st?tm[brk].st:"";
+  /* first shot: the Shot List's Camera Call for the same date, otherwise when the first scene starts */
+  const sl=rj(SHOT_KEY),sd=sl&&Array.isArray(sl.days)&&ds[i]?sl.days.find(d=>d.date===ds[i]&&d.camCall):null;
+  S.first=sd?sd.camCall:(scIdx.length&&tm[scIdx[0]].st)||"";S.last=(scIdx.length&&tm[scIdx[scIdx.length-1]].st)||""}
+if(P.scenes){const old=S.scenes;S.scenes=items.map((r,k)=>{if(r.t=="b")return{sc:"",set:r.txt||"",desc:"",ch:"",dn:"",pg:"",st:tm[k].st||"",en:tm[k].en||"",nt:""};
+  const o=old.find(x=>x.sc&&String(x.sc).trim()==String(r.sc).trim())||{};
+  return{sc:r.sc||"",part:!!o.part,set:[r.ie?r.ie+".":"",r.hd||""].join(" ").trim(),desc:r.desc||"",ch:qCast(r.cast).join(", "),dn:/NIGHT|DUSK|EVENING/i.test(r.dn||"")?"N":"D",pg:r.pg||"",st:tm[k].st||"",en:tm[k].en||"",nt:o.nt||""}});
+  if(!S.scenes.length)S.scenes=[{}]}
+if(P.cast){/* S/W/F across the whole schedule, as in its day-out-of-days */
+  const work=Q.days.map(d=>new Set((d.items||[]).filter(r=>r.t=="s").flatMap(r=>qCast(r.cast)))),nums=[...work[i]].sort((a,b)=>(parseFloat(a)||0)-(parseFloat(b)||0)||String(a).localeCompare(b));
+  const same=(a,b)=>String(a||"").trim().toLowerCase()===String(b||"").trim().toLowerCase(),old=S.cast;
+  S.cast=nums.map(n=>{const c=(Q.cast||[]).find(c=>String(c.n).trim()==n)||{},w=work.map(s=>s.has(n)),f=w.indexOf(true),l=w.lastIndexOf(true);
+    const sw=f==l?"SWF":i==f?"SW":i==l?"WF":"W",o=old.find(x=>(c.name&&same(x.name,c.name))||(!c.name&&c.ch&&same(x.ch,c.ch)))||{};
+    return{n,name:c.name||o.name||"",ch:c.ch||o.ch||"",sw,mu:o.mu||"",set:o.set||"",minor:o.minor||"",si:o.si||""}});
+  if(!S.cast.length)S.cast=[{}]}
+S.fs={day:i,sig:qSig(Q,i),addr:S.addr===addr?addr:prevAddr||"",when:Date.now()};
+form();prev();persist()}
+document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.fspick){fsPick[t.dataset.fspick]=t.checked}});
+/* pick up schedule changes made in another tab of this project */
+addEventListener("storage",e=>{if(!e.key||e.key===SCHED_KEY||e.key===SHOT_KEY)fsRender()});
+addEventListener("focus",fsRender);document.addEventListener("visibilitychange",()=>{if(!document.hidden)fsRender()});
 // events
 document.addEventListener("input",e=>{const t=e.target,k=t.dataset.k;if(!k)return;const v=t.type=="checkbox"?t.checked:t.value;
 if(t.dataset.a)S[t.dataset.a][+t.dataset.i][k]=v;else S[k]=v;prev();persist()});
@@ -268,7 +341,7 @@ function crewFill(){const same=(a,b)=>String(a||"").trim().toLowerCase()===Strin
 (window.fthPeople?window.fthPeople():[]).forEach(p=>{if(S.crew.some(r=>same(r.name,p.name)))return;
 const r=(p.role&&S.crew.find(r=>same(r.pos,p.role)&&!String(r.name||"").trim()))||S.crew.find(r=>!String(r.pos||"").trim()&&!String(r.name||"").trim());
 if(r){r.name=p.name;if(p.role&&!String(r.pos||"").trim())r.pos=p.role}else S.crew.push({pos:p.role||"",name:p.name});n++});return n}
-document.addEventListener("click",e=>{const t=e.target;if(t.dataset.crewfill){crewFill();form();prev();persist();return}if(t.dataset.add){S[t.dataset.add].push({});form();prev();persist()}
+document.addEventListener("click",e=>{const t=e.target;if(t.dataset.fsgo){fsFill(+$("#fsDay").value);return}if(t.dataset.crewfill){crewFill();form();prev();persist();return}if(t.dataset.add){S[t.dataset.add].push({});form();prev();persist()}
 if(t.dataset.del&&confirm("Remove this row?")){S[t.dataset.del].splice(+t.dataset.i,1);form();prev();persist()}});
 /* Documentation (Film Tool Hub): each export is also filed in the project's Documentation folder.
    window.fthDocs only exists inside the hub. Both helpers return true when the person chose
@@ -285,7 +358,7 @@ const[sr,ss]=sun(S.date,+S.lat,+S.lng),e=[""],R=[[S.title,"",S.place,"",S.date,"
 ["Nearest hospital",S.hosp+", "+S.hospAddr+" "+S.hospPhone,"","Weather",S.wx,"AM "+S.amT+"C / PM "+S.pmT+"C","Humidity "+S.hum+"%"],e,
 ["Set address",S.addr,"","Call time",S.call,"Dinner",S.dinner],["What3Words",S.w3w,"","Camera wrap",S.camWrap,"Crew wrap",S.crewWrap],["Notes",S.notes],e,
 ["SCENES","SET","DESCRIPTION","CHAR #","D/N","PAGES","START","END","NOTES"],...S.scenes.map(r=>[sc_(r),r.set,r.desc,r.ch,r.dn,r.pg,r.st,r.en,r.nt]),["","","","","TOTAL PAGES",fp(totals())],e,
-["#","CAST","CHARACTER","SWHF","MU","SET","MINOR?","SPECIAL INSTRUCTIONS"],...S.cast.map((r,i)=>[i+1,r.name,r.ch,r.sw,r.mu,r.set,r.minor,r.si]),e,
+["#","CAST","CHARACTER","SWHF","MU","SET","MINOR?","SPECIAL INSTRUCTIONS"],...S.cast.map((r,i)=>[r.n||i+1,r.name,r.ch,r.sw,r.mu,r.set,r.minor,r.si]),e,
 ["SHOT INFORMATION"],["First shot",S.first],["Last shot",S.last],e,["POSITION","NAME","PHONE","SET"],...S.crew.map(r=>[r.pos,r.name,r.ph,r.set])];
 const ws=XLSX.utils.aoa_to_sheet(R);ws["!cols"]=[{wch:22},{wch:28},{wch:36},{wch:16},{wch:16},{wch:18},{wch:12},{wch:12},{wch:24}];
 const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,"Call Sheet");const xn="Call_Sheet_"+(S.date||"draft")+".xlsx";
