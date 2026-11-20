@@ -256,6 +256,13 @@ table.t{border-collapse:collapse;min-width:100%}
 #pv .ag{font-size:10.4px;margin:4px 0 0}
 #pv .intro2{font-size:10.6px;margin:0 0 8px}
 #pv table.gp td{height:27px}
+
+/* the agreement wording, editable as one text */
+.wdx{width:100%;min-height:340px;font:13px/1.55 var(--fth-display);resize:vertical}
+.wd-n{margin:8px 0 0;font-size:12.5px;color:var(--fth-muted)}
+.wd-n.edited{color:var(--fth-warn);font-weight:600}
+.wd-tok{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
+.wd-tok code{font:500 11.5px var(--fth-mono);background:var(--fth-surface2);border:1px solid var(--fth-line);border-radius:5px;padding:1px 6px;color:var(--fth-text)}
 @media print{
   body.solo #pv .sheet:not(.only){display:none!important}
   body.solo #pv .sheet.only{break-after:auto}
@@ -289,6 +296,7 @@ const blank=()=>({title:"",company:"",producer:"",contact:"",address:"",dates:""
   opt:{each:true,blank:1,blankMinor:false,group:false,groupRows:16}});
 let S=blank(),savedAt=0;
 try{const o=JSON.parse(localStorage.getItem(KEY)||"null");if(o&&o.S){S=Object.assign(blank(),o.S);S.opt=Object.assign(blank().opt,o.S.opt||{});savedAt=o.at||0}}catch(e){}
+if(S.wording===undefined)S.wording=null;
 if(!Array.isArray(S.people))S.people=[];
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -307,24 +315,41 @@ const USES={
 const PAYS={none:"No fee",fee:"A fee",exp:"Expenses only"};
 const who=()=>S.company||S.producer||"the Producer";
 const filmName=()=>S.title?"“"+S.title+"”":"the film named above";
-function clauses(p){p=p||{};const fee=String(p.fee||"").trim(),perks=[S.credit&&("credit me in the Film's credits"+(p.role?" as "+p.role:"")),S.copy&&"give me a copy of, or a link to, the finished Film"].filter(Boolean);
+function defaultWording(){const perks=[S.credit&&"credit me in the Film's credits",S.copy&&"give me a copy of, or a link to, the finished Film"].filter(Boolean);
 const perkTxt=perks.length?" The Producer will also "+perks.join(" and ")+".":"";
-const pay=S.pay==="fee"?`In return the Producer will pay me ${fee?fee:"__________________"}. This payment covers every use in this form.${perkTxt}`
-  :S.pay==="exp"?`I am taking part without a fee. The Producer will pay my reasonable expenses agreed in advance and backed by receipts.${perkTxt}`
-  :`I am taking part without payment.${perkTxt}`;
-const L=[
-`I agree to be filmed, photographed and recorded by ${esc(who())} (“the Producer”) for ${esc(filmName())} (“the Film”), and to the use of my name, likeness, voice, performance and any biographical details I give (together, “my Contribution”).`,
-`The Producer, and anyone the Producer allows, may use my Contribution ${USES[S.use]?USES[S.use].t:USES.all.t}.`,
-`The Producer may edit, cut, re-record or rearrange my Contribution, and does not have to use it at all.`,
-`The Producer owns the recordings of my Contribution and all rights in the Film. I give every consent the law needs for these uses, and waive any moral rights in my performance as far as the law allows.`,
-esc(pay),
-`My contact details will be kept securely, used only for this production, and not passed to anyone outside it without my permission.`,
-`I have read and understood this form, I am free to sign it, and taking part does not break any other agreement I have.`];
-String(S.extra||"").split(/\n+/).map(s=>s.trim()).filter(Boolean).forEach(x=>L.push(esc(x)));
-return `<ol class="cl">${L.map(x=>`<li>${x}</li>`).join("")}</ol>`}
+const pay=S.pay==="fee"?"In return the Producer will pay me [Fee]. This payment covers every use in this form."+perkTxt
+  :S.pay==="exp"?"I am taking part without a fee. The Producer will pay my reasonable expenses agreed in advance and backed by receipts."+perkTxt
+  :"I am taking part without payment."+perkTxt;
+return [
+"I agree to be filmed, photographed and recorded by [Producer] (“the Producer”) for [Film] (“the Film”), and to the use of my name, likeness, voice, performance and any biographical details I give (together, “my Contribution”).",
+"The Producer, and anyone the Producer allows, may use my Contribution "+(USES[S.use]||USES.all).t+".",
+"The Producer may edit, cut, re-record or rearrange my Contribution, and does not have to use it at all.",
+"The Producer owns the recordings of my Contribution and all rights in the Film. I give every consent the law needs for these uses, and waive any moral rights in my performance as far as the law allows.",
+pay,
+"My contact details will be kept securely, used only for this production, and not passed to anyone outside it without my permission.",
+"I have read and understood this form, I am free to sign it, and taking part does not break any other agreement I have."].join("\n\n")}
+const TOKENS=[["Producer","The production company, or the producer"],["Film","The film's title"],["Name","The performer's name"],["Role","The performer's role"],["Fee","The performer's fee (a line to write on if blank)"]];
+const LINE="__________________";
+function tokens(p){return{producer:who(),film:filmName(),name:p.name||LINE,role:p.role||LINE,fee:String(p.fee||"").trim()||LINE}}
+
+/* ───────── the wording, editable as one text ─────────
+   defaultWording() follows the choices above, one paragraph per numbered clause. Someone's own text is kept in S.wording
+   (null = use the default, so the choices keep changing it). Words in [square brackets] are filled in for each form. */
+const paras=t=>String(t||"").split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean);
+const wordingNow=()=>typeof S.wording==="string"?S.wording:defaultWording();
+function fillTokens(t,vals){return t.replace(/\[([A-Za-z ]+)\]/g,(m,k)=>{const key=k.trim().toLowerCase();return key in vals?vals[key]:m})}
+function clauses(x){const vals=tokens(x||{});return `<ol class="cl">${paras(wordingNow()).map(p=>`<li>${esc(fillTokens(p,vals)).replace(/\n/g,"<br>")}</li>`).join("")}</ol>`}
+function wordingRender(){const el=$("#wd");if(!el)return;const ed=typeof S.wording==="string";
+el.innerHTML=`<textarea class="fth-input wdx" id="wdx" spellcheck="true" aria-label="Agreement wording">${esc(wordingNow())}</textarea>
+<p class="wd-n${ed?" edited":""}" id="wdNote">${ed?"You've edited the wording, so the choices above no longer change it.":"This is the standard wording. It changes with the choices above until you edit it."}</p>
+<div class="wd-tok">${TOKENS.map(t=>`<code title="${esc(t[1])}">[${t[0]}]</code>`).join("")}</div>
+<div class="bar"><button class="fth-btn sm" id="wdReset" ${ed?"":"hidden"}>Reset to default</button></div>`}
+function wordingInput(t){const d=defaultWording();S.wording=t.value===d?null:t.value;const ed=typeof S.wording==="string";
+const n=$("#wdNote");n.className="wd-n"+(ed?" edited":"");n.textContent=ed?"You've edited the wording, so the choices above no longer change it.":"This is the standard wording. It changes with the choices above until you edit it.";$("#wdReset").hidden=!ed;prev();persist()}
 
 /* ───────── help ───────── */
 const INFO={
+wording:"The full wording that prints. Change anything: each paragraph (separated by a blank line) becomes a numbered clause, so add a paragraph for an extra term or delete one you don't need. Words in [square brackets] fill in for each form. Once you've edited it, the choices above stop changing it; Reset to default brings the standard wording back.",
 legal:"This is a plain-English starting template, not legal advice. Check the wording with your college or course leader, or a solicitor, before you rely on it, especially for paid or commercial work.",
 fill:"Bring in the cast you've marked as Booked in the Casting Tracker (with their role, contact and fee), or the cast list from the Production Schedule Builder. People already in the list are kept and not added twice. The production details fill in only where they're blank.",
 prod:"These print at the top of every form. The production company (or the producer, if there isn't one) is who the performer gives their consent to.",
@@ -348,17 +373,18 @@ function form(){const act=document.activeElement,o=S.opt;$("#ed").innerHTML=`
 <div class="radios">${Object.entries(USES).map(([k,u])=>`<label class="ck"><input type="radio" name="use" data-k="use" value="${k}" ${S.use===k?"checked":""}><span>${u.n}<small>${u.d}</small></span></label>`).join("")}</div>
 <h2 class="fth-sec"><span class="fth-num">03</span>Payment and thanks ${info("pay")}</h2>${tip("pay")}
 <div class="g"><div><label>Payment</label><select class="fth-input" data-k="pay">${Object.entries(PAYS).map(([k,n])=>`<option value="${k}" ${S.pay===k?"selected":""}>${n}</option>`).join("")}</select></div><div></div>
-<label class="ck"><input type="checkbox" data-k="credit" ${S.credit?"checked":""}> Credit in the film</label><label class="ck"><input type="checkbox" data-k="copy" ${S.copy?"checked":""}> A copy of the finished film</label>
-${F("Extra terms (one per line, each becomes a numbered clause)","extra","area",1)}</div>
-<h2 class="fth-sec"><span class="fth-num">04</span>Performers ${info("people")}</h2>${tip("people")}
+<label class="ck"><input type="checkbox" data-k="credit" ${S.credit?"checked":""}> Credit in the film</label><label class="ck"><input type="checkbox" data-k="copy" ${S.copy?"checked":""}> A copy of the finished film</label></div>
+<h2 class="fth-sec"><span class="fth-num">04</span>Agreement wording ${info("wording")}</h2>${tip("wording")}
+<div id="wd"></div>
+<h2 class="fth-sec"><span class="fth-num">05</span>Performers ${info("people")}</h2>${tip("people")}
 ${people()}
-<h2 class="fth-sec"><span class="fth-num">05</span>What to print ${info("print")}</h2>${tip("print")}
+<h2 class="fth-sec"><span class="fth-num">06</span>What to print ${info("print")}</h2>${tip("print")}
 <div class="opts">
 <div class="optc"><label class="ck"><input type="checkbox" data-o="each" ${o.each?"checked":""}> A form for each performer</label></div>
 <div class="optc"><label class="ck">Blank forms</label><div class="inline" style="margin-left:0">How many <input class="fth-input" type="number" min="0" max="20" data-o="blank" value="${o.blank}"> <label class="ck"><input type="checkbox" data-o="blankMinor" ${o.blankMinor?"checked":""}> with a parent / guardian section</label></div></div>
 <div class="optc"><label class="ck"><input type="checkbox" data-o="group" ${o.group?"checked":""}> Group release for extras</label><div class="inline">Rows <input class="fth-input" type="number" min="5" max="16" data-o="groupRows" value="${o.groupRows}"></div><p>A sign-in sheet: everyone on it agrees to the same terms. Under-18s still need their own form.</p></div>
 </div>`;
-fsRender();
+fsRender();wordingRender();
 if(act&&act.dataset&&(act.dataset.k||act.dataset.o)&&act.type!=="radio"){const q=act.dataset.o?`[data-o="${act.dataset.o}"]`:`[data-k="${act.dataset.k}"]`+(act.dataset.a?`[data-a="${act.dataset.a}"][data-i="${act.dataset.i}"]`:":not([data-a])");const n=$(q);n&&n.focus()}}
 
 /* ───────── bringing people in (read only) ───────── */
@@ -415,7 +441,7 @@ function prev(){const o=S.opt;pages=[];
 if(o.each)S.people.forEach((p,i)=>{if(isReal(p))pages.push({k:"Talent release",who:i,h:pForm(p,!!p.minor)})});
 for(let i=0;i<Math.max(0,Math.min(20,parseInt(o.blank)||0));i++)pages.push({k:"Talent release",h:pForm(null,!!o.blankMinor)});
 if(o.group)pages.push({k:"Group release",h:pGroup()});
-$("#pv").innerHTML=pages.length?pages.map((p,i)=>`<div class="sheet"${p.who!=null?` data-who="${p.who}"`:""}>${p.h}${foot(p.k,i+1,pages.length)}</div>`).join(""):`<div class="sheet"><p style="color:#777">Add a performer, or choose blank forms or a group release under 05 What to print.</p></div>`;
+$("#pv").innerHTML=pages.length?pages.map((p,i)=>`<div class="sheet"${p.who!=null?` data-who="${p.who}"`:""}>${p.h}${foot(p.k,i+1,pages.length)}</div>`).join(""):`<div class="sheet"><p style="color:#777">Add a performer, or choose blank forms or a group release under 06 What to print.</p></div>`;
 $("#pvCount").textContent=pages.length?pages.length+" page"+(pages.length==1?"":"s"):"";}
 
 /* ───────── PDFs ───────── */
@@ -423,7 +449,7 @@ const fthPage=(type,name,group)=>!!(window.fthDocs&&window.fthDocs.page({type,na
 function pdfAll(){if(!pages.length)return toast("Nothing to print yet.");if(!fthPage("Talent Release PDF","Release forms"+(S.title?" · "+S.title:"")))print()}
 /* one person's form: only their sheet shows in print, and the page title becomes the PDF's suggested file name */
 function pdfOne(i){const p=S.people[i];if(!p||!isReal(p))return toast("Add a name first.");
-  const sh=$(`#pv .sheet[data-who="${i}"]`);if(!sh)return toast("Tick “A form for each performer” under 05 to print one.");
+  const sh=$(`#pv .sheet[data-who="${i}"]`);if(!sh)return toast("Tick “A form for each performer” under 06 to print one.");
   const t0=document.title,nm="Talent release - "+(p.name||"performer")+(S.title?" - "+S.title:"");
   document.body.classList.add("solo");sh.classList.add("only");document.title=nm;
   const done=()=>{document.body.classList.remove("solo");sh.classList.remove("only");document.title=t0};
@@ -432,12 +458,14 @@ function pdfOne(i){const p=S.people[i];if(!p||!isReal(p))return toast("Add a nam
 /* ───────── events ───────── */
 const toNum=(v,lo,hi)=>{v=parseInt(v);return isNaN(v)?lo:Math.max(lo,Math.min(hi,v))};
 document.addEventListener("input",e=>{const t=e.target;
+  if(t.id==="wdx"){wordingInput(t);return}
   if(t.dataset.o){S.opt[t.dataset.o]=t.type==="checkbox"?t.checked:t.value;prev();persist();return}
   const k=t.dataset.k;if(!k)return;const v=t.type==="checkbox"?t.checked:t.value;
   if(t.dataset.a)S[t.dataset.a][+t.dataset.i][k]=v;else S[k]=v;
-  if(k==="pay"){form()}prev();persist()});
+  if(k==="pay"){form()}else if(!t.dataset.a&&typeof S.wording!=="string")wordingRender();prev();persist()});
 document.addEventListener("change",e=>{const t=e.target;if(t.dataset.o&&t.type==="number"){const lim={blank:[0,20],groupRows:[5,16]}[t.dataset.o];S.opt[t.dataset.o]=toNum(t.value,...lim);t.value=S.opt[t.dataset.o];prev();persist()}});
 document.addEventListener("click",e=>{const t=e.target.closest("button,b.fth-info");if(!t)return;
+  if(t.id==="wdReset"){if(!confirm("Go back to the standard wording? Your changes to the text will be lost."))return;S.wording=null;wordingRender();prev();persist();return}
   if(t.dataset.tip){const n=t.closest("h2,.fs-h");const tp=n&&n.nextElementSibling;tp&&tp.classList.toggle("on");return}
   if(t.dataset.from){t.dataset.from==="cast"?fromCasting():fromSchedule();return}
   if(t.dataset.add){S.people.push({name:"",role:"",contact:"",fee:"",minor:false});form();prev();persist();const ins=$$('[data-a="people"][data-k="name"]');ins.length&&ins[ins.length-1].focus();return}
@@ -448,5 +476,7 @@ addEventListener("storage",e=>{if(!e.key||/^fth-(casting|schedule)-v1$/.test(e.k
 addEventListener("focus",fsRender);document.addEventListener("visibilitychange",()=>{if(!document.hidden)fsRender()});
 $("#printBtn").onclick=pdfAll;
 if(window.fthDocs)fthDocs.attach($("#docBtn"),[{label:"Talent Release PDF (all forms)",fn:pdfAll}]);
+/* older saves had a separate Extra terms box (one term per line): fold it into the wording once */
+if(String(S.extra||"").trim()){const x=String(S.extra).split(/\n+/).map(t=>t.trim()).filter(Boolean).join("\n\n");S.wording=wordingNow()+"\n\n"+x;S.extra="";persist()}
 form();prev();showSaved();
 </script></body></html>
