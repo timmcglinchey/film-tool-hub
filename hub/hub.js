@@ -403,6 +403,11 @@ window.__fthHub = {
   projectInfo() { const p = cur(); return p ? {id: p.id, name: p.name} : null; },
   /* shared projects: everyone on the project, owner first, as {name, email, role, me}. [] when it isn't shared */
   people() { return projectPeople(cur()); },
+  /* Notes inside tools (comments pinned to a spot in a tool, e.g. on the script in Script Breakdown): see "Notes inside tools" */
+  notes(tool, pid) { return notesOf(tool, pid); },
+  notesVer() { return notesVer; },
+  notePut(tool, pid, o) { return notePut(tool, pid, o); },
+  noteMe() { return noteMe(); },
   /* Documentation: every tool hands its exports to this one helper (through window.fthDocs in the tool) */
   saveDoc(tool, pid, o) { return saveDoc(tool, pid, o || {}); },
   /* a personal tool (My Research) changed: send it to the person's own Drive shortly */
@@ -1909,6 +1914,16 @@ function fthProjectShim(cfg) {
   /* People: in a shared project, tools can ask who is on it (window.fthPeople() gives [{name, email, role, me}]),
      and the name fields listed for this tool (cfg.people) offer those names while still taking any text. */
   W.fthPeople = function () { try { return (hub && hub.people && hub.people()) || []; } catch (e) { return []; } };
+  /* Notes: comments pinned to a spot in the tool (Script Breakdown's comments on the script). They're kept by the hub,
+     so anyone on the project can add one even while someone else is editing the tool. Only inside the hub.
+       fthNotes.list()  every comment and reply      fthNotes.put(o)  add (no id) or change one; resolves true if done
+       fthNotes.ver()   changes when the list might have      fthNotes.me()  {name, email, role} when signed in, else null */
+  if (hub && hub.notes && !PERS) W.fthNotes = {
+    list: function () { try { return hub.notes(tool, P) || []; } catch (e) { return []; } },
+    ver: function () { try { return hub.notesVer(); } catch (e) { return 0; } },
+    put: function (o) { try { return Promise.resolve(hub.notePut(tool, P, JSON.parse(JSON.stringify(o)))).catch(function () { return false; }); } catch (e) { return Promise.resolve(false); } },
+    me: function () { try { return hub.noteMe(); } catch (e) { return null; } }
+  };
   if (hub && cfg.people) (function () {
     var pt = 0;
     function sync() {
@@ -2066,7 +2081,8 @@ function fthProjectShim(cfg) {
   var aT = 0;
   function act() { if (PERS) return; var n = Date.now(); if (n - aT < 3000) return; aT = n; try { if (hub && hub.activity) hub.activity(tool, P); } catch (e) {} }
   ['pointerdown', 'keydown', 'wheel'].forEach(function (ev) { W.addEventListener(ev, act, true); });
-  ['beforeinput', 'paste', 'cut', 'drop'].forEach(function (ev) { W.addEventListener(ev, function (e) { if (!ro()) return; e.preventDefault(); if (ev !== 'beforeinput') e.stopImmediatePropagation(); }, true); });
+  /* view-only: typing is blocked, except inside [data-fth-free] (e.g. Script Breakdown's comments, which the hub keeps, not the tool) */
+  ['beforeinput', 'paste', 'cut', 'drop'].forEach(function (ev) { W.addEventListener(ev, function (e) { if (!ro()) return; var t = e.target; if (t && t.closest && t.closest('[data-fth-free]')) return; e.preventDefault(); if (ev !== 'beforeinput') e.stopImmediatePropagation(); }, true); });
   if (cfg.ro && !hub) document.addEventListener('DOMContentLoaded', function () {
     var n = document.createElement('div');
     n.textContent = 'Shared project: this separate tab is view-only. To edit, open the tool inside Film Tool Hub.';
@@ -2981,19 +2997,21 @@ $('#docsPage').addEventListener('click', async e => {
    tag the people it's for. Comments belong to the hub, not the tool, so you don't need to be the one
    editing the tool to write one. They travel inside the project file (snap.msgs) and are merged one
    by one, so two people writing at once both keep their comment. "*" is the whole-project conversation. */
-const MSG_PUBLIC = ['id', 'tool', 'text', 'to', 'by', 'at', 'mod', 'deleted'];
+/* kind 'note' (with anchor, labels, re, done) is a comment pinned to a spot inside a tool, e.g. on the script
+   in Script Breakdown; see "Notes inside tools" below. They share this store so they travel and merge the same way. */
+const MSG_PUBLIC = ['id', 'tool', 'text', 'to', 'by', 'at', 'mod', 'deleted', 'kind', 'anchor', 'labels', 're', 'done'];
 const msgPublic = m => { const o = {}; MSG_PUBLIC.forEach(k => { if (m[k] !== undefined) o[k] = m[k]; }); return o; };
-let msgCache = [], convTool = null, meOpen = false;
+let msgCache = [], convTool = null, meOpen = false, notesVer = 0;
 const convTo = new Set();
 const msgsAll = async pid => (pid && await store.gtx('msgs', 'readonly', s => s.index('projectId').getAll(pid)).catch(() => [])) || [];
 const putMsg = rec => store.gtx('msgs', 'readwrite', s => s.put(rec));
-async function msgsLoad() { const pid = curId, l = await msgsAll(pid); if (pid !== curId) return msgCache; return (msgCache = l.sort((a, b) => a.at - b.at)); }
+async function msgsLoad() { const pid = curId, l = await msgsAll(pid); if (pid !== curId) return msgCache; notesVer++; return (msgCache = l.sort((a, b) => a.at - b.at)); }
 async function msgsWipe(pid) { for (const m of await msgsAll(pid)) await store.gtx('msgs', 'readwrite', s => s.delete(m.id)).catch(() => {}); }
 const meMail = () => account ? account.email.toLowerCase() : '';
 const convOn = () => { const p = cur(); return !!(p && p.shared && account); };
 const byMe = m => !!(m.by && m.by.email && m.by.email.toLowerCase() === meMail());
 const forMe = m => (m.to || []).includes(meMail());
-const liveMsgs = tool => msgCache.filter(m => !m.deleted && (tool == null || m.tool === tool));
+const liveMsgs = tool => msgCache.filter(m => !m.deleted && !m.kind && (tool == null || m.tool === tool));
 const msgSeen = tool => ((cur() || {}).msgSeen || {})[tool] || 0;
 const unreadIn = tool => liveMsgs(tool).filter(m => !byMe(m) && m.at > msgSeen(tool));
 const unreadForMe = () => liveMsgs().filter(m => !byMe(m) && forMe(m) && m.at > msgSeen(m.tool));
@@ -3015,7 +3033,7 @@ async function msgsMergeIn(p, list) {
   for (const r of list) {
     if (!r || !r.id) continue;
     const m = have.get(r.id);
-    if (!m || (r.mod || 0) > (m.mod || 0)) { await putMsg({...msgPublic(r), projectId: p.id}); ch = true; if (!m && !r.deleted) fresh.push(r); }
+    if (!m || (r.mod || 0) > (m.mod || 0)) { await putMsg({...msgPublic(r), projectId: p.id}); ch = true; if (!m && !r.deleted && !r.kind) fresh.push(r); }
   }
   if (!ch || p.id !== curId) return;
   await msgsLoad(); renderConv(); renderBar(); renderMe();
@@ -3077,6 +3095,69 @@ async function sendConv() {
   const t = $('#cvText'); if (!t.value.trim() || convTool == null) return;
   const text = t.value; t.value = '';
   if (await postMsg(convTool, text, convTo)) { convTo.clear(); renderConv(true); } else t.value = text;
+}
+
+/* ───────── Notes inside tools ─────────
+   Comments pinned to a spot inside a tool: Script Breakdown's comments on the script, shown as cards beside it.
+   Like Conversations they belong to the hub, so in a shared project anyone can write one while someone else
+   is editing the tool, and they merge one by one. Unlike Conversations they also work in a project that isn't
+   shared (signed in or not). Each is
+     {id, kind: 'note', tool, text, anchor: {a, b, text, p}, labels: [names], re: <id it replies to, or ''>,
+      done: {name, email, at} or 0, by: {name, email, role}, at, mod, deleted}
+   Tools reach them through window.fthNotes (see the shim). They stay out of Conversations and My work
+   (liveMsgs skips anything with a kind). Anyone can resolve or reopen one; only its author can edit or delete it. */
+const NOTE_MAX = 4000;
+const cleanStr = (v, n) => String(v == null ? '' : v).slice(0, n);
+function noteMe() {
+  if (!account) return null;
+  const me = projectPeople(cur()).find(x => x.me);
+  return {name: (me && me.name) || account.name || account.email, email: account.email.toLowerCase(), role: (me && me.role) || ''};
+}
+const noteAnchor = a => a && typeof a === 'object' ? {a: Math.max(0, a.a | 0), b: Math.max(0, a.b | 0), text: cleanStr(a.text, 400), p: Math.max(0, a.p | 0)} : null;
+const noteLabels = l => Array.isArray(l) ? [...new Set(l.map(x => cleanStr(x, 40).trim()).filter(Boolean))].slice(0, 12) : [];
+const noteDone = (d, me) => d ? {name: me ? me.name : cleanStr(d.name, 80) || 'Someone', email: me ? me.email : '', at: Date.now()} : 0;
+function notesOf(tool, pid) {
+  if (pid !== curId) return [];
+  return msgCache.filter(m => m.kind === 'note' && m.tool === tool && !m.deleted).map(m => JSON.parse(JSON.stringify(msgPublic(m))));
+}
+async function notePut(tool, pid, o) {
+  const p = cur(); if (!p || pid !== curId || !byId(tool) || !o || typeof o !== 'object') return false;
+  const now = Date.now(), me = noteMe(), mineE = me ? me.email : '';
+  /* the store is keyed by id across every project: a comment brought back from a .json into a second project
+     on this computer gets its own copy (same id plus the project), never moved out of the first */
+  if (o.imp && typeof o.id === 'string') {
+    const elsewhere = async id => { const r = await store.gtx('msgs', 'readonly', s => s.get(id)).catch(() => null); return !!(r && r.projectId !== p.id); };
+    const sfx = '_' + String(p.id).replace(/\W/g, '').slice(-6);
+    o = {...o};
+    if (await elsewhere(o.id)) o.id += sfx;
+    if (o.re && await elsewhere(o.re)) o.re += sfx;
+  }
+  const old = o.id ? (await msgsAll(p.id)).find(m => m.id === o.id) : null;
+  if (old) {
+    if (o.imp || old.kind !== 'note' || old.tool !== tool) return false;
+    const authorE = String((old.by || {}).email || '').toLowerCase();
+    const mine = !authorE || authorE === mineE;   /* a comment written signed out belongs to whoever is on this computer */
+    if (('text' in o || 'labels' in o || o.deleted) && !mine) return false;
+    const rec = {...old, mod: now};
+    if ('done' in o) rec.done = noteDone(o.done, me);
+    if ('text' in o) { const t = cleanStr(o.text, NOTE_MAX).trim(); if (!t) return false; rec.text = t; }
+    if ('labels' in o) rec.labels = noteLabels(o.labels);
+    if ('anchor' in o) rec.anchor = noteAnchor(o.anchor);
+    if (o.deleted) { rec.deleted = now; rec.text = ''; }
+    await putMsg(rec);
+  } else {
+    const text = cleanStr(o.text, NOTE_MAX).trim(); if (!text || o.deleted) return false;
+    /* a comment brought back from a saved .json keeps its author, time and resolved state */
+    const imp = !!(o.imp && o.by && typeof o.by === 'object');
+    const by = imp ? {name: cleanStr(o.by.name, 80) || 'Someone', email: cleanStr(o.by.email, 120).toLowerCase(), role: cleanStr(o.by.role, 60)}
+      : me || {name: cleanStr(o.byName, 80).trim() || 'Someone', email: '', role: ''};
+    const id = typeof o.id === 'string' && /^[\w-]{4,40}$/.test(o.id) ? o.id : 'n' + now.toString(36) + Math.random().toString(36).slice(2, 7);
+    const done = imp && o.done ? {name: cleanStr(o.done.name, 80) || 'Someone', email: cleanStr(o.done.email, 120).toLowerCase(), at: +o.done.at || now} : 0;
+    await putMsg({id, projectId: p.id, kind: 'note', tool, text, anchor: noteAnchor(o.anchor), labels: noteLabels(o.labels), re: cleanStr(o.re, 40),
+      done, to: [], by, at: imp && +o.at > 0 ? +o.at : now, mod: now, deleted: 0});
+  }
+  await msgsChanged(p);
+  return true;
 }
 
 /* ───────── My work ─────────

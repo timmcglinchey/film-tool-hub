@@ -394,6 +394,73 @@ select.fi{padding:0 6px}
 .cedit{display:grid;gap:9px;padding:10px;margin:0 8px 8px;border-radius:9px;background:var(--panel2);border:1px solid var(--line2)}
 .cedit .ra{display:flex;justify-content:space-between;gap:8px}
 
+/* ═════ comments beside the script ═════ */
+.doc{display:flex;justify-content:center;align-items:stretch;min-width:min-content;min-height:100%;position:relative}
+.rail{flex:none;width:280px;position:relative;margin-right:14px}
+.page .cm i{position:absolute;background:rgba(255,196,0,.16);border-bottom:2px solid #E0A100;border-radius:2px 2px 0 0}
+.page .cm i.on{background:rgba(255,186,0,.42);border-bottom-color:#B87F00}
+.tgl .n{font:500 10.5px var(--mono);color:var(--muted);margin-left:-2px}
+.cmhead{position:sticky;top:0;z-index:6;background:var(--bg2);padding:14px 0 8px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.cmhead .t{font:600 10.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);flex:1}
+.cmhead .t b{color:var(--fg);font-weight:700}
+.cmfb{height:26px;padding:0 9px;border-radius:7px;border:1px solid var(--line2);background:var(--panel);font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.cmfb:hover,.cmfb.on{border-color:var(--fg)}
+.cmfb svg{width:13px;height:13px}
+.cmfb .k{font:500 10.5px var(--mono);color:var(--muted)}
+.cmchips{flex-basis:100%;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.cmchips .clr{border:0;background:none;color:var(--muted);font-size:11.5px;font-weight:600;padding:2px 4px;text-decoration:underline}
+.cmhint{flex-basis:100%;font-size:12px;color:var(--muted);line-height:1.4;padding:6px 2px 0}
+.cmmenu{position:absolute;top:44px;right:0;z-index:8;width:250px;max-height:min(440px,70vh);overflow:auto;background:var(--panel);border:1px solid var(--line2);border-radius:11px;box-shadow:var(--shadow);padding:6px}
+.cmmenu label{display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:7px;font-size:12.5px;font-weight:600;cursor:pointer}
+.cmmenu label:hover{background:var(--panel2)}
+.cmmenu label input{accent-color:var(--accent);width:14px;height:14px;margin:0}
+.cmmenu label span{margin-left:auto;font:500 10.5px var(--mono);color:var(--muted)}
+.cmmenu label.zero{color:var(--muted);font-weight:500}
+.cmmenu .sep{height:1px;background:var(--line);margin:5px 4px}
+.cmmenu .cap{font:600 9.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint);padding:6px 7px 2px}
+.cml{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px 0 6px;border-radius:10px;background:var(--panel2);border:1px solid var(--line2);font-size:11px;font-weight:650;white-space:nowrap;max-width:100%}
+.cml i,.cmopt i,.cmmenu label i{width:8px;height:8px;border-radius:50%;background:var(--lc);flex:none;display:block}
+.cml button{border:0;background:none;padding:0 0 0 2px;color:var(--muted);font-size:12px;line-height:1}
+.cml button:hover{color:var(--fg)}
+.cmc{position:absolute;left:0;right:0;z-index:1;scroll-margin-top:64px;background:var(--panel);border:1px solid var(--line2);border-radius:11px;padding:10px 11px 11px;box-shadow:0 2px 8px -4px rgba(0,0,0,.35);transition:top .18s ease,transform .18s ease,box-shadow .18s;cursor:default}
+.cmc:not(.on):hover{border-color:var(--fth-line3,var(--line2));cursor:pointer}
+.cmc.on{z-index:3;border-color:var(--accent);box-shadow:var(--shadow);transform:translateX(-8px)}
+.cmc.done{opacity:.72}
+.cmc.done.on{opacity:1}
+.cmh{display:flex;align-items:flex-start;gap:8px}
+.av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 11.5px var(--display);color:#fff;flex:none;text-transform:uppercase}
+.who{flex:1;min-width:0;line-height:1.25}
+.who b{display:block;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who small{display:block;font:500 10.5px var(--mono);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cma{display:flex;gap:1px;margin:-3px -5px 0 0}
+.cma button{width:26px;height:26px;border:0;background:none;border-radius:7px;color:var(--faint);display:grid;place-items:center;padding:0}
+.cma button:hover{background:var(--panel2);color:var(--fg)}
+.cma button[data-arm]{color:var(--fth-bad);background:color-mix(in srgb,var(--fth-bad) 14%,transparent);width:auto;padding:0 7px;font-size:11px;font-weight:650}
+.cma svg{width:15px;height:15px}
+.cmq{margin:7px 0 0;font:500 10.5px/1.35 var(--mono);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmq q{color:var(--fg);font-family:var(--display);font-size:11.5px;font-weight:600}
+.cmlost{margin:7px 0 0;font-size:11.5px;color:var(--fth-warn);line-height:1.35}
+.cmlbls{display:flex;flex-wrap:wrap;gap:4px;margin:7px 0 0;align-items:center}
+.cmt{margin:7px 0 0;font-size:13px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+.cmdone{margin:7px 0 0;font:500 10.5px var(--mono);color:var(--fth-good)}
+.cmr{margin:9px 0 0;padding:8px 0 0;border-top:1px solid var(--line)}
+.cmr .cmh .av{width:22px;height:22px;font-size:10px}
+.cmr .cmt{margin-top:4px;font-size:12.5px}
+.cmc textarea.fi{min-height:58px;margin-top:8px;font-size:13px;resize:none;overflow:hidden}
+.cmc .cmreply textarea.fi{min-height:34px}
+.cmc input.fi{height:30px;margin-top:8px;font-size:12.5px}
+.cmrow{display:flex;justify-content:flex-end;gap:6px;margin-top:8px;align-items:center}
+.cmrow .k{font:500 10px var(--mono);color:var(--faint);margin-right:auto}
+.cmaddl{height:20px;border-radius:10px;border:1px dashed var(--line2);background:none;font-size:11px;font-weight:650;color:var(--muted);padding:0 8px}
+.cmaddl:hover,.cmaddl.on{color:var(--fg);border-color:var(--fg)}
+.cmpick{margin-top:6px;border:1px solid var(--line2);border-radius:9px;padding:4px;display:grid;gap:1px;background:var(--panel2);max-height:260px;overflow:auto}
+.cmopt{display:flex;align-items:center;gap:7px;border:0;background:none;text-align:left;padding:5px 7px;border-radius:6px;font-size:12px;font-weight:600;color:var(--fg)}
+.cmopt:hover{background:var(--panel)}
+.cmopt.on::after{content:"✓";margin-left:auto;color:var(--accent);font-weight:800}
+.cmpick input.fi{margin:3px 0 0;height:28px}
+#cmFab{position:absolute;z-index:7;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line2);border-radius:10px;padding:4px 9px 4px 4px;box-shadow:var(--shadow);font-size:11.5px;color:var(--muted);white-space:nowrap}
+#cmFab .btn svg{width:14px;height:14px}
+
 /* ═════ Film Tool Hub kit mapping ═════ */
 :root:root:root{--bg:var(--fth-bg);--bg2:var(--fth-bg2);--panel:var(--fth-surface);--panel2:var(--fth-surface2);--field:var(--fth-bg2);--line:var(--fth-line);--line2:var(--fth-line2);--fg:var(--fth-text);--muted:var(--fth-muted);--faint:var(--fth-faint);--accent:var(--fth-accent);--accent-ink:var(--fth-on-accent);--accent-soft:var(--fth-accent-soft);--shadow:var(--fth-shadow);--display:var(--fth-display);--mono:var(--fth-mono);}
 .fth-head .proj{flex:1;min-width:180px;max-width:380px;height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--fth-line2);background:var(--fth-bg2);font-size:14px;color:var(--fth-text);outline:none}
@@ -426,6 +493,8 @@ select.fi{padding:0 6px}
   <div class="vsep"></div>
   <label class="tgl"><input type="checkbox" id="lblT" checked>Margin labels</label>
   <div class="vsep"></div>
+  <label class="tgl" title="Show comments as cards beside the script"><input type="checkbox" id="cmT" checked>Comments<span class="n" id="nCm"></span></label>
+  <div class="vsep"></div>
   <label class="tgl adv" title="Story days, time of day, scene run times and continuity checks"><input type="checkbox" id="advT">Advanced</label>
   <div class="vsep"></div>
   <div class="grp">
@@ -438,7 +507,8 @@ select.fi{padding:0 6px}
 </div>
 
 <div class="work">
-  <div id="viewer"><div class="pages" id="pages"></div></div>
+  <div id="viewer"><div class="doc" id="doc"><div class="pages" id="pages"></div><aside class="rail" id="rail" hidden aria-label="Comments" data-fth-free></aside>
+    <div id="cmFab" hidden><button class="btn sm primary" id="cmAdd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 5.5h15a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H12l-4.5 3.5v-3.5h-3a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/></svg>Comment</button><span>or press 1–9 to tag</span></div></div></div>
   <aside id="panel">
     <div class="ptabs" role="tablist">
       <button data-tab="tag" class="on">Tag</button>
@@ -483,7 +553,7 @@ const PDFLIB = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.mi
 const S = {
   fileName: '', bytes: null, pdf: null,
   pages: [], words: [], lines: [], scenes: [], lineScene: null,
-  cats: DEFAULT_CATS.map(c => ({ ...c })), tags: [], notes: {},
+  cats: DEFAULT_CATS.map(c => ({ ...c })), tags: [], notes: {}, comments: [],
   active: null, zoom: 1, fit: 1, labels: true, tab: 'tag', editCat: null, openItem: null, q: '',
   // advanced mode
   adv: false, dnames: {}, sorder: [], sm: {}, cont: [], sview: 'script', openScene: null, openCont: null, fillFwd: true, openOnly: false, focus: null
@@ -617,10 +687,14 @@ const DB = { open() { return new Promise((res, rej) => { try { const r = indexed
   async get(k) { const d = await this.open(); return new Promise(res => { const q = d.transaction('s').objectStore('s').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); },
   async put(k, v) { const d = await this.open(); return new Promise(res => { const t = d.transaction('s', 'readwrite'); t.objectStore('s').put(v, k); t.oncomplete = res; t.onerror = res; }); },
   async del(k) { const d = await this.open(); return new Promise(res => { const t = d.transaction('s', 'readwrite'); t.objectStore('s').delete(k); t.oncomplete = res; t.onerror = res; }); } };
+/* this browser tab only (sessionStorage): which script was open, where, and any comment being written */
+const sessKey = k => 'sb-' + k + ':' + (window.__fthProjectId || 'solo');
+function sessSet(k, v) { try { if (v == null) sessionStorage.removeItem(sessKey(k)); else sessionStorage.setItem(sessKey(k), JSON.stringify(v)); } catch (e) {} }
+function sessGet(k) { try { return JSON.parse(sessionStorage.getItem(sessKey(k)) || 'null'); } catch (e) { return null; } }
 let saveT;
 function autosave() {
   clearTimeout(saveT);
-  saveT = setTimeout(() => { if (!S.bytes) return; DB.put('last', { bytes: S.bytes, fileName: S.fileName, title: $('#proj').value, cats: S.cats, tags: S.tags, notes: S.notes, dnames: S.dnames, sorder: S.sorder, sm: S.sm, cont: S.cont, labels: S.labels, saved: Date.now() }).catch(() => {}); }, 700);
+  saveT = setTimeout(() => { if (!S.bytes) return; DB.put('last', { bytes: S.bytes, fileName: S.fileName, title: $('#proj').value, cats: S.cats, tags: S.tags, notes: S.notes, dnames: S.dnames, sorder: S.sorder, sm: S.sm, cont: S.cont, labels: S.labels, comments: cmLocal() ? S.comments : undefined, saved: Date.now() }).catch(() => {}); }, 700);
 }
 
 /* ═════════════ loading ═════════════ */
@@ -640,17 +714,21 @@ async function openPdf(bytes, fileName, saved) {
     S.cats = saved.cats || S.cats; S.tags = (saved.tags || []).filter(t => t.a >= 0 && t.b < S.words.length); S.notes = saved.notes || {};
     S.dnames = saved.dnames || {}; S.sorder = saved.sorder || []; S.sm = saved.sm || {}; S.cont = saved.cont || [];
     migrateOldDays(saved.days);
+    S.comments = cmLocal() && Array.isArray(saved.comments) ? saved.comments : [];   /* inside the hub, comments are kept by the hub instead */
     S.labels = saved.labels !== false; $('#proj').value = saved.title || '';
   } else {
     S.cats = DEFAULT_CATS.map(c => ({ ...c })); S.tags = []; S.notes = {};
-    S.dnames = {}; S.sorder = []; S.sm = {}; S.cont = [];
+    S.dnames = {}; S.sorder = []; S.sm = {}; S.cont = []; S.comments = [];
     let t = ''; try { const md = await pdf.getMetadata(); t = md?.info?.Title || ''; } catch (e) {}
     $('#proj').value = (t && !/untitled|\.fdx|microsoft/i.test(t) ? t : fileName.replace(/\.pdf$/i, '')).trim();
   }
   undoS.length = 0; redoS.length = 0; S.openScene = null; S.openCont = null; if (RUN) { RUN = null; clearInterval(runIv); } S.active = S.active && catById(S.active) ? S.active : null;
+  cmReset();
   buildPages();
   ['#saveBtn', '#csvBtn', '#pdfBtn'].forEach(s => $(s).disabled = false);
   changed(true);
+  cmRefresh();
+  sessSet('open', 1);
   if (S.words.length < 30) toast('This PDF has almost no selectable text — it may be a scan. Export a text PDF from your screenwriting app.', 7000);
   else if (!S.scenes.length) toast('No scene headings (INT./EXT.) were found, so items will list without scene numbers.', 6000);
   else if (!saved) toast(`Loaded ${S.pages.length} pages · ${S.scenes.length} scenes. Pick a category, then drag across words to tag.`, 4500);
@@ -662,6 +740,7 @@ async function openFile(f) {
     if (d.app !== 'script-breakdown' || !d.pdf) { toast('That .json wasn’t saved from Script Breakdown.'); return; }
     const bin = atob(d.pdf), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
     await openPdf(u, d.fileName || 'script.pdf', d); toast(`Opened ${d.title ? '“' + d.title + '”' : 'project'} · ${d.tags.length} tags`);
+    if (window.fthNotes && Array.isArray(d.comments)) await cmImport(d.comments);
     return;
   }
   if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') { toast('Please choose a screenplay PDF (or a saved .json project).'); return; }
@@ -670,11 +749,19 @@ async function openFile(f) {
 
 /* ═════════════ viewer ═════════════ */
 const viewer = $('#viewer'), pagesEl = $('#pages');
+let viewT; viewer.addEventListener('scroll', () => { clearTimeout(viewT); viewT = setTimeout(() => { if (S.pdf) sessSet('view', { zoom: S.zoom, top: viewer.scrollTop }); }, 250); });
 let io, renderGen = 0;
-function showBusy(msg) { pagesEl.innerHTML = ''; viewer.querySelector('.drop')?.remove(); viewer.querySelector('.busy')?.remove(); const b = document.createElement('div'); b.className = 'busy'; b.textContent = msg; viewer.appendChild(b); }
+function showBusy(msg) { $('#rail').hidden = true; $('#cmFab').hidden = true; pagesEl.innerHTML = ''; viewer.querySelector('.drop')?.remove(); viewer.querySelector('.busy')?.remove(); const b = document.createElement('div'); b.className = 'busy'; b.textContent = msg; viewer.appendChild(b); }
 async function showEmpty() {
-  viewer.querySelector('.busy')?.remove(); pagesEl.innerHTML = '';
+  viewer.querySelector('.busy')?.remove(); pagesEl.innerHTML = ''; $('#rail').hidden = true; $('#cmFab').hidden = true;
   let last = null; try { last = await DB.get('last'); } catch (e) {}
+  /* the hub reloads this tool when someone else's saved work arrives: if a script was open in this tab, carry straight on */
+  if (last && last.bytes && sessGet('open')) {
+    const v = sessGet('view'), dr = sessGet('draft'); sessSet('open', null);
+    await openPdf(last.bytes, last.fileName, last);
+    if (S.pdf) { if (v) { if (v.zoom && v.zoom !== S.zoom) { S.zoom = v.zoom; sizePages(); } viewer.scrollTop = v.top || 0; } cmRestore(dr); }
+    return;
+  }
   const d = document.createElement('div'); d.className = 'drop';
   d.innerHTML = `<div class="box" data-pick tabindex="0" role="button">
     <div class="bars"><i style="width:120px;background:#E53935"></i><i style="width:170px;background:#8E24AA"></i><i style="width:90px;background:#1E88E5"></i><i style="width:140px;background:#00897B"></i></div>
@@ -688,12 +775,12 @@ async function showEmpty() {
   d.querySelector('[data-pick]').onclick = e => { if (e.target.closest('[data-stop]')) return; pickFile(); };
   d.querySelector('[data-pick]').onkeydown = e => { if (e.key === 'Enter') pickFile(); };
   const r = d.querySelector('[data-resume]'); if (r) r.onclick = () => openPdf(last.bytes, last.fileName, last);
-  const x = d.querySelector('[data-discard]'); if (x) x.onclick = async () => { await DB.del('last'); showEmpty(); };
+  const x = d.querySelector('[data-discard]'); if (x) x.onclick = async () => { await DB.del('last'); sessSet('open', null); showEmpty(); };
   renderPanel();
 }
 function pickFile() { $('#fileIn').value = ''; $('#fileIn').click(); }
 
-function computeFit() { const mw = Math.max(...S.pages.map(p => p.w)); S.fit = Math.min(1.7, Math.max(0.4, (viewer.clientWidth - 64) / mw)); }
+function computeFit() { const mw = Math.max(...S.pages.map(p => p.w)); S.fit = Math.min(1.7, Math.max(0.4, (viewer.clientWidth - 64 - (cmOn() ? RAIL_W + 14 : 0)) / mw)); }
 const scale = () => S.fit * S.zoom;
 function buildPages() {
   viewer.querySelector('.busy')?.remove(); viewer.querySelector('.drop')?.remove();
@@ -703,7 +790,7 @@ function buildPages() {
   io = new IntersectionObserver(es => es.forEach(e => { const p = +e.target.dataset.p; S.pages[p].vis = e.isIntersecting; if (e.isIntersecting) renderPage(p); }), { root: viewer, rootMargin: '900px 0px' });
   S.pages.forEach((pg, p) => {
     const el = document.createElement('div'); el.className = 'page'; el.dataset.p = p;
-    el.innerHTML = `<canvas></canvas><div class="lyr hl"></div><div class="lyr sel"></div><div class="lyr ml"></div><span class="pn">${p + 1}</span>`;
+    el.innerHTML = `<canvas></canvas><div class="lyr cm"></div><div class="lyr hl"></div><div class="lyr sel"></div><div class="lyr ml"></div><span class="pn">${p + 1}</span>`;
     pg.el = el; pg.rs = 0; pg.ov = -1; pagesEl.appendChild(el); io.observe(el);
   });
   sizePages();
@@ -714,6 +801,7 @@ function sizePages() {
   $('#zv').textContent = Math.round(S.zoom * 100) + '%';
   renderGen++;
   S.pages.forEach((pg, p) => { pg.ov = -1; if (pg.vis) renderPage(p); });
+  cmLayout(); cmFab();
 }
 async function renderPage(p) {
   const pg = S.pages[p], s = scale(), gen = renderGen;
@@ -770,6 +858,7 @@ function drawOverlay(p) {
     }
   }
   hl.innerHTML = h;
+  pg.el.querySelector('.cm').innerHTML = cmOverlay(pg, first, last);
   let m = '';
   const s = scale();
   labelsByLine.forEach((cs, l) => {
@@ -803,12 +892,13 @@ function tagsAt(i) { return S.tags.filter(t => t.a <= i && t.b >= i); }
 let drag = null;
 function drawSel() {
   document.querySelectorAll('.page .sel').forEach(e => e.innerHTML = '');
-  if (!drag) return;
-  const a = Math.min(drag.a, drag.b), b = Math.max(drag.a, drag.b);
+  const r = drag && (S.active || drag.moved) ? drag : CM.sel; if (!r) return;
+  const a = Math.min(r.a, r.b), b = Math.max(r.a, r.b);
   for (const [x, y] of segments(a, b)) { const pg = S.pages[S.words[x].p]; const r = wordRect(pg, S.words[x], S.words[y]); pg.el.querySelector('.sel').insertAdjacentHTML('beforeend', `<i style="left:${r.l}px;top:${r.t}px;width:${r.w}px;height:${r.h}px"></i>`); }
 }
 pagesEl.addEventListener('pointerdown', e => {
   if (e.button !== 0 || !S.pdf) return;
+  cmClearSel();
   const i = hit(e.clientX, e.clientY, true);
   if (i == null) { closePop(); return; }
   e.preventDefault();
@@ -818,7 +908,7 @@ pagesEl.addEventListener('pointerdown', e => {
 window.addEventListener('pointermove', e => {
   if (!drag) return;
   if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 4) drag.moved = true;
-  if (!S.active || !drag.moved) return;
+  if (!drag.moved) return;   /* not tagging: the words are selected so they can be commented on */
   const i = hit(e.clientX, e.clientY, false); if (i != null && i !== drag.b) { drag.b = i; drawSel(); }
   // auto-scroll near edges
   const r = viewer.getBoundingClientRect();
@@ -828,9 +918,13 @@ window.addEventListener('pointerup', e => {
   if (!drag) return;
   const d = drag; drag = null; drawSel();
   const a = Math.min(d.a, d.b), b = Math.max(d.a, d.b);
-  const existing = tagsAt(d.a);
-  if (!d.moved && existing.length) { openPop(existing[existing.length - 1].id, e.clientX, e.clientY); return; }
-  if (!S.active) { if (d.moved || !existing.length) toast('Pick a category on the right first (or press 1–9).'); return; }
+  const existing = tagsAt(d.a), cms = d.moved ? [] : cmAt(d.a);
+  if (!d.moved && existing.length) { openPop(existing[existing.length - 1].id, e.clientX, e.clientY); if (cms.length) cmActivate(cms[cms.length - 1].id); return; }
+  if (cms.length && !S.active) { cmActivate(cms[cms.length - 1].id); return; }
+  if (!S.active) {
+    if (d.moved) { CM.sel = { a, b }; drawSel(); cmFab(); return; }   /* words selected: offer Comment */
+    toast('Pick a category on the right first (or press 1–9), or drag across words to comment.'); return;
+  }
   addTag(S.active, a, b, e.clientX, e.clientY);
 });
 function addTag(cat, a, b) {
@@ -859,6 +953,7 @@ function openPop(id, cx, cy) {
     <label>Item name<input class="fi" id="pItem" list="pList" value="${esc(t.item)}"><datalist id="pList">${names.map(n => `<option value="${esc(n)}">`).join('')}</datalist></label>
     <label>Note for this item <span style="text-transform:none;letter-spacing:0;font-weight:400">(shared by every mention)</span><textarea class="fi" id="pNote" rows="2" placeholder="e.g. x2, one breakaway">${esc(S.notes[itemKey(t.cat, t.item)] || '')}</textarea></label>
     ${S.adv ? `<button class="btn sm" id="pCont" style="width:100%;justify-content:center;margin:0 0 8px">+ Continuity from here</button>` : ''}
+    <button class="btn sm" id="pCm" style="width:100%;justify-content:center;margin:0 0 8px">+ Comment on this</button>
     <div class="row"><button class="btn sm danger" id="pDel">Remove tag</button><button class="btn sm primary" id="pDone">Done</button></div>`;
   pop.hidden = false;
   const w = 300, h = pop.offsetHeight;
@@ -870,6 +965,7 @@ function openPop(id, cx, cy) {
     if (!sc) { toast('This mention is before the first scene heading, so it can’t start a continuity note.'); return; }
     closePop(); newCont(sc.key, { type: 'item', key: itemKey(t.cat, t.item) });
   };
+  $('#pCm').onclick = () => { closePop(); cmStartDraft(t.a, t.b); };
   $('#pNote').onchange = e => { commit(); const k = itemKey(t.cat, t.item); if (e.target.value.trim()) S.notes[k] = e.target.value.trim(); else delete S.notes[k]; changed(); };
   $('#pDel').onclick = () => { commit(); S.tags = S.tags.filter(x => x.id !== id); closePop(); changed(); toast('Tag removed — Ctrl+Z to undo'); };
   $('#pDone').onclick = () => { document.activeElement?.blur(); closePop(); };
@@ -1431,9 +1527,10 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !typing) { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y' && !typing) { e.preventDefault(); redo(); return; }
   if (typing) { if (e.key === 'Escape') e.target.blur(); return; }
-  if (e.key === 'Escape') { if (!$('#modal').hidden) closeModal(); else if (!$('#pop').hidden) closePop(); else setActive(null); return; }
+  if (e.key === 'Escape') { if (!$('#modal').hidden) closeModal(); else if (!$('#pop').hidden) closePop(); else if (cmEscape()) {} else setActive(null); return; }
   if (e.key === ' ' && S.adv && $('#modal').hidden && (RUN || (S.tab === 'scenes' && S.openScene))) { e.preventDefault(); document.activeElement?.blur(); toggleRun(RUN ? RUN.key : S.openScene); return; }
   const k = KEYS.indexOf(e.key);
+  if (k >= 0 && S.cats[k] && CM.sel && !e.ctrlKey && !e.metaKey && !e.altKey) { const r = CM.sel; cmClearSel(); addTag(S.cats[k].id, r.a, r.b); return; }   /* words selected: tag them */
   if (k >= 0 && S.cats[k] && !e.ctrlKey && !e.metaKey && !e.altKey) setActive(S.active === S.cats[k].id ? null : S.cats[k].id);
 });
 
@@ -1462,7 +1559,7 @@ function download(name, blob) { const u = URL.createObjectURL(blob), a = documen
 function b64(u8) { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); }
 $('#saveBtn').onclick = () => {
   if (!S.bytes) return;
-  const d = { app: 'script-breakdown', version: 3, saved: new Date().toISOString(), title: $('#proj').value.trim(), fileName: S.fileName, cats: S.cats, tags: S.tags, notes: S.notes, dnames: S.dnames, sorder: S.sorder, sm: S.sm, cont: S.cont, labels: S.labels, pdf: b64(S.bytes) };
+  const d = { app: 'script-breakdown', version: 3, saved: new Date().toISOString(), title: $('#proj').value.trim(), fileName: S.fileName, cats: S.cats, tags: S.tags, notes: S.notes, dnames: S.dnames, sorder: S.sorder, sm: S.sm, cont: S.cont, labels: S.labels, comments: CM.list, pdf: b64(S.bytes) };
   download(slug(d.title || S.fileName.replace(/\.pdf$/i, '')) + '-breakdown.json', new Blob([JSON.stringify(d)], { type: 'application/json' }));
   toast('Project saved (includes the script PDF)');
 };
@@ -1741,6 +1838,382 @@ async function exportPdf(o) {
   const pdfBlob = new Blob([bytes], { type: 'application/pdf' }), pdfName = slug(title) + '-breakdown.pdf';
   if (!fthDoc(S.adv ? 'Advanced Breakdown PDF' : 'Breakdown PDF', pdfName, pdfBlob)) download(pdfName, pdfBlob);
 }
+
+/* ═════════════ comments beside the script ═════════════
+   Select words on the script (with no category picked) and press Comment, or use "Comment on this" on a tag.
+   Each comment is a card beside the script, level with its words, like comments in Google Docs. Comments carry
+   labels (crew roles by default, plus any made up) and the cards can be filtered by label.
+   Inside Film Tool Hub the hub keeps them (window.fthNotes), so in a shared project anyone can comment while
+   someone else is editing the breakdown. Opened on its own, they're saved with the breakdown (S.comments).
+   A comment: {id, text, anchor: {a, b, text, p}, labels: [names], re: <id it replies to>, done, by: {name, email, role}, at, mod} */
+const RAIL_W = 280;
+const DEFAULT_LABELS = ['Director', 'Producer', '1st AD', 'Cinematographer', 'Production Designer', 'Costume', 'Hair & Make-up', 'Sound', 'Editor', 'VFX', 'Script Supervisor'];
+const LABEL_COLS = ['#E5484D', '#0090FF', '#F76B15', '#46A758', '#8E4EC6', '#D6409F', '#12A594', '#FFB224', '#3E63DD', '#AD7F58', '#E54666', '#29A383', '#7D66D9', '#978365'];
+const CMI = {
+  ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7L4.5 11.5 9 16"/><path d="M5 11.5h9a5 5 0 0 1 0 10h-2"/></svg>',
+  del: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 7h15M10 7V4.5h4V7M6.5 7l1 13h9l1-13"/></svg>',
+  filter: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16l-6.2 7.3v5.4l-3.6 1.8v-7.2z"/></svg>'
+};
+const CM = {
+  list: [], sig: '', ver: -1, loc: new Map(),
+  show: true, filter: null, done: false, extra: [], last: [],   /* view settings, per person and project */
+  active: null, sel: null, draft: null, edit: null, replies: {}, pick: null, newLabel: '', menu: false, arm: null
+};
+const lk = s => String(s ?? '').trim().toLowerCase();
+const strHash = s => { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); };
+const labelCol = n => { const i = DEFAULT_LABELS.findIndex(d => lk(d) === lk(n)); return LABEL_COLS[i >= 0 ? i : strHash(lk(n)) % LABEL_COLS.length]; };
+const personCol = n => LABEL_COLS[strHash(lk(n)) % LABEL_COLS.length];
+/* inside the hub the hub keeps comments; a hub tool opened in a separate browser tab can't reach them */
+const cmHub = () => !!window.fthNotes;
+const cmLocal = () => !window.fthNotes && window.__fthProjectId === undefined;
+const cmBlocked = () => !cmHub() && !cmLocal();
+const cmMe = () => { try { return cmHub() ? window.fthNotes.me() : null; } catch (e) { return null; } };
+const cmViewKey = 'filmtoolhub-cm-view', cmPid = () => window.__fthProjectId || 'solo';
+let cmName = ''; try { cmName = localStorage.getItem('filmtoolhub-cm-name') || ''; } catch (e) {}
+try { const v = (JSON.parse(localStorage.getItem(cmViewKey) || '{}') || {})[cmPid()]; if (v) { CM.show = v.show !== false; CM.filter = Array.isArray(v.filter) && v.filter.length ? new Set(v.filter) : null; CM.done = !!v.done; CM.extra = Array.isArray(v.extra) ? v.extra : []; CM.last = Array.isArray(v.last) ? v.last : []; } } catch (e) {}
+function cmSaveView() {
+  try { const all = JSON.parse(localStorage.getItem(cmViewKey) || '{}') || {}; all[cmPid()] = { show: CM.show, filter: CM.filter ? [...CM.filter] : null, done: CM.done, extra: CM.extra.slice(-40), last: CM.last }; localStorage.setItem(cmViewKey, JSON.stringify(all)); } catch (e) {}
+}
+const cmOn = () => !!S.pdf && CM.show;
+
+/* ── the list, wherever it's kept ── */
+function cmLoad() {
+  const l = cmHub() ? window.fthNotes.list() : cmLocal() ? (S.comments || []) : [];
+  const sig = JSON.stringify(l); if (sig === CM.sig) return false;
+  CM.sig = sig; CM.list = JSON.parse(sig).filter(c => c && c.id && !c.deleted); return true;
+}
+function cmReset() { CM.loc.clear(); CM.sel = null; CM.draft = null; CM.edit = null; CM.active = null; CM.replies = {}; CM.pick = null; CM.menu = false; CM.sig = ''; }
+function cmRefresh() { cmLoad(); renderRail(); redrawAll(); }
+async function cmPut(o) {
+  if (cmBlocked()) { toast('Open Script Breakdown inside Film Tool Hub to add or change comments.', 4000); return false; }
+  if (cmHub()) {
+    const ok = await window.fthNotes.put(o);
+    if (!ok) toast('That comment couldn’t be saved. Only the person who wrote a comment can change or delete it.', 4500);
+    cmRefresh(); return ok;
+  }
+  const now = Date.now(), L = S.comments || (S.comments = []), c = o.id && L.find(x => x.id === o.id);
+  if (c) {
+    if (o.deleted) S.comments = L.filter(x => x.id !== c.id && x.re !== c.id);
+    else {
+      if ('done' in o) c.done = o.done ? { name: cmName, email: '', at: now } : 0;
+      if ('text' in o) c.text = String(o.text).trim();
+      if ('labels' in o) c.labels = o.labels;
+      c.mod = now;
+    }
+  } else L.push({ id: o.id || 'n' + now.toString(36) + uid(), kind: 'note', text: String(o.text).trim(), anchor: o.anchor || null, labels: o.labels || [], re: o.re || '', done: 0, by: { name: cmName, email: '', role: '' }, at: now, mod: now });
+  autosave(); cmRefresh(); return true;
+}
+async function cmImport(list) {
+  const have = new Set(CM.list.map(c => c.id)); let n = 0;
+  for (const c of list) if (c && c.id && !have.has(c.id) && c.text) { if (await window.fthNotes.put({ ...c, imp: true })) n++; }
+  if (n) toast(`Brought back ${n} comment${n === 1 ? '' : 's'} saved in that file`);
+}
+/* inside the hub: pick up other people's comments as they arrive */
+setInterval(() => { if (!cmHub() || !S.pdf) return; const v = window.fthNotes.ver(); if (v === CM.ver) return; CM.ver = v; if (cmLoad()) { renderRail(); redrawAll(); } }, 1200);
+
+/* ── where a comment sits: its words, or the same words nearby in a new draft of the script ── */
+function cmLoc(c) {
+  const an = c.anchor; if (!an || !S.words.length) return null;
+  const key = c.id + '|' + an.a + '|' + an.b + '|' + an.text;
+  if (CM.loc.has(key)) return CM.loc.get(key);
+  const want = String(an.text || '').split(' ').filter(Boolean);
+  const at = i => want.length && want.every((w, k) => S.words[i + k] && S.words[i + k].s === w);
+  let r = null;
+  if (at(an.a)) r = { a: an.a, b: an.a + want.length - 1 };
+  else if (want.length) { let best = -1; for (let i = 0; i < S.words.length; i++) if (S.words[i].s === want[0] && at(i) && (best < 0 || Math.abs(i - an.a) < Math.abs(best - an.a))) best = i; if (best >= 0) r = { a: best, b: best + want.length - 1 }; }
+  CM.loc.set(key, r); return r;
+}
+const cmRoots = () => CM.list.filter(c => !c.re);
+const cmReplies = id => CM.list.filter(c => c.re === id).sort((x, y) => x.at - y.at);
+function cmShown(c) {
+  if (c.done && !CM.done) return false;
+  if (!CM.filter) return true;
+  const ls = c.labels || [];
+  return ls.length ? ls.some(l => CM.filter.has(lk(l))) : CM.filter.has('');
+}
+function cmAt(i) { if (!cmOn()) return []; return cmRoots().filter(c => { if (!cmShown(c)) return false; const r = cmLoc(c); return r && r.a <= i && r.b >= i; }); }
+function cmMine(c) { if (!cmHub()) return true; const e = lk((c.by || {}).email), me = cmMe(); return !e || !!(me && lk(me.email) === e); }
+function cmWho(by) {
+  by = by || {}; const e = lk(by.email);
+  const p = e && window.fthPeople ? window.fthPeople().find(x => lk(x.email) === e) : null;
+  const me = cmMe();
+  return { name: (p && p.name) || by.name || (me && e === lk(me.email) ? me.name : '') || (cmLocal() ? 'You' : 'Someone'), role: (p && p.role) || by.role || '' };
+}
+/* every label: the usual roles, the crew's roles, ones already on comments, and ones made up here */
+function cmLabels() {
+  const map = new Map();
+  const add = (n, custom) => { n = String(n || '').trim(); if (!n) return null; const k = lk(n); if (!map.has(k)) map.set(k, { name: n, key: k, n: 0, custom: !!custom }); return map.get(k); };
+  DEFAULT_LABELS.forEach(n => add(n));
+  (window.fthPeople ? window.fthPeople() : []).forEach(p => add(p.role));
+  const me = cmMe(); if (me) add(me.role);
+  CM.extra.forEach(n => add(n, true));
+  cmRoots().forEach(c => (c.labels || []).forEach(l => { const x = add(l, true); if (x && (!c.done || CM.done)) x.n++; }));
+  return [...map.values()];
+}
+const fmtAgo = t => { const s = (Date.now() - t) / 1000; if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s / 60) + ' min ago'; if (s < 86400) return Math.floor(s / 3600) + ' h ago'; return new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); };
+
+/* ── on the script ── */
+function cmOverlay(pg, first, last) {
+  if (!cmOn()) return '';
+  let h = '';
+  const draw = (r, id, on) => {
+    if (!r || r.b < first || r.a > last) return;
+    for (const [a, b] of segments(Math.max(r.a, first), Math.min(r.b, last))) { const q = wordRect(pg, S.words[a], S.words[b]); h += `<i data-c="${esc(id)}" class="${on ? 'on' : ''}" style="left:${q.l}px;top:${q.t}px;width:${q.w}px;height:${q.h}px"></i>`; }
+  };
+  for (const c of cmRoots()) if (cmShown(c)) draw(cmLoc(c), c.id, CM.active === c.id);
+  if (CM.draft) draw(CM.draft.r, '', true);
+  return h;
+}
+function cmClearSel() { if (!CM.sel) return; CM.sel = null; $('#cmFab').hidden = true; drawSel(); }
+function cmFab() {
+  const f = $('#cmFab'), r = CM.sel;
+  if (!r || drag) { f.hidden = true; return; }
+  const w = S.words[r.b], pg = S.pages[w.p], q = wordRect(pg, S.words[r.b], S.words[r.b]);
+  f.hidden = false;
+  const docW = $('#doc').clientWidth;
+  f.style.left = Math.max(4, Math.min(docW - f.offsetWidth - 4, pg.el.offsetLeft + q.l + q.w - f.offsetWidth / 2)) + 'px';
+  f.style.top = (pg.el.offsetTop + q.t + q.h + 6) + 'px';
+}
+$('#cmAdd').addEventListener('pointerdown', e => e.stopPropagation());
+$('#cmAdd').onclick = () => { const r = CM.sel; if (r) { cmClearSel(); cmStartDraft(r.a, r.b); } };
+function cmShowRail(on) { if (CM.show === on) return; CM.show = on; cmSaveView(); if (S.pdf) { computeFit(); sizePages(); } renderRail(); redrawAll(); }
+function cmStartDraft(a, b) {
+  if (cmBlocked()) { toast('Open Script Breakdown inside Film Tool Hub to add comments.', 4000); return; }
+  [a, b] = [Math.min(a, b), Math.max(a, b)];
+  const me = cmMe(), labels = me && me.role ? [me.role] : CM.last.slice();
+  CM.draft = { r: { a, b }, anchor: { a, b, text: S.words.slice(a, b + 1).map(w => w.s).join(' '), p: S.words[a].p }, text: '', labels };
+  CM.active = null; CM.edit = null; CM.pick = null; CM.menu = false;
+  /* a filter that would hide the new comment is cleared, so it doesn't vanish once posted */
+  if (CM.filter && !(labels.length ? labels.some(l => CM.filter.has(lk(l))) : CM.filter.has(''))) { CM.filter = null; cmSaveView(); }
+  cmShowRail(true); renderRail(); redrawAll();
+  cmFocus('[data-k=draft]');
+}
+function cmFocus(sel) { setTimeout(() => { const el = $('#rail').querySelector(sel); if (el) { el.focus(); cmScrollTo(el.closest('.cmc')); } }, 0); }
+function cmScrollTo(card) {
+  if (!card) return;
+  const top = card.offsetTop, bottom = top + card.offsetHeight, v = viewer.scrollTop, vh = viewer.clientHeight;
+  if (top < v + 50 || bottom > v + vh - 10) viewer.scrollTo({ top: Math.max(0, top - Math.min(vh * 0.3, 160)), behavior: 'smooth' });
+}
+function cmActivate(id) {
+  if (CM.active === id && !CM.draft) return;
+  if (CM.draft && !CM.draft.text.trim()) CM.draft = null;
+  CM.active = id; CM.pick = null; CM.arm = null;
+  if (!cmOn()) cmShowRail(true);
+  renderRail(); redrawAll();
+  cmScrollTo($('#rail').querySelector(`.cmc[data-cid="${CSS.escape(id)}"]`));
+}
+function cmEscape() {
+  if (CM.menu) { CM.menu = false; renderRail(); return true; }
+  if (CM.pick) { CM.pick = null; renderRail(); return true; }
+  if (CM.sel) { cmClearSel(); return true; }
+  if (CM.draft) { CM.draft = null; renderRail(); redrawAll(); return true; }
+  if (CM.edit) { CM.edit = null; renderRail(); return true; }
+  if (CM.active) { CM.active = null; renderRail(); redrawAll(); return true; }
+  return false;
+}
+
+/* ── the cards ── */
+function cmLabelChip(n, x) { return `<span class="cml" style="--lc:${labelCol(n)}"><i></i>${esc(n)}${x ? `<button type="button" data-${x}="${esc(n)}" title="Remove" aria-label="Remove ${esc(n)}">×</button>` : ''}</span>`; }
+function cmPicker(which, chosen) {
+  const sel = new Set(chosen.map(lk)), open = CM.pick === which;
+  let h = `<div class="cmlbls">${chosen.map(n => cmLabelChip(n, 'unlbl')).join('')}<button type="button" class="cmaddl${open ? ' on' : ''}" data-cm="pick">${chosen.length ? '+ Label' : '+ Add a label'}</button></div>`;
+  if (open) h += `<div class="cmpick">${cmLabels().map(l => `<button type="button" class="cmopt${sel.has(l.key) ? ' on' : ''}" data-lbl="${esc(l.name)}" style="--lc:${labelCol(l.name)}"><i></i>${esc(l.name)}</button>`).join('')}
+    <input class="fi" data-k="newlbl" maxlength="40" placeholder="New label, then Enter" value="${esc(CM.newLabel)}"></div>`;
+  return h;
+}
+function cmAvatar(name) { return `<span class="av" style="background:${personCol(name)}">${esc((String(name).trim()[0] || '?'))}</span>`; }
+function cmCard(c) {
+  const r = cmLoc(c), w = cmWho(c.by), on = CM.active === c.id, mine = cmMine(c), sc = r ? sceneOfWord(r.a) : null;
+  const ed = CM.edit && CM.edit.id === c.id;
+  const quote = cleanText((c.anchor || {}).text || '') || (c.anchor || {}).text || '';
+  const where = r ? (sc ? 'Sc. ' + sc.n + ' · ' : '') + 'p. ' + (S.words[r.a].p + 1) : '';
+  const acts = (c.done ? `<button type="button" data-cm="reopen" title="Reopen">${CMI.undo}</button>` : `<button type="button" data-cm="resolve" title="Resolve: mark as done and hide">${CMI.ok}</button>`)
+    + (mine ? `<button type="button" data-cm="edit" title="Edit">${PENCIL}</button>` + (CM.arm === c.id ? `<button type="button" data-cm="del" data-arm title="Click again to delete">Delete?</button>` : `<button type="button" data-cm="del" title="Delete">${CMI.del}</button>`) : '');
+  let h = `<div class="cmc${on ? ' on' : ''}${c.done ? ' done' : ''}" data-cid="${esc(c.id)}" data-w="${r ? r.a : -1}">
+    <div class="cmh">${cmAvatar(w.name)}<div class="who"><b>${esc(w.name)}</b><small>${esc([w.role, fmtAgo(c.at)].filter(Boolean).join(' · '))}</small></div><div class="cma">${acts}</div></div>
+    ${r ? `<div class="cmq" title="${esc(quote)}">${esc(where)} · <q>${esc(quote)}</q></div>` : `<div class="cmlost">Not found in this script: the words it was on (“${esc(quote.slice(0, 80))}”) have changed.</div>`}`;
+  if (ed) h += `${cmPicker('edit', CM.edit.labels)}<textarea class="fi" data-k="edit" rows="2">${esc(CM.edit.text)}</textarea>
+    <div class="cmrow"><button type="button" class="btn xs" data-cm="canceledit">Cancel</button><button type="button" class="btn xs primary" data-cm="save">Save</button></div>`;
+  else h += `${(c.labels || []).length ? `<div class="cmlbls">${c.labels.map(n => cmLabelChip(n)).join('')}</div>` : ''}<div class="cmt">${esc(c.text)}</div>`;
+  if (c.done) h += `<div class="cmdone">Resolved${c.done.name ? ' by ' + esc(cmWho(c.done).name) : ''} · ${esc(fmtAgo(c.done.at))}</div>`;
+  for (const x of cmReplies(c.id)) {
+    const xw = cmWho(x.by);
+    h += `<div class="cmr" data-rid="${esc(x.id)}"><div class="cmh">${cmAvatar(xw.name)}<div class="who"><b>${esc(xw.name)}</b><small>${esc([xw.role, fmtAgo(x.at)].filter(Boolean).join(' · '))}</small></div>
+      <div class="cma">${cmMine(x) ? (CM.arm === x.id ? `<button type="button" data-cm="delr" data-arm>Delete?</button>` : `<button type="button" data-cm="delr" title="Delete reply">${CMI.del}</button>`) : ''}</div></div><div class="cmt">${esc(x.text)}</div></div>`;
+  }
+  if (on && !c.done && !ed) h += `<div class="cmreply"><textarea class="fi" data-k="reply" rows="1" placeholder="Reply…">${esc(CM.replies[c.id] || '')}</textarea>
+    ${(CM.replies[c.id] || '').trim() ? `<div class="cmrow"><span class="k">Ctrl+Enter</span><button type="button" class="btn xs" data-cm="cancelreply">Cancel</button><button type="button" class="btn xs primary" data-cm="reply">Reply</button></div>` : ''}</div>`;
+  return h + '</div>';
+}
+function cmDraftCard() {
+  const d = CM.draft, me = cmMe();
+  return `<div class="cmc on draft" data-cid="__draft" data-w="${d.r.a}">
+    <div class="cmh">${cmAvatar(me ? me.name : cmName || 'Y')}<div class="who"><b>${esc(me ? me.name : cmName || 'New comment')}</b><small>${esc(me && me.role ? me.role : 'New comment')}</small></div></div>
+    ${!me ? `<input class="fi" data-k="name" maxlength="60" placeholder="Your name" value="${esc(d.byName ?? cmName)}">` : ''}
+    ${cmPicker('draft', d.labels)}
+    <textarea class="fi" data-k="draft" rows="2" placeholder="Add a comment or idea…">${esc(d.text)}</textarea>
+    <div class="cmrow"><span class="k">Ctrl+Enter</span><button type="button" class="btn xs" data-cm="canceldraft">Cancel</button><button type="button" class="btn xs primary" data-cm="post"${d.text.trim() ? '' : ' disabled'}>Comment</button></div></div>`;
+}
+function cmHead(roots) {
+  const open = roots.filter(c => !c.done), shown = roots.filter(cmShown), labels = cmLabels();
+  const nDone = roots.length - open.length, nNone = roots.filter(c => !(c.labels || []).length && (!c.done || CM.done)).length;
+  const fl = CM.filter ? `${CM.filter.size} label${CM.filter.size === 1 ? '' : 's'}` : 'All';
+  const total = CM.done ? roots.length : open.length;
+  let h = `<div class="cmhead"><span class="t"><b>${shown.length}</b> ${CM.filter ? 'of ' + total + ' ' : ''}comment${(CM.filter ? total : shown.length) === 1 ? '' : 's'}</span>
+    <button type="button" class="cmfb${CM.menu ? ' on' : ''}" data-cm="menu" aria-expanded="${CM.menu}">${CMI.filter}Show: ${esc(fl)}</button>`;
+  if (CM.filter) h += `<div class="cmchips">${[...CM.filter].map(k => k === '' ? `<span class="cml"><i style="background:var(--faint)"></i>No label<button type="button" data-unf="" title="Remove">×</button></span>` : cmLabelChip((labels.find(l => l.key === k) || { name: k }).name, 'unf')).join('')}<button type="button" class="clr" data-cm="all">Show all</button></div>`;
+  if (!roots.length && !CM.draft) h += `<div class="cmhint">No comments yet. Drag across words on the script, then press <b>Comment</b>. Anyone on the project can add ideas, and label them by role.</div>`;
+  else if (!shown.length && !CM.draft) h += `<div class="cmhint">No comments match this filter.</div>`;
+  if (CM.menu) {
+    const used = labels.filter(l => l.n), unused = labels.filter(l => !l.n);
+    const row = l => `<label class="${l.n ? '' : 'zero'}"><input type="checkbox" data-fl="${esc(l.key)}"${CM.filter && CM.filter.has(l.key) ? ' checked' : ''}><i style="--lc:${labelCol(l.name)}"></i>${esc(l.name)}<span>${l.n || ''}</span></label>`;
+    h += `<div class="cmmenu" role="menu"><label><input type="checkbox" data-fl="*"${CM.filter ? '' : ' checked'}>All comments<span>${CM.done ? roots.length : open.length}</span></label><div class="sep"></div>
+      ${used.length ? '<div class="cap">In use</div>' + used.map(row).join('') : ''}
+      ${nNone ? `<label><input type="checkbox" data-fl=""${CM.filter && CM.filter.has('') ? ' checked' : ''}><i style="--lc:var(--faint)"></i>No label<span>${nNone}</span></label>` : ''}
+      ${unused.length ? '<div class="cap">Other labels</div>' + unused.map(row).join('') : ''}
+      <div class="sep"></div><label><input type="checkbox" data-fdone${CM.done ? ' checked' : ''}>Show resolved<span>${nDone || ''}</span></label></div>`;
+  }
+  return h + '</div>';
+}
+function renderRail() {
+  const rail = $('#rail'), on = cmOn(), roots = cmRoots();
+  const nOpen = roots.filter(c => !c.done).length; $('#nCm').textContent = nOpen || ''; $('#cmT').checked = CM.show;
+  rail.hidden = !on;
+  if (!on) { $('#cmFab').hidden = true; return; }
+  if (CM.active && !CM.list.some(c => c.id === CM.active)) CM.active = null;
+  if (CM.edit && !CM.list.some(c => c.id === CM.edit.id)) CM.edit = null;
+  /* keep whatever is being typed, and where the cursor is */
+  const ae = document.activeElement, fk = ae && rail.contains(ae) && ae.dataset.k ? { k: ae.dataset.k, cid: ae.closest('.cmc')?.dataset.cid, s: ae.selectionStart, e: ae.selectionEnd } : null;
+  const ms = rail.querySelector('.cmmenu')?.scrollTop || 0;
+  if (CM.active && !cmShown(CM.list.find(c => c.id === CM.active))) CM.active = null;   /* resolved, or filtered out */
+  const cards = roots.filter(cmShown).map(cmCard).join('');
+  rail.innerHTML = cmHead(roots) + (CM.draft ? cmDraftCard() : '') + cards;
+  const mn = rail.querySelector('.cmmenu'); if (mn) mn.scrollTop = ms;
+  rail.querySelectorAll('textarea').forEach(cmGrow);
+  cmKeep();
+  if (fk) { const el = rail.querySelector(`.cmc[data-cid="${CSS.escape(fk.cid || '')}"] [data-k="${fk.k}"]`) || rail.querySelector(`[data-k="${fk.k}"]`); if (el) { el.focus(); try { el.setSelectionRange(fk.s, fk.e); } catch (e) {} } }
+  cmLayout();
+}
+/* what's being written survives the tool being reloaded (see showEmpty) */
+function cmKeep() { sessSet('draft', CM.draft || CM.edit || Object.values(CM.replies).some(v => v.trim()) || CM.active ? { draft: CM.draft, edit: CM.edit, replies: CM.replies, active: CM.active } : null); }
+function cmRestore(dr) {
+  if (!dr) return;
+  CM.draft = dr.draft || null; CM.edit = dr.edit || null; CM.replies = dr.replies || {}; CM.active = dr.active || null;
+  if (CM.draft && !CM.draft.r) CM.draft = null;
+  renderRail(); redrawAll();
+  if (CM.draft) cmFocus('[data-k=draft]');
+}
+function cmGrow(t) { t.style.height = 'auto'; t.style.height = t.scrollHeight + 2 + 'px'; }
+/* cards sit level with their words; they're pushed apart where they'd overlap, and the active one is kept level */
+function cmLayout() {
+  const rail = $('#rail'); if (rail.hidden) return;
+  const head = rail.querySelector('.cmhead'), top0 = head ? head.offsetHeight + 6 : 0, GAP = 8;
+  const items = [...rail.querySelectorAll('.cmc')].map(el => {
+    const wi = +el.dataset.w; let y = -1;
+    if (wi >= 0 && S.words[wi]) { const pg = S.pages[S.words[wi].p]; y = pg.el.offsetTop + wordRect(pg, S.words[wi], S.words[wi]).t - 10; }
+    return { el, y, h: el.offsetHeight, on: el.classList.contains('on') };
+  }).sort((p, q) => p.y - q.y);
+  if (!items.length) { rail.style.minHeight = ''; return; }
+  const ai = items.findIndex(x => x.on);
+  if (ai < 0) { let y = top0; items.forEach(it => { it.top = Math.max(it.y, y); y = it.top + it.h + GAP; }); }
+  else {
+    items[ai].top = Math.max(items[ai].y, top0);
+    for (let i = ai + 1; i < items.length; i++) items[i].top = Math.max(items[i].y, items[i - 1].top + items[i - 1].h + GAP);
+    for (let i = ai - 1; i >= 0; i--) items[i].top = Math.min(items[i].y, items[i + 1].top - items[i].h - GAP);
+    if (items[0].top < top0) { let y = top0; items.forEach(it => { it.top = Math.max(it.top, y); y = it.top + it.h + GAP; }); }
+  }
+  items.forEach(it => { it.el.style.top = it.top + 'px'; });
+  const last = items[items.length - 1]; rail.style.minHeight = (last.top + last.h + 40) + 'px';
+}
+
+/* ── what the buttons do ── */
+const cmCardOf = el => el.closest('.cmc')?.dataset.cid;
+function cmToggleLabel(n) {
+  const tgt = CM.pick === 'edit' && CM.edit ? CM.edit : CM.draft; if (!tgt) return;
+  const k = lk(n), i = tgt.labels.findIndex(x => lk(x) === k);
+  if (i >= 0) tgt.labels.splice(i, 1); else tgt.labels.push(n);
+}
+function cmNewLabel(v) {
+  v = String(v || '').trim().slice(0, 40); if (!v) return;
+  const tgt = CM.pick === 'edit' && CM.edit ? CM.edit : CM.draft;
+  const ex = cmLabels().find(l => l.key === lk(v)); const name = ex ? ex.name : v;
+  if (!ex) { CM.extra.push(name); cmSaveView(); }
+  if (tgt && !tgt.labels.some(x => lk(x) === lk(name))) tgt.labels.push(name);
+  CM.newLabel = ''; renderRail(); cmFocus('[data-k=newlbl]');
+}
+async function cmPost() {
+  const d = CM.draft; if (!d || !d.text.trim()) return;
+  if (!cmMe() && d.byName != null) { cmName = d.byName.trim(); try { localStorage.setItem('filmtoolhub-cm-name', cmName); } catch (e) {} }
+  const id = 'n' + Date.now().toString(36) + uid();
+  CM.last = d.labels.slice(); cmSaveView();
+  if (await cmPut({ id, text: d.text, anchor: d.anchor, labels: d.labels, byName: cmName })) { CM.draft = null; CM.active = id; CM.pick = null; renderRail(); redrawAll(); }
+}
+async function cmReply(id) {
+  const t = (CM.replies[id] || '').trim(); if (!t) return;
+  if (await cmPut({ id: 'n' + Date.now().toString(36) + uid(), text: t, re: id, byName: cmName })) { delete CM.replies[id]; renderRail(); cmFocus(`.cmc[data-cid="${CSS.escape(id)}"] [data-k=reply]`); }
+}
+$('#rail').addEventListener('click', async e => {
+  const t = e.target;
+  const ul = t.closest('[data-unlbl]'); if (ul) { cmToggleLabel(ul.dataset.unlbl); renderRail(); return; }
+  const uf = t.closest('[data-unf]'); if (uf) { CM.filter.delete(uf.dataset.unf); if (!CM.filter.size) CM.filter = null; cmSaveView(); renderRail(); redrawAll(); return; }
+  const lb = t.closest('[data-lbl]'); if (lb) { cmToggleLabel(lb.dataset.lbl); renderRail(); return; }
+  if (t.closest('.cmmenu') || t.closest('input,textarea')) return;
+  const b = t.closest('[data-cm]'), cid = cmCardOf(t), act = b && b.dataset.cm;
+  if (act !== 'del' && act !== 'delr') CM.arm = null;
+  if (!b) { if (cid && cid !== '__draft') cmActivate(cid); return; }
+  if (act === 'menu') { CM.menu = !CM.menu; renderRail(); return; }
+  if (act === 'all') { CM.filter = null; cmSaveView(); renderRail(); redrawAll(); return; }
+  if (act === 'pick') { CM.pick = CM.pick === (cid === '__draft' ? 'draft' : 'edit') ? null : (cid === '__draft' ? 'draft' : 'edit'); renderRail(); return; }
+  if (act === 'canceldraft') { CM.draft = null; CM.pick = null; renderRail(); redrawAll(); return; }
+  if (act === 'post') { cmPost(); return; }
+  if (act === 'cancelreply') { delete CM.replies[cid]; renderRail(); return; }
+  if (act === 'reply') { cmReply(cid); return; }
+  const c = CM.list.find(x => x.id === cid); if (!c) return;
+  if (act === 'resolve' || act === 'reopen') { const on = act === 'resolve'; if (on && CM.active === c.id) CM.active = null; await cmPut({ id: c.id, done: on ? { name: cmName } : 0 }); if (on) toast(CM.done ? 'Resolved' : 'Resolved. Tick “Show resolved” under Show to see it again.', 3200); return; }
+  if (act === 'edit') { CM.edit = { id: c.id, text: c.text, labels: (c.labels || []).slice() }; CM.active = c.id; CM.pick = null; renderRail(); redrawAll(); cmFocus(`.cmc[data-cid="${CSS.escape(c.id)}"] [data-k=edit]`); return; }
+  if (act === 'canceledit') { CM.edit = null; CM.pick = null; renderRail(); return; }
+  if (act === 'save') { const ed = CM.edit; if (!ed || !ed.text.trim()) return; if (await cmPut({ id: ed.id, text: ed.text, labels: ed.labels })) { CM.edit = null; CM.pick = null; renderRail(); } return; }
+  if (act === 'del' || act === 'delr') {
+    const tid = act === 'delr' ? t.closest('[data-rid]').dataset.rid : c.id;
+    if (CM.arm !== tid) { CM.arm = tid; renderRail(); return; }
+    CM.arm = null; if (await cmPut({ id: tid, deleted: true })) toast(act === 'delr' ? 'Reply deleted' : 'Comment deleted');
+  }
+});
+$('#rail').addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.fl !== undefined) {
+    const k = t.dataset.fl;
+    if (k === '*') CM.filter = null;
+    else { if (!CM.filter) CM.filter = new Set(); if (t.checked) CM.filter.add(k); else CM.filter.delete(k); if (!CM.filter.size) CM.filter = null; }
+    cmSaveView(); renderRail(); redrawAll(); return;
+  }
+  if (t.hasAttribute('data-fdone')) { CM.done = t.checked; cmSaveView(); renderRail(); redrawAll(); }
+});
+$('#rail').addEventListener('input', e => {
+  const t = e.target, k = t.dataset.k, cid = cmCardOf(t); if (!k) return;
+  if (k === 'draft' && CM.draft) { const had = !!CM.draft.text.trim(); CM.draft.text = t.value; if (had !== !!t.value.trim()) $('#rail [data-cm=post]').disabled = !t.value.trim(); }
+  if (k === 'edit' && CM.edit) CM.edit.text = t.value;
+  if (k === 'name' && CM.draft) CM.draft.byName = t.value;
+  if (k === 'newlbl') CM.newLabel = t.value;
+  if (k === 'reply') { const had = !!(CM.replies[cid] || '').trim(); CM.replies[cid] = t.value; if (had !== !!t.value.trim()) { renderRail(); return; } }
+  if (t.tagName === 'TEXTAREA') { cmGrow(t); cmLayout(); }
+  cmKeep();
+});
+$('#rail').addEventListener('keydown', e => {
+  const t = e.target, k = t.dataset.k; if (!k) return;
+  if (k === 'newlbl' && e.key === 'Enter') { e.preventDefault(); cmNewLabel(t.value); return; }
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    if (k === 'draft') cmPost(); else if (k === 'reply') cmReply(cmCardOf(t)); else if (k === 'edit') $('#rail [data-cm=save]')?.click();
+  }
+});
+document.addEventListener('pointerdown', e => {
+  if (CM.menu && !e.target.closest('.cmmenu,[data-cm=menu]')) { CM.menu = false; renderRail(); }
+  if (CM.sel && !e.target.closest('#cmFab,.page')) cmClearSel();
+}, true);
+$('#cmT').onchange = e => cmShowRail(e.target.checked);
+window.addEventListener('resize', () => { cmLayout(); cmFab(); });
 
 /* ═════════════ boot ═════════════ */
 setActive(null);
