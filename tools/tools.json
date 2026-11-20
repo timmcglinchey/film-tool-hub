@@ -270,6 +270,26 @@
       "group": "people"
     },
     {
+      "id": "release",
+      "name": "Talent Release Forms",
+      "desc": "Make a release form for every performer, with a parent or guardian section for under-18s and a group sign-in sheet for extras. Print them to sign on set, or save each one as a PDF to sign digitally.",
+      "category": "prep",
+      "tags": [
+        "Producer",
+        "Casting",
+        "PDF"
+      ],
+      "icon": "release",
+      "fileName": "Talent Release Forms.html",
+      "origTitle": "Talent Release Forms",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611201700,
+      "file": "tools/release.html",
+      "group": "people"
+    },
+    {
       "id": "recce",
       "name": "Location Recce",
       "desc": "Recce every location: print a field sheet to fill in on site, then write up access, power, sound, light and safety, add photos, and compare candidates.",
