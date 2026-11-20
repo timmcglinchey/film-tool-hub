@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<!--fth-standalone-->
+<!-- Film Tool Hub: this block is only used when this file is opened on its own (for example while working on it).
+     Inside the hub it is removed and the hub supplies the same look from hub/kit.css. Keep it, but don't edit it here. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Caveat:wght@700&display=swap" rel="stylesheet">
+<style>
+/* ═════════ Film Tool Hub kit ═════════
+   Shared look for every tool. The hub injects this at the top of each tool's <head>,
+   sets data-theme="light|dark" on the tool's <html>, and sets --fth-cat to the tool's
+   category colour. Tools use the --fth-* tokens and the .fth-* components. */
+:root{
+  --fth-bg:#0b0c0e; --fth-bg2:#101216; --fth-surface:#15181d; --fth-surface2:#1b1f26; --fth-surface3:#232831;
+  --fth-line:#242931; --fth-line2:#333a45; --fth-line3:#46505e;
+  --fth-text:#f0ece5; --fth-muted:#9aa0aa; --fth-faint:#666c77;
+  --fth-good:#5cc98a; --fth-bad:#ff8f7a; --fth-warn:#f2bd5c;
+  /* accent tokens (--fth-cat, --fth-accent, --fth-accent-ink, --fth-accent-soft, --fth-accent-line, --fth-on-accent)
+     are written by the hub for each tool's category, as plain colours for both themes */
+  --fth-cat:#ffb547; --fth-accent:#ffb547; --fth-accent-ink:#ffb547; --fth-accent-soft:rgba(255,181,71,.14); --fth-accent-line:rgba(255,181,71,.45); --fth-on-accent:#14110b;
+  --fth-paper-backdrop:#07080a;
+  --fth-shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --fth-shadow-sm:none;
+  --fth-radius:14px; --fth-radius-sm:9px;
+  --fth-display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --fth-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --fth-script:"Courier Prime","Courier New",Courier,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --fth-bg:#f3f0ea; --fth-bg2:#f9f7f3; --fth-surface:#ffffff; --fth-surface2:#f1ede5; --fth-surface3:#e6e1d6;
+  --fth-line:#e3ded4; --fth-line2:#d2ccc0; --fth-line3:#b4ad9f;
+  --fth-text:#16181c; --fth-muted:#565c66; --fth-faint:#878c95;
+  --fth-good:#22804a; --fth-bad:#c0392b; --fth-warn:#9a6200;
+  --fth-paper-backdrop:#e4dfd5;
+  --fth-shadow:0 14px 30px -16px rgba(70,50,20,.30);
+  --fth-shadow-sm:0 1px 2px rgba(60,45,20,.05),0 4px 14px rgba(60,45,20,.05);
+  color-scheme:light;
+}
+
+/* base */
+html{background:var(--fth-bg)}
+body{background:var(--fth-bg);color:var(--fth-text);font-family:var(--fth-display);-webkit-font-smoothing:antialiased}
+::selection{background:var(--fth-accent-line)}
+:focus-visible{outline:2px solid var(--fth-accent);outline-offset:2px}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--fth-line2);border-radius:6px;border:2px solid var(--fth-bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--fth-line3)}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+
+/* tool header: category eyebrow, tool name, then actions on the right */
+.fth-head{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 20px;
+  background:color-mix(in srgb,var(--fth-bg) 88%,transparent);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  border-bottom:1px solid var(--fth-line)}
+.fth-head::before{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:linear-gradient(90deg,var(--fth-cat),transparent 38%);opacity:.75;pointer-events:none}
+.fth-id{display:flex;flex-direction:column;gap:5px;min-width:0;flex:none}
+.fth-eyebrow{display:flex;align-items:center;gap:8px;font:500 10.5px/1 var(--fth-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fth-accent-ink);white-space:nowrap}
+.fth-eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fth-cat);box-shadow:0 0 0 3px var(--fth-accent-soft);flex:none}
+.fth-title{margin:0;font-weight:800;font-variation-settings:"wdth" 68;font-size:23px;line-height:1;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap}
+.fth-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.fth-vsep{width:1px;height:22px;background:var(--fth-line2);margin:0 3px;flex:none}
+
+/* buttons */
+.fth-btn{height:34px;padding:0 13px;border-radius:var(--fth-radius-sm);border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);
+  font:600 13px/1 var(--fth-display);display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  transition:background-color .15s,border-color .15s,color .15s}
+.fth-btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.fth-btn:disabled{opacity:.45;cursor:default}
+.fth-btn.primary{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.fth-btn.primary:hover{filter:brightness(1.08)}
+.fth-btn.ghost{background:transparent;border-color:transparent;color:var(--fth-muted)}
+.fth-btn.ghost:hover{background:var(--fth-surface2);border-color:var(--fth-line2);color:var(--fth-text)}
+.fth-btn.danger{color:var(--fth-bad)}
+.fth-btn.sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.fth-btn.icon{width:30px;height:30px;padding:0}
+
+/* labels, fields */
+.fth-label{font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.fth-input{width:100%;min-width:0;background:var(--fth-bg2);border:1px solid var(--fth-line2);border-radius:8px;padding:7px 10px;color:var(--fth-text);font:14px/1.35 var(--fth-display);outline:none;transition:border-color .15s,box-shadow .15s}
+.fth-input:hover{border-color:var(--fth-line3)}
+.fth-input:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+select.fth-input{cursor:pointer}
+textarea.fth-input{resize:vertical;line-height:1.45}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-accent)}
+
+/* sections & surfaces */
+.fth-card{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);box-shadow:var(--fth-shadow-sm)}
+.fth-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.fth-sec::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+.fth-sec .fth-num{font:600 11px var(--fth-mono);color:var(--fth-accent-ink);letter-spacing:.08em}
+.fth-muted{color:var(--fth-muted)}
+.fth-mono{font-family:var(--fth-mono)}
+
+/* notes */
+.fth-tip{background:var(--fth-accent-soft);border-left:2px solid var(--fth-accent);color:var(--fth-text);padding:7px 10px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.45}
+.fth-warn{background:color-mix(in srgb,var(--fth-warn) 10%,var(--fth-surface));border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent);color:var(--fth-text);border-radius:10px;padding:10px 12px;font-size:13px}
+.fth-warn b:first-child{color:var(--fth-warn)}
+.fth-info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--fth-line3);color:var(--fth-muted);font:600 10px/1 var(--fth-mono);text-transform:none;letter-spacing:0;cursor:pointer;user-select:none;vertical-align:1px;margin-left:5px;transition:.15s}
+.fth-info:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+
+/* toast */
+.fth-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;z-index:200;background:var(--fth-text);color:var(--fth-bg);padding:10px 16px;border-radius:10px;font:500 13.5px var(--fth-display);box-shadow:var(--fth-shadow);transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.fth-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* paper: a printable page shown on screen stays paper-white in both themes */
+.fth-paper-wrap{background:var(--fth-paper-backdrop)}
+.fth-paper{background:#fff;color:#000;color-scheme:light;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55)}
+
+@media print{
+  html,body{background:#fff!important;color:#000}
+  .fth-head{display:none!important}
+  .fth-paper-wrap{background:#fff!important}
+  .fth-paper{box-shadow:none!important}
+}
+@media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
+@media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
+
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
+:root{--fth-cat:#4fc7b5;--fth-accent:#4fc7b5;--fth-accent-ink:#4fc7b5;--fth-accent-soft:rgba(79,199,181,0.14);--fth-accent-line:rgba(79,199,181,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#2e7369;--fth-accent-ink:#2e7369;--fth-accent-soft:rgba(79,199,181,0.16);--fth-accent-line:rgba(79,199,181,0.6);--fth-on-accent:#ffffff}
+</style>
+<script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
+<!--/fth-standalone-->
+<meta charset="utf-8"><title>Location Agreements</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font:14px/1.45 var(--fth-display);color:var(--fth-text);background:var(--fth-bg);display:flex;flex-direction:column}
+.app{flex:1;min-height:0;display:grid;grid-template-columns:minmax(400px,44%) 1fr}
+.app>*{min-width:0}
+.ed{padding:6px 22px 48px;border-right:1px solid var(--fth-line);overflow:auto}
+.pvw{padding:0 24px 40px;overflow:auto}
+.intro{color:var(--fth-muted);margin:16px 0 4px;font-size:13.5px;max-width:62ch}
+.sub{color:var(--fth-muted);margin:0 0 10px;font-size:12.5px}
+.status{font:500 11px var(--fth-mono);letter-spacing:.04em;color:var(--fth-faint);white-space:nowrap}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}.g .w{grid-column:1/-1}.g3{grid-template-columns:1fr 1fr 1fr}
+.ed label{display:flex;align-items:center;margin-bottom:5px;font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.ed label.ck{font:400 13.5px/1.4 var(--fth-display);letter-spacing:0;text-transform:none;color:var(--fth-text);gap:8px;margin:0;cursor:pointer}
+.inline{display:flex;gap:8px;align-items:center;color:var(--fth-muted);font-size:13px}
+.inline .fth-input{width:80px}
+.tip{display:none;margin:2px 0 8px}.tip.on{display:block}
+.fth-sec .fth-info{margin-left:0}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+.tw{overflow-x:auto;border:1px solid var(--fth-line);border-radius:11px;background:var(--fth-bg2)}
+table.t{border-collapse:collapse;min-width:100%}
+.t th{font:500 10px/1.2 var(--fth-mono);letter-spacing:.07em;text-transform:uppercase;color:var(--fth-muted);text-align:left;white-space:nowrap;padding:9px 6px 7px;border-bottom:1px solid var(--fth-line);background:var(--fth-surface)}
+.t td{padding:3px;border-bottom:1px solid var(--fth-line)}
+.t tr:last-child td{border-bottom:0}
+.t td:first-child{padding-left:6px}
+.t .fth-input{min-width:60px;padding:5px 7px;font-size:13px;border-radius:6px;background:var(--fth-surface);border-color:var(--fth-line)}
+.t .fth-input.n{min-width:0;width:58px}.t .fth-input.wide{min-width:200px}
+.t select.fth-input{min-width:0;width:66px}
+.x{color:var(--fth-faint)}.x:hover{color:var(--fth-bad)}
+.empty{padding:14px;color:var(--fth-muted);font-size:13px}
+.fs{margin:14px 0 0;padding:14px 16px;border:1px solid var(--fth-accent-line);border-radius:var(--fth-radius-sm);background:var(--fth-accent-soft)}
+.fs-h{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px;margin-bottom:6px}
+.fs .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}.fs select{flex:1;min-width:220px}
+.fs .lbl{font:500 10.5px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted);width:100%;margin-top:6px}
+.fs .note{margin:10px 0 0;font-size:12.5px;color:var(--fth-muted)}.fs .note.stale{color:var(--fth-warn);font-weight:600}
+.opts{display:grid;gap:10px}
+.optc{border:1px solid var(--fth-line);border-radius:11px;padding:10px 12px;background:var(--fth-bg2)}
+.optc .inline{margin:8px 0 0 26px;flex-wrap:wrap}
+.optc p{margin:4px 0 0 26px;color:var(--fth-muted);font-size:12.5px}
+/* preview */
+.pvbar{position:sticky;top:0;z-index:4;max-width:794px;margin:0 auto;padding:14px 0 12px;display:flex;gap:10px;align-items:center;background:var(--fth-paper-backdrop)}
+.pvbar .sp{flex:1}
+.mswitch{display:none}
+.fth-toast{white-space:pre-line}
+
+/* ═════ the printed pages (stay white in both themes) ═════ */
+#pv{max-width:794px;margin:0 auto;font:10.5px/1.35 Arial,Helvetica,sans-serif;color:#111}
+#pv *{box-sizing:border-box}
+#pv .sheet{background:#fff;width:100%;min-height:1123px;padding:34px 38px 30px;margin:0 0 22px;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55);display:flex;flex-direction:column}
+#pv .hd{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;padding-bottom:10px;border-bottom:2.5px solid #111;margin-bottom:10px}
+#pv .kick{font:700 9px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:#2e7369;margin-bottom:7px;display:flex;align-items:center;gap:7px}
+#pv .kick::before{content:"";width:8px;height:8px;background:#4fc7b5;border-radius:50%}
+#pv .ln1{font:800 26px/1.02 Archivo,"Arial Narrow",Arial,sans-serif;font-variation-settings:"wdth" 68;text-transform:uppercase;min-height:28px;word-break:break-word}
+#pv .ln2{margin-top:5px;font-size:11.5px;color:#333}
+#pv .wr{display:inline-block;width:150px;height:22px;border-bottom:2px solid #111;vertical-align:-2px}
+#pv .hm{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;align-content:start;font-size:10px}
+#pv .hm span{font:600 8px/1.9 "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:#666;white-space:nowrap}
+#pv .hm b{font-weight:600;border-bottom:1px solid #bbb;min-height:16px}
+#pv .ph{display:flex;align-items:center;gap:8px;font:800 12px/1 Archivo,"Arial Narrow",Arial,sans-serif;font-variation-settings:"wdth" 78;text-transform:uppercase;letter-spacing:.04em;padding:0 0 4px;border-bottom:1.2px solid #111;margin:14px 0 6px}
+#pv .ph small{margin-left:auto;font:500 8px "JetBrains Mono",monospace;letter-spacing:.06em;color:#777}
+#pv table{width:100%;border-collapse:collapse}
+#pv th{font:600 7.6px "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:#333;text-align:left;border:1px solid #111;background:#eef0f0;padding:4px 5px}
+#pv td{border:1px solid #444;padding:3px 5px;height:24px;vertical-align:top}
+#pv td.c,#pv th.c{text-align:center}
+#pv .pre{font-weight:700}
+#pv .dim{color:#777}
+#pv .bx{display:inline-block;width:11px;height:11px;border:1.1px solid #222;border-radius:2px;vertical-align:-2px}
+#pv tr.shot td{background:#fbefec;border-top:1.6px solid #111;font-weight:700}
+#pv tr.shot td.d{font-weight:400;font-style:italic}
+#pv tr.tk td{height:25px}
+#pv .tkn{color:#999;font-size:9px}
+#pv .wl{height:21px;border-bottom:1px solid #9a9a9a}
+#pv .two{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+#pv .frames{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px}
+#pv .frames div{aspect-ratio:16/9;border:1.2px solid #111;position:relative}
+#pv .frames div::after{content:attr(data-l);position:absolute;left:4px;bottom:3px;font:600 7px "JetBrains Mono",monospace;letter-spacing:.06em;color:#888;text-transform:uppercase}
+#pv .key{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:9px;color:#444;margin-top:8px}
+#pv .key b{color:#111}
+#pv .sign{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px}
+#pv .sign div{border-top:1px solid #111;padding-top:3px;font:600 7.6px "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:#555}
+#pv .sp{flex:1}
+#pv .ft{display:flex;justify-content:space-between;margin-top:14px;padding-top:6px;border-top:1px solid #ccc;font:500 8px "JetBrains Mono",monospace;letter-spacing:.06em;color:#777;text-transform:uppercase}
+
+@media screen and (max-width:900px){
+  html,body{height:auto}body{display:block}
+  .app{display:block}.ed{border-right:0;overflow:visible;padding:0 14px 60px}.pvw{overflow:visible;padding:0 10px 40px}
+  .mswitch{display:flex;position:sticky;top:0;z-index:31;padding:8px 14px;background:var(--fth-bg);border-bottom:1px solid var(--fth-line)}
+  .mswitch button{flex:1;height:34px;border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-muted);font:600 13px var(--fth-display);cursor:pointer}
+  .mswitch button:first-child{border-radius:9px 0 0 9px}.mswitch button:last-child{border-radius:0 9px 9px 0;border-left:0}
+  .mswitch button.on{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+  body:not(.vpv) .pvw{display:none}body.vpv .ed{display:none}
+  #pv .sheet{min-height:0;padding:18px 16px}
+}
+@media screen and (max-width:560px){.g,.g3{grid-template-columns:1fr}#pv .hd{grid-template-columns:1fr}}
+@media print{
+  @page{size:A4 portrait;margin:9mm}
+  html,body{height:auto;background:#fff}body{display:block}
+  .fth-head,.ed,.pvbar,.mswitch,.fth-toast{display:none!important}
+  .app{display:block}.pvw{display:block!important;padding:0;overflow:visible;background:#fff}
+  #pv{max-width:none}
+  #pv .sheet{box-shadow:none;margin:0;padding:0;min-height:277mm;break-after:page}
+  #pv .sheet:last-child{break-after:auto}
+  #pv tr{break-inside:avoid}
+}
+/* release forms */
+.t td.ck{text-align:center}.t td.ck input{margin:0 8px}
+.t .rowpdf{white-space:nowrap}
+.radios{display:grid;gap:6px}
+.radios label.ck{align-items:flex-start;padding:8px 10px;border:1px solid var(--fth-line);border-radius:9px;background:var(--fth-bg2)}
+.radios label.ck small{display:block;color:var(--fth-muted);font-size:12px;margin-top:2px}
+.radios input{margin-top:3px}
+.legal{margin:14px 0 0}
+#pv .cl{margin:0;padding:0;list-style:none;counter-reset:c}
+#pv .cl li{counter-increment:c;position:relative;padding:0 0 6px 20px;font-size:10.4px;line-height:1.45}
+#pv .cl li::before{content:counter(c)".";position:absolute;left:0;font-weight:700}
+#pv .fl{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}
+#pv .fl .w{grid-column:1/-1}
+#pv .fl .l{font:600 7.6px/1.3 "JetBrains Mono",monospace;letter-spacing:.07em;text-transform:uppercase;color:#555}
+#pv .fl .v{min-height:20px;border-bottom:1px solid #9a9a9a;font-size:11px;font-weight:600;padding-top:3px}
+#pv .sigs{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px;margin-top:6px}
+#pv .sigbox{border:1.2px solid #111;border-radius:4px;padding:8px 10px}
+#pv .sigbox h4{margin:0 0 4px;font:700 8px "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase}
+#pv .sigbox .sg{height:46px;border-bottom:1px solid #111}
+#pv .sigbox .row2{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-top:8px}
+#pv .sigbox .row2 div{border-bottom:1px solid #9a9a9a;min-height:18px;font-size:10.5px;font-weight:600}
+#pv .sigbox .row2.caps{margin-top:2px}#pv .sigbox .row2.caps div{border:0;min-height:0;font:600 7px "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:#777}
+#pv .sigbox .cap{font:600 7px "JetBrains Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:#777;margin-top:2px}
+#pv .grd{margin-top:10px;border:1.2px dashed #111;border-radius:4px;padding:8px 10px}
+#pv .grd p{margin:0 0 6px;font-size:10.2px}
+#pv .ag{font-size:10.4px;margin:4px 0 0}
+#pv .intro2{font-size:10.6px;margin:0 0 8px}
+#pv table.gp td{height:27px}
+/* location agreements */
+.pvwarn{max-width:794px;margin:0 auto 12px;padding:9px 12px;border-radius:9px;background:color-mix(in srgb,var(--fth-warn) 12%,var(--fth-surface));border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent);color:var(--fth-text);font-size:13px}
+.lc{border:1px solid var(--fth-line);border-radius:12px;background:var(--fth-bg2);padding:12px 14px;margin:0 0 10px}
+.lc-h{display:flex;align-items:center;gap:8px;margin:0 0 10px}
+.lc-h b{flex:1;font-size:14px}
+.lc-h .num{font:600 10.5px var(--fth-mono);color:var(--fth-accent-ink);background:var(--fth-accent-soft);border-radius:5px;padding:2px 6px}
+.lc .g{gap:10px 12px}
+.lc textarea.fth-input{min-height:52px}
+#pv .fl3{grid-template-columns:1fr 1fr 1fr}
+#pv .cl li{font-size:10px;line-height:1.4;padding-bottom:4px}
+#pv .rules{font-size:10.3px;white-space:pre-wrap;min-height:20px;border-bottom:1px solid #9a9a9a;padding:2px 0 3px}
+#pv table.cc td{height:34px}
+@media print{
+  body.solo #pv .sheet:not(.only){display:none!important}
+  body.solo #pv .sheet.only{break-after:auto}
+}
+</style></head><body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>02 · Prep</span><h1 class="fth-title">Location Agreements</h1></div>
+  <div class="fth-actions">
+    <span class="status" id="saveState"></span>
+    <span class="fth-vsep"></span>
+    <button class="fth-btn" id="docBtn" data-fth-doc hidden></button>
+    <button class="fth-btn primary" id="printBtn">Save all as PDF</button>
+  </div>
+</header>
+<div class="mswitch"><button data-view="ed" class="on">Fill in</button><button data-view="pv">Preview &amp; print</button></div>
+<div class="app">
+  <div class="ed" id="ed"></div>
+  <div class="pvw fth-paper-wrap" id="pvw">
+    <div class="pvbar"><span class="fth-label">Preview · A4</span><span class="sp"></span><span class="fth-label" id="pvCount"></span></div>
+    <p class="pvwarn" id="pvWarn" hidden></p>
+    <div id="pv"></div>
+  </div>
+</div>
+<div class="fth-toast" id="toast"></div>
+<script>
+'use strict';
+/* ───────── state ───────── */
+const KEY="fth-loc-agree-v1";
+const newLoc=()=>({name:"",addr:"",areas:"",dates:"",hours:"",park:"",owner:"",role:"",phone:"",email:"",day:"",fee:"",rules:""});
+const blank=()=>({title:"",company:"",producer:"",contact:"",address:"",insurance:"",
+  use:"all",pay:"free",credit:true,copy:true,cancel:true,extra:"",
+  locs:[newLoc()],
+  opt:{each:true,cond:false,blank:1}});
+let S=blank(),savedAt=0;
+try{const o=JSON.parse(localStorage.getItem(KEY)||"null");if(o&&o.S){S=Object.assign(blank(),o.S);S.opt=Object.assign(blank().opt,o.S.opt||{});savedAt=o.at||0}}catch(e){}
+if(!Array.isArray(S.locs))S.locs=[];
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let saveT;function persist(){clearTimeout(saveT);saveT=setTimeout(()=>{try{savedAt=Date.now();localStorage.setItem(KEY,JSON.stringify({S,at:savedAt}));showSaved()}catch(e){$("#saveState").textContent="Couldn’t save in this browser"}},400)}
+function showSaved(){$("#saveState").textContent=savedAt?"Saved in this browser · "+new Date(savedAt).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""}
+let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),3200)}
+
+/* ───────── the wording ───────── */
+const USES={
+  all:{n:"Everywhere, for good",d:"Festivals, online, screenings, showreels, sale or broadcast, worldwide, with no end date. The usual choice: you won't need to ask again later.",
+    t:"in the Film and in trailers, clips, stills, behind-the-scenes material and publicity for it, and in the showreels and portfolios of the Producer and crew, in all media now known or invented later, throughout the world, without time limit"},
+  fest:{n:"Festivals, education and online portfolios",d:"Festivals, screenings, college assessment and online showreels and channels. Selling or broadcasting the film would need a new agreement.",
+    t:"in the Film and its trailer, clips, stills and publicity, for festival entries, screenings, college assessment and exhibition, and online on the showreels, portfolios and channels of the Producer and crew, throughout the world, without time limit. Any sale, licence or broadcast of the Film needs the Owner's further written agreement"},
+  edu:{n:"Assessment and teaching only",d:"Marking, teaching and internal screenings only. Nothing public or online without asking again.",
+    t:"in the Film for assessment, teaching and internal screenings only. It will not be shown publicly, entered into festivals or put online without the Owner's further written agreement"}};
+const PAYS={free:"Free",fee:"A fee",cost:"Costs only (e.g. electricity, cleaning)"};
+const who=()=>S.company||S.producer||"the Producer";
+const filmName=()=>S.title?"“"+S.title+"”":"the film named above";
+function clauses(l){l=l||{};const fee=String(l.fee||"").trim(),perks=[S.credit&&"thank the Property in the Film's credits",S.copy&&"give the Owner a copy of, or a link to, the finished Film"].filter(Boolean);
+const perkTxt=perks.length?" The Producer will also "+perks.join(" and ")+".":"";
+const pay=S.pay==="fee"?`The Producer will pay the Owner ${fee?fee:"__________________"} for the use of the Property, which covers everything in this agreement.${perkTxt}`
+  :S.pay==="cost"?`There is no location fee. The Producer will pay any costs agreed in advance (such as electricity or cleaning).${perkTxt}`
+  :`The Owner is allowing the use of the Property free of charge.${perkTxt}`;
+const L=[
+`The Owner confirms they own the Property or are authorised to give this permission (if the Property is rented, with the landlord's agreement), and gives ${esc(who())} (“the Producer”) permission to bring cast, crew, vehicles and equipment onto the Property on the dates and times above, plus any extra days agreed, to prepare, film, record and clear up for ${esc(filmName())} (“the Film”).`,
+`The Producer may film, photograph and record the Property, inside and out, show it as a fictional place, and use those recordings ${USES[S.use]?USES[S.use].t:USES.all.t}. The Producer owns the recordings, and the Owner will make no claim over them or the Film.`,
+`The Producer will keep to the agreed areas, follow the house rules below, take reasonable care of the Property, and leave it as it was found, removing all equipment and rubbish.`,
+`The Producer will tell the Owner straight away about any damage, and will repair it or pay the reasonable cost of repair (normal wear and tear excepted).${S.insurance?" The Producer has public liability insurance: "+esc(S.insurance)+".":""}`,
+esc(pay),
+`The Owner knows of nothing on the Property that would make filming unsafe, and will tell the Producer about anything that might, such as alarms, pets, works or other visitors.`,
+...(S.cancel?[`Either side may cancel by telling the other before filming starts. Once the Property has been filmed, the permission to use the recordings cannot be withdrawn.`]:[])];
+String(S.extra||"").split(/\n+/).map(s=>s.trim()).filter(Boolean).forEach(x=>L.push(esc(x)));
+return `<ol class="cl">${L.map(x=>`<li>${x}</li>`).join("")}</ol>`}
+
+/* ───────── help ───────── */
+const INFO={
+fill:"Bring in the locations from the Location Recce (with the owner's details, fee, dates, hours and house rules) or from the Production Schedule (with the address and the shoot days each one is used). Locations already in the list are filled in, not added twice. Rejected recces are skipped.",
+prod:"These print on every agreement. The production company (or the producer, if there isn't one) is who the owner gives permission to. Add your public liability insurance if you have it: owners often ask.",
+use:"What the footage of the property can be used for. Wider is safer: a festival success or a sale later on needs every owner's agreement, and tracking someone down years later can be hard.",
+pay:"What the owner gets. Each location's fee comes from its own Fee box. A thank-you in the credits and a copy of the film are the usual thanks on student work.",
+locs:"One agreement prints for each location. Anything left blank prints as a line to write on. The PDF button saves just that location's agreement, named after it.",
+print:"The condition check is a before-and-after sheet for each location: walk round with the owner at the start and the end of the day. Blank agreements are for places you find on the day."};
+const info=k=>INFO[k]?`<b class="fth-info" title="What is this?" data-tip="1">i</b>`:"",tip=k=>`<div class="tip fth-tip">${INFO[k]||""}</div>`;
+const F=(l,k,t="text",w)=>`<div class="${w?"w":""}"><label>${l}</label>${t==="area"?`<textarea class="fth-input" data-k="${k}">${esc(S[k])}</textarea>`:`<input class="fth-input" type="${t}" data-k="${k}" value="${esc(S[k])}">`}</div>`;
+const LF=(i,l,k,t,w,ph)=>`<div class="${w?"w":""}"><label>${l}</label>${t==="area"?`<textarea class="fth-input" data-a="locs" data-i="${i}" data-k="${k}"${ph?` placeholder="${esc(ph)}"`:""}>${esc(S.locs[i][k])}</textarea>`:`<input class="fth-input" data-a="locs" data-i="${i}" data-k="${k}" value="${esc(S.locs[i][k])}"${ph?` placeholder="${esc(ph)}"`:""}>`}</div>`;
+function locCards(){if(!S.locs.length)return `<div class="tw"><div class="empty">No locations yet: only blank agreements will print.</div></div><div class="bar"><button class="fth-btn sm" data-add="1">＋ Add location</button></div>`;
+return S.locs.map((l,i)=>`<div class="lc"><div class="lc-h"><span class="num">${i+1}</span><b>${esc(l.name||"New location")}</b><button class="fth-btn sm" data-one="${i}" title="Save just this agreement as a PDF">PDF</button><button class="fth-btn ghost icon x" data-del="${i}" title="Remove">✕</button></div>
+<div class="g">${LF(i,"Location name","name","text",0,"e.g. Rose's flat")}${LF(i,"Areas to be used","areas","text",0,"e.g. kitchen, hallway")}${LF(i,"Address","addr","area",1)}
+${LF(i,"Shoot dates","dates")}${LF(i,"In by / out by","hours","text",0,"e.g. 8am to 7pm")}${LF(i,"Parking and unit base","park","text",1)}
+${LF(i,"Owner / manager","owner")}${LF(i,"Their role","role","text",0,"e.g. Owner, venue manager")}${LF(i,"Owner's phone","phone")}${LF(i,"Owner's email","email")}
+${LF(i,"Contact on the day (name and phone)","day","text",1)}${LF(i,"Fee","fee","text",0,S.pay==="fee"?"e.g. £50 a day":"")}<div></div>${LF(i,"House rules and restrictions","rules","area",1,"e.g. shoes off upstairs, no filming the neighbours' windows, quiet after 6pm")}</div></div>`).join("")+`<div class="bar"><button class="fth-btn sm" data-add="1">＋ Add location</button></div>`}
+function form(){const act=document.activeElement,o=S.opt;$("#ed").innerHTML=`
+<p class="intro">Make a location agreement for every place you film: fill in the basics, print them, and get each one signed by the owner before the shoot (or on the day).</p>
+<div class="fth-tip legal"><b>Not legal advice.</b> This is a plain-English starting template. Check the wording with your college, course leader or a solicitor before you rely on it, especially for paid, commercial or public locations, which may also need a council or landowner permit.</div>
+<div id="fs"></div>
+<h2 class="fth-sec"><span class="fth-num">01</span>Production ${info("prod")}</h2>${tip("prod")}
+<div class="g">${F("Film title","title","text",1)}${F("Production company / college","company")}${F("Producer","producer")}${F("Producer's email or phone","contact")}${F("Public liability insurance","insurance")}${F("Production address","address","text",1)}</div>
+<h2 class="fth-sec"><span class="fth-num">02</span>How the footage can be used ${info("use")}</h2>${tip("use")}
+<div class="radios">${Object.entries(USES).map(([k,u])=>`<label class="ck"><input type="radio" name="use" data-k="use" value="${k}" ${S.use===k?"checked":""}><span>${u.n}<small>${u.d}</small></span></label>`).join("")}</div>
+<h2 class="fth-sec"><span class="fth-num">03</span>Payment and terms ${info("pay")}</h2>${tip("pay")}
+<div class="g"><div><label>Payment</label><select class="fth-input" data-k="pay">${Object.entries(PAYS).map(([k,n])=>`<option value="${k}" ${S.pay===k?"selected":""}>${n}</option>`).join("")}</select></div><div></div>
+<label class="ck"><input type="checkbox" data-k="credit" ${S.credit?"checked":""}> Thank the location in the credits</label><label class="ck"><input type="checkbox" data-k="copy" ${S.copy?"checked":""}> A copy of the finished film</label>
+<label class="ck w"><input type="checkbox" data-k="cancel" ${S.cancel?"checked":""}> Either side can cancel before filming starts</label>
+${F("Extra terms (one per line, each becomes a numbered clause)","extra","area",1)}</div>
+<h2 class="fth-sec"><span class="fth-num">04</span>Locations ${info("locs")}</h2>${tip("locs")}
+${locCards()}
+<h2 class="fth-sec"><span class="fth-num">05</span>What to print ${info("print")}</h2>${tip("print")}
+<div class="opts">
+<div class="optc"><label class="ck"><input type="checkbox" data-o="each" ${o.each?"checked":""}> An agreement for each location</label></div>
+<div class="optc"><label class="ck"><input type="checkbox" data-o="cond" ${o.cond?"checked":""}> A condition check sheet for each location</label><p>Before and after, room by room, initialled by the owner.</p></div>
+<div class="optc"><label class="ck">Blank agreements</label><div class="inline" style="margin-left:0">How many <input class="fth-input" type="number" min="0" max="20" data-o="blank" value="${o.blank}"></div></div>
+</div>`;
+fsRender();
+if(act&&act.dataset&&(act.dataset.k||act.dataset.o)&&act.type!=="radio"){const q=act.dataset.o?`[data-o="${act.dataset.o}"]`:`[data-k="${act.dataset.k}"]`+(act.dataset.a?`[data-a="${act.dataset.a}"][data-i="${act.dataset.i}"]`:":not([data-a])");const n=$(q);n&&n.focus()}}
+
+/* ───────── bringing locations in (read only) ───────── */
+const rj=k=>{try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}};
+const same=(a,b)=>String(a||"").trim().toLowerCase()===String(b||"").trim().toLowerCase();
+const niceD=d=>d?new Date(d+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"}):"";
+function recceLoad(){const o=rj("fth-recce-v1");if(!o||!o.S||!Array.isArray(o.S.locs))return null;const L=o.S.locs.filter(r=>r&&r.f&&String(r.f.name||"").trim()&&r.f.status!=="Rejected");return L.length?{R:o.S,L}:null}
+function schedLoad(){const o=rj("fth-schedule-v1");if(!o||!o.S||!Array.isArray(o.S.locs))return null;const L=o.S.locs.filter(l=>String(l.name||"").trim());return L.length?{Q:o.S,L}:null}
+function qDates(Q){const iso=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"),out=[];(Q.days||[]).forEach((d,i)=>{if(d.date){out.push(d.date);return}const base=i?out[i-1]:Q.start;if(!base){out.push("");return}
+const x=new Date(base+"T12:00");if(i)x.setDate(x.getDate()+1);if(Q.skipWk)while(x.getDay()==0||x.getDay()==6)x.setDate(x.getDate()+1);out.push(iso(x))});return out}
+function fsRender(){const el=$("#fs");if(!el)return;const A=recceLoad(),B=schedLoad();
+if(!A&&!B){el.innerHTML="";return}
+el.innerHTML=`<div class="fs"><div class="fs-h">Bring in your locations ${info("fill")}</div>${tip("fill")}<div class="row">
+${A?`<button class="fth-btn primary sm" data-from="recce">From the Location Recce (${A.L.length})</button>`:""}
+${B?`<button class="fth-btn ${A?"":"primary "}sm" data-from="sched">From the Schedule (${B.L.length})</button>`:""}</div></div>`}
+function addLocs(list,prod){let n=0;
+S.locs=S.locs.filter(l=>Object.values(l).some(v=>String(v||"").trim()));
+list.forEach(p=>{const r=S.locs.find(x=>same(x.name,p.name));if(r){Object.keys(p).forEach(k=>{if(!String(r[k]||"").trim()&&p[k])r[k]=p[k]});return}S.locs.push(Object.assign(newLoc(),p));n++});
+Object.entries(prod||{}).forEach(([k,v])=>{if(v&&!String(S[k]||"").trim())S[k]=v});
+form();prev();persist();toast(n?`${n} location${n==1?"":"s"} added.`:"Those locations are already listed (blank details filled in).")}
+function fromRecce(){const A=recceLoad();if(!A)return;const P=A.R.prod||{};
+addLocs(A.L.map(r=>{const f=r.f;return{name:f.name.trim(),addr:f.addr||"",dates:f.avail||(f.shoot?niceD(f.shoot):""),hours:f.hours||"",park:f.park||"",
+  owner:f.cName||"",role:f.cRole||"",phone:f.cPhone||"",email:f.cEmail||"",day:f.dayC||"",fee:/^\s*(free|none|no fee|£?0)\s*$/i.test(f.fee||"")?"":(f.fee||""),
+  rules:[f.restr,f.deadline&&"Must be cleared by "+f.deadline].filter(Boolean).join("\n"),areas:f.setting||""}}),{title:P.title,company:P.company})}
+/* "Sat 14 Nov, Sun 15 Nov 2026": dates without the year, then the year once at the end */
+function dayList(a){const iso=a.filter(x=>/^\d{4}-/.test(x)),yr=iso.length?iso[iso.length-1].slice(0,4):"";
+  return a.map(x=>/^\d{4}-/.test(x)?new Date(x+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}).replace(",",""):x).join(", ")+(yr?" "+yr:"")}
+function fromSchedule(){const B=schedLoad();if(!B)return;const Q=B.Q,ds=qDates(Q);
+addLocs(B.L.map(l=>{const nm=l.name.trim(),days=[];(Q.days||[]).forEach((d,i)=>{if((d.items||[]).some(r=>r.t==="s"&&same(r.loc,nm)))days.push(ds[i]||"Day "+(i+1))});
+  return{name:nm,addr:l.addr||"",dates:dayList(days)}}),{title:Q.title,company:Q.company,producer:Q.producer})}
+
+/* ───────── the printed pages ───────── */
+const isReal=l=>Object.values(l).some(v=>String(v||"").trim());
+function head(kind,big,extra){return `<div class="hd"><div><div class="kick">${kind}</div><div class="ln1">${big||"&nbsp;"}</div><div class="ln2">${esc(S.title?S.title+(S.company?" · "+S.company:""):S.company)}</div></div>
+<div class="hm"><span>Producer</span><b>${esc(S.producer)}</b><span>Contact</span><b>${esc(S.contact)}</b>${extra||""}</div></div>`}
+const fld=(l,v,w)=>`<div class="${w?"w":""}"><div class="l">${l}</div><div class="v">${esc(v||"")}</div></div>`;
+const foot=(what,n,of)=>`<div class="sp"></div><div class="ft"><span>${esc(S.title||"Film Tool Hub")} · ${what}</span><span>Page ${n} of ${of}</span></div>`;
+function sigBox(t,name){return `<div class="sigbox"><h4>${t}</h4><div class="sg"></div><div class="cap">Signature</div><div class="row2"><div>${esc(name||"")}</div><div></div></div><div class="row2 caps"><div>Print name</div><div>Date</div></div></div>`}
+function pAgree(l){l=l||{};const rules=String(l.rules||"").trim();
+return `${head("Location agreement",esc(l.name),S.insurance?`<span>Insurance</span><b>${esc(S.insurance)}</b>`:"")}
+<div class="ph">The property</div>
+<div class="fl fl3">${fld("Location name",l.name)}${fld("Areas to be used",l.areas)}${fld("Shoot dates",l.dates)}${fld("Address",l.addr,1)}${fld("In by / out by",l.hours)}${fld("Parking and unit base",l.park)}${fld("Contact on the day",l.day)}</div>
+<div class="ph">The owner</div>
+<div class="fl fl3">${fld("Name",l.owner)}${fld("Role",l.role||"Owner / authorised person")}${fld("Phone",l.phone)}${fld("Email",l.email)}${fld("Address (if different)","",1)}</div>
+<div class="ph">What we're agreeing</div>${clauses(l)}
+<div class="ph">House rules and restrictions</div>${rules?`<div class="rules">${esc(rules)}</div>`:'<div class="wl"></div><div class="wl"></div>'}
+<div class="ph">Signed</div>
+<div class="sigs">${sigBox("Owner or authorised person",l.owner)}${sigBox("For the Producer",S.producer)}</div>`}
+function pCond(l){l=l||{};const areas=String(l.areas||"").split(/[,;\n]+/).map(s=>s.trim()).filter(Boolean),n=Math.max(12,areas.length+3);
+return `${head("Location condition check",esc(l.name),`<span>Shoot dates</span><b>${esc(l.dates)}</b>`)}
+<p class="intro2">Walk round with the owner before filming and again at wrap. Note any marks, damage or anything moved, take photos, and both initial each line.</p>
+<table class="cc"><tr><th style="width:20%">Area or item</th><th>Before filming</th><th class="c" style="width:44px">Photo</th><th>After wrap</th><th class="c" style="width:58px">Owner initials</th></tr>
+${Array.from({length:n},(_,i)=>`<tr><td class="pre">${esc(areas[i]||"")}</td><td></td><td class="c"><span class="bx"></span></td><td></td><td></td></tr>`).join("")}</table>
+<div class="ph">Furniture or items moved, and where they go back</div><div class="wl"></div><div class="wl"></div><div class="wl"></div>
+<div class="sign" style="grid-template-columns:1fr 1fr 1fr 1fr;margin-top:22px"><div>Before: owner</div><div>Before: producer</div><div>After: owner</div><div>After: producer</div></div>`}
+let pages=[];
+function prev(){const o=S.opt;pages=[];
+S.locs.forEach((l,i)=>{if(!isReal(l))return;if(o.each)pages.push({k:"Location agreement",who:i,h:pAgree(l)});if(o.cond)pages.push({k:"Condition check",who:i,h:pCond(l)})});
+for(let i=0;i<Math.max(0,Math.min(20,parseInt(o.blank)||0));i++){pages.push({k:"Location agreement",h:pAgree(null)});if(o.cond)pages.push({k:"Condition check",h:pCond(null)})}
+$("#pv").innerHTML=pages.length?pages.map((p,i)=>`<div class="sheet"${p.who!=null?` data-who="${p.who}"`:""}>${p.h}${foot(p.k,i+1,pages.length)}</div>`).join(""):`<div class="sheet"><p style="color:#777">Add a location, or choose blank agreements under 05 What to print.</p></div>`;
+$("#pvCount").textContent=pages.length?pages.length+" page"+(pages.length==1?"":"s"):"";
+/* an A4 sheet is 1123px tall at full preview width: warn if one runs over (it still prints, on two pages) */
+/* measured at true A4 width (794px) for an instant, then put back before the screen is drawn; skipped on phones, where the sheets are laid out differently */
+let long=[];const pvEl=$("#pv");if(!matchMedia("(max-width:900px)").matches){const w0=pvEl.style.width,m0=pvEl.style.maxWidth;pvEl.style.width=pvEl.style.maxWidth="794px";
+long=$$("#pv .sheet").filter(s=>s.scrollHeight>1130).map(s=>{const w=s.dataset.who;return w!=null&&S.locs[w]?S.locs[w].name||"An agreement":"A blank agreement"});pvEl.style.width=w0;pvEl.style.maxWidth=m0}
+$("#pvWarn").hidden=!long.length;$("#pvWarn").textContent=long.length?`⚠ ${[...new Set(long)].join(", ")} runs onto a second page. Shorten the house rules or extra terms to keep it on one.`:"";}
+
+/* ───────── PDFs ───────── */
+const fthPage=(type,name,group)=>!!(window.fthDocs&&window.fthDocs.page({type,name,group}));
+function pdfAll(){if(!pages.length)return toast("Nothing to print yet.");if(!fthPage("Location Agreement PDF","Location agreements"+(S.title?" · "+S.title:"")))print()}
+/* one location: only its sheets show in print, and the page title becomes the PDF's suggested file name */
+function pdfOne(i){const l=S.locs[i];if(!l||!isReal(l))return toast("Fill in the location first.");
+  const sh=$$(`#pv .sheet[data-who="${i}"]`);if(!sh.length)return toast("Tick an agreement or condition check under 05 to print one.");
+  const t0=document.title,nm=l.name||"location";
+  document.body.classList.add("solo");sh.forEach(s=>s.classList.add("only"));document.title="Location agreement - "+nm+(S.title?" - "+S.title:"");
+  try{if(!fthPage("Location Agreement PDF","Location agreement · "+nm,nm))print()}finally{document.body.classList.remove("solo");sh.forEach(s=>s.classList.remove("only"));document.title=t0}}
+
+/* ───────── events ───────── */
+const toNum=(v,lo,hi)=>{v=parseInt(v);return isNaN(v)?lo:Math.max(lo,Math.min(hi,v))};
+document.addEventListener("input",e=>{const t=e.target;
+  if(t.dataset.o){S.opt[t.dataset.o]=t.type==="checkbox"?t.checked:t.value;prev();persist();return}
+  const k=t.dataset.k;if(!k)return;const v=t.type==="checkbox"?t.checked:t.value;
+  if(t.dataset.a){S[t.dataset.a][+t.dataset.i][k]=v;if(k==="name"){const h=t.closest(".lc");h&&(h.querySelector(".lc-h b").textContent=v||"New location")}}else S[k]=v;
+  if(k==="pay"){form()}prev();persist()});
+document.addEventListener("change",e=>{const t=e.target;if(t.dataset.o==="blank"){S.opt.blank=toNum(t.value,0,20);t.value=S.opt.blank;prev();persist()}});
+document.addEventListener("click",e=>{const t=e.target.closest("button,b.fth-info");if(!t)return;
+  if(t.dataset.tip){const n=t.closest("h2,.fs-h");const tp=n&&n.nextElementSibling;tp&&tp.classList.toggle("on");return}
+  if(t.dataset.from){t.dataset.from==="recce"?fromRecce():fromSchedule();return}
+  if(t.dataset.add){S.locs.push(newLoc());form();prev();persist();const ins=$$('[data-a="locs"][data-k="name"]');ins.length&&ins[ins.length-1].focus();return}
+  if(t.dataset.one!=null){pdfOne(+t.dataset.one);return}
+  if(t.dataset.del!=null){const r=S.locs[+t.dataset.del];if(r&&isReal(r)&&!confirm("Remove "+(r.name||"this location")+"?"))return;S.locs.splice(+t.dataset.del,1);form();prev();persist();return}
+  if(t.dataset.view){$$(".mswitch button").forEach(b=>b.classList.toggle("on",b===t));document.body.classList.toggle("vpv",t.dataset.view==="pv");return}});
+addEventListener("storage",e=>{if(!e.key||/^fth-(recce|schedule)-v1$/.test(e.key))fsRender()});
+addEventListener("focus",fsRender);document.addEventListener("visibilitychange",()=>{if(!document.hidden)fsRender()});
+$("#printBtn").onclick=pdfAll;
+if(window.fthDocs)fthDocs.attach($("#docBtn"),[{label:"Location Agreement PDF (all)",fn:pdfAll}]);
+form();prev();showSaved();
+</script></body></html>
