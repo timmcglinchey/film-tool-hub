@@ -42,6 +42,7 @@ const ICONS = {
   blocking: P('<rect x="3" y="3" width="18" height="18" rx="1.4"/><path d="M3 13h5M13 3v5"/><circle cx="8.5" cy="17.5" r="1.6"/><path d="M10.2 16.2c2.6-1.4 4.4-3.4 5.2-6.4"/><path d="M13.6 10.4l1.8-1.3 1 2"/>'),
   lighting: P('<path d="M3.5 8.2l6.5-2.6v12.8l-6.5-2.6z"/><path d="M10 9h2.6v6H10"/><path d="M15.5 7.6l4.5-2M16 12h5M15.5 16.4l4.5 2"/>'),
   callsheet:P('<rect x="5" y="4.5" width="14" height="16.5" rx="1.6"/><path d="M9 4.5V3h6v1.5"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4.5"/>'),
+  locagree: P('<path d="M12 14.5s-4.6-4-4.6-7.4a4.6 4.6 0 0 1 9.2 0c0 3.4-4.6 7.4-4.6 7.4z"/><circle cx="12" cy="7.1" r="1.6"/><path d="M4 21c1.4-1.8 2.4-1.8 2.9-.5.5 1.3 1.3 1.3 2.4-.2.8-1 1.6-1 2.6.3"/><path d="M14.5 20.5H20"/>'),
   release:  P('<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 10h6M9 13h4"/><path d="M8.5 18c1.2-1.6 2-1.6 2.4-.4.4 1.1 1.1 1.1 2.1-.2.7-.9 1.5-.9 2.5.2"/>'),
   scriptlog:P('<rect x="4" y="4.5" width="11.5" height="16" rx="1.5"/><path d="M7.5 4.5V3h4.5v1.5"/><path d="M7 9.5h5.5M7 12.5h3.5"/><circle cx="16.8" cy="16" r="4.2"/><path d="M16.8 13.8V16l1.5 1"/>'),
   risk:     P('<path d="M12 3.2l9.3 16.6H2.7z"/><path d="M12 10v4.6"/><circle cx="12" cy="17.2" r=".5" fill="currentColor"/>'),
@@ -2156,6 +2157,7 @@ const TOOL_THEME = {
   callsheet: {kit: true},
   'script-log': {kit: true},
   release: {kit: true},
+  'loc-agree': {kit: true},
   shotlist:  {kit: true},
   risk:      {kit: true},
   schedule:  {kit: true},
@@ -2206,6 +2208,7 @@ const PEOPLE_FIELDS = {
   risk: '[data-k="assessor"],[data-k="act"],[data-k="sup"],[data-k="fa"],[data-k="fbox"],[data-k="hod"],[data-k="sn"]',
   recce: '[data-f="by"],[data-f="aid"]',
   release: '[data-k="producer"]',
+  'loc-agree': '[data-k="producer"]',
   'script-log': '[data-k="director"],[data-k="dp"],[data-k="ad"],[data-k="sup"]',
   budget: '#sProd'
 };
@@ -2641,6 +2644,7 @@ const DOC_TYPES = {
   callsheet: ['Call Sheet PDF', 'Call Sheet Excel'],
   'script-log': ['Script Supervisor Pack PDF'],
   release: ['Talent Release PDF'],
+  'loc-agree': ['Location Agreement PDF'],
   risk: ['Risk Assessment PDF', 'Risk Assessment Excel']
 };
 const DOC_KEEP_MS = 30 * 864e5, SHARED_DOC_CAP = 200 * 1024 * 1024, UPLOAD_MAX = 100 * 1024 * 1024, UPLOAD_MAX_FILES = 50;

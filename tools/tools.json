@@ -310,6 +310,26 @@
       "group": "people"
     },
     {
+      "id": "loc-agree",
+      "name": "Location Agreements",
+      "desc": "Make a location agreement for every place you film, with the owner's details, dates, house rules and sign-off, plus an optional before-and-after condition check. Print them to sign on the day.",
+      "category": "prep",
+      "tags": [
+        "Locations",
+        "Producer",
+        "PDF"
+      ],
+      "icon": "locagree",
+      "fileName": "Location Agreements.html",
+      "origTitle": "Location Agreements",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611201715,
+      "file": "tools/loc-agree.html",
+      "group": "people"
+    },
+    {
       "id": "shotlist",
       "name": "Shot List Builder",
       "desc": "Plan every shot day by day with custom columns, sunrise and sunset times, breaks and company moves. Track it live on the day.",
