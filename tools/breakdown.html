@@ -1920,11 +1920,15 @@ function cmLoc(c) {
   const an = c.anchor; if (!an || !S.words.length) return null;
   const key = c.id + '|' + an.a + '|' + an.b + '|' + an.text;
   if (CM.loc.has(key)) return CM.loc.get(key);
-  const want = String(an.text || '').split(' ').filter(Boolean);
+  let want = String(an.text || '').split(' ').filter(Boolean);
+  /* the hub used to keep only the first 400 characters of the words: match on what's there (the last word may be cut short) and keep the full length */
+  const n = Math.max(1, (an.b | 0) - (an.a | 0) + 1), cut = want.length < n;
+  if (cut && want.length > 1) want = want.slice(0, -1);
+  const len = cut ? n : want.length;
   const at = i => want.length && want.every((w, k) => S.words[i + k] && S.words[i + k].s === w);
   let r = null;
-  if (at(an.a)) r = { a: an.a, b: an.a + want.length - 1 };
-  else if (want.length) { let best = -1; for (let i = 0; i < S.words.length; i++) if (S.words[i].s === want[0] && at(i) && (best < 0 || Math.abs(i - an.a) < Math.abs(best - an.a))) best = i; if (best >= 0) r = { a: best, b: best + want.length - 1 }; }
+  if (at(an.a)) r = { a: an.a, b: Math.min(S.words.length - 1, an.a + len - 1) };
+  else if (want.length) { let best = -1; for (let i = 0; i < S.words.length; i++) if (S.words[i].s === want[0] && at(i) && (best < 0 || Math.abs(i - an.a) < Math.abs(best - an.a))) best = i; if (best >= 0) r = { a: best, b: Math.min(S.words.length - 1, best + len - 1) }; }
   CM.loc.set(key, r); return r;
 }
 const cmRoots = () => CM.list.filter(c => !c.re);
