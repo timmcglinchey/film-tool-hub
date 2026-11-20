@@ -31,6 +31,7 @@ Each tool is one self-contained HTML file. It runs inside Film Tool Hub, which g
    - A tool that uses the print window: call `window.fthDocs.page({type: 'Call Sheet PDF', name: 'Call Sheet 12 May'})` at the moment you would call `window.print()`. It keeps the page exactly as it prints.
    - Both return `true` when the person pressed **Save to Documentation**. That means: skip the download or the print window. So the pattern is `if (!fthDocs.save(...)) download(...)`.
    - Give each tool a hidden button with `data-fth-doc hidden`, and switch it on with `window.fthDocs.attach(button, [{label: 'Shot List PDF', fn: exportPdf}, …])`. One item saves straight away; several open a small menu.
+   - Paperwork people bring in themselves (as the Task Board does): `window.fthDocs.upload({blob, filename} or {link}, folder, task: {id, title}, quiet: true})` resolves to the new entry (`{id, name, ext, link…}`) or `null`. `folder` is `'other'` (Other paperwork) or a tool's id from `fthDocs.folders()`. `fthDocs.open(id)` shows one, `fthDocs.info([ids])` says which are still there, and `fthDocs.readOnly()` is true while someone else holds the tool. Check `typeof window.fthDocs.upload === 'function'` first.
    - `type` is the kind of document. Saving the same `type` again makes the next draft. Use `group` when one type covers separate things (for example one picture per scene).
    - A new tool's document types also go in the `DOC_TYPES` list in `hub/hub.js`, which is what gives it a folder.
    - Project and backup files (`.json`) stay as downloads only.
