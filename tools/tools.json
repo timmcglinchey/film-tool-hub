@@ -431,6 +431,25 @@
       "group": "finalise"
     },
     {
+      "id": "script-log",
+      "name": "Script Supervisor's Log",
+      "desc": "Print the script supervisor's paperwork for a shoot day: a daily progress report, a take log with the day's shots ready to fill in, and a continuity sheet for every scene. Bring the basics in from the schedule and shot list.",
+      "category": "prep",
+      "tags": [
+        "Script supervisor",
+        "Continuity"
+      ],
+      "icon": "scriptlog",
+      "fileName": "Script Supervisor's Log.html",
+      "origTitle": "Script Supervisor's Log",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611201640,
+      "file": "tools/script-log.html",
+      "group": "finalise"
+    },
+    {
       "id": "tasks",
       "name": "Task Board",
       "desc": "Keep on top of pre-production: what needs doing, who's doing it and when it's due, as a board, a calendar or a timeline.",
