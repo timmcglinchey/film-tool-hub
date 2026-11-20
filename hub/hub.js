@@ -410,6 +410,12 @@ window.__fthHub = {
   noteMe() { return noteMe(); },
   /* Documentation: every tool hands its exports to this one helper (through window.fthDocs in the tool) */
   saveDoc(tool, pid, o) { return saveDoc(tool, pid, o || {}); },
+  /* paperwork made outside the hub (e.g. attached to a task on the Task Board): o.folder picks the Documentation folder.
+     Resolves to the new entry ({id, name, ext, link…}) or null */
+  uploadDoc(tool, pid, o) { o = o || {}; return uploadDoc(o.folder && isDocFolder(o.folder) ? o.folder : tool, pid, o); },
+  async openDoc(pid, id) { const d = (await docsAll(pid)).find(x => x.id === id && !x.deleted); if (!d) { toast('That document is no longer in Documentation'); return false; } await docOpen(d); return true; },
+  async docInfo(pid, ids) { const want = new Set(ids || []); return (await docsAll(pid)).filter(d => want.has(d.id)).map(docPublic); },
+  docFolders() { return [{id: OTHER_DOCS, name: 'Other paperwork'}].concat(tools().filter(t => DOC_TYPES[t.id]).map(t => ({id: t.id, name: t.name, kinds: docKinds(t.id)}))); },
   /* a personal tool (My Research) changed: send it to the person's own Drive shortly */
   personalChanged() { researchChanged(); },
   /* a tool's Focus mode (e.g. Script Lining on a phone): hide the top bar and tab strip while that tool is showing.
@@ -928,7 +934,8 @@ let sh = {props: {}, at: 0, lost: false}, myReq = null, reqShown = null, tickBus
 const whoAmI = () => account ? {email: account.email, name: account.name || account.email} : null;
 const sharedCur = () => { const p = cur(); return p && p.shared && p.driveFileId && !p.needsDownload ? p : null; };
 const isOwner = p => !!p && !p.sharedBy;
-const toolName = id => (byId(id) || {}).name || id;
+const OTHER_DOCS = 'other';
+const toolName = id => id === OTHER_DOCS ? 'Other paperwork' : (byId(id) || {}).name || id;   /* OTHER_DOCS: Documentation's own folder, see "Documentation" */
 const firstName = l => String((l && (l.name || l.email)) || 'Someone').split(/[\s@]/)[0];
 function dirtyTools(p) {
   const out = new Set(), d = p && p.dirty; if (!d) return out;
@@ -2063,6 +2070,15 @@ function fthProjectShim(cfg) {
         if (r && typeof r.then === 'function') { busy = true; onlyT = setTimeout(off, 120000); r.then(off, off); } else onlyT = setTimeout(off, 1500);
         return r;
       },
+      /* paperwork made outside the hub (the Task Board's "Paperwork" on each task):
+           upload({blob, filename} or {link}, name, type, folder, task: {id, title})  → Promise of the new entry, or null
+           open(id) shows it (a link opens in a new tab); info([ids]) → Promise of the entries still listed;
+           folders() → the Documentation folders [{id, name}]; readOnly() → true while someone else holds this tool */
+      upload: function (o) { if (ro()) return Promise.resolve(null); try { return Promise.resolve(hub.uploadDoc(tool, P, o || {})).catch(function () { return null; }); } catch (e) { return Promise.resolve(null); } },
+      open: function (id) { try { return Promise.resolve(hub.openDoc(P, id)); } catch (e) { return Promise.resolve(false); } },
+      info: function (ids) { try { return Promise.resolve(hub.docInfo(P, ids)).catch(function () { return []; }); } catch (e) { return Promise.resolve([]); } },
+      folders: function () { try { return hub.docFolders(); } catch (e) { return []; } },
+      readOnly: function () { return ro(); },
       /* turn a (hidden) button into "Save to Documentation": one export saves straight away, several open a small menu */
       attach: function (btn, items, label) {
         if (!btn || !items) return;
@@ -2566,7 +2582,7 @@ function helpDialog() {
       <li><b>Task Board.</b> The <b>Task Board</b> button in the top bar opens the project’s tasks from anywhere in the hub. Give tasks to your crew and they appear on each person’s <b>My work</b>.</li>
       <li><b>Light or dark.</b> The sun/moon button in the top bar switches the hub and every tool at once.</li>
       <li><b>Projects.</b> Pick a project in the top bar and every tool files its work under it, so you can move between tools on the same film. Archive projects you’ve finished with.</li>
-      <li><b>Documentation.</b> The <b>Documentation</b> button in the top bar opens a folder for each tool. Whenever you export from a tool (a PDF, spreadsheet or picture), a copy is filed there as a new draft, so the whole project’s paperwork is in one place. Each tool also has a <b>Save to Documentation</b> button, for saving a draft without downloading it.</li>
+      <li><b>Documentation.</b> The <b>Documentation</b> button in the top bar opens a folder for each tool. Whenever you export from a tool (a PDF, spreadsheet or picture), a copy is filed there as a new draft, so the whole project’s paperwork is in one place. Each tool also has a <b>Save to Documentation</b> button, for saving a draft without downloading it. Made something another way? Upload the file, or paste a link to it, into the tool’s folder (under <b>Your own versions</b>) or into <b>Other paperwork</b>. Tasks on the Task Board can carry paperwork too.</li>
       <li><b>Saving and backups.</b> Your work saves in this browser as you go. Press <b>Save</b> (or Ctrl/⌘+S) to store the project’s main copy${driveOn() ? '; sign in with Google to keep it in your own Google Drive and carry on from any computer' : ''}. Backups are taken every few minutes while you work. Bring one back from Manage projects → Backups.</li>
       ${driveOn() ? `<li><b>Sharing with your crew.</b> Sign in, press <b>Share</b> and type your crew’s email addresses. They open the link Google emails them, and the project appears under “Shared with me”. One person edits a tool at a time; everyone else can view it and press <b>Request to edit</b>. Press Save to send your changes to the crew.</li>` : ''}
     </ol>${admin}</div>
@@ -2619,8 +2635,23 @@ const DOC_TYPES = {
   callsheet: ['Call Sheet PDF', 'Call Sheet Excel'],
   risk: ['Risk Assessment PDF', 'Risk Assessment Excel']
 };
-const DOC_KEEP_MS = 30 * 864e5, SHARED_DOC_CAP = 200 * 1024 * 1024;
-const DOC_PUBLIC = ['id', 'tool', 'type', 'group', 'name', 'ext', 'mime', 'size', 'at', 'mod', 'draft', 'page', 'by', 'deleted', 'signed'];
+const DOC_KEEP_MS = 30 * 864e5, SHARED_DOC_CAP = 200 * 1024 * 1024, UPLOAD_MAX = 100 * 1024 * 1024, UPLOAD_MAX_FILES = 50;
+/* Paperwork made outside the hub (added 20 November 2026). People can upload a file, or add a link, either to
+   "Other paperwork" (OTHER_DOCS, for paperwork no tool makes) or to a tool's folder, as their own version of what
+   that tool would export. These entries have src: 'upload'; a link has link: 'https://…' and no file. A file or link
+   attached to a task on the Task Board is filed the same way, with task: {id, title}. */
+const OTHER_TYPES = ['Contract', 'Release form', 'Location agreement', 'Permit', 'Insurance', 'Treatment', 'Pitch deck', 'Storyboard', 'Script', 'Production notes', 'Invoice or receipt', 'Document'];
+const isDocFolder = id => id === OTHER_DOCS || !!byId(id);
+/* what someone's own version of a tool's export is called: "Call Sheet PDF" → "Call Sheet" */
+const docKinds = tool => tool === OTHER_DOCS ? OTHER_TYPES : [...new Set((DOC_TYPES[tool] || []).map(t => t.replace(/\s*(\((Fountain|Final Draft)\)|PDF|Excel|CSV|PNG|JPG|SVG)$/i, '').trim()).filter(Boolean)), 'Document'];
+/* a pasted link: only web addresses, with https:// added when it was left off */
+function cleanLink(s) {
+  s = String(s || '').trim(); if (!s) return null;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) s = 'https://' + s.replace(/^\/+/, '');
+  try { const u = new URL(s); return /^https?:$/.test(u.protocol) && (u.hostname.includes('.') || u.hostname === 'localhost') ? u.href : null; } catch (e) { return null; }
+}
+const linkName = url => { try { const u = new URL(url), last = decodeURIComponent(u.pathname.split('/').filter(Boolean).pop() || ''); return u.hostname.replace(/^www\./, '') + (last && last.length < 60 ? ' · ' + last : ''); } catch (e) { return 'Link'; } };
+const DOC_PUBLIC = ['id', 'tool', 'type', 'group', 'name', 'ext', 'mime', 'size', 'at', 'mod', 'draft', 'page', 'by', 'deleted', 'signed', 'src', 'link', 'task'];
 const docPublic = d => { const o = {}; DOC_PUBLIC.forEach(k => { if (d[k] !== undefined) o[k] = d[k]; }); return o; };
 let docCache = [], docsOpen = false, docsTool = null, docDirs = new Map();
 const docsOlder = new Set();
@@ -2641,7 +2672,7 @@ async function docsLoad() {
   for (const d of list) if (d.deleted && !d.purged && Date.now() - d.deleted > DOC_KEEP_MS) { await delBytes(d.id); d.purged = true; await patchDoc(d.id, {purged: true}); }
   return (docCache = list);
 }
-async function docsRefresh() { docsOlder.clear(); await msgsLoad(); renderConv(); renderMe(); await docsLoad(); if (docsOpen) { if (docsTool && !byId(docsTool)) docsTool = null; renderDocs(); docsSendSoon(cur(), 200, true); } }
+async function docsRefresh() { docsOlder.clear(); await msgsLoad(); renderConv(); renderMe(); await docsLoad(); if (docsOpen) { if (docsTool && !isDocFolder(docsTool)) docsTool = null; renderDocs(); docsSendSoon(cur(), 200, true); } }
 async function docsWipe(pid) { for (const d of await docsAll(pid)) { await delBytes(d.id); await store.gtx('docs', 'readwrite', s => s.delete(d.id)).catch(() => {}); } docDirs.delete(pid); }
 const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(n >= 10485760 ? 0 : 1) + ' MB' : n >= 1024 ? Math.round(n / 1024) + ' KB' : (n || 0) + ' B';
 const fmtStamp = t => new Date(t).toLocaleDateString(undefined, {day: 'numeric', month: 'short', year: 'numeric'}) + ', ' + new Date(t).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
@@ -2673,38 +2704,55 @@ function prunePage(html) {
 
 let persistAsked = false;
 async function storageUse() { try { const e = await navigator.storage.estimate(); return e && e.quota ? {used: e.usage || 0, quota: e.quota, pct: (e.usage || 0) / e.quota} : null; } catch (e) { return null; } }
-async function saveDoc(tool, pid, o) {
+async function saveDoc(tool, pid, o) { return !!(await addDoc(tool, pid, o)); }
+/* files and links people bring in themselves (Documentation's Upload, and the Task Board's paperwork): the new entry, or null */
+async function uploadDoc(tool, pid, o) {
+  o = o || {};
+  if (o.blob && isBlob(o.blob) && o.blob.size > UPLOAD_MAX) { toastLong(`“${o.filename || o.name || 'That file'}” is ${fmtSize(o.blob.size)}. Files up to ${fmtSize(UPLOAD_MAX)} can be uploaded; for anything bigger, add a link to it instead (for example from Google Drive or Dropbox).`); return null; }
+  const r = await addDoc(tool, pid, {...o, type: o.type || (tool === OTHER_DOCS ? 'Document' : docKinds(tool)[0]), src: 'upload'});
+  return r ? docPublic(r) : null;
+}
+async function addDoc(tool, pid, o) {
   const p = projById(pid) || cur();
-  if (!p || !byId(tool)) return false;
+  if (!p || !isDocFolder(tool)) return null;
   try {
     if (!store.persistent) throw new Error('This browser is blocking storage, so documents can’t be kept');
-    let blob, page = false;
-    if (o.page != null) { blob = new Blob([await prunePage(String(o.page))], {type: 'text/html'}); page = true; }
+    let blob = null, page = false, link = null;
+    if (o.link != null) { link = cleanLink(o.link); if (!link) throw new Error('That doesn’t look like a web address. Copy the whole link, starting https://'); }
+    else if (o.page != null) { blob = new Blob([await prunePage(String(o.page))], {type: 'text/html'}); page = true; }
     else if (isBlob(o.blob)) blob = new Blob([await o.blob.arrayBuffer()], {type: o.blob.type || o.mime || ''});   /* a copy of our own: the tool that made it may close */
     else if (o.data != null) blob = new Blob([o.data], {type: o.mime || ''});
     else throw new Error('There was nothing to save');
     const fn = String(o.filename || ''), m = fn.match(/\.([a-z0-9]{1,8})$/i);
-    const ext = page ? 'html' : String(o.ext || (m ? m[1] : '')).toLowerCase();
-    const name = String(o.name || (m ? fn.slice(0, -m[0].length) : fn) || toolName(tool)).replace(/\s+/g, ' ').trim().slice(0, 120) || toolName(tool);
-    const type = String(o.type || 'Document').slice(0, 60), group = String(o.group || type).slice(0, 140);
-    const mime = page ? 'text/html' : (DOC_MIME[ext] || blob.type || o.mime || 'application/octet-stream');
+    const ext = link ? '' : page ? 'html' : String(o.ext || (m ? m[1] : '')).toLowerCase();
+    const name = String(o.name || (m ? fn.slice(0, -m[0].length) : fn) || (link && linkName(link)) || toolName(tool)).replace(/\s+/g, ' ').trim().slice(0, 120) || toolName(tool);
+    const src = o.src === 'upload' ? 'upload' : undefined;
+    const type = String(o.type || 'Document').replace(/\s+/g, ' ').trim().slice(0, 60) || 'Document';
+    /* uploading again with the same name and kind adds the next draft of it, as exports do */
+    const group = String(o.group || (src ? 'upload|' + type.toLowerCase() + '|' + name.toLowerCase() : type)).slice(0, 200);
+    const mime = link ? 'text/uri-list' : page ? 'text/html' : (DOC_MIME[ext] || blob.type || o.mime || 'application/octet-stream');
+    const size = blob ? blob.size : 0;
     const all = await docsAll(p.id);
-    if (p.shared) {
+    if (p.shared && size) {
       const total = all.filter(d => !d.deleted).reduce((n, d) => n + (d.size || 0), 0);
-      if (total + blob.size > SHARED_DOC_CAP) throw new Error('This shared project’s Documentation is full (about 200 MB, so saving stays quick for your crew). Delete some older drafts, then save again');
+      if (total + size > SHARED_DOC_CAP) throw new Error('This shared project’s Documentation is full (about 200 MB, so saving stays quick for your crew). Delete some older drafts' + (src ? ', or add a link to the file instead' : '') + ', then save again');
     }
     const draft = 1 + all.filter(d => d.tool === tool && d.group === group).reduce((n, d) => Math.max(n, d.draft || 0), 0), now = Date.now();
-    const rec = {id: 'd' + now.toString(36) + Math.random().toString(36).slice(2, 7), projectId: p.id, tool, type, group, name, ext, mime, size: blob.size, at: now, mod: now, draft, page, by: whoAmI(), deleted: 0};
-    await putBytes(rec.id, blob); await putDoc(rec);
+    const rec = {id: 'd' + now.toString(36) + Math.random().toString(36).slice(2, 7), projectId: p.id, tool, type, group, name, ext, mime, size, at: now, mod: now, draft, page, by: whoAmI(), deleted: 0};
+    if (src) rec.src = src;
+    if (link) rec.link = link;
+    if (o.task && o.task.id) rec.task = {id: String(o.task.id).slice(0, 60), title: String(o.task.title || '').slice(0, 120)};
+    if (blob) await putBytes(rec.id, blob);
+    await putDoc(rec);
     if (!persistAsked) { persistAsked = true; try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) {} }
     await docsChanged(p);
-    if (!o.quiet) toast('Saved to Documentation');
-    storageUse().then(u => { if (u && u.pct > .8 && !(driveOn() && account)) toastLong(`Saved to Documentation, but this browser’s storage is ${Math.round(u.pct * 100)}% full. Open Documentation, download what you need to keep and delete older drafts.`); });
-    return true;
+    if (!o.quiet) toast(link ? 'Link added to Documentation' : 'Saved to Documentation');
+    if (blob) storageUse().then(u => { if (u && u.pct > .8 && !(driveOn() && account)) toastLong(`Saved to Documentation, but this browser’s storage is ${Math.round(u.pct * 100)}% full. Open Documentation, download what you need to keep and delete older drafts.`); });
+    return rec;
   } catch (e) {
     const full = e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''));
     toastLong(full ? 'Couldn’t save to Documentation: this browser’s storage is full. Open Documentation and delete older drafts to make room.' : 'Couldn’t save to Documentation. ' + ((e && e.message) || e) + '.');
-    return false;
+    return null;
   }
 }
 /* after any change to the documents: refresh the page, mark the project changed, and send it where it's kept */
@@ -2747,7 +2795,7 @@ async function docsPull(p) {
     if (d) { if (!d.driveId) await patchDoc(id, {driveId: f.id, driveName: f.name, driveAt: now}); continue; }
     let m = {}; try { m = JSON.parse(f.description || '{}') || {}; } catch (e) {}
     const ext = (f.name.match(/\.([a-z0-9]{1,8})$/i) || [])[1] || '', at = Date.parse(f.modifiedTime) || now;
-    await putDoc({tool: 'other', type: 'Document', group: 'Document', name: f.name, ext: ext.toLowerCase(), mime: f.mimeType, at, mod: at, draft: 1, page: false, by: null, ...docPublic(m),
+    await putDoc({tool: OTHER_DOCS, type: 'Document', group: 'Document', name: f.name, ext: ext.toLowerCase(), mime: f.mimeType, at, mod: at, draft: 1, page: false, by: null, ...docPublic(m),
       id, projectId: p.id, size: +f.size || m.size || 0, deleted: 0, driveId: f.id, driveName: f.name, driveAt: now});
   }
   /* gone from Drive (deleted on another computer, or binned in Drive itself)? Ask about each one before believing it */
@@ -2759,6 +2807,7 @@ async function docsPull(p) {
 }
 /* a document's file: from this browser, or fetched from the Drive folder the first time it's opened here */
 async function docBytes(d) {
+  if (d.link) return null;   /* a link has no file of its own */
   let b = await getBytes(d.id); if (b) return b;
   if (!d.driveId && hasToken() && !(projById(d.projectId) || {}).sharedBy) {   /* listed from a save made elsewhere: find its file in the Drive folder */
     try { const f = (await findFiles(byProp('fth', 'doc') + ' and ' + byProp('doc', d.id), 'id,name'))[0]; if (f) { d.driveId = f.id; await patchDoc(d.id, {driveId: f.id, driveName: f.name, driveAt: Date.now()}); } } catch (e) {}
@@ -2826,12 +2875,18 @@ const DOCI = {
   folder: P('<path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>'),
   back: P('<path d="M19 12H5M11 6l-6 6 6 6"/>'),
   eye: P('<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>'),
-  print: P('<path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v6H7z"/>')
+  print: P('<path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v6H7z"/>'),
+  link: P('<path d="M10 14a4.2 4.2 0 0 0 6 0l3-3a4.2 4.2 0 0 0-6-6l-1 1"/><path d="M14 10a4.2 4.2 0 0 0-6 0l-3 3a4.2 4.2 0 0 0 6 6l1-1"/>'),
+  copy: P('<rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/>'),
+  stack: P('<path d="M7 3.5h7.5l4 4V17a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 17V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M14.5 3.5v4h4"/><path d="M8.5 20.5h9a2 2 0 0 0 2-2V9.5"/><path d="M8.5 11.5h6M8.5 14.5h4"/>')
 };
+/* "Other paperwork" isn't a tool or a stage: it has its own colour and sits below the stages */
+const OTHER_CAT = {id: OTHER_DOCS, num: '+', name: 'Other', color: '#c2a27c'};
 const docTools = () => tools().filter(t => DOC_TYPES[t.id] || liveDocs().some(d => d.tool === t.id));
 const docCount = n => `${n} document${n === 1 ? '' : 's'}`;
+const isUpload = d => d.src === 'upload';
 function showDocs(on, tool) {
-  docsOpen = on; docsTool = on && tool && byId(tool) ? tool : null;
+  docsOpen = on; docsTool = on && tool && isDocFolder(tool) ? tool : null;
   document.body.classList.toggle('docs-open', on);
   $('#docsPage').hidden = !on; $('#docsBtn').classList.toggle('on', on); $('#docsBtn').setAttribute('aria-pressed', on);
   if (!on) return;
@@ -2839,22 +2894,41 @@ function showDocs(on, tool) {
   renderDocs(); docsLoad().then(() => { renderDocs(); docsSendSoon(cur(), 100, true); });
 }
 function docRow(d, latest, older) {
-  const p = cur(), kind = d.page ? 'PRINT' : (d.ext || 'file').toUpperCase().slice(0, 5);
-  const waiting = driveOn() && account && p && !p.sharedBy && !d.driveId;
+  const p = cur(), kind = d.link ? 'LINK' : d.page ? 'PRINT' : (d.ext || 'file').toUpperCase().slice(0, 5);
+  const waiting = driveOn() && account && p && !p.sharedBy && !d.driveId && !d.link;
+  let host = ''; if (d.link) { try { host = new URL(d.link).hostname.replace(/^www\./, ''); } catch (e) {} }
+  const kindTip = d.link ? 'A link to a file kept somewhere else: ' + d.link : d.page ? 'Print-ready page: open it here, or use Save as PDF' : (d.ext || 'file').toUpperCase() + ' file';
   return `<div class="drow${older ? ' old' : ''}" data-doc="${esc(d.id)}">
-    <span class="dkind${d.page ? ' pg' : ''}" title="${d.page ? 'Print-ready page: open it here, or use Save as PDF' : esc((d.ext || 'file').toUpperCase() + ' file')}">${esc(kind)}</span>
-    <div class="dname"><b title="${esc(d.name)}">${esc(d.name)}</b><small><span class="dx">${esc(d.type)} · ${esc(fmtStamp(d.at))} · </span>${esc(fmtSize(d.size))}${d.by && d.by.name && p && p.shared ? ' · saved by ' + esc(whoName(d.by)) : ''}${d.signed ? ` · <b class="dsigned">signed off${d.signed.name ? ' by ' + esc(whoName(d.signed)) : ''}, ${esc(fmtStamp(d.signed.at))}</b>` : ''}${waiting ? ' · <i title="It will be sent to your Google Drive once Drive is connected">not in Drive yet</i>' : ''}</small></div>
+    <span class="dkind${d.page ? ' pg' : ''}${d.link ? ' lk' : ''}" title="${esc(kindTip)}">${esc(kind)}</span>
+    <div class="dname"><b title="${esc(d.name)}">${esc(d.name)}</b><small><span class="dx">${esc(d.type)} · ${esc(fmtStamp(d.at))} · </span>${d.link ? esc(host || 'link') : esc(fmtSize(d.size))}${isUpload(d) ? ` · ${d.link ? 'link' : 'uploaded'}${d.by && d.by.name && p && p.shared ? ' by ' + esc(whoName(d.by)) : ''}` : d.by && d.by.name && p && p.shared ? ' · saved by ' + esc(whoName(d.by)) : ''}${d.task && d.task.title ? ` · on the task “${esc(d.task.title)}”` : ''}${d.signed ? ` · <b class="dsigned">signed off${d.signed.name ? ' by ' + esc(whoName(d.signed)) : ''}, ${esc(fmtStamp(d.signed.at))}</b>` : ''}${waiting ? ' · <i title="It will be sent to your Google Drive once Drive is connected">not in Drive yet</i>' : ''}</small></div>
     <span class="dtype">${esc(d.type)}</span>
     <span class="dwhen">${esc(fmtStamp(d.at))}</span>
     <span class="ddraft">Draft ${d.draft}${latest ? '<em>Latest</em>' : ''}</span>
     <div class="dacts">
-      <button type="button" class="btn sm" data-da="open">${DOCI.eye}Open</button>
-      <button type="button" class="btn sm" data-da="down" title="${d.page ? 'Opens the print window: choose “Save as PDF”' : 'Download a copy to this computer'}">${d.page ? DOCI.print + 'Save as PDF' : UI.down + 'Download'}</button>
+      <button type="button" class="btn sm" data-da="open" title="${d.link ? 'Open the link in a new tab' : 'Open it here'}">${d.link ? UI.newtab : DOCI.eye}Open</button>
+      ${d.link ? `<button type="button" class="btn sm" data-da="copy" title="Copy the link, to paste somewhere else">${DOCI.copy}Copy link</button>`
+        : `<button type="button" class="btn sm" data-da="down" title="${d.page ? 'Opens the print window: choose “Save as PDF”' : 'Download a copy to this computer'}">${d.page ? DOCI.print + 'Save as PDF' : UI.down + 'Download'}</button>`}
       <button type="button" class="btn sm${d.signed ? ' signed' : ' ghost'}" data-da="sign" aria-pressed="${!!d.signed}" title="${d.signed ? 'Signed off. Click to take the sign-off back' : 'Sign off this draft: it’s checked and ready'}">${UI.check || ''}${d.signed ? 'Signed off' : 'Sign off'}</button>
       <button type="button" class="btn sm ghost" data-da="rename" title="Rename">${UI.edit}<span class="sr">Rename</span></button>
       <button type="button" class="btn sm ghost danger" data-da="delete" title="Delete">${UI.trash}<span class="sr">Delete</span></button>
     </div></div>`;
 }
+/* one folder's documents, each kind with its drafts (newest first, older ones folded away) */
+function docGroups(folder, list) {
+  const groups = new Map();
+  list.forEach(d => { if (!groups.has(d.group)) groups.set(d.group, []); groups.get(d.group).push(d); });
+  const gs = [...groups.values()].map(g => g.sort((a, b) => b.draft - a.draft || b.at - a.at)).sort((a, b) => b[0].at - a[0].at);
+  return `<div class="dlist"><div class="drow dcols" aria-hidden="true"><span></span><span>Name</span><span>Type</span><span>Saved</span><span>Draft</span><span></span></div>${gs.map(g => {
+    const key = folder + '|' + g[0].group, open = docsOlder.has(key), rest = g.slice(1);
+    return `<div class="dgroup">${docRow(g[0], true)}${rest.length ? `<button type="button" class="dmore" data-da="older" data-key="${esc(key)}" aria-expanded="${open}">${open ? 'Hide' : 'Show'} ${rest.length} older draft${rest.length === 1 ? '' : 's'}</button>${open ? rest.map(d => docRow(d, false, true)).join('') : ''}` : ''}</div>`;
+  }).join('')}</div>`;
+}
+/* the place to bring in paperwork made outside the hub: drop files on it, or use the buttons */
+const upZone = (folder, msg) => `<div class="dup" data-up="${esc(folder)}">
+    <div class="dup-ic">${UI.upload}</div>
+    <div class="dup-t"><b>${msg}</b><span>Drop files here, or upload them from this computer. For something kept elsewhere (Google Drive, Dropbox, a website), paste a link instead.</span></div>
+    <div class="dup-b"><button type="button" class="btn sm primary" data-da="upload">${UI.upload}Upload files</button><button type="button" class="btn sm" data-da="addlink">${DOCI.link}Paste a link</button></div>
+  </div>`;
 function renderDocs() {
   if (!docsOpen) return;
   const p = cur(), el = $('#docsWrap'); if (!p) return;
@@ -2872,35 +2946,54 @@ function renderDocs() {
       <div class="dmeta">${docCount(live.length)}${last ? ' · last updated ' + esc(fmtWhen(last)) : ''}</div>
       <p class="dwhere">${where}</p></div>`;
   const head = `<section class="dhero"><p class="eyebrow"><span>Project</span><span>${esc(p.name)}</span></p><h1>Documen<em>tation</em></h1>
-      <p class="lede">Every export and draft saved from the tools in this project, one folder per tool. Faded folders are still empty.</p></section>`;
+      <p class="lede">Every export and draft saved from the tools in this project, one folder per tool, plus any paperwork you bring in yourself. Faded folders are still empty.</p></section>`;
   let body = '';
-  if (docsTool) {
-    const t = byId(docsTool), c = catOf(t.category), mine = of(t.id), groups = new Map();
-    mine.forEach(d => { if (!groups.has(d.group)) groups.set(d.group, []); groups.get(d.group).push(d); });
-    const gs = [...groups.values()].map(g => g.sort((a, b) => b.draft - a.draft || b.at - a.at)).sort((a, b) => b[0].at - a[0].at);
+  if (docsTool === OTHER_DOCS) {
+    const mine = of(OTHER_DOCS), tlast = mine.reduce((m, d) => Math.max(m, d.at), 0);
+    body = `<a class="dback" href="#/docs">${DOCI.back}All folders</a>
+      <section class="section dfolder" style="--cat:${OTHER_CAT.color}">
+        <div class="sec-head"><div class="sec-num">${OTHER_CAT.num}</div><h2>Other paperwork</h2>
+          <p>${mine.length ? docCount(mine.length) + ' · last updated ' + esc(fmtWhen(tlast)) : 'Paperwork the tools don’t make: contracts, release forms, permits, insurance, a treatment or pitch deck…'}</p></div>
+        ${upZone(OTHER_DOCS, 'Add paperwork made outside Film Tool Hub')}
+        ${mine.length ? docGroups(OTHER_DOCS, mine) : ''}
+      </section>`;
+  } else if (docsTool) {
+    const t = byId(docsTool), c = catOf(t.category), mine = of(t.id), made = mine.filter(d => !isUpload(d)), own = mine.filter(isUpload);
     const tlast = mine.reduce((m, d) => Math.max(m, d.at), 0);
     body = `<a class="dback" href="#/docs">${DOCI.back}All folders</a>
       <section class="section dfolder" style="--cat:${c.color}">
         <div class="sec-head"><div class="sec-num">${esc(c.num)}</div><h2>${esc(t.name)}</h2>
           <p>${mine.length ? docCount(mine.length) + ' · last updated ' + esc(fmtWhen(tlast)) : 'Nothing saved here yet.'}</p></div>
         <div class="dtop"><a class="btn" href="#/tool/${encodeURIComponent(t.id)}">${UI.open}Open ${esc(t.name)}</a></div>
-        ${gs.length ? `<div class="dlist"><div class="drow dcols" aria-hidden="true"><span></span><span>Name</span><span>Type</span><span>Saved</span><span>Draft</span><span></span></div>${gs.map(g => {
-            const key = t.id + '|' + g[0].group, open = docsOlder.has(key), rest = g.slice(1);
-            return `<div class="dgroup">${docRow(g[0], true)}${rest.length ? `<button type="button" class="dmore" data-da="older" data-key="${esc(key)}" aria-expanded="${open}">${open ? 'Hide' : 'Show'} ${rest.length} older draft${rest.length === 1 ? '' : 's'}</button>${open ? rest.map(d => docRow(d, false, true)).join('') : ''}` : ''}</div>`;
-          }).join('')}</div>`
-        : `<div class="empty">No documents in this folder yet.<br>Export from ${esc(t.name)}, or use its <b>Save to Documentation</b> button, and they appear here${DOC_TYPES[t.id] ? ':<br><span class="dcan">' + DOC_TYPES[t.id].map(esc).join(' · ') + '</span>' : '.'}</div>`}
+        ${made.length ? docGroups(t.id, made)
+        : `<div class="empty msmall">No exports from ${esc(t.name)} yet.<br>Export from ${esc(t.name)}, or use its <b>Save to Documentation</b> button, and they appear here${DOC_TYPES[t.id] ? ':<br><span class="dcan">' + DOC_TYPES[t.id].map(esc).join(' · ') + '</span>' : '.'}</div>`}
+        <div class="dsub"><h3>Your own versions</h3><p>${own.length ? docCount(own.length) + ' made outside Film Tool Hub.' : `Made this paperwork another way? Keep it here, beside what ${esc(t.name)} exports.`}</p></div>
+        ${upZone(t.id, `Upload your own ${esc(docKinds(t.id)[0].toLowerCase())}`)}
+        ${own.length ? docGroups(t.id + '|own', own) : ''}
       </section>`;
   } else {
     for (const c of CATS) {
       const list = tl.filter(t => catOf(t.category).id === c.id); if (!list.length) continue;
       body += `<section class="section" style="--cat:${c.color}"><div class="sec-head"><div class="sec-num">${esc(c.num)}</div><h2>${esc(c.name)}</h2><p>${list.filter(t => of(t.id).length).length} of ${list.length} folders have documents</p></div>
         <div class="grid dgrid">${list.map(t => {
-          const m = of(t.id), at = m.reduce((x, d) => Math.max(x, d.at), 0);
+          const m = of(t.id), at = m.reduce((x, d) => Math.max(x, d.at), 0), own = m.filter(isUpload).length;
           return `<a class="dfold${m.length ? '' : ' none'}" href="#/docs/${encodeURIComponent(t.id)}" style="--cat:${c.color}" title="${esc(t.name)}: ${m.length ? docCount(m.length) : 'nothing saved yet'}">
-            <span class="dtab"></span><div class="dfi">${ICONS[t.icon] || ICONS.generic}</div><h3>${esc(t.name)}</h3>
+            <span class="dtab"></span><div class="dfi">${ICONS[t.icon] || ICONS.generic}</div><h3>${esc(t.name)}</h3>${own ? `<small class="dfown">${own === m.length ? 'All your own versions' : `Includes ${own} of your own`}</small>` : ''}
             <div class="dfm">${m.length ? `<b>${docCount(m.length)}</b><span>Updated ${esc(fmtWhen(at))}</span>` : '<b>Empty</b><span>Nothing saved yet</span>'}</div></a>`;
         }).join('')}</div></section>`;
     }
+    const om = of(OTHER_DOCS), oat = om.reduce((x, d) => Math.max(x, d.at), 0);
+    body += `<section class="section dother" style="--cat:${OTHER_CAT.color}"><div class="sec-head"><div class="sec-num">${OTHER_CAT.num}</div><h2>Other</h2><p>Paperwork made outside Film Tool Hub: contracts, release forms, permits, insurance, anything the tools don’t make.</p></div>
+        <div class="grid dgrid">
+          <a class="dfold${om.length ? '' : ' none'}" href="#/docs/${OTHER_DOCS}" style="--cat:${OTHER_CAT.color}" title="Other paperwork: ${om.length ? docCount(om.length) : 'nothing saved yet'}">
+            <span class="dtab"></span><div class="dfi">${DOCI.stack}</div><h3>Other paperwork</h3>
+            <div class="dfm">${om.length ? `<b>${docCount(om.length)}</b><span>Updated ${esc(fmtWhen(oat))}</span>` : '<b>Empty</b><span>Nothing saved yet</span>'}</div></a>
+          <div class="dfold dupcard" data-up="${OTHER_DOCS}" style="--cat:${OTHER_CAT.color}">
+            <div class="dfi">${UI.upload}</div><h3>Add paperwork</h3>
+            <p>Drop files here, or:</p>
+            <div class="dup-b"><button type="button" class="btn sm primary" data-da="upload">Upload files</button><button type="button" class="btn sm" data-da="addlink">Paste a link</button></div>
+          </div>
+        </div></section>`;
   }
   el.innerHTML = head + strip + body;
   if ($('#docsQuota')) storageUse().then(u => { const q = $('#docsQuota'); if (!q || !u) return; q.innerHTML = u.pct > .8 ? ` <b class="dfull">This browser’s storage is ${Math.round(u.pct * 100)}% full.</b> Download what you need to keep and delete older drafts.` : ` This browser’s storage is ${Math.max(1, Math.round(u.pct * 100))}% full.`; });
@@ -2915,7 +3008,9 @@ function printPage(html) {
   f.onload = () => setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { toast('Couldn’t open the print window'); } setTimeout(() => f.remove(), 60000); }, 250);
   f.srcdoc = html; document.body.appendChild(f);
 }
+const openLink = url => { const w = window.open(url, '_blank', 'noopener'); if (w) try { w.opener = null; } catch (e) {} };
 async function docDownload(d) {
+  if (d.link) { openLink(d.link); return; }
   const b = await docBytes(d);
   if (!b) { toastLong(driveOn() && account && !hasToken() ? 'Reconnect Google Drive (account button, top right) to fetch this document.' : 'This document’s file isn’t on this computer.'); return; }
   if (d.page) { toast('In the print window, choose “Save as PDF”'); printPage(await b.text()); } else saveBlob(b, docFileName(d));
@@ -2934,6 +3029,7 @@ function csvRows(text, max) {
 }
 let viewUrl = null;
 async function docOpen(d) {
+  if (d.link) { openLink(d.link); return; }
   const b = await docBytes(d);
   if (!b) { toastLong(driveOn() && account && !hasToken() ? 'Reconnect Google Drive (account button, top right) to open this document.' : 'This document’s file isn’t on this computer.'); return; }
   const v = $('#docView'), body = $('#dvBody');
@@ -2966,13 +3062,98 @@ async function docOpen(d) {
 $('#docView').addEventListener('close', () => { $('#dvBody').innerHTML = ''; if (viewUrl) { URL.revokeObjectURL(viewUrl); viewUrl = null; } });
 $('#dvClose').onclick = () => $('#docView').close();
 window.addEventListener('resize', () => { const v = $('#docView'); if (v.open && v._fit) v._fit(); });
+/* ── bringing in paperwork made outside the hub: files (several at once, or a whole folder) or a link ── */
+const junkFile = f => /^(\.|~\$)|^(thumbs\.db|desktop\.ini)$/i.test(f.name) || !f.size;
+function uploadDialog(folder, mode, files, link) {
+  const p = cur(); if (!p || !isDocFolder(folder)) return;
+  const kinds = docKinds(folder), other = folder === OTHER_DOCS;
+  let pick = [...(files || [])].filter(f => !junkFile(f));
+  const where = other ? 'Other paperwork' : `${esc(toolName(folder))} · Your own versions`;
+  const kindF = `<div class="field"><label for="f-ukind">What is it?</label><input id="f-ukind" name="kind" list="upKinds" maxlength="60" autocomplete="off" ${other ? 'placeholder="Contract, release form, permit…"' : `value="${esc(kinds[0])}"`}>
+      <datalist id="upKinds">${kinds.map(k => `<option value="${esc(k)}">`).join('')}</datalist></div>`;
+  const nameF = `<div class="field" id="upNameF"><label for="f-uname">Name <span class="opt">(optional)</span></label><input id="f-uname" name="name" maxlength="120" autocomplete="off" placeholder="${mode === 'link' ? 'e.g. Location agreement, Main Street' : 'Leave blank to use the file’s name'}"></div>`;
+  showDlg(mode === 'link'
+    ? `<h3>Paste a link</h3><p class="sub">Into ${where}. For paperwork kept somewhere else, such as Google Drive, Dropbox or a website. Check the people who need it can open the link.</p>
+      <div class="field"><label for="f-ulink">Link</label><input id="f-ulink" name="link" required inputmode="url" autocomplete="off" placeholder="https://…" value="${esc(link || '')}"></div>
+      ${nameF}${kindF}
+      <div class="dlg-actions"><button class="btn ghost" value="cancel">Cancel</button><button class="btn primary" value="ok">Add link</button></div>`
+    : `<h3>Upload paperwork</h3><p class="sub">Into ${where}. Any kind of file, up to ${fmtSize(UPLOAD_MAX)} each.</p>
+      <div class="field"><label>Files</label><div class="dupick" id="upPick"></div>
+        <div class="dup-b"><button type="button" class="btn sm" id="upChoose">${UI.upload}Choose files</button><button type="button" class="btn sm ghost" id="upDir">Choose a folder</button></div>
+        <input type="file" id="upFiles" multiple hidden><input type="file" id="upDirIn" webkitdirectory multiple hidden></div>
+      ${nameF}${kindF}
+      <div class="dlg-actions"><button class="btn ghost" value="cancel">Cancel</button><button class="btn primary" value="ok" id="upGo">Upload</button></div>`,
+  fd => {
+    const kind = String(fd.get('kind') || '').trim() || 'Document', name = String(fd.get('name') || '').replace(/\s+/g, ' ').trim();
+    if (mode === 'link') {
+      const url = cleanLink(fd.get('link'));
+      if (!url) { const i = $('#f-ulink'); i.setCustomValidity('Paste the whole web address, starting https://'); i.reportValidity(); i.oninput = () => i.setCustomValidity(''); return false; }
+      uploadDoc(folder, p.id, {link: url, name: name || undefined, type: kind});
+      return;
+    }
+    if (!pick.length) { toast('Choose a file to upload first'); return false; }
+    const list = pick.slice(0, UPLOAD_MAX_FILES), one = list.length === 1;
+    (async () => {
+      let n = 0;
+      for (const f of list) if (await uploadDoc(folder, p.id, {blob: f, filename: f.name, name: one && name ? name : undefined, type: kind, quiet: true})) n++;
+      if (n) toast(`${n === 1 ? (one ? `“${list[0].name}”` : '1 file') : n + ' files'} added to ${toolName(folder)}`);
+      if (pick.length > UPLOAD_MAX_FILES) toastLong(`Only the first ${UPLOAD_MAX_FILES} files were uploaded. Upload the rest in a second go.`);
+    })();
+  });
+  if (mode === 'link') { const i = $('#f-ulink'); if (link) { const k = $('#f-uname'); k.focus(); } else i.focus(); return; }
+  const show = () => {
+    const box = $('#upPick'); if (!box) return;
+    box.innerHTML = pick.length ? pick.slice(0, 8).map((f, i) => `<div class="dupf"><span class="dkind">${esc(((f.name.match(/\.([a-z0-9]{1,8})$/i) || [])[1] || 'file').toUpperCase().slice(0, 5))}</span><b title="${esc(f.webkitRelativePath || f.name)}">${esc(f.name)}</b><small>${esc(fmtSize(f.size))}${f.size > UPLOAD_MAX ? ' · too big' : ''}</small><button type="button" class="btn sm ghost" data-rm="${i}" title="Leave this one out">${UI.close}<span class="sr">Leave out</span></button></div>`).join('')
+        + (pick.length > 8 ? `<p class="dupmore">and ${pick.length - 8} more</p>` : '')
+      : `<p class="dupnone">No files chosen yet. You can also drop them here.</p>`;
+    $('#upNameF').hidden = pick.length > 1;
+    $('#upGo').textContent = pick.length > 1 ? `Upload ${Math.min(pick.length, UPLOAD_MAX_FILES)} files` : 'Upload';
+  };
+  const add = fl => { pick = pick.concat([...fl].filter(f => !junkFile(f))); show(); };
+  $('#upChoose').onclick = () => $('#upFiles').click();
+  $('#upDir').onclick = () => $('#upDirIn').click();
+  $('#upFiles').onchange = e => { add(e.target.files); e.target.value = ''; };
+  $('#upDirIn').onchange = e => { add(e.target.files); e.target.value = ''; };
+  $('#upPick').onclick = e => { const r = e.target.closest('[data-rm]'); if (r) { pick.splice(+r.dataset.rm, 1); show(); } };
+  const box = $('#upPick');
+  box.ondragover = e => { e.preventDefault(); box.classList.add('over'); };
+  box.ondragleave = () => box.classList.remove('over');
+  box.ondrop = e => { e.preventDefault(); box.classList.remove('over'); if (e.dataTransfer.files.length) add(e.dataTransfer.files); };
+  show();
+  if (!pick.length) $('#upChoose').focus(); else if ($('#f-ukind')) $('#f-ukind').focus();
+}
+const droppedLink = dt => { const u = (dt.getData('text/uri-list') || '').split(/\r?\n/).find(l => l && !l.startsWith('#')) || dt.getData('text/plain'); return cleanLink(u && !/\s/.test(u.trim()) ? u : ''); };
+/* drop files (or a link) on a folder's upload area */
+$('#docsPage').addEventListener('dragover', e => {
+  const z = e.target.closest('[data-up]'); if (!z) return;
+  e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+  document.querySelectorAll('#docsPage [data-up].over').forEach(x => { if (x !== z) x.classList.remove('over'); }); z.classList.add('over');
+});
+$('#docsPage').addEventListener('dragleave', e => { const z = e.target.closest('[data-up]'); if (z && !z.contains(e.relatedTarget)) z.classList.remove('over'); });
+$('#docsPage').addEventListener('drop', e => {
+  const z = e.target.closest('[data-up]'); if (!z) return;
+  e.preventDefault(); z.classList.remove('over');
+  if (e.dataTransfer.files.length) uploadDialog(z.dataset.up, 'file', e.dataTransfer.files);
+  else { const u = droppedLink(e.dataTransfer); if (u) uploadDialog(z.dataset.up, 'link', null, u); }
+});
+/* paste a link (or a copied file) anywhere on the Documentation page */
+document.addEventListener('paste', e => {
+  if (!docsOpen || dlg.open || $('#docView').open) return;
+  const t = e.target; if (t && t.closest && t.closest('input,textarea,select,[contenteditable]')) return;
+  const folder = docsTool || OTHER_DOCS, cd = e.clipboardData; if (!cd) return;
+  if (cd.files && cd.files.length) { e.preventDefault(); uploadDialog(folder, 'file', cd.files); return; }
+  const u = cleanLink(/^\S+$/.test((cd.getData('text/plain') || '').trim()) ? cd.getData('text/plain') : '');
+  if (u) { e.preventDefault(); uploadDialog(folder, 'link', null, u); }
+});
 $('#docsPage').addEventListener('click', async e => {
   const b = e.target.closest('[data-da]'); if (!b) return;
   const a = b.dataset.da;
   if (a === 'older') { const k = b.dataset.key; if (docsOlder.has(k)) docsOlder.delete(k); else docsOlder.add(k); renderDocs(); return; }
+  if (a === 'upload' || a === 'addlink') { const z = b.closest('[data-up]'); uploadDialog(z ? z.dataset.up : (docsTool || OTHER_DOCS), a === 'addlink' ? 'link' : 'file'); return; }
   const row = b.closest('[data-doc]'), d = row && docCache.find(x => x.id === row.dataset.doc), p = cur(); if (!d || !p) return;
   if (a === 'open') docOpen(d);
   if (a === 'down') docDownload(d);
+  if (a === 'copy') { try { await navigator.clipboard.writeText(d.link); toast('Link copied'); } catch (er) { showDlg(`<h3>Copy the link</h3><div class="field"><input id="f-clink" readonly value="${esc(d.link)}"></div><div class="dlg-actions"><button class="btn primary" value="cancel">Done</button></div>`); const i = $('#f-clink'); if (i) i.select(); } }
   if (a === 'sign') {
     const now = Date.now();
     await patchDoc(d.id, {signed: d.signed ? null : {...(whoAmI() || {}), at: now}, mod: now}); await docsChanged(p);

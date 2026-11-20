@@ -2,7 +2,7 @@
    Set FTH_TEST_LIBS to a folder holding local copies of the PDF/Excel libraries to include those steps (see test1.js). */
 const { spawnSync } = require('child_process'), path = require('path');
 let failed = 0;
-for (const file of ['test1.js', 'test2.js', 'test3.js']) {
+for (const file of ['test1.js', 'test2.js', 'test3.js', 'test4.js']) {
   const r = spawnSync(process.execPath, [path.join(__dirname, file)], { stdio: 'inherit' });
   if (r.status !== 0) failed++;
 }

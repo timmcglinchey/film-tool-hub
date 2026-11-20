@@ -184,6 +184,7 @@ button.tb-chip[aria-pressed="true"]{background:var(--fth-accent-soft);border-col
 /* a task, as shown on the board and the timeline */
 .tb-item{display:flex;gap:10px;align-items:flex-start;background:var(--fth-surface);border:1px solid var(--fth-line2);border-radius:10px;padding:10px 12px;cursor:pointer;box-shadow:var(--fth-shadow-sm);transition:border-color .15s}
 .tb-item:hover{border-color:var(--fth-line3)}
+.tb-item.filedrop{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
 .tb-item.overdue{border-color:color-mix(in srgb,var(--fth-bad) 55%,transparent);background:color-mix(in srgb,var(--fth-bad) 7%,var(--fth-surface));box-shadow:inset 3px 0 0 var(--fth-bad)}
 .tb-item-main{min-width:0;flex:1;display:flex;flex-direction:column;gap:6px}
 .tb-item-title{font:600 14.5px/1.3 var(--fth-display);overflow-wrap:anywhere}
@@ -269,6 +270,30 @@ button.tb-chip[aria-pressed="true"]{background:var(--fth-accent-soft);border-col
 .tb-who-add{display:flex;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid var(--fth-line)}
 .tb-who-add .fth-btn{height:auto;flex:none}
 
+/* paperwork on a task: files and links, kept in the project's Documentation inside the hub */
+.tb-chip.clip svg{width:12px;height:12px;flex:none}
+.tb-files{display:flex;flex-direction:column;gap:4px;border:1px dashed var(--fth-line2);border-radius:8px;padding:6px;background:var(--fth-bg2);transition:border-color .15s,background-color .15s}
+.tb-files.over{border-color:var(--fth-accent);border-style:solid;background:var(--fth-accent-soft)}
+.tb-files-empty{padding:6px 6px;font-size:13px;color:var(--fth-muted)}
+.tb-file{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:9px;align-items:center;padding:4px 4px 4px 6px;border-radius:6px}
+.tb-file:hover{background:var(--fth-surface2)}
+.tb-file-kind{min-width:40px;text-align:center;padding:3px 4px;border-radius:5px;font:600 9.5px/1.2 var(--fth-mono);letter-spacing:.05em;color:var(--fth-accent-ink);background:var(--fth-accent-soft);border:1px solid var(--fth-accent-line)}
+.tb-file-kind.lk{color:var(--fth-text);background:var(--fth-surface2);border-color:var(--fth-line3)}
+.tb-file-kind.new{color:var(--fth-muted);background:transparent;border-style:dashed;border-color:var(--fth-line3)}
+.tb-file-main{min-width:0;display:flex;flex-direction:column;gap:2px}
+.tb-file-name{all:unset;cursor:pointer;font:600 13.5px/1.3 var(--fth-display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fth-text)}
+.tb-file-name:hover{text-decoration:underline}
+.tb-file-name:focus-visible{outline:2px solid var(--fth-accent);outline-offset:1px;border-radius:3px}
+.tb-file-meta{font:500 10.5px/1.2 var(--fth-mono);color:var(--fth-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-file-meta.gone{color:var(--fth-warn)}
+.tb-file .x{border:0;background:transparent;color:var(--fth-faint);font-size:17px;line-height:1;cursor:pointer;padding:2px 6px;border-radius:4px}
+.tb-file .x:hover{color:var(--fth-bad)}
+.tb-file-add{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.tb-link-add{display:flex;gap:6px}
+.tb-link-add .fth-btn{height:auto;flex:none}
+.tb-file-where{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12.5px;color:var(--fth-muted)}
+.tb-file-where select{width:auto;max-width:240px;height:30px;padding:0 8px;font-size:12.5px}
+
 @media (max-width:820px){
   main{padding:14px 14px 60px}
   .tb-board{grid-template-columns:1fr}
@@ -337,6 +362,17 @@ button.tb-chip[aria-pressed="true"]{background:var(--fth-accent-soft);border-col
       <div class="tb-depts" id="deptList"></div>
       <div class="tb-dept-add"><input class="fth-input" id="deptNew" maxlength="40" placeholder="Another department" aria-label="Add another department"><button type="button" class="fth-btn sm" id="deptAdd">Add</button></div>
     </div>
+    <div class="tb-field">
+      <span class="fth-label" id="filesLbl">Paperwork <span class="tb-opt">(optional: files or links, e.g. your own call sheet or a signed release)</span></span>
+      <div class="tb-files" id="fileList" aria-labelledby="filesLbl"></div>
+      <div class="tb-file-add">
+        <button type="button" class="fth-btn sm" id="fileUp">Upload a file</button>
+        <button type="button" class="fth-btn sm" id="linkBtn">Paste a link</button>
+        <input type="file" id="fileIn" multiple hidden>
+      </div>
+      <div class="tb-link-add" id="linkRow" hidden><input class="fth-input" id="linkNew" inputmode="url" placeholder="Paste a link, e.g. https://drive.google.com/…" aria-label="Paste a link"><button type="button" class="fth-btn sm" id="linkAdd">Add</button></div>
+      <div class="tb-file-where" id="fileWhere" hidden><label for="fileFolder">Also kept in Documentation, in</label><select class="fth-input" id="fileFolder"></select></div>
+    </div>
     <div class="tb-two">
       <div class="tb-field"><label class="fth-label" for="fDue">Due date</label><input class="fth-input" id="fDue" type="date"></div>
       <div class="tb-field"><span class="fth-label">Status</span>
@@ -395,8 +431,12 @@ function toast(msg) { const t = document.getElementById('toast'); t.textContent 
 /* ═════ TASK BOARD ═════
    What gets saved (under STORE_KEY):
    { v:1, view:'board'|'calendar'|'timeline', hideDone:true|false, people:[names typed before],
-     tasks:[{ id, title, details, who:[names], depts:[department names], due:'YYYY-MM-DD' or '', status:'todo'|'doing'|'done' }] }
-   Older saves without hideDone or depts still open: they are treated as "show done" and "no department".
+     docFolder: the Documentation folder new paperwork goes into ('other' = Other paperwork, or a tool's id),
+     tasks:[{ id, title, details, who:[names], depts:[department names], due:'YYYY-MM-DD' or '', status:'todo'|'doing'|'done',
+              files:[{doc, name, ext, link, folder, at}] }] }
+   files is the task's paperwork. Inside the hub each file or link is kept in the project's Documentation and doc is its id
+   there; on its own (no hub) the tool can only keep links, with doc ''.
+   Older saves without hideDone, depts or files still open: they are treated as "show done", "no department" and "no paperwork".
    The order of tasks in the list is the order they appear in on the board. */
 const STATUSES = [{id: 'todo', label: 'To do'}, {id: 'doing', label: 'In progress'}, {id: 'done', label: 'Done'}];
 const statusLabel = id => (STATUSES.find(s => s.id === id) || STATUSES[0]).label;
@@ -445,6 +485,7 @@ function normalise(d) {
   if (!d || typeof d !== 'object') return out;
   if (['board', 'calendar', 'timeline'].includes(d.view)) out.view = d.view;
   out.hideDone = !!d.hideDone;
+  if (typeof d.docFolder === 'string') out.docFolder = d.docFolder;
   if (Array.isArray(d.people)) out.people = d.people.map(n => String(n || '').trim()).filter(Boolean);
   if (Array.isArray(d.tasks)) out.tasks = d.tasks.filter(t => t && typeof t === 'object').map(t => ({
     ...t,
@@ -454,7 +495,9 @@ function normalise(d) {
     who: Array.isArray(t.who) ? t.who.map(n => String(n || '').trim()).filter(Boolean) : [],
     depts: Array.isArray(t.depts) ? t.depts.map(n => String(n || '').trim()).filter(Boolean) : [],
     due: /^\d{4}-\d{2}-\d{2}$/.test(t.due) ? t.due : '',
-    status: STATUSES.some(s => s.id === t.status) ? t.status : 'todo'
+    status: STATUSES.some(s => s.id === t.status) ? t.status : 'todo',
+    files: Array.isArray(t.files) ? t.files.filter(f => f && typeof f === 'object' && (f.doc || f.link)).map(f => ({
+      doc: f.doc ? String(f.doc) : '', name: String(f.name || 'Document'), ext: String(f.ext || '').toLowerCase(), link: f.link ? String(f.link) : '', folder: String(f.folder || ''), at: +f.at || 0})) : []
   }));
   return out;
 }
@@ -535,11 +578,16 @@ function taskItem(t, mode) {
   }
   t.who.forEach(n => meta.push(h('span', {class: 'tb-chip who'}, n)));
   t.depts.forEach(d => meta.push(h('span', {class: 'tb-chip dept'}, d)));
+  meta.push(clipChip(t));
   const shown = meta.filter(Boolean);
   return h('div', {class: 'tb-item' + (mode === 'board' ? ' tb-card' : '') + (t.status === 'done' ? ' done' : '') + (isOverdue(t) ? ' overdue' : ''),
       'data-id': t.id, tabindex: '0', role: 'button', draggable: mode === 'board' ? 'true' : null,
       onclick: () => openTask(t.id),
-      onkeydown: e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openTask(t.id); } }},
+      onkeydown: e => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openTask(t.id); } },
+      /* drop files from the computer straight onto a task: it opens with them ready to attach */
+      ondragover: e => { if (dragId || !dropsFiles(e)) return; e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect = 'copy'; e.currentTarget.classList.add('filedrop'); },
+      ondragleave: e => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('filedrop'); },
+      ondrop: e => { if (dragId || !dropsFiles(e)) return; e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('filedrop'); openTask(t.id); addDropped(e.dataTransfer); }},
     checkBtn(t),
     h('div', {class: 'tb-item-main'},
       h('div', {class: 'tb-item-title'}, t.title),
@@ -701,7 +749,8 @@ let draft = null;                                  /* {id, who:[names], depts:[n
 function openTask(id, preset) {
   const t = id ? data.tasks.find(x => x.id === id) : null;
   preset = preset || {};
-  draft = {id: t ? t.id : null, who: t ? [...t.who] : (filter && filter !== NONE ? [filter] : []), depts: t ? [...t.depts] : (deptFilter ? [deptFilter] : [])};
+  draft = {id: t ? t.id : null, who: t ? [...t.who] : (filter && filter !== NONE ? [filter] : []), depts: t ? [...t.depts] : (deptFilter ? [deptFilter] : []),
+    files: t ? t.files.map(f => ({...f})) : [], pending: [], gone: new Set()};
   $('dlgTitle').textContent = t ? 'Edit task' : 'New task';
   $('fTitle').value = t ? t.title : '';
   $('fDetails').value = t ? t.details : '';
@@ -709,8 +758,9 @@ function openTask(id, preset) {
   const st = t ? t.status : (preset.status || 'todo');
   document.querySelectorAll('input[name=fStatus]').forEach(r => { r.checked = r.value === st; });
   $('btnDelete').hidden = !t;
-  $('whoNew').value = ''; $('deptNew').value = '';
-  renderWhoBtn(); renderWhoList(); renderDepts();
+  $('whoNew').value = ''; $('deptNew').value = ''; $('linkNew').value = ''; $('linkRow').hidden = true;
+  renderWhoBtn(); renderWhoList(); renderDepts(); renderFolders(); renderFiles();
+  checkFiles(t);
   setWhoPanel(false);
   $('taskDlg').showModal();
   $('fTitle').focus();
@@ -780,13 +830,141 @@ $('taskForm').addEventListener('submit', e => {
   if (!title) { $('fTitle').value = ''; $('fTitle').focus(); toast('Give the task a name first.'); return; }
   addTypedName(); addTypedDept();                   /* include anything typed but not yet added */
   const picked = document.querySelector('input[name=fStatus]:checked');
-  const fields = {title, details: $('fDetails').value.trim(), who: [...draft.who], depts: [...draft.depts], due: $('fDue').value || '', status: picked ? picked.value : 'todo'};
-  const existing = draft.id ? data.tasks.find(t => t.id === draft.id) : null;
-  if (existing) Object.assign(existing, fields); else data.tasks.push({id: newId(), created: Date.now(), ...fields});
+  addTypedLink();
+  const fields = {title, details: $('fDetails').value.trim(), who: [...draft.who], depts: [...draft.depts], due: $('fDue').value || '', status: picked ? picked.value : 'todo', files: draft.files.map(f => ({...f}))};
+  const existing = draft.id ? data.tasks.find(t => t.id === draft.id) : null, id = existing ? existing.id : newId();
+  if (existing) Object.assign(existing, fields); else data.tasks.push({id, created: Date.now(), ...fields});
   fields.who.forEach(n => { if (!projectPeople.some(p => sameName(p.name, n)) && !data.people.some(p => sameName(p, n))) data.people.push(n); });
+  const pend = draft.pending.slice(), folder = $('fileFolder').value || data.docFolder || 'other';
+  if (pend.length && DOCS) data.docFolder = folder;
   closeTask();
   commit();
-  toast(existing ? 'Task updated' : 'Task added');
+  toast(pend.length && DOCS ? (existing ? 'Task updated. Attaching paperwork…' : 'Task added. Attaching paperwork…') : existing ? 'Task updated' : 'Task added');
+  if (pend.length) attachAll(id, title, pend, folder);
+});
+
+/* ── paperwork on a task: upload a file or paste a link ──
+   Inside the hub, window.fthDocs keeps each one in the project's Documentation (the folder picked below the list,
+   Other paperwork unless someone chooses a tool's folder), and the task keeps its id. New ones wait in the window
+   ("added when you save the task") and are attached once the task is saved, so Cancel leaves nothing behind. */
+const DOCS = window.fthDocs && typeof window.fthDocs.upload === 'function' ? window.fthDocs : null;
+const MAX_FILE = 100 * 1024 * 1024;
+const CLIP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11.5l-7.8 7.8a5 5 0 0 1-7.1-7.1l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4l7.8-7.8"/></svg>';
+const extOf = n => ((String(n || '').match(/\.([a-z0-9]{1,8})$/i) || [])[1] || '').toLowerCase();
+const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : n >= 1024 ? Math.round(n / 1024) + ' KB' : n + ' B';
+const hostOf = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return 'link'; } };
+function cleanLink(s) {
+  s = String(s || '').trim(); if (!s || /\s/.test(s)) return null;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) s = 'https://' + s.replace(/^\/+/, '');
+  try { const u = new URL(s); return /^https?:$/.test(u.protocol) && (u.hostname.includes('.') || u.hostname === 'localhost') ? u.href : null; } catch (e) { return null; }
+}
+function linkName(u) { try { const x = new URL(u), last = decodeURIComponent(x.pathname.split('/').filter(Boolean).pop() || ''); return x.hostname.replace(/^www\./, '') + (last && last.length < 60 ? ' · ' + last : ''); } catch (e) { return 'Link'; } }
+function clipChip(t) {
+  if (!t.files.length) return null;
+  const c = h('span', {class: 'tb-chip clip', title: 'Paperwork: ' + t.files.map(f => f.name).join(', ')});
+  c.innerHTML = CLIP; c.append(String(t.files.length)); return c;
+}
+const dropsFiles = e => !!(e.dataTransfer && [...e.dataTransfer.types].some(x => x === 'Files' || x === 'text/uri-list')) && !(DOCS && DOCS.readOnly());
+const folderName = id => { const f = DOCS && DOCS.folders().find(x => x.id === id); return f ? f.name : 'Documentation'; };
+function renderFolders() {
+  const sel = $('fileFolder'); sel.textContent = '';
+  if (!DOCS) return;
+  const list = DOCS.folders();
+  list.forEach(f => sel.append(h('option', {value: f.id}, f.name)));
+  sel.value = list.some(f => f.id === data.docFolder) ? data.docFolder : 'other';
+}
+function fileRow(f, pending, remove) {
+  const gone = !pending && f.doc && draft.gone.has(f.doc);
+  const kind = f.link ? 'LINK' : (f.ext || extOf(f.name) || 'file').toUpperCase().slice(0, 5);
+  const meta = pending ? (f.file ? fmtSize(f.file.size) + ' · ' : hostOf(f.link) + ' · ') + 'added when you save the task'
+    : gone ? (f.link ? hostOf(f.link) + ' · ' : '') + 'deleted from Documentation'
+    : f.link ? hostOf(f.link) + (f.doc ? ' · also in Documentation' : '')
+    : 'In Documentation · ' + folderName(f.folder);
+  const canOpen = pending ? !!f.link : !!(f.link || (f.doc && DOCS && !gone));
+  const label = f.name + (!f.link && f.ext && !pending ? '.' + f.ext : '');
+  return h('div', {class: 'tb-file'},
+    h('span', {class: 'tb-file-kind' + (f.link ? ' lk' : '') + (pending ? ' new' : '')}, kind),
+    h('div', {class: 'tb-file-main'},
+      canOpen ? h('button', {type: 'button', class: 'tb-file-name', title: f.link ? 'Open the link in a new tab' : 'Open it', onclick: () => openFile(f, pending)}, label) : h('span', {class: 'tb-file-name', style: 'cursor:default;text-decoration:none'}, label),
+      h('span', {class: 'tb-file-meta' + (gone ? ' gone' : '')}, meta)),
+    h('button', {type: 'button', class: 'x', title: pending ? 'Leave this out' : 'Take it off this task (it stays in Documentation)', 'aria-label': 'Remove ' + f.name, onclick: remove}, '×'));
+}
+function openFile(f, pending) {
+  if (!pending && f.doc && DOCS && !draft.gone.has(f.doc)) { DOCS.open(f.doc); return; }
+  if (f.link) { const w = window.open(f.link, '_blank', 'noopener'); if (w) try { w.opener = null; } catch (e) {} }
+}
+function renderFiles() {
+  if (!draft) return;
+  const box = $('fileList'), ro = !!(DOCS && DOCS.readOnly());
+  box.textContent = '';
+  const rows = draft.files.map((f, i) => fileRow(f, false, () => { draft.files.splice(i, 1); renderFiles(); }))
+    .concat(draft.pending.map((f, i) => fileRow(f, true, () => { draft.pending.splice(i, 1); renderFiles(); })));
+  if (rows.length) box.append(...rows);
+  else box.append(h('div', {class: 'tb-files-empty'}, DOCS ? 'Nothing attached yet. Drop files here, upload one, or paste a link.' : 'Nothing attached yet. Paste a link to paperwork kept somewhere else. (Inside Film Tool Hub you can upload files too.)'));
+  $('fileUp').hidden = !DOCS;
+  $('fileUp').disabled = $('linkBtn').disabled = ro;
+  $('fileWhere').hidden = !DOCS || !draft.pending.length;
+}
+/* files deleted in Documentation since they were attached: say so, rather than fail when opened */
+function checkFiles(t) {
+  if (!DOCS || !t) return;
+  const ids = t.files.map(f => f.doc).filter(Boolean); if (!ids.length) return;
+  DOCS.info(ids).then(list => {
+    if (!draft || draft.id !== t.id) return;
+    const live = new Set((list || []).filter(d => !d.deleted).map(d => d.id));
+    draft.gone = new Set(ids.filter(id => !live.has(id))); renderFiles();
+  });
+}
+function addFiles(list) {
+  if (!draft || !DOCS) return;
+  let big = 0;
+  [...list].forEach(f => { if (!f.size || /^\./.test(f.name)) return; if (f.size > MAX_FILE) { big++; return; } draft.pending.push({file: f, name: f.name, ext: extOf(f.name)}); });
+  if (big) toast(big === 1 ? 'That file is over 100 MB. Paste a link to it instead.' : big + ' files are over 100 MB. Paste links to them instead.');
+  renderFiles();
+}
+function addLink(raw) {
+  const url = cleanLink(raw);
+  if (!url) { toast('That doesn’t look like a web address. Copy the whole link, starting https://'); return false; }
+  if (!draft.pending.concat(draft.files).some(f => f.link === url)) draft.pending.push({link: url, name: linkName(url)});
+  renderFiles(); return true;
+}
+function addTypedLink() { const v = $('linkNew').value.trim(); if (v && addLink(v)) { $('linkNew').value = ''; $('linkRow').hidden = true; } }
+function addDropped(dt) {
+  if (dt.files && dt.files.length) { addFiles(dt.files); return; }
+  const u = (dt.getData('text/uri-list') || '').split(/\r?\n/).find(l => l && !l.startsWith('#')) || dt.getData('text/plain');
+  if (u) addLink(u);
+}
+async function attachAll(id, title, list, folder) {
+  let n = 0, failed = 0;
+  for (const p of list) {
+    let rec;
+    if (DOCS) {
+      const e = await DOCS.upload(p.file ? {blob: p.file, filename: p.file.name, folder, task: {id, title}, quiet: true} : {link: p.link, folder, task: {id, title}, quiet: true});
+      if (!e) { failed++; continue; }
+      rec = {doc: e.id, name: e.name, ext: e.ext || '', link: e.link || '', folder, at: Date.now()};
+    } else rec = {doc: '', name: p.name, ext: '', link: p.link, folder: '', at: Date.now()};
+    const t = data.tasks.find(x => x.id === id); if (!t) continue;   /* deleted meanwhile: its paperwork stays in Documentation */
+    t.files.push(rec); n++;
+  }
+  if (n) { commit(); toast((n === 1 ? 'Paperwork attached' : n + ' pieces of paperwork attached') + (DOCS ? ', and kept in Documentation → ' + folderName(folder) : '')); }
+  if (failed && !n) toast('The paperwork couldn’t be attached. See the message at the bottom of the hub.');
+}
+$('fileUp').onclick = () => $('fileIn').click();
+$('fileIn').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
+$('linkBtn').onclick = () => { const r = $('linkRow'); r.hidden = !r.hidden; if (!r.hidden) $('linkNew').focus(); };
+$('linkAdd').onclick = () => { addTypedLink(); };
+$('linkNew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTypedLink(); } });
+$('linkNew').addEventListener('paste', () => setTimeout(() => { if (cleanLink($('linkNew').value)) addTypedLink(); }, 0));   /* a pasted link goes straight in */
+$('fileList').addEventListener('dragover', e => { if (!dropsFiles(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; $('fileList').classList.add('over'); });
+$('fileList').addEventListener('dragleave', e => { if (!$('fileList').contains(e.relatedTarget)) $('fileList').classList.remove('over'); });
+$('fileList').addEventListener('drop', e => { if (!dropsFiles(e)) return; e.preventDefault(); $('fileList').classList.remove('over'); addDropped(e.dataTransfer); });
+/* paste a link or a copied file anywhere in the task window (outside a text box) */
+$('taskDlg').addEventListener('paste', e => {
+  if (!draft || (DOCS && DOCS.readOnly())) return;
+  const t = e.target; if (t && t.closest && t.closest('input,textarea')) return;
+  const cd = e.clipboardData; if (!cd) return;
+  if (DOCS && cd.files && cd.files.length) { e.preventDefault(); addFiles(cd.files); return; }
+  const txt = (cd.getData('text/plain') || '').trim(); if (cleanLink(txt) && /^\S+$/.test(txt)) { e.preventDefault(); addLink(txt); }
 });
 
 /* ── delete, with a confirm first ── */
@@ -825,7 +1003,7 @@ function printList() {
       h('thead', null, h('tr', null, h('th', null, ''), h('th', null, 'Task'), h('th', null, 'Who'), h('th', null, 'Department'), h('th', null, 'Due'), h('th', null, 'Status'))),
       h('tbody', null, tasks.map(t => h('tr', null,
         h('td', null, h('span', {class: 'box'}, t.status === 'done' ? '✓' : '')),
-        h('td', null, h('b', null, t.title), t.details ? h('div', {class: 'det'}, t.details) : null),
+        h('td', null, h('b', null, t.title), t.details ? h('div', {class: 'det'}, t.details) : null, t.files.length ? h('div', {class: 'det'}, 'Paperwork: ' + t.files.map(f => f.name + (f.ext ? '.' + f.ext : '')).join(', ')) : null),
         h('td', null, t.who.join(', ') || '—'),
         h('td', null, t.depts.join(', ') || '—'),
         h('td', {class: isOverdue(t) ? 'late' : null}, t.due ? fmt(fromIso(t.due), {weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'}) + (isOverdue(t) ? ' (overdue)' : '') : '—'),

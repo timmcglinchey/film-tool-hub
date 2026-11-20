@@ -408,6 +408,36 @@ body.docs-open #home{display:none}
 .dmore:hover{color:var(--text);background:var(--bg2)}
 .dmore::before{content:"▸ "}.dmore[aria-expanded="true"]::before{content:"▾ "}
 .dcan{display:inline-block;margin-top:8px;font:500 11.5px var(--mono);color:var(--faint)}
+/* paperwork made outside the hub: "Your own versions" in a tool's folder, the Other paperwork folder, the upload dialog */
+.dfold .dfown{margin-top:-4px;font:500 11px var(--mono);letter-spacing:.04em;color:var(--muted)}
+.dkind.lk{color:var(--text);background:var(--surface2);border-color:var(--line3)}
+.dsub{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;margin:34px 0 12px;padding-top:18px;border-top:1px dashed var(--line2)}
+.dsub h3{margin:0;font-weight:750;font-variation-settings:"wdth" 74;font-size:21px;text-transform:uppercase;letter-spacing:.01em}
+.dsub p{margin:0;color:var(--muted);font-size:14px}
+.dup{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px 16px;align-items:center;padding:14px 16px;margin-bottom:14px;border:1.5px dashed color-mix(in srgb,var(--cat) 45%,var(--line2));border-radius:var(--radius);
+  background:color-mix(in srgb,var(--cat) 5%,transparent);transition:background-color .15s,border-color .15s}
+.dup.over,.dupcard.over,.dupick.over{border-color:var(--cat,var(--accent));border-style:solid;background:color-mix(in srgb,var(--cat,var(--accent)) 14%,transparent)}
+.dup-ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--cat-ink);background:color-mix(in srgb,var(--cat) 14%,transparent)}
+.dup-ic svg{width:20px;height:20px}
+.dup-t b{display:block;font-size:15px}
+.dup-t span{display:block;margin-top:2px;font-size:13px;color:var(--muted)}
+.dup-b{display:flex;flex-wrap:wrap;gap:6px}
+.dup-b .btn svg{width:15px;height:15px}
+.dupcard{border-style:dashed;background:none;cursor:default}
+.dupcard:hover{transform:none;box-shadow:none}
+.dupcard p{margin:0;font-size:13px;color:var(--muted)}
+.dupcard .dup-b{margin-top:auto}
+.dupick{display:flex;flex-direction:column;gap:4px;padding:8px;margin-bottom:8px;border:1px dashed var(--line2);border-radius:10px;background:var(--bg2);max-height:270px;overflow:auto}
+.dupf{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:4px 4px 4px 6px;border-radius:7px}
+.dupf:hover{background:var(--surface2)}
+.dupf .dkind{color:var(--muted);background:var(--surface2);border-color:var(--line2);min-width:40px;font-size:9.5px;padding:3px 4px}
+.dupf b{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dupf small{font:500 11px var(--mono);color:var(--faint);white-space:nowrap}
+.dupf .btn{height:26px;padding:0 6px}.dupf .btn svg{width:14px;height:14px}
+.dupnone,.dupmore{margin:0;padding:10px 6px;font-size:13px;color:var(--muted)}
+.dupmore{padding:4px 6px}
+.field label .opt{text-transform:none;letter-spacing:0;color:var(--faint)}
+@media (max-width:700px){.dup{grid-template-columns:auto minmax(0,1fr)}.dup-b{grid-column:1/-1}}
 @media (min-width:981px){.dname .dx{display:none}}
 @media (max-width:980px){
   .dstrip{grid-template-columns:1fr}.dmeta{white-space:normal}
