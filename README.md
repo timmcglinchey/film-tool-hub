@@ -40,6 +40,7 @@ The buttons for adding and replacing tools (Add tool, the ⋯ menus) only show f
 1. **Never change a tool's `id`** in `tools.json`. Its saved work is filed under that id. Changing the display `name` is fine.
 2. **When a tool changes what it saves, it must still read the old format.**
 3. **When a tool's file changes, update its `rev`** in `tools.json` to the current date and time written as YYYYMMDDHHMM (e.g. `202611091430` for 9 November 2026 at 14:30). This makes sure everyone gets the new version rather than an older copy someone tried out in their browser.
+4. **When `hub/hub.js` or `hub/hub.css` changes, update the `?v=` after it in `index.html`** the same way. Browsers keep these two files for a few minutes; without a new `?v=`, someone can end up with a new tool running inside the old hub.
 
 ## Trying the site on your own computer
 

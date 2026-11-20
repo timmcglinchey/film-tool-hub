@@ -1868,6 +1868,9 @@ const personCol = n => LABEL_COLS[strHash(lk(n)) % LABEL_COLS.length];
 const cmHub = () => !!window.fthNotes;
 const cmLocal = () => !window.fthNotes && window.__fthProjectId === undefined;
 const cmBlocked = () => !cmHub() && !cmLocal();
+/* inside the hub but it has no comment store: the browser is still running an older copy of the hub */
+const cmOldHub = () => { try { return window.parent !== window && !!window.parent.__fthHub && !window.parent.__fthHub.notes; } catch (e) { return false; } };
+const cmBlockedMsg = () => cmOldHub() ? 'Film Tool Hub has been updated. Reload the page (Ctrl+Shift+R, or Cmd+Shift+R on a Mac) to use comments.' : 'This tab is a separate copy of the tool. Open Script Breakdown inside Film Tool Hub to add or change comments.';
 const cmMe = () => { try { return cmHub() ? window.fthNotes.me() : null; } catch (e) { return null; } };
 const cmViewKey = 'filmtoolhub-cm-view', cmPid = () => window.__fthProjectId || 'solo';
 let cmName = ''; try { cmName = localStorage.getItem('filmtoolhub-cm-name') || ''; } catch (e) {}
@@ -1886,7 +1889,7 @@ function cmLoad() {
 function cmReset() { CM.loc.clear(); CM.sel = null; CM.draft = null; CM.edit = null; CM.active = null; CM.replies = {}; CM.pick = null; CM.menu = false; CM.sig = ''; }
 function cmRefresh() { cmLoad(); renderRail(); redrawAll(); }
 async function cmPut(o) {
-  if (cmBlocked()) { toast('Open Script Breakdown inside Film Tool Hub to add or change comments.', 4000); return false; }
+  if (cmBlocked()) { toast(cmBlockedMsg(), 7000); return false; }
   if (cmHub()) {
     const ok = await window.fthNotes.put(o);
     if (!ok) toast('That comment couldn’t be saved. Only the person who wrote a comment can change or delete it.', 4500);
@@ -1979,7 +1982,7 @@ $('#cmAdd').addEventListener('pointerdown', e => e.stopPropagation());
 $('#cmAdd').onclick = () => { const r = CM.sel; if (r) { cmClearSel(); cmStartDraft(r.a, r.b); } };
 function cmShowRail(on) { if (CM.show === on) return; CM.show = on; cmSaveView(); if (S.pdf) { computeFit(); sizePages(); } renderRail(); redrawAll(); }
 function cmStartDraft(a, b) {
-  if (cmBlocked()) { toast('Open Script Breakdown inside Film Tool Hub to add comments.', 4000); return; }
+  if (cmBlocked()) { toast(cmBlockedMsg(), 7000); return; }
   [a, b] = [Math.min(a, b), Math.max(a, b)];
   const me = cmMe(), labels = me && me.role ? [me.role] : CM.last.slice();
   CM.draft = { r: { a, b }, anchor: { a, b, text: S.words.slice(a, b + 1).map(w => w.s).join(' '), p: S.words[a].p }, text: '', labels };
