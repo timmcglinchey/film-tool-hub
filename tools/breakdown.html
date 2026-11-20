@@ -1868,6 +1868,9 @@ const personCol = n => LABEL_COLS[strHash(lk(n)) % LABEL_COLS.length];
 const cmHub = () => !!window.fthNotes;
 const cmLocal = () => !window.fthNotes && window.__fthProjectId === undefined;
 const cmBlocked = () => !cmHub() && !cmLocal();
+/* inside the hub but it has no comment store: the browser is still running an older copy of the hub */
+const cmOldHub = () => { try { return window.parent !== window && !!window.parent.__fthHub && !window.parent.__fthHub.notes; } catch (e) { return false; } };
+const cmBlockedMsg = () => cmOldHub() ? 'Film Tool Hub has been updated. Reload the page (Ctrl+Shift+R, or Cmd+Shift+R on a Mac) to use comments.' : 'This tab is a separate copy of the tool. Open Script Breakdown inside Film Tool Hub to add or change comments.';
 const cmMe = () => { try { return cmHub() ? window.fthNotes.me() : null; } catch (e) { return null; } };
 const cmViewKey = 'filmtoolhub-cm-view', cmPid = () => window.__fthProjectId || 'solo';
 let cmName = ''; try { cmName = localStorage.getItem('filmtoolhub-cm-name') || ''; } catch (e) {}
@@ -1886,7 +1889,7 @@ function cmLoad() {
 function cmReset() { CM.loc.clear(); CM.sel = null; CM.draft = null; CM.edit = null; CM.active = null; CM.replies = {}; CM.pick = null; CM.menu = false; CM.sig = ''; }
 function cmRefresh() { cmLoad(); renderRail(); redrawAll(); }
 async function cmPut(o) {
-  if (cmBlocked()) { toast('Open Script Breakdown inside Film Tool Hub to add or change comments.', 4000); return false; }
+  if (cmBlocked()) { toast(cmBlockedMsg(), 7000); return false; }
   if (cmHub()) {
     const ok = await window.fthNotes.put(o);
     if (!ok) toast('That comment couldn’t be saved. Only the person who wrote a comment can change or delete it.', 4500);
@@ -1917,11 +1920,15 @@ function cmLoc(c) {
   const an = c.anchor; if (!an || !S.words.length) return null;
   const key = c.id + '|' + an.a + '|' + an.b + '|' + an.text;
   if (CM.loc.has(key)) return CM.loc.get(key);
-  const want = String(an.text || '').split(' ').filter(Boolean);
+  let want = String(an.text || '').split(' ').filter(Boolean);
+  /* the hub used to keep only the first 400 characters of the words: match on what's there (the last word may be cut short) and keep the full length */
+  const n = Math.max(1, (an.b | 0) - (an.a | 0) + 1), cut = want.length < n;
+  if (cut && want.length > 1) want = want.slice(0, -1);
+  const len = cut ? n : want.length;
   const at = i => want.length && want.every((w, k) => S.words[i + k] && S.words[i + k].s === w);
   let r = null;
-  if (at(an.a)) r = { a: an.a, b: an.a + want.length - 1 };
-  else if (want.length) { let best = -1; for (let i = 0; i < S.words.length; i++) if (S.words[i].s === want[0] && at(i) && (best < 0 || Math.abs(i - an.a) < Math.abs(best - an.a))) best = i; if (best >= 0) r = { a: best, b: best + want.length - 1 }; }
+  if (at(an.a)) r = { a: an.a, b: Math.min(S.words.length - 1, an.a + len - 1) };
+  else if (want.length) { let best = -1; for (let i = 0; i < S.words.length; i++) if (S.words[i].s === want[0] && at(i) && (best < 0 || Math.abs(i - an.a) < Math.abs(best - an.a))) best = i; if (best >= 0) r = { a: best, b: Math.min(S.words.length - 1, best + len - 1) }; }
   CM.loc.set(key, r); return r;
 }
 const cmRoots = () => CM.list.filter(c => !c.re);
@@ -1979,7 +1986,7 @@ $('#cmAdd').addEventListener('pointerdown', e => e.stopPropagation());
 $('#cmAdd').onclick = () => { const r = CM.sel; if (r) { cmClearSel(); cmStartDraft(r.a, r.b); } };
 function cmShowRail(on) { if (CM.show === on) return; CM.show = on; cmSaveView(); if (S.pdf) { computeFit(); sizePages(); } renderRail(); redrawAll(); }
 function cmStartDraft(a, b) {
-  if (cmBlocked()) { toast('Open Script Breakdown inside Film Tool Hub to add comments.', 4000); return; }
+  if (cmBlocked()) { toast(cmBlockedMsg(), 7000); return; }
   [a, b] = [Math.min(a, b), Math.max(a, b)];
   const me = cmMe(), labels = me && me.role ? [me.role] : CM.last.slice();
   CM.draft = { r: { a, b }, anchor: { a, b, text: S.words.slice(a, b + 1).map(w => w.s).join(' '), p: S.words[a].p }, text: '', labels };

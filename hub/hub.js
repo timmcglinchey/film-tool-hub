@@ -3113,7 +3113,7 @@ function noteMe() {
   const me = projectPeople(cur()).find(x => x.me);
   return {name: (me && me.name) || account.name || account.email, email: account.email.toLowerCase(), role: (me && me.role) || ''};
 }
-const noteAnchor = a => a && typeof a === 'object' ? {a: Math.max(0, a.a | 0), b: Math.max(0, a.b | 0), text: cleanStr(a.text, 400), p: Math.max(0, a.p | 0)} : null;
+const noteAnchor = a => a && typeof a === 'object' ? {a: Math.max(0, a.a | 0), b: Math.max(0, a.b | 0), text: cleanStr(a.text, 20000), p: Math.max(0, a.p | 0)} : null;
 const noteLabels = l => Array.isArray(l) ? [...new Set(l.map(x => cleanStr(x, 40).trim()).filter(Boolean))].slice(0, 12) : [];
 const noteDone = (d, me) => d ? {name: me ? me.name : cleanStr(d.name, 80) || 'Someone', email: me ? me.email : '', at: Date.now()} : 0;
 function notesOf(tool, pid) {
