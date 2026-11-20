@@ -189,7 +189,7 @@
     {
       "id": "breakdown",
       "name": "Script Breakdown",
-      "desc": "Tag cast, props, SFX, wardrobe and more straight onto your script PDF, then export category lists, scene-by-scene breakdowns and a colour-coded script.",
+      "desc": "Tag cast, props, SFX, wardrobe and more straight onto your script PDF, leave labelled comments for the crew beside it, then export category lists, scene-by-scene breakdowns and a colour-coded script.",
       "category": "prep",
       "tags": [
         "1st AD",
@@ -204,7 +204,7 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611171845,
+      "rev": 202611201140,
       "file": "tools/breakdown.html",
       "group": "breakdown"
     },
