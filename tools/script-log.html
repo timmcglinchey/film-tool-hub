@@ -118,7 +118,7 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
 /* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
 [data-fth-doc][hidden]{display:none!important}
 
-:root{--fth-cat:#4fc7b5;--fth-accent:#4fc7b5;--fth-accent-ink:#4fc7b5;--fth-accent-soft:rgba(79,199,181,0.14);--fth-accent-line:rgba(79,199,181,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#2e7369;--fth-accent-ink:#2e7369;--fth-accent-soft:rgba(79,199,181,0.16);--fth-accent-line:rgba(79,199,181,0.6);--fth-on-accent:#ffffff}
+:root{--fth-cat:#ff7152;--fth-accent:#ff7152;--fth-accent-ink:#ff7152;--fth-accent-soft:rgba(255,113,82,0.14);--fth-accent-line:rgba(255,113,82,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#944230;--fth-accent-ink:#944230;--fth-accent-soft:rgba(255,113,82,0.16);--fth-accent-line:rgba(255,113,82,0.6);--fth-on-accent:#ffffff}
 </style>
 <script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
 <!--/fth-standalone-->
@@ -174,8 +174,8 @@ table.t{border-collapse:collapse;min-width:100%}
 #pv *{box-sizing:border-box}
 #pv .sheet{background:#fff;width:100%;min-height:1123px;padding:34px 38px 30px;margin:0 0 22px;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55);display:flex;flex-direction:column}
 #pv .hd{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;padding-bottom:10px;border-bottom:2.5px solid #111;margin-bottom:10px}
-#pv .kick{font:700 9px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:#2e7369;margin-bottom:7px;display:flex;align-items:center;gap:7px}
-#pv .kick::before{content:"";width:8px;height:8px;background:#4fc7b5;border-radius:50%}
+#pv .kick{font:700 9px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:#944230;margin-bottom:7px;display:flex;align-items:center;gap:7px}
+#pv .kick::before{content:"";width:8px;height:8px;background:#ff7152;border-radius:50%}
 #pv .ln1{font:800 26px/1.02 Archivo,"Arial Narrow",Arial,sans-serif;font-variation-settings:"wdth" 68;text-transform:uppercase;min-height:28px;word-break:break-word}
 #pv .ln2{margin-top:5px;font-size:11.5px;color:#333}
 #pv .wr{display:inline-block;width:150px;height:22px;border-bottom:2px solid #111;vertical-align:-2px}
@@ -191,7 +191,7 @@ table.t{border-collapse:collapse;min-width:100%}
 #pv .pre{font-weight:700}
 #pv .dim{color:#777}
 #pv .bx{display:inline-block;width:11px;height:11px;border:1.1px solid #222;border-radius:2px;vertical-align:-2px}
-#pv tr.shot td{background:#eef6f5;border-top:1.6px solid #111;font-weight:700}
+#pv tr.shot td{background:#fbefec;border-top:1.6px solid #111;font-weight:700}
 #pv tr.shot td.d{font-weight:400;font-style:italic}
 #pv tr.tk td{height:25px}
 #pv .tkn{color:#999;font-size:9px}
@@ -230,7 +230,7 @@ table.t{border-collapse:collapse;min-width:100%}
 }
 </style></head><body>
 <header class="fth-head">
-  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>02 · Prep</span><h1 class="fth-title">Script Supervisor's Log</h1></div>
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>03 · Shoot</span><h1 class="fth-title">Script Supervisor's Log</h1></div>
   <div class="fth-actions">
     <span class="status" id="saveState"></span>
     <button class="fth-btn ghost" id="newBtn">New day</button>
