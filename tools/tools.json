@@ -640,6 +640,24 @@
       "note": "",
       "rev": 202611182115,
       "file": "tools/colour-temp.html"
+    },
+    {
+      "id": "mic-placement",
+      "name": "Mic Placement Lab",
+      "desc": "Learn how distance, pickup pattern and gain decide what your mic records. Place the mic, choose what you're recording, and see and hear the signal against the noise.",
+      "category": "learn",
+      "tags": [
+        "Sound",
+        "Learning"
+      ],
+      "icon": "mic",
+      "fileName": "Mic Placement Lab.html",
+      "origTitle": "Mic Placement Lab",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611211230,
+      "file": "tools/mic-placement.html"
     }
   ]
 }

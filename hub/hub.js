@@ -53,6 +53,7 @@ const ICONS = {
   breakdown:P('<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><rect x="8.6" y="10.2" width="5" height="2.4" rx=".6" fill="currentColor" stroke="none" opacity=".5"/><path d="M14.8 11.4h1.8M8.6 15h2.6"/><rect x="12" y="13.8" width="4.6" height="2.4" rx=".6" fill="currentColor" stroke="none" opacity=".5"/>'),
   exposure: P('<circle cx="12" cy="12" r="8.8"/><path d="M12 3.2l2.6 6.4M20.4 9.3l-6.8.9M17.4 18.9l-4.2-5.4M6.6 18.9l4.2-5.4M3.6 9.3l6.8.9"/><circle cx="12" cy="12" r="2.6"/>'),
   dof:      P('<circle cx="12" cy="12" r="8.8"/><path d="M3.2 12h17.6"/><path d="M8 7.4v9.2M16 7.4v9.2"/><path d="M12 9.6v4.8" stroke-width="2.4"/>'),
+  mic:      P('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21M8.5 21h7"/>'),
   colourtemp: P('<path d="M9 14.6V5.2a2.5 2.5 0 0 1 5 0v9.4a4.2 4.2 0 1 1-5 0z"/><circle cx="11.5" cy="18" r="1.7" fill="currentColor" stroke="none"/><path d="M11.5 16V9.5"/><path d="M17 6h3.2M17 9.5h3.2M17 13h3.2"/>'),
   falsecolour: P('<rect x="3" y="5" width="18" height="14" rx="1.8"/><path d="M3 15l4.5-4.5 3.5 3.5 4-5 6 6"/><path d="M7 5v14M11 5v14M15 5v14" opacity=".35"/>'),
   budget:   P('<ellipse cx="9.5" cy="6.5" rx="6" ry="2.5"/><path d="M3.5 6.5V11c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V6.5"/><path d="M3.5 11v4.5c0 1.4 2.7 2.5 6 2.5"/><circle cx="16.8" cy="16.6" r="4.2"/><path d="M16.8 14.6v4"/>'),
@@ -2183,6 +2184,7 @@ const TOOL_THEME = {
   falsecolour:   {kit: true, after: 'drawHist'},
   dof:           {kit: true},
   'colour-temp': {kit: true},
+  'mic-placement': {kit: true},
 };
 
 /* Shared kit (fonts, colours, buttons, fields, tool header). Tools marked kit:true in TOOL_THEME
