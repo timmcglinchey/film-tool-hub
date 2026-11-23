@@ -16,3 +16,9 @@ const H = {
   act: async (u, tool) => { const f = await H.frame(u, tool); await f.evaluate(() => document.body.dispatchEvent(new PointerEvent('pointerdown', {bubbles: true}))); },
 };
 module.exports = { assert, sleep, until, H };
+/* how many tools have a Documentation folder, read from the hub's DOC_TYPES list so tests don't go stale as tools are added */
+const docToolIds = () => { const s = require('fs').readFileSync(require('path').join(__dirname, '../../hub/hub.js'), 'utf8'), m = s.match(/const DOC_TYPES = \{([\s\S]*?)\n\};/); return m[1].split('\n').map(l => (l.match(/^\s*'?([\w-]+)'?\s*:\s*\[/) || [])[1]).filter(Boolean); };
+const docToolCount = () => docToolIds().length;
+/* how many stages (Develop, Prep, …) those tools are in: one Documentation section each */
+const docStageCount = () => { const t = require('../../tools/tools.json').tools, ids = new Set(docToolIds()); return new Set(t.filter(x => ids.has(x.id)).map(x => x.category)).size; };
+Object.assign(module.exports, { docToolCount, docStageCount });

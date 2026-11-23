@@ -4,7 +4,8 @@
    • shared project: the crew see each other's documents without doing anything extra. */
 const { chromium } = require('playwright');
 const { D, serve, person } = require('../sharing/mock');
-const { assert, until, H, sleep } = require('../sharing/lib');
+const { assert, until, H, sleep, docToolCount } = require('../sharing/lib');
+const N = docToolCount();
 const step = s => console.log('• ' + s);
 const go = (u, h) => u.page.evaluate(h => { location.hash = h; }, h);
 const rows = u => u.page.$$eval('#docsPage .drow:not(.dcols)', els => els.map(r => [r.querySelector('.dname b').textContent, r.querySelector('.dtype').textContent, r.querySelector('.ddraft').textContent.replace('Latest', ' Latest')].join(' | ')));
@@ -42,7 +43,7 @@ async function saveDoc(u, tool, sel, label) {
   await A2.page.goto(base); await H.signIn(A2);
   await until(async () => /My first project/.test(await A2.page.$eval('#projName', e => e.textContent)), 'project on device 2');
   await go(A2, '#/docs');
-  await until(async () => await sum(A2) === '2 of 17 tools have documents', 'both folders filled on device 2');
+  await until(async () => await sum(A2) === `2 of ${N} tools have documents`, 'both folders filled on device 2');
   await go(A2, '#/docs/recce'); await until(async () => (await rows(A2)).length === 1, 'row on device 2');
   assert.match((await rows(A2))[0], /^Locations compared \| Recce CSV \| Draft 1 Latest$/);
   await A2.page.click('.drow:not(.dcols) [data-da=open]');
@@ -69,7 +70,7 @@ async function saveDoc(u, tool, sel, label) {
   await until(async () => /Shared by Alice Adams/.test(await B.page.textContent('#projStrip')), 'Bob has the project');
   assert.equal(D.log.filter(l => l[0] === 'pick' && l[1] === 'bob@example.com').length, 1, 'Bob chose one file once: the project');
   await go(B, '#/docs');
-  await until(async () => await sum(B) === '2 of 17 tools have documents', 'Bob sees both folders');
+  await until(async () => await sum(B) === `2 of ${N} tools have documents`, 'Bob sees both folders');
   await go(B, '#/docs/callsheet'); await until(async () => (await rows(B)).length === 1, 'Bob sees the call sheet');
   await B.page.click('.drow:not(.dcols) [data-da=open]');
   await until(async () => { const h = await B.page.$('#dvBody iframe'); const fr = h && await h.contentFrame(); return fr && fr.evaluate(() => /CALL TIME/i.test(document.body.innerText)); }, 'Bob opens Alice’s call sheet');
@@ -78,7 +79,7 @@ async function saveDoc(u, tool, sel, label) {
   step('Bob saves a document: it reaches Alice by itself, and lands in her Drive folder too');
   await saveDoc(B, 'risk', '#docBtn', 'Risk Assessment PDF');
   await go(A, '#/docs');
-  await until(async () => await sum(A) === '3 of 17 tools have documents', 'Alice sees Bob’s document', 30000);
+  await until(async () => await sum(A) === `3 of ${N} tools have documents`, 'Alice sees Bob’s document', 30000);
   await go(A, '#/docs/risk'); await until(async () => (await rows(A)).length === 1, 'row');
   assert.match(await A.page.$eval('.drow:not(.dcols) .dname small', e => e.textContent), /saved by Bob/);
   await until(() => driveDocs().some(n => /\/ Risk Assessment Builder \//.test(n)), 'Bob’s document is in Alice’s Drive folder');
@@ -87,7 +88,7 @@ async function saveDoc(u, tool, sel, label) {
   step('Alice deletes it: it disappears for Bob as well');
   await A.page.click('.drow:not(.dcols) [data-da=delete]'); await A.page.click('#dlg button[value=ok]');
   await go(B, '#/docs');
-  await until(async () => await sum(B) === '2 of 17 tools have documents', 'gone for Bob', 30000);
+  await until(async () => await sum(B) === `2 of ${N} tools have documents`, 'gone for Bob', 30000);
   await until(() => !Object.keys(JSON.parse(pf.revs.at(-1).content).snap.docFiles).some(k => JSON.parse(pf.revs.at(-1).content).snap.docs.find(d => d.id === k).tool === 'risk'), 'its file left the shared project file');
   assert.deepEqual(A.page.errors, [], 'no page errors (Alice)'); assert.deepEqual(B.page.errors, [], 'no page errors (Bob)');
   await browser.close(); srv.close();

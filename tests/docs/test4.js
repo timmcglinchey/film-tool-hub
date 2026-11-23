@@ -5,7 +5,8 @@
    • signed in: uploads go to Drive like exports (links don't make a file); shared: the crew get both. */
 const { chromium } = require('playwright');
 const { D, serve, person } = require('../sharing/mock');
-const { assert, until, H, sleep } = require('../sharing/lib');
+const { assert, until, H, sleep, docToolCount } = require('../sharing/lib');
+const N = docToolCount();
 const step = s => console.log('• ' + s);
 const go = (u, h) => u.page.evaluate(h => { location.hash = h; }, h);
 const rows = u => u.page.$$eval('#docsPage .drow:not(.dcols)', els => els.map(r => [r.querySelector('.dkind').textContent, r.querySelector('.dname b').textContent, r.querySelector('.dtype').textContent, r.querySelector('.ddraft').textContent.replace('Latest', ' Latest')].join(' | ')));
@@ -26,7 +27,7 @@ const file = (name, text, mimeType) => ({name, mimeType: mimeType || 'applicatio
   await go(A, '#/docs'); await A.page.waitForSelector('#docsPage .dother');
   assert.match(await A.page.textContent('#docsPage .dother h2'), /^Other$/);
   assert.equal(await A.page.$eval('#docsPage .dother .dfold[href="#/docs/other"]', a => a.classList.contains('none')), true, 'faded while empty');
-  assert.match(await A.page.textContent('#docsPage .dsum'), /^0\s*of 17 tools/, 'Other isn’t counted as a tool');
+  assert.match(await A.page.textContent('#docsPage .dsum'), new RegExp(`^0\\s*of ${N} tools`), 'Other isn’t counted as a tool');
 
   step('Upload two files at once into Other paperwork, as release forms');
   await A.page.click('#docsPage .dother [data-da=upload]'); await A.page.waitForSelector('#upFiles', {state: 'attached'});
@@ -80,7 +81,7 @@ const file = (name, text, mimeType) => ({name, mimeType: mimeType || 'applicatio
   assert.deepEqual(await rows(A), ['PDF | My call sheet | Call Sheet | Draft 1 Latest']);
   await go(A, '#/docs');
   assert.match(await A.page.$eval('#docsPage .dfold[href="#/docs/callsheet"]', e => e.textContent), /All your own versions.*1 document/s);
-  assert.match(await A.page.textContent('#docsPage .dsum'), /^1\s*of 17 tools/);
+  assert.match(await A.page.textContent('#docsPage .dsum'), new RegExp(`^1\\s*of ${N} tools`));
 
   step('Signed in: uploaded files go to Drive in their folder (Other paperwork too); links make no file');
   await until(() => driveDocs().length === 4, 'four files in Drive', 20000);
