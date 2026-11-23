@@ -2489,10 +2489,18 @@ const dlg = $('#dlg'), form = $('#dlgForm');
 function showDlg(html, onSubmit) {
   dlg.classList.remove('wide');
   form.innerHTML = html;
+  dlg.returnValue = '';
+  /* only the main (ok) button should check required fields; Cancel, Done etc. must always close */
+  form.querySelectorAll('button:not([value="ok"]):not([type="button"])').forEach(b => { b.formNoValidate = true; });
   form.onsubmit = e => { const v = e.submitter && e.submitter.value; if (v === 'ok' && onSubmit) { const r = onSubmit(new FormData(form)); if (r === false) e.preventDefault(); } };
   dlg.showModal();
   const first = form.querySelector('input:not([type=hidden]),select,textarea'); if (first) first.focus();
 }
+/* clicking the dimmed area outside the box closes it, like Esc (ignore drags that start inside the box) */
+let dlgDownOutside = false;
+const outsideDlg = (e, d) => { const r = d.getBoundingClientRect(); return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom; };
+dlg.addEventListener('mousedown', e => { dlgDownOutside = e.target === dlg && outsideDlg(e, dlg); });
+dlg.addEventListener('click', e => { if (dlgDownOutside && e.target === dlg && outsideDlg(e, dlg)) dlg.close('cancel'); dlgDownOutside = false; });
 function confirmDlg(title, msg, okLabel, danger, altLabel) {
   return new Promise(res => {
     showDlg(`<h3>${esc(title)}</h3><p class="sub">${esc(msg)}</p><div class="dlg-actions"><button class="btn ghost" value="cancel">Cancel</button>${altLabel ? `<button class="btn" value="alt">${esc(altLabel)}</button>` : ''}<button class="btn ${danger ? 'danger' : 'primary'}" value="ok">${esc(okLabel)}</button></div>`);
