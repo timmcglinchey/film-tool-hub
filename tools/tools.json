@@ -658,6 +658,24 @@
       "note": "",
       "rev": 202611211230,
       "file": "tools/mic-placement.html"
+    },
+    {
+      "id": "spectrum",
+      "name": "Spectrum Analysis Lab",
+      "desc": "See a sound split into its frequencies. Pick out the peaks, listen to them on their own, and hear how different mics would change the same sound.",
+      "category": "learn",
+      "tags": [
+        "Sound",
+        "Learning"
+      ],
+      "icon": "spectrum",
+      "fileName": "Spectrum Analysis Lab.html",
+      "origTitle": "Spectrum Analysis Lab",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611232055,
+      "file": "tools/spectrum.html"
     }
   ]
 }
