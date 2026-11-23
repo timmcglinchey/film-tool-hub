@@ -2506,7 +2506,14 @@ dlg.addEventListener('click', e => { if (dlgDownOutside && e.target === dlg && o
 function confirmDlg(title, msg, okLabel, danger, altLabel) {
   return new Promise(res => {
     showDlg(`<h3>${esc(title)}</h3><p class="sub">${esc(msg)}</p><div class="dlg-actions"><button class="btn ghost" value="cancel">Cancel</button>${altLabel ? `<button class="btn" value="alt">${esc(altLabel)}</button>` : ''}<button class="btn ${danger ? 'danger' : 'primary'}" value="ok">${esc(okLabel)}</button></div>`);
-    dlg.addEventListener('close', () => res(dlg.returnValue === 'ok' ? true : dlg.returnValue === 'alt' ? false : (altLabel ? null : false)), {once:true});
+    /* callers often do dlg.close() just before this; that close event is queued and fires after showModal() below,
+       so ignore any close that arrives while this confirm is still open */
+    const onClose = () => {
+      if (dlg.open) return;
+      dlg.removeEventListener('close', onClose);
+      res(dlg.returnValue === 'ok' ? true : dlg.returnValue === 'alt' ? false : (altLabel ? null : false));
+    };
+    dlg.addEventListener('close', onClose);
   });
 }
 const catOptions = sel => CATS.filter(c => !c.personal || c.id === sel).map(c => `<option value="${c.id}"${c.id === sel ? ' selected' : ''}>${esc(catLabel(c))}</option>`).join('');
