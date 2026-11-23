@@ -187,6 +187,13 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
   .cycle-return-line { flex:1; height:1px; background:repeating-linear-gradient(90deg, var(--teal) 0, var(--teal) 6px, transparent 6px, transparent 12px); }
   .cycle-return-label { font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--teal); white-space:nowrap; }
   .cycle-return-arrow { font-size:14px; color:var(--teal); }
+  /* Shot cycle loop: the bottom line runs right, up the side, and back in at the top */
+  .phase-tasks.cycle-tasks { position:relative; padding-right:34px; }
+  .cycle-tasks .cycle-return { height:30px; padding:0 0 0 16px; margin:4px 0; opacity:0.8; }
+  .cycle-loop { position:absolute; right:6px; top:43px; bottom:43px; width:28px; pointer-events:none;
+    border:2px dashed var(--teal); border-left:none; border-radius:0 14px 14px 0; opacity:0.8; }
+  .cycle-loop::before { content:''; position:absolute; top:-8px; left:-4px; width:12px; height:12px;
+    border-left:2px solid var(--teal); border-bottom:2px solid var(--teal); transform:rotate(45deg); }
 
   /* ---- Standard tasks ---- */
   .task { background:var(--navy-card); border:1px solid var(--navy-border); border-radius:6px; position:relative; overflow:hidden; transition:border-color .2s,background .2s,opacity .3s; cursor:pointer; }
@@ -267,10 +274,10 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
   .task-lock:hover { color:var(--teal); }
   .task.unlocked .task-lock { color:var(--teal); }
   .task:not(.unlocked) .task-name-field, .task:not(.unlocked) .task-desc-field, .task:not(.unlocked) .task-owner-field, .task:not(.unlocked) .task-icon-edit { pointer-events:none; border-bottom-color:transparent !important; cursor:default; }
-  .task:not(.unlocked) .guidance-block { pointer-events:none; cursor:default; }
+  .task:not(.unlocked) .guidance-block { cursor:text; }
   .gloss-link { pointer-events:auto; }
   .task:not(.unlocked) .guidance-toolbar { display:none !important; }
-  .task:not(.unlocked) .drawer-notes { pointer-events:none; background:transparent; border-color:transparent; resize:none; cursor:default; }
+  .task:not(.unlocked) .drawer-notes { background:transparent; border-color:transparent; resize:none; cursor:text; }
   .task:not(.unlocked) .btn-add-link, .task:not(.unlocked) .btn-remove-link, .task:not(.unlocked) .link-input { pointer-events:none; opacity:0.5; }
   .task:not(.unlocked) [data-action="reset"] { display:none; }
 
@@ -394,6 +401,36 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
   .research-intro { font-size:13px; color:var(--slate); font-weight:300; line-height:1.7; padding:24px 0 28px; max-width:640px; }
   .research-tasks { display:flex; flex-direction:column; gap:10px; padding-bottom:32px; }
 
+  /* Further reading (per task) */
+  .reading-source { border:1px solid var(--navy-border); border-radius:5px; padding:12px 16px 6px; }
+  .reading-source + .reading-source { margin-top:8px; }
+  .reading-book { font-size:12px; color:var(--slate); font-weight:300; margin-bottom:8px; }
+  .reading-book cite { font-style:italic; color:var(--slate-light); }
+  .reading-row { display:grid; grid-template-columns:minmax(140px,34%) minmax(0,1fr); gap:14px; padding:8px 0; border-top:1px solid var(--navy-border); }
+  .reading-ch { font-size:12px; font-weight:600; color:var(--white); line-height:1.5; }
+  .reading-ch .reading-part { display:block; font-size:10px; font-weight:400; letter-spacing:1px; text-transform:uppercase; color:var(--slate); margin-bottom:1px; }
+  .reading-pages { display:block; font-size:11px; font-weight:400; color:var(--slate); margin-top:2px; }
+  .reading-why { font-size:12px; color:var(--slate-light); font-weight:300; line-height:1.6; }
+  @media (max-width:560px) { .reading-row { grid-template-columns:1fr; gap:2px; } }
+
+  /* References & Links section */
+  .src-intro { font-size:13px; color:var(--slate); font-weight:300; line-height:1.7; padding:24px 0 20px; max-width:680px; }
+  .src-list { display:flex; flex-direction:column; gap:10px; padding-bottom:28px; }
+  .src-card { border:1px solid var(--navy-border); border-radius:5px; padding:16px 18px; background:var(--navy-mid); }
+  .src-head { display:flex; gap:16px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+  .src-title { font-size:15px; font-weight:600; color:var(--white); }
+  .src-title cite { font-style:italic; }
+  .src-author { font-size:12px; color:var(--slate); margin-top:2px; }
+  .src-about { font-size:12px; color:var(--slate-light); font-weight:300; line-height:1.65; margin-top:10px; max-width:760px; }
+  .src-details { font-size:11px; color:var(--slate); line-height:1.6; margin-top:6px; }
+  .src-cited { margin-top:12px; font-size:10px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--slate); }
+  .src-tasks { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .src-task { font-family:inherit; font-size:11px; color:var(--slate-light); background:none; border:1px solid var(--navy-border); border-radius:3px; padding:3px 8px; cursor:pointer; transition:border-color .15s, color .15s; }
+  .src-task:hover { border-color:var(--teal); color:var(--white); }
+  .src-group { font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--slate); margin-right:5px; }
+  .task.src-flash { outline:2px solid var(--teal); outline-offset:2px; transition:outline-color .6s; }
+  .ref-section { padding-bottom:12px; }
+
 /* ═════ Film Tool Hub kit mapping ═════ */
 :root:root:root{--navy:var(--fth-bg);--navy-mid:var(--fth-bg2);--navy-card:var(--fth-surface);--navy-border:var(--fth-line);--teal:var(--fth-accent-ink);--teal-dim:var(--fth-accent-ink);--teal-glow:var(--fth-accent-soft);--slate:var(--fth-muted);--slate-light:var(--fth-text);--white:var(--fth-text);--green:var(--fth-good);--danger:var(--fth-bad);}
 body{font-family:var(--fth-display)}
@@ -438,6 +475,20 @@ body{font-family:var(--fth-display)}
 </div>
 
 <main class="timeline-wrapper" id="timeline"></main>
+
+<div class="research-section ref-section" id="sourcesSection">
+  <button class="research-toggle" onclick="toggleSources()">
+    <span class="research-toggle-eyebrow">Further reading</span>
+    <span class="research-toggle-label">References &amp; Links</span>
+    <svg class="research-chevron" viewBox="0 0 16 16" fill="none">
+      <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="research-body" id="sourcesBody">
+    <p class="src-intro">Every book referred to in this pipeline. Each task's Further reading points to the exact chapters, sections and pages; click a task below to jump straight to it.</p>
+    <div class="src-list" id="sourcesList"></div>
+  </div>
+</div>
 
 <div class="glossary-wrap glossary-locked" id="glossaryWrap">
   <button class="glossary-toggle" onclick="toggleGlossary()">
@@ -1115,6 +1166,239 @@ const PHASE3_TASKS = [
   },
 ];
 
+// Further reading: shown under each task's guidance, separate from the editable text,
+// so it stays visible even when someone has rewritten the guidance.
+// To add a book, add it to READING_SOURCES once, then refer to it by key in READING.
+// A section inside a larger chapter takes `part`. Add `pages` where the edition has reliable page numbers.
+const READING_SOURCES = {
+  brown: { title: 'Cinematography: Theory and Practice', author: 'Blain Brown', edition: '3rd edition, Routledge, 2016',
+           details: 'Routledge, 3rd edition, 2016. ISBN 978-1-138-94092-5 (pbk). Page numbers are those of the printed 3rd edition, taken from the book’s index. Ebook copies reflow and may show no page numbers, so search for the section heading instead.',
+           about: 'A wide-ranging guide to the cinematographer’s craft: visual storytelling, coverage and continuity, exposure, lighting, lenses, camera movement, set procedure and data management.' },
+  elkins: { title: 'The Camera Assistant’s Manual', author: 'David E. Elkins', edition: '7th edition, Routledge, 2020',
+           details: 'Routledge, 7th edition, 2020. ISBN 978-1-138-32335-3 (pbk). Page numbers in this tool refer to this edition.',
+           about: 'The standard practical handbook for the camera department: every role from DP to trainee, camera prep, marks, slating, camera reports, focus pulling and the daily routine on set.' },
+  honthaner: { title: 'The Complete Film Production Handbook', author: 'Eve Light Honthaner', edition: '4th edition, Focal Press, 2010',
+           details: 'Focal Press, 4th edition, 2010. ISBN 978-0-240-81150-5. Page numbers in this tool refer to this edition. Written for US productions: check UK practice (HSE guidance, union agreements) on legal and employment points.',
+           about: 'A production manager’s and AD’s reference: who does what, the daily routine of a shoot, call sheets and production reports, safety, locations and wrap, with sample forms.' }
+};
+
+const READING = {
+  // ── Research & Contextualisation ──
+  rt1: [
+    { src:'brown', part:'Chapter 5: Coverage & Continuity', ch:'The Shots: Building Blocks of a Scene', pages:'pp. 60–65', why:'Wide, medium, close-up, over-the-shoulder, inserts, cutaways and reactions: the vocabulary of a shot list.' },
+    { src:'brown', part:'Chapter 5: Coverage & Continuity', ch:'The Shooting Methods', pages:'pp. 66–71', why:'Master scene, coverage, overlapping, in-one and freeform: different ways of breaking down the same scene, each with its own cost in time.' },
+    { src:'brown', part:'Chapter 5: Coverage & Continuity', ch:'Planning Coverage and Cuttability', pages:'pp. 82–83', why:'Shooting so the editor can cut, including the 20% and 30 degree rules for avoiding jump cuts.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Block, Light, Rehearse, Shoot', pages:'pp. 348–351', why:'The standard order of work on set, and exactly when the director hands the set to the DP and takes it back.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'The Shot List', pages:'pp. 326–329', why:'Why the director’s shot list matters to the DP and AD even when it is not followed step by step.' },
+    { src:'elkins', part:'Chapter 1: Basics of Cinematography', ch:'Shots and Composition', pages:'pp. 8–12', why:'Standard shot names, and a warning that two people can mean different framings by the same name: agree what you mean.' },
+    { src:'honthaner', part:'Chapter 8: During the Shoot', ch:'The Script Supervisor’s Role', pages:'p. 162', why:'How the script supervisor supports the director’s coverage decisions during the day.' }
+  ],
+  rt2: [
+    { src:'honthaner', part:'Chapter 1: The Production Team and Who Does What', ch:'First and Second Assistant Director', pages:'p. 4', why:'The First runs the set, keeps the day on schedule and calls “Quiet on the set”; the Second handles cast, paperwork and call times.' },
+    { src:'honthaner', part:'Chapter 1: The Production Team and Who Does What', ch:'Production Team Job Responsibilities', pages:'pp. 6–10', why:'A chart of which production role is responsible for each task, useful for working out who owns what on a small crew.' },
+    { src:'honthaner', part:'Chapter 8: During the Shoot', ch:'The Set, Communications and The Daily Routine', pages:'pp. 157–159', why:'How a shoot day is run from the production side, and how the set and office stay in contact.' },
+    { src:'honthaner', part:'Chapter 8: During the Shoot', ch:'Call Sheets and Production Reports', pages:'p. 160', why:'The two key documents of every shoot day: the plan for tomorrow and the record of today.' },
+    { src:'honthaner', part:'Chapter 6: Pre-Production', ch:'Walkie-Talkies', pages:'p. 100', why:'Radios on set: planning channels and handsets before the shoot.' },
+    { src:'honthaner', part:'Chapter 17: Safety', ch:'Safety Meetings and General Safety Guidelines for Production', pages:'pp. 311–315', why:'Running safety meetings, who is responsible for which area, and the general rules of safe practice on set.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'The Page Turn', pages:'p. 331', why:'The production meeting the First AD runs, going through the script page by page to get a go or no-go from every department.' }
+  ],
+  rt3: [
+    { src:'elkins', part:'Chapter 2', ch:'The Camera Department', pages:'pp. 47–63', why:'What each camera role does in prep, during the shoot and afterwards, from DP and operator to ACs, DIT and data wrangler.' },
+    { src:'elkins', part:'Chapter 5: First Assistant Cameraman', ch:'Camera Prep Check List', pages:'pp. 197–217', why:'A full, step-by-step camera prep at the rental house: the basis of any build check.' },
+    { src:'elkins', part:'Chapter 5: First Assistant Cameraman', ch:'Focus Measurements and Following Focus', pages:'pp. 251–262', why:'Measuring distances, getting marks during rehearsal, and practical tips for pulling focus.' },
+    { src:'elkins', part:'Chapter 1: Basics of Cinematography', ch:'Camera Mounts', pages:'pp. 40–46', why:'Tripods, high hats, fluid and gear heads, Steadicam and dollies.' },
+    { src:'brown', part:'Chapter 9: Exposure', ch:'Exposure Indicators in the Camera', pages:'pp. 184–189', why:'Zebras, histogram, traffic lights and false colour: what each tells you and how to read them.' },
+    { src:'brown', part:'Chapter 14: Optics & Focus', ch:'Focus, Depth-of-Field and Hyperfocal Distance', pages:'pp. 287–294', why:'The optics behind focus pulling: circle of confusion, depth-of-field and hyperfocal distance.' },
+    { src:'brown', part:'Chapter 15: Camera Movement', ch:'Camera Supports for Movement', pages:'pp. 308–319', why:'Handheld, stabilisers, heads, tripods and dollies, including dolly terminology (pp. 314–316).' }
+  ],
+  rt4: [
+    { src:'brown', part:'Chapter 13: Lighting Basics', ch:'The Fundamentals of Lighting', pages:'pp. 259–263', why:'What lighting is for: tone, shape, separation, depth, texture and mood.' },
+    { src:'brown', part:'Chapter 13: Lighting Basics', ch:'Working with Hard Light and Soft Light', pages:'pp. 265–269', why:'How hard and soft sources are made and controlled, and why flat front light is best avoided.' },
+    { src:'brown', part:'Chapter 13: Lighting Basics', ch:'Basic Principles of Lighting', pages:'pp. 272–278', why:'Practicals, motivated light, lighting through windows and carrying a lamp.' },
+    { src:'brown', part:'Chapter 4: Visual Storytelling', ch:'Lighting as Storytelling', pages:'pp. 48–56', why:'Light as visual metaphor, from film noir to light and shadow as good and evil.' },
+    { src:'brown', part:'Chapter 12: The Tools of Lighting', ch:'LED Lights and HMI Units', pages:'pp. 238–245', why:'The main daylight and LED fixtures you are likely to have on the truck, and how they differ.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Lighting Technicians and Grips', pages:'pp. 344–348', why:'How the gaffer, best boy, electricians and grips divide the work.' },
+    { src:'elkins', part:'Chapter 1: Basics of Cinematography', ch:'Exposure Meters, and Color Temperature and Color Balance', pages:'pp. 17–20', why:'Incident, spot and combination meters, and colour temperature in kelvin.' },
+    { src:'honthaner', part:'Chapter 17: Safety', ch:'Electrical Safety', pages:'p. 315', why:'Electrical safety guidelines for production.' }
+  ],
+  rt5: [
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Room Tone', pages:'p. 351', why:'Why room tone is essential, and how to label it so the sound editor knows which scene it belongs to.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Slating Technique', pages:'pp. 355–356', why:'Verbal slating, the clap as the sync point, tail slates and MOS.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Timecode Slates and Jamming the Slate', pages:'pp. 356–359', why:'Keeping recorder and slate timecode in step through the day.' },
+    { src:'elkins', part:'Chapter 1: Basics of Cinematography', ch:'Sync and MOS', pages:'p. 31', why:'What sync sound and MOS mean for camera and sound.' },
+    { src:'elkins', part:'Chapter 4: Second Assistant Cameraman', ch:'Slating Procedures', pages:'pp. 133–137', why:'Slating from the camera side: where to hold the board, when to clap, and how to deal with common problems.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Set Etiquette', pages:'pp. 351–353', why:'Absolute silence during takes, and the habits that keep a set quiet enough to record.' }
+  ],
+  rt6: [
+    { src:'brown', part:'Chapter 5: Coverage & Continuity', ch:'Types of Continuity', pages:'pp. 74–77', why:'Continuity of content, movement, position and time: what the art department has to keep matching between takes and setups.' },
+    { src:'honthaner', part:'Chapter 15: Clearances and Releases', ch:'What Needs to Be Cleared', pages:'pp. 274–275', why:'Posters, paintings, products, publications, street addresses, licence plates: items in the dressing that may need permission.' },
+    { src:'honthaner', part:'Chapter 18: Locations', ch:'Filmmaker’s Code of Conduct', pages:'p. 327', why:'How a crew is expected to treat a location and its neighbours.' },
+    { src:'honthaner', part:'Chapter 29: Wrap', ch:'Wrapping by Department: Props and Set Dressing', pages:'p. 453', why:'Wrapping props and set dressing at the end of the shoot.' },
+    { src:'brown', part:'Chapter 3: Language of the Lens', ch:'Foreground/Midground/Background', pages:'p. 30', why:'How depth in the frame is built, and why dressing in the foreground and background matters to the camera.' }
+  ],
+  rt7: [
+    { src:'honthaner', part:'Chapter 8: During the Shoot', ch:'The Script Supervisor’s Role', pages:'p. 162', why:'The script supervisor’s responsibilities during principal photography.' },
+    { src:'brown', part:'Chapter 5: Coverage & Continuity', ch:'Types of Continuity', pages:'pp. 74–77', why:'Content, movement, position and time: the four kinds of continuity to watch on every take.' },
+    { src:'brown', part:'Chapter 5: Coverage & Continuity', ch:'The Prime Directive: Screen Direction', pages:'pp. 77–82', why:'The action axis, what establishes the line, and legitimate ways to cross it.' },
+    { src:'brown', part:'Chapter 5: Coverage & Continuity', ch:'Eyelines', pages:'p. 87', why:'Eyelines in over-the-shoulder coverage and for seated characters.' },
+    { src:'brown', part:'Chapter 5: Coverage & Continuity', ch:'Jump Cuts and the Six Types of Cuts', pages:'pp. 91–94', why:'What makes a cut work, so you know which continuity errors will show in the edit.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'The European System of Slating', pages:'pp. 360–361', why:'The consecutive slate-number system used in the UK, Europe and Australia, which the slate in this pipeline follows.' }
+  ],
+  rt8: [
+    { src:'brown', part:'Chapter 17', ch:'Data Management', pages:'pp. 365–376', why:'The whole chapter: principles, procedures, logs, file naming, software and storage.' },
+    { src:'brown', part:'Chapter 17: Data Management', ch:'Basic Principles', pages:'pp. 366–367', why:'Have a standard procedure, follow it every time, and keep logs that show what was done.' },
+    { src:'brown', part:'Chapter 17: Data Management', ch:'Procedure: Best Practices', pages:'pp. 367–371', why:'Locked cards, clear signals between camera and data, scrubbing footage, three copies and never drag-and-drop.' },
+    { src:'brown', part:'Chapter 8: Measurement', ch:'The Waveform Monitor and the Vectorscope', pages:'pp. 152–161', why:'The scopes the DIT uses to monitor exposure and colour on set.' },
+    { src:'elkins', part:'Chapter 2: The Camera Department', ch:'Digital Imaging Technician and Digital Loader/Data Manager', pages:'pp. 59–61', why:'How the DIT and data manager roles divide the work on a digital shoot.' },
+    { src:'elkins', part:'Chapter 4: Second Assistant Cameraman', ch:'Preparing Media Cards and Hard Drives; Storage and Care of Media Cards', pages:'pp. 184–185', why:'The camera side of the handover: preparing, labelling and looking after media.' }
+  ],
+
+  // ── Phase 01: Crew Call & Set Up ──
+  p1t0: [
+    { src:'elkins', part:'Chapter 5: First Assistant Cameraman', ch:'Start-of-the-Day Procedures', pages:'pp. 218–220', why:'What a professional AC does from arrival to the first shot.' },
+    { src:'elkins', part:'Chapter 4: Second Assistant Cameraman', ch:'Start of Day Procedures', pages:'p. 83', why:'The Second AC’s routine at the start of each day.' },
+    { src:'elkins', part:'Chapter 8: Before, During, and After the Job', ch:'During the Job and On Set Etiquette', pages:'pp. 360–364, 376', why:'Professional conduct once you are hired and on set.' },
+    { src:'honthaner', part:'Chapter 8: During the Shoot', ch:'The Daily Routine', pages:'pp. 158–159', why:'How a typical shoot day runs from first call.' },
+    { src:'honthaner', part:'Chapter 1: The Production Team and Who Does What', ch:'Second Assistant Director', pages:'p. 4', why:'The Second AD is usually first to set in the morning and last to leave at wrap.' }
+  ],
+  p1t1: [
+    { src:'honthaner', part:'Chapter 17: Safety', ch:'Safety Meetings and Designated Areas of Responsibility', pages:'pp. 311–312', why:'Holding safety meetings, and making each person responsible for safety in their own area.' },
+    { src:'honthaner', part:'Chapter 17: Safety', ch:'General Safety Guidelines for Production', pages:'pp. 313–315', why:'Lifting, falls, hazardous materials, equipment, electrics, water, stunts, smoke and firearms, and preparing for an emergency.' },
+    { src:'honthaner', part:'Chapter 17: Safety', ch:'Working Under Hazardous Conditions', pages:'p. 316', why:'Extra precautions when the work itself is dangerous.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Set Safety', pages:'pp. 354–355', why:'Practical rules: no running, ladder safety, sandbags, and nobody touches electrics but the electricians.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'The Page Turn', pages:'p. 331', why:'Where stunts, effects and other special requirements should be raised before the day.' }
+  ],
+  p1t2: [
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Location Scouts and Tech Scouts', pages:'pp. 328–330', why:'What the DP is looking for on a scout and a tech scout.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Finding the Sun', pages:'p. 364', why:'Knowing where the sun will be, and when, for scheduling exteriors and window light.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Block, Light, Rehearse, Shoot', pages:'pp. 348–351', why:'The DP needs to know what will not be in shot before lighting seriously.' },
+    { src:'honthaner', part:'Chapter 1: The Production Team and Who Does What', ch:'Second Assistant Director', pages:'p. 4', why:'A short definition of tech scouts: heads of department visiting a location to work out what they need.' },
+    { src:'honthaner', part:'Chapter 17: Safety', ch:'Visit Locations Prior to First Day of Shooting', pages:'p. 317', why:'Personal safety considerations when visiting a location before the shoot.' },
+    { src:'honthaner', part:'Chapter 18: Locations', ch:'The Location Manager', pages:'pp. 323–326', why:'The location manager’s role in finding, securing and looking after a location.' }
+  ],
+  p1t3: [
+    { src:'elkins', part:'Chapter 5: First Assistant Cameraman', ch:'Camera Prep Check List', pages:'pp. 197–217', why:'A full checklist for building and testing the camera.' },
+    { src:'elkins', part:'Chapter 5: First Assistant Cameraman', ch:'Setting Up the Camera (digital)', pages:'pp. 286–287', why:'Building and setting up a digital camera on the day.' },
+    { src:'elkins', part:'Chapter 5: First Assistant Cameraman', ch:'Setting the Viewfinder Eyepiece', pages:'pp. 225–228', why:'Setting the eyepiece for the operator before the first shot.' },
+    { src:'elkins', part:'Chapter 4: Second Assistant Cameraman', ch:'Setting Up the Camera and Organizing Equipment', pages:'pp. 84–86', why:'How the Second AC lays out cases and accessories so anything can be found quickly.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'AC Prep and Camera Prep Checklist', pages:'pp. 342–344', why:'Batteries, cables and backups: what to check, and why to always carry spares.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Lighting Technicians and Grips', pages:'pp. 344–348', why:'Who builds and checks lighting and grip equipment.' },
+    { src:'elkins', part:'Chapter 6: Problems and Troubleshooting', ch:'Battery Problems', pages:'p. 314', why:'Batteries that lose power or won’t hold a charge.' }
+  ],
+  p1t4: [
+    { src:'elkins', part:'Chapter 4: Second Assistant Cameraman', ch:'Marking Actors and Camera Positions', pages:'pp. 124–127', why:'Laying actors’ marks during blocking, and the kinds of mark used.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Block, Light, Rehearse, Shoot', pages:'pp. 348–351', why:'Blocking, marks, lighting with stand-ins, then “first team” for rehearsal.' },
+    { src:'honthaner', part:'Chapter 12: Principal Talent', ch:'Work Calls and Rest Periods', pages:'pp. 211–212', why:'Actors’ call times and the rest they are owed between days (US union rules, but the principle is universal).' },
+    { src:'honthaner', part:'Chapter 12: Principal Talent', ch:'The Employment of Minors', pages:'pp. 214–216', why:'Chaperones, schooling and working hours for child actors. In the UK, check your local authority’s licensing rules.' },
+    { src:'honthaner', part:'Chapter 13: Background Talent', ch:'Reminder of Professional Conduct for Background Actors', pages:'p. 266', why:'A conduct reminder for extras.' }
+  ],
+  p1t5: [
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'The Process', pages:'pp. 348–351', why:'Step by step from blocking to “camera is ready”, first team, last looks and “lock it up”.' },
+    { src:'elkins', part:'Chapter 5: First Assistant Cameraman', ch:'Shooting the Shot', pages:'p. 265', why:'The AC’s part in the moment the first shot rolls.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Camera Crew', pages:'pp. 332–338', why:'Operator, First AC, Second AC and loader: who must be ready before picture is up.' },
+    { src:'honthaner', part:'Chapter 8: During the Shoot', ch:'The Daily Routine', pages:'pp. 158–159', why:'How the AD team moves the set from first call into shooting.' }
+  ],
+
+  // ── Phase 02: The Shot Cycle ──
+  cs1: [
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Block, Light, Rehearse, Shoot', pages:'pp. 348–351', why:'The reset as part of a fixed order of work that the whole crew understands.' },
+    { src:'brown', part:'Chapter 5: Coverage & Continuity', ch:'Types of Continuity', pages:'pp. 74–77', why:'What has to go back exactly where it was: content, movement, position and time.' },
+    { src:'elkins', part:'Chapter 5: First Assistant Cameraman', ch:'Changing Lenses, Filters and Accessories', pages:'pp. 248–250', why:'Swapping lenses and filters quickly and safely between setups.' },
+    { src:'elkins', part:'Chapter 5: First Assistant Cameraman', ch:'Moving the Camera', pages:'pp. 268–269', why:'Moving the camera safely to the next position.' },
+    { src:'elkins', part:'Chapter 4: Second Assistant Cameraman', ch:'Changing Lenses, Filters and Magazines', pages:'pp. 138–140', why:'The Second AC’s side of a lens or media change.' }
+  ],
+  cs2: [
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'The Process', pages:'pp. 348–351', why:'The calls in order: lock it up, roll sound, speed, roll camera, marker, action.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Slating Technique', pages:'pp. 355–356', why:'Hold the board in focus, read it aloud, clap cleanly and get out of shot. Includes tail slates and MOS.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'The European System of Slating', pages:'pp. 360–361', why:'Consecutive slate numbers, as used in this pipeline, and how they differ from the American scene-and-letter system (pp. 359–360).' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Pickups, Series, and Reshoots; Bumping a Slate', pages:'pp. 361–363', why:'How to mark pickups and reshoots on the board.' },
+    { src:'elkins', part:'Chapter 4: Second Assistant Cameraman', ch:'Slates and Slating Procedures', pages:'pp. 128–137', why:'Types of slate, what goes on them, and slating procedure step by step.' },
+    { src:'honthaner', part:'Chapter 1: The Production Team and Who Does What', ch:'First Assistant Director', pages:'p. 4', why:'The First runs the set and is the one who calls “Quiet on the set!”.' }
+  ],
+  cs3: [
+    { src:'elkins', part:'Chapter 5: First Assistant Cameraman', ch:'Focus Measurements and Following Focus', pages:'pp. 251–262', why:'Pulling focus during the take, including getting marks and dealing with actors who miss them.' },
+    { src:'elkins', part:'Chapter 5: First Assistant Cameraman', ch:'Zoom Lens Moves', pages:'pp. 263–264', why:'Executing zooms during a shot.' },
+    { src:'brown', part:'Chapter 15: Camera Movement', ch:'Basic Technique and Types of Moves', pages:'pp. 303–306', why:'Pans, tilts, push-ins, tracking and countermoves, and keeping moves motivated.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Operator and First AC Duties', pages:'pp. 332–338', why:'What the operator and focus puller are each responsible for while the camera rolls.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Set Etiquette', pages:'pp. 351–353', why:'Silence during takes, and keeping away from the camera and the monitor.' }
+  ],
+  cs4: [
+    { src:'elkins', part:'Chapter 5: First Assistant Cameraman', ch:'Checking the Gate', pages:'pp. 266–267', why:'Checking for hairs or debris before moving on (film), and its digital equivalent of checking the take.' },
+    { src:'elkins', part:'Chapter 4: Second Assistant Cameraman', ch:'Camera Reports', pages:'pp. 91–103', why:'Logging each take, including which takes are circled.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Camera Crew Reports', pages:'pp. 339–342', why:'What the camera report records and why the editor relies on it.' },
+    { src:'brown', part:'Chapter 5: Coverage & Continuity', ch:'Planning Coverage and Cuttability', pages:'pp. 82–83', why:'Before moving on, ask: will this cut with what we already have?' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'When to Change the Letter', pages:'pp. 359–360', why:'What counts as a new setup for slating purposes: a new camera position, a lens change for a punch-in, a new frame rate.' },
+    { src:'honthaner', part:'Chapter 8: During the Shoot', ch:'The Script Supervisor’s Role', pages:'p. 162', why:'Recording the director’s take assessments for the edit.' }
+  ],
+
+  // ── Phase 03: Tear Down ──
+  p3t1: [
+    { src:'brown', part:'Chapter 5: Coverage & Continuity', ch:'The Shooting Methods', pages:'pp. 66–71', why:'Checking coverage against the method you chose: master, coverage, overlapping or in-one.' },
+    { src:'brown', part:'Chapter 5: Coverage & Continuity', ch:'Planning Coverage and Cuttability', pages:'pp. 82–83', why:'Are there enough angles to cut the scene, and enough change between them?' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'The Shot List', pages:'pp. 326–329', why:'The shot list as the record to check against before releasing a location.' },
+    { src:'honthaner', part:'Chapter 8: During the Shoot', ch:'The Script Supervisor’s Role and Reshoots', pages:'pp. 162–163', why:'Checking what has been shot, and what happens when a shot has to be picked up later.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Pickups, Series, and Reshoots', pages:'pp. 361–362', why:'How pickups and reshoots are slated so the editor can find them.' }
+  ],
+  p3t2: [
+    { src:'brown', part:'Chapter 17: Data Management', ch:'Procedure: Best Practices', pages:'pp. 367–371', why:'Locked media, clear signals, scrubbing footage after copying, and keeping at least three copies.' },
+    { src:'brown', part:'Chapter 17: Data Management', ch:'Download/Ingest Software', pages:'pp. 372–373', why:'Software that copies with checksum verification instead of drag-and-drop.' },
+    { src:'brown', part:'Chapter 17: Data Management', ch:'Hard Drives, RAIDs and Shuttle Drives', pages:'pp. 374–375', why:'Where the copies live and how they travel to post, and how much storage to plan for.' },
+    { src:'brown', part:'Chapter 17: Data Management', ch:'File Naming and Logs', pages:'pp. 370–371', why:'Naming conventions and logs that let you prove each card was copied.' },
+    { src:'elkins', part:'Chapter 2: The Camera Department', ch:'Digital Loader/Data Manager/Data Wrangler', pages:'pp. 60–61', why:'The role responsible for offloading and backing up media.' },
+    { src:'honthaner', part:'Chapter 7: Insurance Requirements', ch:'Production Media / Direct Physical Loss', pages:'p. 131', why:'Insurance that covers lost or damaged footage, and why losing media is so costly.' }
+  ],
+  p3t3: [
+    { src:'honthaner', part:'Chapter 8: During the Shoot', ch:'Call Sheets and Production Reports; Paperwork from the Set', pages:'pp. 160–161', why:'The production report and the other paperwork that must leave the set each day.' },
+    { src:'honthaner', part:'Chapter 2: The Production Office', ch:'Day Files', pages:'p. 28', why:'One file per shoot day holding its call sheet, production report, camera and sound reports.' },
+    { src:'elkins', part:'Chapter 4: Second Assistant Cameraman', ch:'Camera Reports', pages:'pp. 91–103', why:'Filling in the camera report: header information, takes, circled takes and notes.' },
+    { src:'elkins', part:'Chapter 4: Second Assistant Cameraman', ch:'Camera Reports (Working in Digital Video)', pages:'pp. 180–182', why:'Camera reports for digital shoots.' },
+    { src:'elkins', part:'Chapter 4: Second Assistant Cameraman', ch:'Distribution of Reports; Record Keeping and Filing of Paperwork', pages:'pp. 164–166', why:'Who gets each copy, and keeping your own records.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Camera Crew Reports', pages:'pp. 339–342', why:'Camera reports as the link between set and editor.' },
+    { src:'elkins', part:'Appendix C', ch:'Camera Department Checklists, Production Forms, and Labels', pages:'pp. 414–420', why:'Sample forms and checklists.' }
+  ],
+  p3t4: [
+    { src:'elkins', part:'Chapter 5: First Assistant Cameraman', ch:'End-of-the-Day Procedures: Packing Equipment and The Walkaway', pages:'pp. 270–271', why:'Packing the camera properly, and a last walk round the set so nothing is left behind.' },
+    { src:'elkins', part:'Chapter 4: Second Assistant Cameraman', ch:'Packing Equipment', pages:'p. 168', why:'The Second AC’s packing routine.' },
+    { src:'honthaner', part:'Chapter 18: Locations', ch:'Filmmaker’s Code of Conduct', pages:'p. 327', why:'Leaving a location as you found it.' },
+    { src:'honthaner', part:'Chapter 31: Greener Filmmaking', ch:'Departmental Guidelines: On-Set', pages:'p. 486', why:'Reducing waste and recycling on set.' },
+    { src:'brown', part:'Chapter 16: Set Operations', ch:'Set Safety', pages:'pp. 354–355', why:'Safety still applies during strike, when everyone is tired and in a hurry.' }
+  ],
+  p3t5: [
+    { src:'honthaner', part:'Chapter 8: During the Shoot', ch:'The Day Before and Daily Wrap', pages:'pp. 163–164', why:'Preparing for the next day, and the routine at the end of each day.' },
+    { src:'honthaner', part:'Chapter 1: The Production Team and Who Does What', ch:'Second Assistant Director', pages:'p. 4', why:'The Second AD is last to leave once wrap is called.' },
+    { src:'honthaner', part:'Chapter 29: Wrap', ch:'At the Completion of Principal Photography', pages:'p. 452', why:'What follows the last day of the shoot.' },
+    { src:'elkins', part:'Chapter 8: Before, During, and After the Job', ch:'After the Job: The Next Job and Networking', pages:'pp. 377–378', why:'How a good wrap leads to the next booking.' }
+  ]
+};
+
+function readingHTML(taskId) {
+  const refs = READING[taskId];
+  if (!refs || !refs.length) return '';
+  const order = [], bySrc = {};
+  refs.forEach(r => { if (!bySrc[r.src]) { bySrc[r.src] = []; order.push(r.src); } bySrc[r.src].push(r); });
+  const blocks = order.map(key => {
+    const s = READING_SOURCES[key]; if (!s) return '';
+    const rows = bySrc[key].map(r => `
+      <div class="reading-row">
+        <div class="reading-ch">${r.part ? `<span class="reading-part">${escHtml(r.part)}</span>` : ''}${escHtml(r.ch)}${r.pages ? `<span class="reading-pages">${escHtml(r.pages)}</span>` : ''}</div>
+        <div class="reading-why">${escHtml(r.why)}</div>
+      </div>`).join('');
+    return `<div class="reading-source"><div class="reading-book">${escHtml(s.author)}, <cite>${escHtml(s.title)}</cite> (${escHtml(s.edition)})</div>${rows}</div>`;
+  }).join('');
+  return `<div class="drawer-section"><div class="drawer-label">Further reading</div>${blocks}</div>`;
+}
+
+// Locked tasks stay readable and selectable (so text can be copied) but not editable.
+function applyTaskLock(taskEl, unlocked) {
+  taskEl.querySelectorAll('.guidance-block').forEach(function(g){ g.setAttribute('contenteditable', unlocked ? 'true' : 'false'); });
+  taskEl.querySelectorAll('.drawer-notes').forEach(function(n){ n.readOnly = !unlocked; });
+}
+
+function hasTextSelection() {
+  var s = window.getSelection ? window.getSelection() : null;
+  return !!(s && !s.isCollapsed && s.toString().trim());
+}
+
 // ---- State ----
 const STORE_KEY = 'production_v1';
 const GLOSSARY_KEY = 'production_glossary_v1';
@@ -1325,6 +1609,7 @@ function buildTaskEl(task, phaseId, rolePanelFn) {
             <div class="guidance-block" contenteditable="true" spellcheck="false">${guidanceContent}</div>
           </div>
         </div>
+        ${readingHTML(task.id)}
         ${rolePanel ? `<div class="drawer-section">${rolePanel}</div>` : ''}
         <div class="drawer-section">
           <div class="drawer-label">Crew Notes</div>
@@ -1340,7 +1625,7 @@ function buildTaskEl(task, phaseId, rolePanelFn) {
 
   // Role pills
   if (rolePanel) {
-    bindRolePillEvents(taskEl.querySelector('.drawer-section:nth-child(2)'));
+    bindRolePillEvents(taskEl.querySelector('.roles-section'));
   }
 
   // Desc auto-height
@@ -1371,12 +1656,16 @@ function buildTaskEl(task, phaseId, rolePanelFn) {
   lockBtn.addEventListener('click', e => {
     e.stopPropagation();
     const unlocked = taskEl.classList.toggle('unlocked');
+    applyTaskLock(taskEl, unlocked);
     lockBtn.textContent = unlocked ? '🔓' : '🔒';
     lockBtn.title = unlocked ? 'Lock to prevent edits' : 'Unlock to edit';
   });
 
   taskEl.addEventListener('click', e => {
-    if (e.target.closest('.task-checkbox') || e.target.closest('.task-lock') || e.target.closest('input') || e.target.closest('textarea') || e.target.closest('.role-pill') || e.target.closest('.role-card')) return;
+    // Only the header opens and closes a task, so text in the drawer can be selected and copied.
+    if (!e.target.closest('.task-header')) return;
+    if (e.target.closest('.task-checkbox') || e.target.closest('.task-lock') || e.target.closest('input') || e.target.closest('textarea')) return;
+    if (hasTextSelection()) return;
     if (!taskEl.classList.contains('unlocked')) {
       const isOpen = taskEl.classList.contains('open');
       document.querySelectorAll('.task.open').forEach(t => { if (t !== taskEl) t.classList.remove('open'); });
@@ -1410,6 +1699,7 @@ function buildTaskEl(task, phaseId, rolePanelFn) {
   notesEl.addEventListener('click', e => e.stopPropagation());
 
   bindLinkEvents(taskEl.querySelector('.task-drawer'), task.id);
+  applyTaskLock(taskEl, taskEl.classList.contains('unlocked'));
   return taskEl;
 }
 
@@ -1485,6 +1775,7 @@ function buildCustomTaskEl(phaseId, ct) {
   lockBtnC.addEventListener('click', e => {
     e.stopPropagation();
     const unlocked = el.classList.toggle('unlocked');
+    applyTaskLock(el, unlocked);
     lockBtnC.textContent = unlocked ? '🔓' : '🔒';
     lockBtnC.title = unlocked ? 'Lock to prevent edits' : 'Unlock to edit';
   });
@@ -1499,6 +1790,7 @@ function buildCustomTaskEl(phaseId, ct) {
   });
   header.addEventListener('click', e => {
     if (e.target.closest('.task-checkbox') || e.target.closest('.task-remove') || e.target.closest('.task-lock') || e.target.closest('input') || e.target.closest('textarea')) return;
+    if (hasTextSelection()) return;
     const isOpen = el.classList.contains('open');
     document.querySelectorAll('.task.open').forEach(t => { if (t !== el) t.classList.remove('open'); });
     el.classList.toggle('open', !isOpen);
@@ -1526,7 +1818,8 @@ function addCustomTask(phaseId) {
   setCustomTasks(phaseId, tasks);
   const tasksEl = document.getElementById('tasks-' + phaseId);
   const el = buildCustomTaskEl(phaseId, newTask);
-  tasksEl.appendChild(el);
+  const cycleEnd = tasksEl.querySelector('.cycle-return-end');
+  if (cycleEnd) tasksEl.insertBefore(el, cycleEnd); else tasksEl.appendChild(el);
   el.classList.add('open');
   const titleInput = el.querySelector('.task-name-edit');
   if (titleInput) setTimeout(() => titleInput.focus(), 50);
@@ -1628,12 +1921,16 @@ function render() {
     <div class="phase-tasks" id="tasks-p2"></div>`;
 
   const tasks2El = phase2El.querySelector('#tasks-p2');
+  tasks2El.classList.add('cycle-tasks');
+  const cycleLoop = document.createElement('div');
+  cycleLoop.className = 'cycle-loop';
+  cycleLoop.setAttribute('aria-hidden', 'true');
+  tasks2El.appendChild(cycleLoop);
 
   // Cycle return arrow at the top (indicating return from Cut back to Set)
   const cycleTopArrow = document.createElement('div');
   cycleTopArrow.className = 'cycle-return';
   cycleTopArrow.innerHTML = `
-    <span class="cycle-return-arrow" title="After Cut, the cycle returns here">↑</span>
     <span class="cycle-return-label">Cycle returns here after each shot</span>
     <div class="cycle-return-line"></div>`;
   tasks2El.appendChild(cycleTopArrow);
@@ -1645,17 +1942,17 @@ function render() {
     // After the last step (Cut & Assess), show the return arrow
     if (idx === CYCLE_STEPS.length - 1) {
       const returnArrow = document.createElement('div');
-      returnArrow.className = 'cycle-return';
-      returnArrow.style.opacity = '0.6';
+      returnArrow.className = 'cycle-return cycle-return-end';
+      returnArrow.title = 'Loop back to Set / Reset for the next shot';
       returnArrow.innerHTML = `
-        <div class="cycle-return-line"></div>
-        <span class="cycle-return-label">Next shot → Set/Reset</span>
-        <span class="cycle-return-arrow" style="transform:rotate(180deg);display:inline-block" title="Loop back to Set/Reset">↑</span>`;
+        <span class="cycle-return-label">Next shot: back to Set / Reset</span>
+        <div class="cycle-return-line"></div>`;
       tasks2El.appendChild(returnArrow);
     }
   });
 
-  getCustomTasks('p2').forEach(ct => tasks2El.appendChild(buildCustomTaskEl('p2', ct)));
+  const cycleEnd = tasks2El.querySelector('.cycle-return-end');
+  getCustomTasks('p2').forEach(ct => tasks2El.insertBefore(buildCustomTaskEl('p2', ct), cycleEnd));
 
   const addBtn2 = document.createElement('button');
   addBtn2.className = 'add-task-btn';
@@ -2145,9 +2442,70 @@ function renderResearch() {
   });
 }
 
+// ---- References & Links ----
+function toggleSources() {
+  var section = document.getElementById('sourcesSection');
+  if (section) section.classList.toggle('open');
+}
+
+function sourceTaskGroups() {
+  return [
+    { label: 'Research', tasks: RESEARCH_TASKS },
+    { label: 'Phase 01', tasks: PHASE1_TASKS },
+    { label: 'Phase 02', tasks: CYCLE_STEPS },
+    { label: 'Phase 03', tasks: PHASE3_TASKS }
+  ];
+}
+
+function renderSources() {
+  var list = document.getElementById('sourcesList');
+  if (!list) return;
+  var groups = sourceTaskGroups();
+  list.innerHTML = Object.keys(READING_SOURCES).map(function(key) {
+    var s = READING_SOURCES[key];
+    var count = 0;
+    var chips = groups.map(function(g) {
+      var cited = g.tasks.filter(function(t){ return (READING[t.id] || []).some(function(r){ return r.src === key; }); });
+      count += cited.length;
+      return cited.map(function(t) {
+        var ts = getTask(t.id);
+        var nm = ts.nameOverride != null ? ts.nameOverride : t.name;
+        return '<button class="src-task" data-goto="' + t.id + '"><span class="src-group">' + g.label + '</span>' + escHtml(nm) + '</button>';
+      }).join('');
+    }).join('');
+    var link = s.link ? '<a class="link-go" href="' + escAttr(s.link) + '" target="_blank" rel="noopener">' + escHtml(s.linkLabel || 'Open link') + ' ↗</a>' : '';
+    return '<div class="src-card"><div class="src-head"><div><div class="src-title"><cite>' + escHtml(s.title) + '</cite></div>' +
+      '<div class="src-author">' + escHtml(s.author) + ' · ' + escHtml(s.edition) + '</div></div>' + link + '</div>' +
+      (s.about ? '<div class="src-about">' + escHtml(s.about) + '</div>' : '') +
+      (s.details ? '<div class="src-details">' + escHtml(s.details) + '</div>' : '') +
+      (count ? '<div class="src-cited">Cited in ' + count + ' task' + (count === 1 ? '' : 's') + '</div><div class="src-tasks">' + chips + '</div>' : '') +
+      '</div>';
+  }).join('');
+  list.querySelectorAll('[data-goto]').forEach(function(b){
+    b.addEventListener('click', function(){ goToTask(b.getAttribute('data-goto')); });
+  });
+}
+
+function goToTask(id) {
+  var el = document.querySelector('.task[data-task-id="' + id + '"]');
+  if (!el) return;
+  var sec = el.closest('.research-section');
+  if (sec) sec.classList.add('open');
+  document.querySelectorAll('.task.open').forEach(function(t){ if (t !== el) t.classList.remove('open'); });
+  el.classList.add('open');
+  setTimeout(function(){
+    var bar = document.querySelector('.fth-head');
+    var offset = (bar && getComputedStyle(bar).position.match(/sticky|fixed/)) ? bar.offsetHeight + 16 : 16;
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+    el.classList.add('src-flash');
+    setTimeout(function(){ el.classList.remove('src-flash'); }, 1600);
+  }, 550);
+}
+
 render();
 renderGlossary();
 renderResearch();
+renderSources();
 buildAndCacheTerms();
 </script>
 </body>
