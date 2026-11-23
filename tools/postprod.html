@@ -226,6 +226,32 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
   .guidance-block li { font-size:12px; color:var(--slate-light); line-height:1.65; font-weight:300; padding-left:14px; position:relative; margin-bottom:3px; }
   .guidance-block li::before { content:'–'; position:absolute; left:0; color:var(--red-dim); }
   .guidance-block strong { color:var(--white); font-weight:600; }
+  .src-intro { font-size:13px; color:var(--slate); font-weight:300; line-height:1.7; padding:24px 0 20px; max-width:680px; }
+  .src-list { display:flex; flex-direction:column; gap:10px; padding-bottom:28px; }
+  .src-card { border:1px solid var(--navy-border); border-radius:5px; padding:16px 18px; background:var(--navy-mid); }
+  .src-head { display:flex; gap:16px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+  .src-title { font-size:15px; font-weight:600; color:var(--white); }
+  .src-title cite { font-style:italic; }
+  .src-author { font-size:12px; color:var(--slate); margin-top:2px; }
+  .src-about { font-size:12px; color:var(--slate-light); font-weight:300; line-height:1.65; margin-top:10px; max-width:760px; }
+  .src-details { font-size:11px; color:var(--slate); line-height:1.6; margin-top:6px; }
+  .src-link { display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:600; letter-spacing:.5px; color:var(--red); border:1px solid var(--navy-border); border-radius:4px; padding:6px 10px; text-decoration:none; white-space:nowrap; transition:border-color .15s; }
+  .src-link:hover { border-color:var(--red); }
+  .src-cited { margin-top:12px; font-size:10px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--slate); }
+  .src-tasks { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .src-task { font-family:inherit; font-size:11px; color:var(--slate-light); background:none; border:1px solid var(--navy-border); border-radius:3px; padding:3px 8px; cursor:pointer; transition:border-color .15s, color .15s; }
+  .src-task:hover { border-color:var(--red); color:var(--white); }
+  .task.src-flash { outline:2px solid var(--red); outline-offset:2px; transition:outline-color .6s; }
+  .reading-source { border:1px solid var(--navy-border); border-radius:5px; padding:12px 16px 6px; }
+  .reading-source + .reading-source { margin-top:8px; }
+  .reading-book { font-size:12px; color:var(--slate); font-weight:300; margin-bottom:8px; }
+  .reading-book cite { font-style:italic; color:var(--slate-light); }
+  .reading-row { display:grid; grid-template-columns:minmax(140px,34%) minmax(0,1fr); gap:14px; padding:8px 0; border-top:1px solid var(--navy-border); }
+  .reading-ch { font-size:12px; font-weight:600; color:var(--white); line-height:1.5; }
+  .reading-ch .reading-part { display:block; font-size:10px; font-weight:400; letter-spacing:1px; text-transform:uppercase; color:var(--slate); margin-bottom:1px; }
+  .reading-pages { display:block; font-size:11px; font-weight:400; color:var(--slate); margin-top:2px; }
+  .reading-why { font-size:12px; color:var(--slate-light); font-weight:300; line-height:1.6; }
+  @media (max-width:560px) { .reading-row { grid-template-columns:1fr; gap:2px; } }
   .guidance-edited-badge { display:inline-block; font-size:9px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--red-dim); margin-left:8px; opacity:0.7; }
 
   .drawer-notes { width:100%; background:var(--navy); border:1px solid var(--navy-border); border-radius:4px; color:var(--slate-light); font-family:var(--fth-display); font-size:12px; font-weight:300; line-height:1.6; padding:10px 12px; resize:vertical; min-height:72px; transition:border-color .2s; outline:none; }
@@ -423,6 +449,20 @@ body{font-family:var(--fth-display)}
 </div>
 
 <main class="timeline-wrapper" id="timeline"></main>
+
+<div class="research-section ref-section" id="sourcesSection">
+  <button class="research-toggle" onclick="toggleSources()">
+    <span class="research-toggle-eyebrow">Further reading</span>
+    <span class="research-toggle-label">References &amp; Links</span>
+    <svg class="research-chevron" viewBox="0 0 16 16" fill="none">
+      <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div class="research-body" id="sourcesBody">
+    <p class="src-intro">Every book and manual referred to in this pipeline. Each task's Further reading points to the exact chapters and pages; click a task below to jump straight to it.</p>
+    <div class="src-list" id="sourcesList"></div>
+  </div>
+</div>
 
 <div class="glossary-wrap glossary-locked" id="glossaryWrap">
   <button class="glossary-toggle" onclick="toggleGlossary()">
@@ -767,6 +807,352 @@ const RESOLVE_TASKS = [
       </ul>`
   },
 ];
+
+// Further reading: shown under each task's guidance, separate from the editable text,
+// so it stays visible even when someone has rewritten the guidance.
+// To add a book, add it to READING_SOURCES once, then refer to it by key in READING.
+// A chapter inside a larger section takes `part` (e.g. the Afterword's sub-sections).
+// Add `pages` where the edition has reliable printed page numbers.
+const READING_SOURCES = {
+  blink: { title: 'In the Blink of an Eye', author: 'Walter Murch', edition: '2nd edition, 2001',
+           details: 'Silman-James Press, revised 2nd edition, 2001. ISBN 1-879505-62-2.',
+           about: 'A short, readable essay by the editor of The Conversation, Apocalypse Now and The English Patient: why cuts work, the Rule of Six, and editing in the digital age.' },
+  reisz: { title: 'The Technique of Film Editing', author: 'Karel Reisz and Gavin Millar', edition: '2nd edition, Focal Press, 2010',
+           details: 'Focal Press, 2nd edition, 2010. ISBN 978-0-240-52185-5. Page numbers in this tool refer to this edition.',
+           about: 'The classic British Film Academy textbook: the history of editing, worked examples by genre, and the principles of continuity, timing, pace and sound.' },
+  dmytryk: { title: 'On Film Editing', author: 'Edward Dmytryk', edition: 'Focal Press, 1984',
+           details: 'Focal Press, 1984. ISBN 978-0-240-51738-4. Page numbers in this tool refer to this edition.',
+           about: 'A practical guide from a Hollywood editor and director: numbered cutting rules, frame counts, and real scenes re-edited.' },
+  resolve: { title: 'DaVinci Resolve 21.1 Reference Manual', author: 'Blackmagic Design', edition: 'PDF, 4,351 pages',
+           details: 'Free from Blackmagic Design. Also available inside Resolve from Help > DaVinci Resolve Reference Manual. Page numbers refer to the 21.1 manual and may shift in later versions.',
+           about: 'The complete official manual, covering every page of Resolve.',
+           link: 'https://www.blackmagicdesign.com/support', linkLabel: 'Download from Blackmagic Design support' }
+};
+
+const READING = {
+  tr1: [
+    { src:'blink', ch:'The Rule of Six', why:'The source for the Rule of Six: emotion, story, rhythm, eye-trace, planarity, space. If a cut can’t satisfy everything, give up from the bottom of the list first.' },
+    { src:'blink', ch:'Why Do Cuts Work?', why:'Why a sudden jump from one image to another feels natural at all, and why a small jump can jar more than a big one.' },
+    { src:'blink', ch:'Don’t Worry, It’s Only a Movie', why:'His idea that a cut works like a blink: a way of ending one thought and starting the next.' },
+    { src:'blink', ch:'“Cut Out the Bad Bits”', why:'What the editor really controls: the order and moment in which information reaches the audience.' },
+    { src:'blink', ch:'Most with the Least', why:'Knowing where not to cut takes more discernment than adding cuts; suggestion beats exposition.' },
+    { src:'blink', ch:'Seeing Around the Edge of the Frame', why:'The editor sees only what is on screen, as the audience will, free of what it cost to shoot.' },
+    { src:'blink', ch:'Dreaming in Pairs', why:'How the editor and director take turns proposing and testing versions of the film.' },
+    { src:'blink', ch:'Team Work: Multiple Editors', why:'When more than one editor helps, and the risk of losing coherence.' },
+    { src:'blink', ch:'Dragnet', why:'Performance editing: picking up an actor’s rhythm, partly from where they blink, and extending it into the cut.' },
+    { src:'blink', part:'Afterword', ch:'Digital Editing: Faster, Faster, Faster?', why:'Cutting rates across genres and decades. There is no right speed, only the speed the material was written for.' },
+    { src:'blink', part:'Afterword', ch:'Past, Present, and Imagined Future', why:'A short history of the cutting room, from scissors to Moviola to digital.' },
+    { src:"reisz", ch:"Chapter 1: Editing and the Silent Film", pages:"pp. 3–23", why:"From Porter and Griffith to Pudovkin and Eisenstein; the Kuleshov experiment is on p. 15." },
+    { src:"reisz", ch:"Who Edits a Film?", part:"Chapter 2: Editing and the Sound Film", pages:"pp. 28–38", why:"Editing as four jobs (order, emphasis, timing, smoothness), and a Brighton Rock script set beside the finished cut." },
+    { src:"reisz", ch:"Chapter 14: Editing the Picture", pages:"pp. 181–189", why:"The rules: matching action, how much shot size and angle should change, the 180° rule, re-establishing a scene." },
+    { src:"reisz", ch:"Chapter 18: Nouvelle Vague", pages:"p. 278", why:"The rules broken: Truffaut’s disguised jump cuts, and “saving his films in the cutting room”." },
+    { src:"reisz", ch:"Chapter 19: Personal Cinema in the Sixties", pages:"p. 291", why:"Godard’s jump cuts in Breathless, and cutting with no concession to smoothness." },
+    { src:"reisz", ch:"Introduction to the Fourth Section", pages:"pp. 231–233", why:"Dickinson’s 1967 notes on which of the book’s rules no longer held." },
+    { src:"reisz", ch:"Chapter 4: Dialogue Sequences", pages:"pp. 77–78", why:"Performance editing: tightening an actor’s pauses can wreck their timing." },
+    { src:"reisz", ch:"Chapters 3, 5 and 6: Action, Comedy, Montage", pages:"pp. 49–96", why:"Genre conventions: cross-cutting a chase, timing a gag, and when a montage sequence earns its place." },
+    { src:"reisz", ch:"Chapter 10: The Documentary and the Use of Sound", pages:"pp. 136–140", why:"Editing and music: in Night Mail the words and music were recorded first and the picture cut to them." },
+    { src:"dmytryk", part:"Chapter 1: Titles and Definitions", ch:"Sequences, scenes and cuts", pages:"pp. 1–5", why:"The basic vocabulary, and why three editors would cut three different films from the same footage." },
+    { src:"dmytryk", part:"Chapter 2: Who Cuts the Film?", ch:"Who really edits", pages:"pp. 7–10", why:"How the work splits between director, producer and editor, and why the editor still controls tempo and pace." },
+    { src:"dmytryk", part:"Chapter 3: Smooth Cutting—The Ideal", ch:"Invisible cutting and coverage", pages:"pp. 11–15", why:"Why good cutting goes unnoticed, and why directors should shoot protection cutaways (“cutting to the kitchen stove”)." },
+    { src:"dmytryk", part:"Chapter 16: Rescuing the Actor", ch:"Building a performance", pages:"pp. 131–133", why:"Laughton’s Gettysburg Address in Ruggles of Red Gap: assembled from 20 takes and played mostly over listeners’ reactions." },
+    { src:"dmytryk", part:"Chapter 17: Where It All Began—The Montage", ch:"Hollywood and Soviet montage", pages:"pp. 135–143", why:"Transition montage versus Eisenstein’s storytelling montage, with a timed shot-by-shot breakdown of a dream sequence." }
+  ],
+  tr2: [
+    { src:'blink', ch:'Methods and Machines: Marble and Clay', why:'The closing pages on colour: judging colour against a reference you can stop and step through, rather than watching it roll past.' },
+    { src:'blink', ch:'The Decisive Moment', why:'His stills of every setup doubled as a record of the film’s true colour and contrast: a model for a look reference.' },
+    { src:"reisz", ch:"Matching Tone", part:"Chapter 14: Editing the Picture", pages:"p. 189", why:"Lighting or colour that differs between neighbouring shots makes the cut jar." }
+  ],
+  tr3: [
+    { src:'blink', ch:'Most with the Least', why:'Opens with sound: great mixes have been made from three tracks and terrible ones from a hundred.' },
+    { src:'blink', part:'Afterword', ch:'The Digital Future', why:'Sound editors think in layers happening at once as well as one after another.' },
+    { src:"reisz", ch:"General", part:"Chapter 15: Sound Editing", pages:"pp. 215–218", why:"We only notice significant sounds; off-screen sounds often matter more; the same car horn needs a different character in different scenes." },
+    { src:"reisz", ch:"Chapter 10: The Documentary and the Use of Sound", pages:"pp. 135–140", why:"Sound that comments on the picture, and the sound “just round the corner” that brings a dull shot to life." },
+    { src:"reisz", ch:"Special Styles of Editing", part:"Chapter 2: Editing and the Sound Film", pages:"pp. 41–43", why:"Why fast cross-cutting needs one continuous sound underneath rather than each shot’s own." },
+    { src:"dmytryk", part:"Chapter 11: If You Can't Make It Smooth, Make It Right", ch:"Sound as accompaniment", pages:"pp. 72–73", why:"Cut for the picture first; the creative use of sound is the most neglected part of filmmaking." },
+    { src:"dmytryk", part:"Chapter 12: Knowing Your Audience", ch:"Sound in suspense", pages:"pp. 81–82", why:"A panther’s roar that turns into a car starter: a sound fake-out that makes the real attack more frightening." }
+  ],
+  rs4: [
+    { src:'blink', ch:'Methods and Machines: Marble and Clay', why:'Why scrolling through all the footage (as the Cut page’s Source Tape does) can show you a better shot than the one you went looking for.' },
+    { src:"resolve", part:"Chapter 33: Using the Cut Page", ch:"The Timeline", pages:"pp. 643–648", why:"The dual timeline: the whole edit above, a zoomed section below." },
+    { src:"resolve", part:"Chapter 35: Fast Editing in the Cut Page", ch:"Source Tape Editing", pages:"pp. 703–705", why:"Playing a whole bin as one long tape to find shots fast." },
+    { src:"resolve", part:"Chapter 35: Fast Editing in the Cut Page", ch:"Using Cut Page Edit Commands", pages:"pp. 696–701", why:"Smart Insert, Append, Ripple Overwrite, Close Up and Place on Top." }
+  ],
+  rs5: [
+    { src:'blink', ch:'Dragnet', why:'Mark out-points in real time as the clip plays, rather than nudging back and forth frame by frame.' },
+    { src:'blink', part:'Afterword', ch:'Random Access and Speed', why:'Instant access only gives you what you ask for. Leave room to stumble on what you need.' },
+    { src:"resolve", part:"Chapter 40", ch:"Using the Edit Page", pages:"pp. 792–835", why:"The Edit page layout, viewers, timeline, toolbar and Inspector." },
+    { src:"resolve", part:"Chapter 43", ch:"Editing Basics", pages:"pp. 887–917", why:"Drag-and-drop and keyboard editing, selections, track targeting and locking." },
+    { src:"resolve", part:"Chapter 51", ch:"Trimming", pages:"pp. 1060–1090", why:"Ripple, roll, slip and slide, with the mouse or the keyboard." }
+  ],
+  t6: [
+    { src:'blink', part:'Afterword', ch:'Random Access and Speed', why:'Your notes and organisation decide what you can find later; a shot once marked no good can be buried for good.' },
+    { src:'blink', part:'Afterword', ch:'General Observations: The Celluloid Amazon', why:'Huge footage needs a plan and a map before you go in.' },
+    { src:"dmytryk", part:"Chapter 4: The Cutter Begins", ch:"Organising the takes", pages:"pp. 18–20", why:"Lay takes out in script order with each scene’s close-ups after its master, and keep every trim findable." },
+    { src:"resolve", part:"Chapter 17: Adding and Organizing Media with the Media Pool", ch:"Manually Organizing the Media Pool", pages:"p. 377", why:"Creating, nesting and naming bins." },
+    { src:"resolve", part:"Chapter 17: Adding and Organizing Media with the Media Pool", ch:"Automated Organization Using Smart Bins", pages:"pp. 381–385", why:"Bins that fill themselves from metadata, such as all takes of scene 4." },
+    { src:"resolve", part:"Chapter 17: Adding and Organizing Media with the Media Pool", ch:"Choosing How to Display Bins", pages:"pp. 387–393", why:"List, thumbnail and filmstrip views, and sorting by column." }
+  ],
+  t7: [
+    { src:'blink', ch:'The Decisive Moment', why:'Choose a representative still from every setup. Watching footage is like casting: each take is auditioning.' },
+    { src:'blink', ch:'Methods and Machines: Marble and Clay', why:'Watch the footage twice, and beware notes like “212-4: NG” that don’t say why.' },
+    { src:'blink', ch:'Cuts and Shadow Cuts', why:'Shooting ratios, and why most of an editor’s time goes on watching and thinking.' },
+    { src:"dmytryk", part:"Chapter 4: The Cutter Begins", ch:"Viewing the rushes", pages:"p. 18", why:"Sit with the director at rushes and note preferred takes and the exact portions they want used." },
+    { src:"resolve", part:"Chapter 18: Using Clip Metadata", ch:"Using the Metadata Editor", pages:"pp. 406–410", why:"Scene, shot, take, good-take flags, keywords and comments." },
+    { src:"resolve", part:"Chapter 18: Using Clip Metadata", ch:"Different Ways of Using Clip Metadata", pages:"p. 423", why:"How metadata pays off later in searching, Smart Bins and the edit." },
+    { src:"resolve", part:"Chapter 42: Preparing Clips for Editing and Viewer Playback", ch:"Adding Markers", pages:"pp. 879–880", why:"Marking moments in clips as you watch." },
+    { src:"resolve", part:"Chapter 42: Preparing Clips for Editing and Viewer Playback", ch:"Setting In and Out Points", pages:"pp. 881–882", why:"Marking the usable part of each take." },
+    { src:"resolve", part:"Chapter 18: Using Clip Metadata", ch:"Slate Finder and Slate ID (Studio Version Only)", pages:"pp. 414–415", why:"Reading slates automatically, if you have Studio." }
+  ],
+  t9: [
+    { src:'blink', part:'Afterword', ch:'Digital Editing: Faster, Faster, Faster?', why:'A low-detail image tempts you to cut too soon, and the cut then feels choppy at full quality. Check at full resolution before lock.' },
+    { src:'blink', part:'Afterword', ch:'Development Problems', why:'Low resolution also pushes editors towards close-ups they don’t need.' },
+    { src:"resolve", part:"Chapter 8: Improving Performance, Proxies, and the Render Cache", ch:"Using Proxy Media", pages:"pp. 207–216", why:"Generating, managing and switching between proxies and originals." },
+    { src:"resolve", part:"Chapter 8: Improving Performance, Proxies, and the Render Cache", ch:"Which Playback Optimization Method Should I Use?", pages:"p. 217", why:"Proxies versus optimized media versus render cache." }
+  ],
+  t10: [
+    { src:'blink', ch:'Cuts and Shadow Cuts', why:'Editing is finding a path, not just joining shots.' },
+    { src:'blink', ch:'Methods and Machines: Marble and Clay', why:'Ideally, rewatch all the footage once the first assembly exists: you and the film have both changed.' },
+    { src:'blink', ch:'Seeing Around the Edge of the Frame', why:'Why the director should take a break between the shoot and the first viewing.' },
+    { src:'blink', part:'Afterword', ch:'Man Meets Machine', why:'He builds first assemblies without sound, which supports this task’s no-music rule.' },
+    { src:"reisz", ch:"Constructing a Lucid Continuity", part:"Chapter 14: Editing the Picture", pages:"p. 181", why:"First a rough cut that makes sense and joins cleanly, then a second pass for drama." },
+    { src:"reisz", ch:"Editing the Film", part:"Cutting Room Procedure", pages:"p. 330", why:"In the first assembly, leave shots longer than they’ll end up and concentrate on order." },
+    { src:"dmytryk", part:"Chapter 4: The Cutter Begins", ch:"Judge it on the big screen", pages:"pp. 18–19", why:"Watch the assembled material on a large screen, repeatedly, until you know which portions you’ll use." },
+    { src:"dmytryk", part:"Chapter 4: The Cutter Begins", ch:"Put it aside", pages:"p. 21", why:"Leave a freshly cut sequence for days before reviewing it, or you’ll anticipate every cut and “fix” jumps that aren’t there." },
+    { src:"resolve", part:"Chapter 41: Creating and Working with Timelines", ch:"Creating and Duplicating Timelines", pages:"pp. 838–841", why:"New timelines and duplicates for each version." },
+    { src:"resolve", part:"Chapter 43: Editing Basics", ch:"Using Keyboard Shortcuts and Three-Point Editing to Assemble a Program", pages:"pp. 896–898", why:"Assembling takes in script order quickly from the keyboard." }
+  ],
+  t12: [
+    { src:'blink', ch:'Dragnet', why:'Don’t cut to whoever is speaking on every line. Choose when to cut to the listener, depending on what you want the audience to realise.' },
+    { src:'blink', ch:'The Rule of Six', why:'Emotion first, then story, then rhythm; continuity comes last.' },
+    { src:'blink', ch:'Misdirection', why:'Where the audience is looking, and what they should think and feel at each moment.' },
+    { src:'blink', ch:'Most with the Least', why:'Resist over-cutting: an editor who points at everything is like a tour guide who never stops talking.' },
+    { src:"reisz", ch:"Chapter 4: Dialogue Sequences", pages:"pp. 65–77", why:"The establishing → two-shot → over-the-shoulder pattern, timing reaction shots, and shot size rising and falling with tension." },
+    { src:"reisz", ch:"Preserving a Sense of Direction", part:"Chapter 14: Editing the Picture", pages:"pp. 186–189", why:"The 180° rule, and re-establishing the scene when someone new enters." },
+    { src:"reisz", ch:"Matching Consecutive Actions", part:"Chapter 14: Editing the Picture", pages:"pp. 181–183", why:"Cut on a moment of rest, or just before a movement starts." },
+    { src:"dmytryk", part:"Chapter 5: You've Got to Have a Reason", ch:"Rules 1 and 2", pages:"pp. 23–26", why:"Never cut without a positive reason; when unsure of the frame, cut long. Trimming later is easy, adding back is messy." },
+    { src:"dmytryk", part:"Chapter 6: The Action Cut—and What Makes It Work", ch:"Rule 3: cut in movement", pages:"pp. 27–33", why:"The action cut, with frame counts: cutting as someone sits, the 3–5 frame overlap, exits and entrances, and keeping walking in step." },
+    { src:"dmytryk", part:"Chapter 9: Cutting Dialogue", ch:"Cutting a dialogue scene", pages:"pp. 47–55", why:"A five-page master-shot script broken into 23 cuts, with reasons for every two-shot and close-up." },
+    { src:"dmytryk", part:"Chapter 7: Keep It Fresh and Fast with the Overlap", ch:"The look-off cut", pages:"pp. 39–41", why:"When to cut to what a character sees, and how long a point-of-view shot or insert should run." },
+    { src:"resolve", part:"Chapter 46", ch:"Three- and Four-Point Editing", pages:"pp. 966–993", why:"Precise placement with in and out points." },
+    { src:"resolve", part:"Chapter 51: Trimming", ch:"Dynamic JKL Trimming", pages:"pp. 1084–1085", why:"Trimming while the cut plays, by feel." }
+  ],
+  t13: [
+    { src:'blink', ch:'Dragnet', why:'Find each out-point in real time. If you can’t hit the same frame twice, rethink the shot.' },
+    { src:'blink', part:'Afterword', ch:'Man Meets Machine', why:'Note how many frames early or late each try was, and use a second screen turned away from you to see the cut afresh.' },
+    { src:'blink', part:'Afterword', ch:'Random Access and Speed', why:'On duplicating timelines: keep a clearly different version every couple of weeks, not every change, or the cut ends up stitched together.' },
+    { src:'blink', ch:'Test Screenings: Referred Pain', why:'Viewers tell you where something hurts, not what’s causing it. Feedback a day or two later is better than first reactions.' },
+    { src:'blink', ch:'Methods and Machines: Marble and Clay', why:'Keep refining until you can no longer “see yourself” in the cut.' },
+    { src:"reisz", ch:"Timing", part:"Chapter 14: Editing the Picture", pages:"pp. 193–201", why:"Every cut should make a point; suspense versus surprise, down to the 14 frames before the scream in Great Expectations." },
+    { src:"reisz", ch:"Pace: Rhythm", part:"Chapter 14: Editing the Picture", pages:"pp. 201–206", why:"Each shot has a minimum length set by its size, content and context; varied pace feels faster; cut, dissolve or fade (pp. 203–204)." },
+    { src:"reisz", ch:"Sound and the Editing of the Picture", part:"Chapter 15: Sound Editing", pages:"pp. 226–227", why:"Letting sound run over a cut (J- and L-cuts), and using a sharp sound to hide a rough one." },
+    { src:"dmytryk", part:"Chapter 7: Keep It Fresh and Fast with the Overlap", ch:"Rules 4 and 5", pages:"pp. 35–38", why:"Never linger on an empty frame after an exit; put any extra frames at the start of the incoming shot; begin and end on live action." },
+    { src:"dmytryk", part:"Chapter 8: Trying a Little Harder", ch:"Rule 6: values over matches", pages:"pp. 43–46", why:"Cut where the drama needs it even if the action doesn’t match; fixes for a bad match (tighter shot, blow-up, cutaway)." },
+    { src:"dmytryk", part:"Chapter 9: Cutting Dialogue", ch:"Overlapping dialogue cuts", pages:"pp. 56–63", why:"The viewer reacts before the speaker finishes: cut picture ahead of sound, and leave 3–4 frames before every reaction." },
+    { src:"dmytryk", part:"Chapter 10: The Reaction Is What Really Counts", ch:"Timing a reaction", pages:"pp. 65–70", why:"How a reaction’s length changes a line’s meaning, and how to stretch one with listening footage, a freeze frame or a borrowed shot." },
+    { src:"dmytryk", part:"Chapter 13: Dissolves: Why, How, and If", ch:"Dissolves, fades and wipes", pages:"pp. 83–88", why:"What each transition does, choosing per scene within the film’s overall style, and keeping action alive through a dissolve." },
+    { src:"resolve", part:"Chapter 51: Trimming", ch:"Trimming Multiple Edits or Clips at Once", pages:"pp. 1078–1082", why:"Adjusting several cuts together." },
+    { src:"resolve", part:"Chapter 48: Marking and Finding Clips in the Timeline", ch:"Using Markers", pages:"pp. 1012–1018", why:"Logging notes on the timeline as you review." },
+    { src:"resolve", part:"Chapter 41: Creating and Working with Timelines", ch:"Comparing Timelines", pages:"pp. 859–861", why:"Seeing exactly what changed between two versions." },
+    { src:"resolve", part:"Chapter 186: Using the Deliver Page", ch:"Using Quick Export", pages:"pp. 4095–4096", why:"Fast review exports for the 07_Previews folder." },
+    { src:"resolve", part:"Chapter 55", ch:"Using Transitions", pages:"pp. 1157–1174", why:"Adding and adjusting dissolves and other transitions." }
+  ],
+  t14: [
+    { src:'blink', ch:'Test Screenings: Referred Pain', why:'Final decisions become permanent. His story of cutting a scene the director loved from Julia.' },
+    { src:'blink', ch:'“Cut Out the Bad Bits”', why:'Don’t change what kind of film it is halfway through.' },
+    { src:"reisz", ch:"Editing the Film", part:"Cutting Room Procedure", pages:"p. 330", why:"Final decisions come from repeated screenings with the producer and director." },
+    { src:"dmytryk", part:"Chapter 2: Who Cuts the Film?", ch:"Cutting for length", pages:"p. 9", why:"Shorten by removing whole scenes, not by snipping phrases and words throughout." },
+    { src:"dmytryk", part:"Chapters 14–15: Editing—Simple and Pure; More of the Same", ch:"Re-editing scenes", pages:"pp. 89–130", why:"Three real scenes restructured or shortened by a third using only existing angles, including a reaction and a breath borrowed from out-takes." },
+    { src:"dmytryk", part:"Chapter 12: Knowing Your Audience", ch:"Learning from previews", pages:"pp. 77–79", why:"Read audiences objectively, and re-edit before reaching for reshoots." },
+    { src:"resolve", part:"Chapter 8: Improving Performance, Proxies, and the Render Cache", ch:"Using Proxy Media: Switching Between Proxy Media and Original Media", pages:"p. 214", why:"Turning proxies off so everything uses the originals." },
+    { src:"resolve", part:"Chapter 43: Editing Basics", ch:"Position Lock for Finishing", pages:"p. 907", why:"Stopping clips moving once picture is locked." },
+    { src:"resolve", part:"Chapter 41: Creating and Working with Timelines", ch:"Backing Up and Restoring Timelines", pages:"pp. 844–845", why:"Keeping a safe copy of the locked edit." }
+  ],
+  t16: [
+    { src:'blink', ch:'Methods and Machines: Marble and Clay', why:'Compare against a reference shot by shot, stopping and stepping, so small casts stand out.' },
+    { src:"resolve", part:"Chapter 131", ch:"Primaries Palette", pages:"pp. 3141–3159", why:"Lift, gamma, gain and offset wheels, log wheels and printer points." },
+    { src:"resolve", part:"Chapter 127: Viewers, Monitoring, and Video Scopes", ch:"Explanation of Each Video Scope", pages:"pp. 3097–3100", why:"Reading the waveform and vectorscope." },
+    { src:"resolve", part:"Chapter 129: Automated Grading Commands and Imported Grades", ch:"Shot Match", pages:"pp. 3130–3132", why:"Matching one shot to another automatically as a starting point." },
+    { src:"resolve", part:"Chapter 142: Grade Management", ch:"Copying Grades", pages:"pp. 3361–3366", why:"Applying one shot’s correction to others." },
+    { src:"resolve", part:"Chapter 125: Introduction to Color Grading", ch:"Balancing Scenes", pages:"p. 3039", why:"Why every shot in a scene should match." }
+  ],
+  t17: [
+    { src:'blink', ch:'The Decisive Moment', why:'Representative stills as a shared reference for a look, and for emotions that are hard to put into words.' },
+    { src:"resolve", part:"Chapter 137", ch:"Secondary Qualifiers", pages:"pp. 3238–3264", why:"Isolating a colour range such as skin or sky." },
+    { src:"resolve", part:"Chapter 138: Secondary Windows", ch:"Power Windows", pages:"pp. 3266–3268", why:"Shapes for local adjustments, with feathering." },
+    { src:"resolve", part:"Chapter 140", ch:"Motion Tracking Windows", pages:"pp. 3307–3331", why:"Making a window follow its subject." },
+    { src:"resolve", part:"Chapter 139", ch:"Magic Mask", pages:"pp. 3280–3306", why:"Isolating people or objects automatically." },
+    { src:"resolve", part:"Chapter 134: Curves", ch:"The HSL Curves", pages:"pp. 3202–3208", why:"Hue-against-hue and hue-against-saturation adjustments." },
+    { src:"resolve", part:"Chapter 142: Grade Management", ch:"Using Groups", pages:"pp. 3377–3382", why:"Applying a look across many clips at once." }
+  ],
+  t18: [
+    { src:'blink', part:'Afterword', ch:'The Digital Present', why:'Sound decisions made in the edit carry straight through to the sound team without being rebuilt, as Edit and Fairlight share one timeline.' },
+    { src:"reisz", ch:"Sound Editing", part:"Cutting Room Procedure", pages:"pp. 330–331", why:"Laying tracks: at least one for dialogue, one for music and several for effects. A model for organising Fairlight tracks." },
+    { src:"resolve", part:"Chapter 171", ch:"Setting Up Tracks, Busses, and Patching", pages:"pp. 3800–3821", why:"Creating, naming and routing tracks and busses." },
+    { src:"resolve", part:"Chapter 175: Editing Basics in the Fairlight Page", ch:"Folder Tracks", pages:"pp. 3870–3871", why:"Grouping dialogue, ambience, Foley, effects and music tracks." }
+  ],
+  t21: [
+    { src:'blink', part:'Afterword', ch:'Man Meets Machine', why:'Trying temporary music and effects early, alongside the picture.' },
+    { src:"reisz", ch:"Analysis of a Sound-Track", part:"Chapter 15: Sound Editing", pages:"p. 224", why:"Music held back until Johnny falls, so its entrance lands." },
+    { src:"reisz", ch:"Chapter 6: Montage Sequences", pages:"p. 88", why:"One continuous piece of music holds a montage together." },
+    { src:"reisz", ch:"Chapter 10: The Documentary and the Use of Sound", pages:"pp. 136–140", why:"Cutting picture to an existing track." },
+    { src:"reisz", ch:"Sound and the Editing of the Picture", part:"Chapter 15: Sound Editing", pages:"p. 226", why:"Music working against the mood of the picture, used with caution." },
+    { src:"dmytryk", part:"Chapter 11: If You Can't Make It Smooth, Make It Right", ch:"Music changes pace", pages:"p. 76", why:"A score makes a sequence feel faster, so cut a touch slow if music is coming, and use temp music to judge it." },
+    { src:"resolve", part:"Chapter 178", ch:"Mix Automation", pages:"pp. 3972–3994", why:"Riding the music level under dialogue." },
+    { src:"resolve", part:"Chapter 181: Fairlight FX", ch:"Track FX: Ducker", pages:"pp. 4016–4017", why:"Lowering music automatically when dialogue plays." },
+    { src:"resolve", part:"Chapter 52: Working with Audio in the Edit Page", ch:"Music Editor (Studio Version Only)", pages:"pp. 1117–1118", why:"Re-timing a music track to fit a scene, if you have Studio." }
+  ],
+  t22: [
+    { src:'blink', ch:'Most with the Least', why:'The quality of a mix comes from the choices, not the number of tracks.' },
+    { src:'blink', part:'Afterword', ch:'The Digital Future', why:'Thinking in layers happening at once, like a musician.' },
+    { src:"reisz", ch:"Sound and the Editing of the Picture", part:"Chapter 15: Sound Editing", pages:"p. 226", why:"Sound setting the pace, sometimes against the picture." },
+    { src:"reisz", ch:"Sound Editing", part:"Cutting Room Procedure", pages:"p. 331", why:"How the final mix (“dubbing”) was rehearsed and recorded." },
+    { src:"dmytryk", part:"Chapter 12: Knowing Your Audience", ch:"The value of silence", pages:"p. 79", why:"Preview audiences pay more attention during silent passages than during dialogue." },
+    { src:"resolve", part:"Chapter 177", ch:"Mixing in the Fairlight Page", pages:"pp. 3927–3971", why:"The mixer from input to fader, including EQ, dynamics, busses and VCAs." },
+    { src:"resolve", part:"Chapter 177: Mixing in the Fairlight Page", ch:"Dynamics", pages:"pp. 3944–3948", why:"Compressor, limiter and gate." },
+    { src:"resolve", part:"Chapter 182: Audio Meters and Audio Monitoring", ch:"Metering Options: Target Loudness Level", pages:"p. 4060", why:"Setting a loudness target for your delivery." },
+    { src:"resolve", part:"Chapter 178", ch:"Mix Automation", pages:"pp. 3972–3994", why:"Writing level and pan changes over time." }
+  ],
+  t25: [
+    { src:'blink', ch:'Misdirection', why:'Imagine the film in a thousand-seat cinema, beyond further changes. Do you still like it?' },
+    { src:'blink', part:'Afterword', ch:'Digital Editing: Faster, Faster, Faster?', why:'A small screen is something you look at, a cinema screen something you look into. Watch on the biggest screen you can.' },
+    { src:'blink', ch:'Test Screenings: Referred Pain', why:'Unfinished sound and colour distract an audience, so show viewers a finished version.' },
+    { src:"dmytryk", part:"Chapter 4: The Cutter Begins", ch:"See it as the audience will", pages:"p. 19", why:"Make final judgements on the big screen; a small viewer shows you a different picture." },
+    { src:"dmytryk", part:"Chapter 12: Knowing Your Audience", ch:"Knowing your audience", pages:"pp. 77–79", why:"Different audiences laugh and react differently; watch real viewers and stay objective about what you see." },
+    { src:"resolve", part:"Chapter 125: Introduction to Color Grading", ch:"Quality Control", pages:"p. 3043", why:"What to check before a grade is finished." },
+    { src:"resolve", part:"Chapter 127: Viewers, Monitoring, and Video Scopes", ch:"Monitor Calibration", pages:"p. 3082", why:"Making sure your display is trustworthy." },
+    { src:"resolve", part:"Chapter 129: Automated Grading Commands and Imported Grades", ch:"Broadcast Safe", pages:"p. 3133", why:"Keeping levels within broadcast limits." },
+    { src:"resolve", part:"Chapter 182", ch:"Audio Meters and Audio Monitoring", pages:"pp. 4049–4061", why:"Checking levels and loudness on the finished mix." }
+  ],
+  t8: [
+    { src:"reisz", ch:"Synchronisation of Rushes", part:"Cutting Room Procedure", pages:"p. 329", why:"The clapperboard principle that syncing relies on, explained from first principles." },
+    { src:"resolve", part:"Chapter 20", ch:"Syncing Audio and Video", pages:"pp. 441–447", why:"All the sync methods in one short chapter." },
+    { src:"resolve", part:"Chapter 20: Syncing Audio and Video", ch:"Auto Sync Audio to Video by Matching Waveforms", pages:"p. 443", why:"The waveform method this task uses." },
+    { src:"resolve", part:"Chapter 20: Syncing Audio and Video", ch:"Manually Syncing Audio to Video", pages:"p. 445", why:"For clips Auto Sync can’t match." }
+  ],
+  t19: [
+    { src:"reisz", ch:"Sound Editing", part:"Cutting Room Procedure", pages:"pp. 330–331", why:"Post-synchronising (ADR), and why whole location scenes were re-voiced." },
+    { src:"reisz", ch:"General", part:"Chapter 15: Sound Editing", pages:"p. 216", why:"Bring background sound down under dialogue gradually, never with an abrupt cut." },
+    { src:"dmytryk", part:"Chapter 9: Cutting Dialogue", ch:"Dialogue over an action cut", pages:"p. 55", why:"Cut for the picture match and let the line carry over; the viewer won’t notice it isn’t in perfect sync." },
+    { src:"dmytryk", part:"Chapter 11: If You Can't Make It Smooth, Make It Right", ch:"Overlapping arguments", pages:"pp. 72–73", why:"Record close-ups without overlaps, then build the interruptions on separate A and B dialogue tracks." },
+    { src:"dmytryk", part:"Chapter 16: Rescuing the Actor", ch:"A speech from many takes", pages:"pp. 131–133", why:"Piecing one clean reading together from lines and words across many takes." },
+    { src:"resolve", part:"Chapter 175: Editing Basics in the Fairlight Page", ch:"Fades and Crossfades", pages:"pp. 3891–3895", why:"Smoothing in and out of each piece of dialogue." },
+    { src:"resolve", part:"Chapter 175: Editing Basics in the Fairlight Page", ch:"EQ, Level, and AI Dialogue Matching", pages:"pp. 3886–3887", why:"Clip EQ and matching lines recorded in different places." },
+    { src:"resolve", part:"Chapter 181: Fairlight FX", ch:"Insert Effects: Noise Reduction", pages:"p. 4041", why:"Removing steady background noise." },
+    { src:"resolve", part:"Chapter 181: Fairlight FX", ch:"Track FX: Dialogue Leveler", pages:"pp. 4014–4015", why:"Evening out dialogue levels." },
+    { src:"resolve", part:"Chapter 174", ch:"ADR (Automated Dialog Replacement)", pages:"pp. 3841–3850", why:"Re-recording lines that can’t be saved." }
+  ],
+  t20: [
+    { src:"reisz", ch:"Analysis of a Sound-Track", part:"Chapter 15: Sound Editing", pages:"pp. 218–226", why:"The Odd Man Out robbery: footsteps recorded on wooden boards, hoof-beats with echo, sound perspective cheated to build tension." },
+    { src:"reisz", ch:"Chapter 10: The Documentary and the Use of Sound", pages:"p. 136", why:"The off-screen sound “round the corner” that brings an empty shot to life." },
+    { src:"dmytryk", part:"Chapter 11: If You Can't Make It Smooth, Make It Right", ch:"Selling a punch", pages:"pp. 75–76", why:"A dubbed-in smack makes a missed punch land; judge fights only once temporary effects are in." },
+    { src:"resolve", part:"Chapter 170: Using the Fairlight Page", ch:"Sound Library Browser", pages:"pp. 3781–3785", why:"Finding and auditioning effects and ambience." },
+    { src:"resolve", part:"Chapter 173", ch:"Recording", pages:"pp. 3831–3840", why:"Recording Foley and wild tracks into the timeline." },
+    { src:"resolve", part:"Chapter 181: Fairlight FX", ch:"Insert Effects: Foley Sampler", pages:"pp. 4032–4034", why:"Performing Foley from samples." },
+    { src:"resolve", part:"Chapter 175: Editing Basics in the Fairlight Page", ch:"Audio Clip Layering", pages:"pp. 3888–3889", why:"Layering ambience beds and effects." }
+  ],
+  t5: [
+    { src:"dmytryk", part:"Chapter 4: The Cutter Begins", ch:"Choosing stock footage", pages:"pp. 17–18", why:"Pick stock material early, so new footage can be shot (or graded) to match it." },
+    { src:"resolve", part:"Chapter 16: Using the Media Page", ch:"The Media Storage Browser", pages:"pp. 344–347", why:"Browsing your drives and adding folders." },
+    { src:"resolve", part:"Chapter 17: Adding and Organizing Media with the Media Pool", ch:"Adding Media to the Media Pool", pages:"pp. 364–367", why:"Every way of importing, and what Resolve does with the files." },
+    { src:"resolve", part:"Chapter 17: Adding and Organizing Media with the Media Pool", ch:"Sync Media Pool Bins with File System Folders", pages:"pp. 370–371", why:"Keeping bins in step with your folder structure." }
+  ],
+  rs1: [
+    { src:"resolve", part:"Chapter 1", ch:"Introduction to DaVinci Resolve", pages:"pp. 13–52", why:"A tour of every page and how they share one project." },
+    { src:"resolve", part:"Chapter 2: Using the DaVinci Resolve User Interface", ch:"Customizing the DaVinci Resolve Interface", pages:"pp. 54–61", why:"Resizing, hiding and rearranging panels, and saving workspace layouts." },
+    { src:"resolve", part:"Chapter 3: Managing Projects and Project Libraries", ch:"Using the Project Manager", pages:"pp. 73–78", why:"Creating, opening, importing and exporting projects." },
+    { src:"resolve", part:"Chapter 3: Managing Projects and Project Libraries", ch:"Saving Projects", pages:"pp. 85–87", why:"Live Save and Project Backups, so a crash never costs you work." }
+  ],
+  rs2: [
+    { src:"resolve", part:"Chapter 16", ch:"Using the Media Page", pages:"pp. 342–359", why:"Every panel of the Media page: Media Storage, Viewer, Media Pool, Metadata Editor and Audio panel." },
+    { src:"resolve", part:"Chapter 17: Adding and Organizing Media with the Media Pool", ch:"Manually Organizing the Media Pool", pages:"p. 377", why:"Creating bins and moving clips between them." },
+    { src:"resolve", part:"Chapter 18: Using Clip Metadata", ch:"Using the Metadata Editor", pages:"pp. 406–410", why:"Entering scene, shot, take, keywords and notes." }
+  ],
+  rs3: [
+    { src:"resolve", part:"Chapter 26", ch:"Using the Photo Page", pages:"pp. 571–580", why:"The new Photo page interface." },
+    { src:"resolve", part:"Chapter 28", ch:"Using Photo Albums", pages:"pp. 587–594", why:"Albums, the Photo page’s way of grouping stills." },
+    { src:"resolve", part:"Chapter 29", ch:"Editing Images in the Photo Page", pages:"pp. 595–617", why:"Grading and adjusting stills with the colour tools." },
+    { src:"resolve", part:"Chapter 32", ch:"Exporting Images", pages:"pp. 629–633", why:"Getting finished stills out of Resolve." }
+  ],
+  rs6: [
+    { src:"resolve", part:"Chapter 62", ch:"Introduction to Compositing in Fusion", pages:"pp. 1278–1283", why:"What Fusion is for and how it relates to the rest of Resolve." },
+    { src:"resolve", part:"Chapter 63", ch:"Exploring the Fusion Interface", pages:"pp. 1284–1330", why:"Node editor, viewers, Inspector and the tool bar." },
+    { src:"resolve", part:"Chapter 64", ch:"Getting Clips into Fusion", pages:"pp. 1331–1356", why:"How timeline clips arrive as MediaIn nodes and leave through MediaOut." },
+    { src:"resolve", part:"Chapter 56: Titles, Generators, and Stills", ch:"The Text+ Title Generator", pages:"pp. 1186–1190", why:"Building titles with Text+, which you can then open in Fusion." }
+  ],
+  rs7: [
+    { src:"resolve", part:"Chapter 126", ch:"Using the Color Page", pages:"pp. 3045–3062", why:"The Color page layout and its palettes." },
+    { src:"resolve", part:"Chapter 143", ch:"Node Editing Basics", pages:"pp. 3384–3405", why:"Serial, parallel and layer nodes, labelling nodes, and clip versus timeline grades." },
+    { src:"resolve", part:"Chapter 127: Viewers, Monitoring, and Video Scopes", ch:"Explanation of Each Video Scope", pages:"pp. 3097–3100", why:"Waveform, Parade, Vectorscope and Histogram, and what each shows." },
+    { src:"resolve", part:"Chapter 141", ch:"Using the Gallery", pages:"pp. 3332–3348", why:"Saving stills to compare shots and copy grades." }
+  ],
+  rs8: [
+    { src:"resolve", part:"Chapter 170", ch:"Using the Fairlight Page", pages:"pp. 3746–3799", why:"The Fairlight timeline, mixer, meters, Effects Library and Sound Library." },
+    { src:"resolve", part:"Chapter 171", ch:"Setting Up Tracks, Busses, and Patching", pages:"pp. 3800–3821", why:"Track types, busses and routing, such as dialogue, music and effects busses." },
+    { src:"resolve", part:"Chapter 177: Mixing in the Fairlight Page", ch:"The Mixer", pages:"pp. 3929–3932", why:"The channel strip: input, effects, dynamics, EQ, pan and fader." }
+  ],
+  rs9: [
+    { src:"resolve", part:"Chapter 186", ch:"Using the Deliver Page", pages:"pp. 4094–4102", why:"Render settings, the Deliver timeline and the Render Queue." },
+    { src:"resolve", part:"Chapter 187: Rendering Media", ch:"Using Presets for Fast Rendering", pages:"pp. 4104–4111", why:"What each built-in preset produces and how to save your own." },
+    { src:"resolve", part:"Chapter 187: Rendering Media", ch:"Using the Render Queue", pages:"pp. 4130–4131", why:"Lining up and running several renders." }
+  ],
+  rs10: [
+    { src:"resolve", part:"Chapter 2: Using the DaVinci Resolve User Interface", ch:"Keyboard Shortcuts", pages:"p. 68", why:"Keyboard Customization and switching shortcut sets." },
+    { src:"resolve", part:"Chapter 42: Preparing Clips for Editing and Viewer Playback", ch:"Keyboard Shortcuts in This Chapter", pages:"p. 864", why:"Playback, JKL, marking and markers." },
+    { src:"resolve", part:"Chapter 43: Editing Basics", ch:"Keyboard Shortcuts in This Chapter", pages:"p. 889", why:"Insert, overwrite, append, selection and deletion." },
+    { src:"resolve", part:"Chapter 51: Trimming", ch:"Trim Tool Operations With the Keyboard", pages:"pp. 1068–1070", why:"Trimming without the mouse." }
+  ],
+  t2: [
+    { src:"resolve", part:"Chapter 17: Adding and Organizing Media with the Media Pool", ch:"Copying Media Using the Clone Tool", pages:"pp. 362–363", why:"Checksum-verified copying inside Resolve." }
+  ],
+  t3: [
+    { src:"resolve", part:"Chapter 17: Adding and Organizing Media with the Media Pool", ch:"Copying Media Using the Clone Tool", pages:"pp. 362–363", why:"Setting up and running a verified clone job." },
+    { src:"resolve", part:"Chapter 53", ch:"Media Management", pages:"pp. 1135–1141", why:"Copying or trimming a project’s media to hand it to another person or archive it." }
+  ],
+  t4: [
+    { src:"resolve", part:"Chapter 3: Managing Projects and Project Libraries", ch:"Using the Project Manager", pages:"pp. 73–78", why:"Creating the project and choosing its library." },
+    { src:"resolve", part:"Chapter 6: Project Settings", ch:"Master Settings: Timeline Format", pages:"pp. 140–141", why:"Timeline resolution and frame rate (frame rate can’t change once media is in the timeline)." },
+    { src:"resolve", part:"Chapter 6: Project Settings", ch:"Master Settings: Working Folders", pages:"p. 144", why:"Where proxies, cache and gallery stills are written." },
+    { src:"resolve", part:"Chapter 8: Improving Performance, Proxies, and the Render Cache", ch:"Using Proxy Media: Creating and Using Proxy Media", pages:"pp. 207–208", why:"Proxy format and resolution settings." }
+  ],
+  t11: [
+    { src:"resolve", part:"Chapter 51: Trimming", ch:"Summarizing Trim Operations", pages:"p. 1061", why:"Which trim does what." },
+    { src:"resolve", part:"Chapter 51: Trimming", ch:"Ripple Editing Rules", pages:"pp. 1074–1076", why:"How ripple trims move everything after them." }
+  ],
+  t15: [
+    { src:"resolve", part:"Chapter 9: Data Levels, Color Management, and ACES", ch:"Simple RCM Setup", pages:"pp. 230–232", why:"Method A: setting up DaVinci colour management." },
+    { src:"resolve", part:"Chapter 9: Data Levels, Color Management, and ACES", ch:"Advanced RCM Setup", pages:"pp. 233–243", why:"Choosing input, timeline and output colour spaces yourself." },
+    { src:"resolve", part:"Chapter 150: Using LUTs", ch:"Applying LUTs to Source Clips", pages:"p. 3480", why:"Method B: a manual conversion with a LUT." },
+    { src:"resolve", part:"Chapter 143: Node Editing Basics", ch:"Clip vs. Timeline Grading", pages:"pp. 3404–3405", why:"Where a grade lives, and when to grade the whole timeline." }
+  ],
+  t23: [
+    { src:"resolve", part:"Chapter 177: Mixing in the Fairlight Page", ch:"Bouncing Audio", pages:"p. 3968", why:"Bouncing the final mix to a new file." },
+    { src:"resolve", part:"Chapter 142: Grade Management", ch:"Using Versions to Manage Grades", pages:"pp. 3351–3360", why:"Local and remote grade versions that follow clips between timelines." }
+  ],
+  t24: [
+    { src:"resolve", part:"Chapter 187: Rendering Media", ch:"Using Presets for Fast Rendering", pages:"pp. 4104–4111", why:"H.264, ProRes and other presets." },
+    { src:"resolve", part:"Chapter 187: Rendering Media", ch:"Choosing a Location to Render", pages:"p. 4113", why:"Pointing the render at 08_Playouts." },
+    { src:"resolve", part:"Chapter 187: Rendering Media", ch:"All Other Render Settings for Output", pages:"pp. 4115–4126", why:"Codec, resolution, audio and file-naming options." },
+    { src:"resolve", part:"Chapter 188", ch:"Delivering DCP and IMF", pages:"pp. 4136–4150", why:"Cinema and IMF packages for festivals." },
+    { src:"resolve", part:"Chapter 59", ch:"Subtitles and Closed Captioning", pages:"pp. 1227–1248", why:"Adding and exporting subtitles for deliverables." }
+  ]
+};
+
+function readingHTML(taskId) {
+  const refs = READING[taskId];
+  if (!refs || !refs.length) return '';
+  const order = [], bySrc = {};
+  refs.forEach(r => { if (!bySrc[r.src]) { bySrc[r.src] = []; order.push(r.src); } bySrc[r.src].push(r); });
+  const blocks = order.map(key => {
+    const s = READING_SOURCES[key]; if (!s) return '';
+    const rows = bySrc[key].map(r => `
+      <div class="reading-row">
+        <div class="reading-ch">${r.part ? `<span class="reading-part">${escHtml(r.part)}</span>` : ''}${escHtml(r.ch)}${r.pages ? `<span class="reading-pages">${escHtml(r.pages)}</span>` : ''}</div>
+        <div class="reading-why">${escHtml(r.why)}</div>
+      </div>`).join('');
+    return `<div class="reading-source"><div class="reading-book">${escHtml(s.author)}, <cite>${escHtml(s.title)}</cite> (${escHtml(s.edition)})</div>${rows}</div>`;
+  }).join('');
+  return `<div class="drawer-section"><div class="drawer-label">Further reading</div>${blocks}</div>`;
+}
 
 const PHASES = [
   {
@@ -1389,6 +1775,7 @@ function buildTaskEl(task) {
               <div class="guidance-block" contenteditable="true" spellcheck="false">${guidanceContent}</div>
             </div>
           </div>
+          ${readingHTML(task.id)}
           <div class="drawer-section">
             <div class="drawer-label">Crew Notes</div>
             <textarea class="drawer-notes" placeholder="Add notes, decisions, or context for your team…" spellcheck="false">${escHtml(ts.notes||'')}</textarea>
@@ -1934,9 +2321,64 @@ function toggleResearch() {
   if (section) section.classList.toggle('open');
 }
 
+function allTasksById() {
+  var map = {};
+  RESEARCH_TASKS.forEach(function(t){ map[t.id] = t; });
+  RESOLVE_TASKS.forEach(function(t){ map[t.id] = t; });
+  PHASES.forEach(function(ph){ ph.tasks.forEach(function(t){ map[t.id] = t; }); });
+  return map;
+}
+
+function renderSources() {
+  var list = document.getElementById('sourcesList');
+  if (!list) return;
+  var tasks = allTasksById();
+  var order = RESEARCH_TASKS.concat(PHASES.reduce(function(a, ph){ return a.concat(ph.tasks); }, [])).concat(RESOLVE_TASKS).map(function(t){ return t.id; });
+  list.innerHTML = Object.keys(READING_SOURCES).map(function(key) {
+    var s = READING_SOURCES[key];
+    var cited = order.filter(function(id){ return (READING[id] || []).some(function(r){ return r.src === key; }); });
+    var link = s.link ? '<a class="src-link" href="' + escHtml(s.link) + '" target="_blank" rel="noopener">' + escHtml(s.linkLabel || 'Open link') + ' \u2197</a>' : '';
+    var chips = cited.map(function(id){
+      var t = tasks[id]; var nm = (getTask(id).nameOverride != null ? getTask(id).nameOverride : (t ? t.name : id));
+      return '<button class="src-task" data-goto="' + id + '">' + escHtml(nm) + '</button>';
+    }).join('');
+    return '<div class="src-card"><div class="src-head"><div><div class="src-title"><cite>' + escHtml(s.title) + '</cite></div>' +
+      '<div class="src-author">' + escHtml(s.author) + '</div></div>' + link + '</div>' +
+      (s.about ? '<div class="src-about">' + escHtml(s.about) + '</div>' : '') +
+      (s.details ? '<div class="src-details">' + escHtml(s.details) + '</div>' : '') +
+      (cited.length ? '<div class="src-cited">Cited in ' + cited.length + ' task' + (cited.length === 1 ? '' : 's') + '</div><div class="src-tasks">' + chips + '</div>' : '') +
+      '</div>';
+  }).join('');
+  list.querySelectorAll('[data-goto]').forEach(function(b){
+    b.addEventListener('click', function(){ goToTask(b.getAttribute('data-goto')); });
+  });
+}
+
+function goToTask(id) {
+  var el = document.querySelector('.task[data-task-id="' + id + '"]');
+  if (!el) return;
+  var sec = el.closest('.research-section');
+  if (sec) sec.classList.add('open');
+  document.querySelectorAll('.task.open').forEach(function(t){ if (t !== el) t.classList.remove('open'); });
+  el.classList.add('open');
+  setTimeout(function(){
+    var bar = document.querySelector('.fth-header, header');
+    var offset = (bar && getComputedStyle(bar).position.match(/sticky|fixed/)) ? bar.offsetHeight + 16 : 16;
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+    el.classList.add('src-flash');
+    setTimeout(function(){ el.classList.remove('src-flash'); }, 1600);
+  }, 550);
+}
+
+function toggleSources() {
+  var section = document.getElementById('sourcesSection');
+  if (section) section.classList.toggle('open');
+}
+
 render();
 renderResearch();
 renderResolve();
+renderSources();
 </script>
 </body>
 </html>
