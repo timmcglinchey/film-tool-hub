@@ -280,10 +280,10 @@ input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-
   .task-lock:hover { color:var(--red); }
   .task.unlocked .task-lock { color:var(--red); }
   .task:not(.unlocked) .task-name-field, .task:not(.unlocked) .task-desc-field, .task:not(.unlocked) .task-owner-field, .task:not(.unlocked) .task-icon-edit { pointer-events:none; border-bottom-color:transparent !important; cursor:default; }
-  .task:not(.unlocked) .guidance-block { pointer-events:none; cursor:default; }
+  .task:not(.unlocked) .guidance-block { cursor:text; }
   .gloss-link { pointer-events:auto; }
   .task:not(.unlocked) .guidance-toolbar { display:none !important; }
-  .task:not(.unlocked) .drawer-notes { pointer-events:none; background:transparent; border-color:transparent; resize:none; cursor:default; }
+  .task:not(.unlocked) .drawer-notes { background:transparent; border-color:transparent; resize:none; cursor:text; }
   .task:not(.unlocked) .btn-add-link, .task:not(.unlocked) .btn-remove-link, .task:not(.unlocked) .link-input { pointer-events:none; opacity:0.5; }
   .task:not(.unlocked) [data-action="reset"] { display:none; }
 
@@ -1701,6 +1701,7 @@ function buildCustomTaskEl(phaseId, ct) {
   lockBtnC.addEventListener('click', e => {
     e.stopPropagation();
     const unlocked = el.classList.toggle('unlocked');
+    applyTaskLock(el, unlocked);
     lockBtnC.textContent = unlocked ? '🔓' : '🔒';
     lockBtnC.title = unlocked ? 'Lock to prevent edits' : 'Unlock to edit';
   });
@@ -1715,6 +1716,7 @@ function buildCustomTaskEl(phaseId, ct) {
   });
   header.addEventListener('click', e => {
     if (e.target.closest('.task-checkbox') || e.target.closest('.task-remove') || e.target.closest('.task-lock') || e.target.closest('input') || e.target.closest('textarea')) return;
+    if (hasTextSelection()) return;
     const isOpen = el.classList.contains('open');
     document.querySelectorAll('.task.open').forEach(t => { if (t !== el) t.classList.remove('open'); });
     el.classList.toggle('open', !isOpen);
@@ -1751,6 +1753,17 @@ function buildCustomTaskEl(phaseId, ct) {
     ct.links[idx] = { ...ct.links[idx], [input.dataset.field]: input.value }; saveCustom();
   });
   return el;
+}
+
+// Locked tasks stay readable and selectable (so text can be copied) but not editable.
+function applyTaskLock(taskEl, unlocked) {
+  taskEl.querySelectorAll('.guidance-block').forEach(function(g){ g.setAttribute('contenteditable', unlocked ? 'true' : 'false'); });
+  taskEl.querySelectorAll('.drawer-notes').forEach(function(n){ n.readOnly = !unlocked; });
+}
+
+function hasTextSelection() {
+  var s = window.getSelection ? window.getSelection() : null;
+  return !!(s && !s.isCollapsed && s.toString().trim());
 }
 
 function buildTaskEl(task) {
@@ -1831,12 +1844,15 @@ function buildTaskEl(task) {
     lockBtn.addEventListener('click', e => {
       e.stopPropagation();
       const unlocked = taskEl.classList.toggle('unlocked');
+      applyTaskLock(taskEl, unlocked);
       lockBtn.textContent = unlocked ? '🔓' : '🔒';
       lockBtn.title = unlocked ? 'Lock to prevent edits' : 'Unlock to edit';
     });
 
     taskEl.addEventListener('click', e => {
+      if (!e.target.closest('.task-header')) return;
       if (e.target.closest('.task-checkbox') || e.target.closest('.task-lock') || e.target.closest('input') || e.target.closest('textarea')) return;
+      if (hasTextSelection()) return;
       if (!taskEl.classList.contains('unlocked')) {
         const isOpen = taskEl.classList.contains('open');
         document.querySelectorAll('.task.open').forEach(t => { if (t !== taskEl) t.classList.remove('open'); });
@@ -1870,6 +1886,7 @@ function buildTaskEl(task) {
     notesEl.addEventListener('click', e => e.stopPropagation());
 
     bindLinkEvents(taskEl.querySelector('.task-drawer'), task.id);
+    applyTaskLock(taskEl, taskEl.classList.contains('unlocked'));
   return taskEl;
 }
 
