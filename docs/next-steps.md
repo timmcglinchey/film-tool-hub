@@ -18,7 +18,7 @@ GitHub access came back on 12 November 2026. Everything built offline is now pub
    - Optional **tutor view** (to be decided).
 3. **Casting Tracker privacy:** it stores actors' names, emails, phone numbers and headshots. `privacy.html` now covers this and the Share box warns the owner. Still to decide: limiting who in a crew can open this tool (fits with the roles work above).
 4. **Later launch steps:**
-   - prove ownership of the domain in Google Search Console;
-   - add a logo;
-   - remove timmcglinchey.github.io from the authorised domains;
+   - prove ownership of the domain in Google Search Console, then submit https://filmtoolhub.com/sitemap.xml there;
+   - logo, sitemap, robots.txt, home page description and privacy policy: done 23 November 2026;
+   - in Google Cloud, make sure filmtoolhub.com is the only authorised domain and origin (plus www);
    - publish the Google app and get it verified.

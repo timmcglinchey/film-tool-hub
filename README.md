@@ -11,6 +11,9 @@ The website for Film Tool Hub: 14 filmmaking tools in one place, with projects a
 | `hub/hub.js` | How the hub works (tabs, projects, saving, light/dark) |
 | `hub/kit.css` | The shared look every tool uses: fonts, colours, buttons, the tool header |
 | `hub/config.json` | Settings: the Google sign-in key (Client ID) and the email addresses that see the admin controls |
+| `privacy.html` | The privacy policy (linked from the home page) |
+| `assets/` | The logo (`logo.png`, used on Google's sign-in screen) and the favicon |
+| `sitemap.xml`, `robots.txt` | Help Google Search find and list the site |
 | `tools/tools.json` | The list of tools: name, category, description and order |
 | `tools/<name>.html` | One file per tool |
 | `tools/research.html` | My Research: the Specialist Research Hub, private to each person (see below) |

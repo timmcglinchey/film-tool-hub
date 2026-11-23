@@ -10,11 +10,13 @@ Tim McGlinchey is a film lecturer at Belfast Met. He isn't technical, so:
 
 ## What the site is
 - **Address:** https://filmtoolhub.com
-- **Hosting:** GitHub Pages from this repo's `main` branch. The domain is bought through Cloudflare. DNS: four A records for GitHub Pages, plus `www` as a CNAME to `timmcglinchey.github.io`, all with the grey cloud (DNS only).
+- **Hosting:** GitHub Pages from this repo's `main` branch. The domain is bought through Cloudflare. DNS: four A records for GitHub Pages, plus `www` as a CNAME to GitHub Pages, all with the grey cloud (DNS only). The site is only ever addressed as https://filmtoolhub.com; GitHub redirects `www` there.
 - **Visitors:** sign in with Google. Each project is saved to the visitor's own Google Drive, in a "Film Tool Hub" folder with "Projects" and "Backups" folders inside it.
 - **Google OAuth client:** set in `hub/config.json`.
   - The app is still in **Testing** mode, so every user must be added as a test user (up to 100). Publishing the app is a later step.
-  - Authorised origins: timmcglinchey.github.io, filmtoolhub.com and www.filmtoolhub.com.
+  - Authorised JavaScript origins: https://filmtoolhub.com and https://www.filmtoolhub.com. Authorised domain on the Branding page: filmtoolhub.com.
+  - Logo for the Branding page: `assets/logo.png` (512×512). The favicon is `assets/logo.svg`, with `assets/favicon-48.png` and `assets/apple-touch-icon.png`.
+  - Search: `sitemap.xml` and `robots.txt` are in the root; the home page has a description and a short "what this is" section linking to the privacy policy.
 - **Admin controls:** shown only to emails listed in `adminEmails` in `hub/config.json`.
 - **Shared projects** (added 12 November 2026): see "How shared projects work" below. They need the **Google Picker API** switched on in the Google Cloud project. `hub/config.json` can also take an optional `googleApiKey` (a browser key limited to the Picker API and the site's addresses); the Picker is built without one if it's missing.
 
