@@ -17,6 +17,11 @@ Tim McGlinchey is a film lecturer at Belfast Met. He isn't technical, so:
   - Authorised JavaScript origins: https://filmtoolhub.com and https://www.filmtoolhub.com. Authorised domain on the Branding page: filmtoolhub.com.
   - Logo for the Branding page: `assets/logo.png` (512×512). The favicon is `assets/logo.svg`, with `assets/favicon-48.png` and `assets/apple-touch-icon.png`.
   - Search: `sitemap.xml` and `robots.txt` are in the root; the home page has a description and a short "what this is" section linking to the privacy policy.
+- **Google app published and verified (November 2026): what's now fixed.** Ordinary changes to tools and the hub are unaffected. But:
+  - keep the privacy policy at `https://filmtoolhub.com/privacy.html` (Google links to it); edit its wording freely, but update it whenever a tool stores a new kind of personal information or the site loads something from a new company;
+  - don't ask Google for more permissions than `drive.file`, `openid`, `email` and `profile` (`SCOPES` in `hub/hub.js`). Anything more needs a new Google review, and some need a paid security assessment;
+  - changing the app name, logo, home page or domain on Google Cloud's Branding page sends it back for checking (a few days);
+  - keep the `google-site-verification` TXT record in Cloudflare DNS: it proves ownership to Google Search Console, where `sitemap.xml` is submitted.
 - **Admin controls:** shown only to emails listed in `adminEmails` in `hub/config.json`.
 - **Shared projects** (added 12 November 2026): see "How shared projects work" below. They need the **Google Picker API** switched on in the Google Cloud project. `hub/config.json` can also take an optional `googleApiKey` (a browser key limited to the Picker API and the site's addresses); the Picker is built without one if it's missing.
 
