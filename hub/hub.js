@@ -2484,7 +2484,7 @@ function sizeCards() {
     }
     m.remove(); return h;
   };
-  const HEAD = 62;   /* space above the title for the pin and ⋯ buttons */
+  const HEAD = 58;   /* space above the title for the pin and ⋯ buttons */
   const one = root.querySelector('.cardw.pic:not(.lead) .card');
   if (one) {
     const all = tools().filter(t => t.card && !t.lead && !isPage(t.id) && !isPersonal(t.id)).map(t => [t.desc || '', t.note || '']);

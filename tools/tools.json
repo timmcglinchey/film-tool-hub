@@ -241,7 +241,7 @@
     {
       "id": "breakdown",
       "name": "Script Breakdown",
-      "desc": "Tag cast, props, SFX, wardrobe and more straight onto your script PDF, leave labelled comments for the crew beside it, then export category lists, scene-by-scene breakdowns and a colour-coded script.",
+      "desc": "Tag cast, props, SFX, wardrobe and more on your script PDF, comment for the crew, then export lists and a colour-coded script.",
       "category": "prep",
       "tags": [
         "1st AD",
@@ -285,7 +285,7 @@
     {
       "id": "budget",
       "name": "Film Budget Builder",
-      "desc": "Build a top-sheet budget department by department, from line items or by allocating money first, with contingency, then track actual spending against the plan.",
+      "desc": "Build a top-sheet budget department by department, with contingency, then track what you actually spend against the plan.",
       "category": "prep",
       "tags": [
         "Producer",
@@ -307,7 +307,7 @@
     {
       "id": "casting",
       "name": "Casting Tracker",
-      "desc": "Cast every role: write breakdowns, track auditionees from submission to booked, score auditions and chemistry reads, and check availability and fees.",
+      "desc": "Write role breakdowns, track auditionees from submission to booked, score auditions and chemistry reads, and check fees.",
       "category": "prep",
       "tags": [
         "Casting",
@@ -328,7 +328,7 @@
     {
       "id": "release",
       "name": "Talent Release Forms",
-      "desc": "Make a release form for every performer, with a parent or guardian section for under-18s and a group sign-in sheet for extras. Print them to sign on set, or save each one as a PDF to sign digitally.",
+      "desc": "Release forms for every performer, with a guardian section for under-18s and a sign-in sheet for extras. Print or sign digitally.",
       "category": "prep",
       "tags": [
         "Producer",
@@ -370,7 +370,7 @@
     {
       "id": "loc-agree",
       "name": "Location Agreements",
-      "desc": "Make a location agreement for every place you film, with the owner's details, dates, house rules and sign-off, plus an optional before-and-after condition check. Print them to sign on the day.",
+      "desc": "An agreement for every location: owner, dates, house rules, sign-off and an optional condition check. Print to sign on the day.",
       "category": "prep",
       "tags": [
         "Locations",
@@ -578,7 +578,7 @@
     {
       "id": "script-log",
       "name": "Script Supervisor's Log",
-      "desc": "Print the script supervisor's paperwork for a shoot day: a daily progress report, a take log with the day's shots ready to fill in, and a continuity sheet for every scene. Bring the basics in from the schedule and shot list.",
+      "desc": "Print the script supervisor's day: progress report, take log and continuity sheets, filled in from the schedule and shot list.",
       "category": "shoot",
       "tags": [
         "Script supervisor",
@@ -597,7 +597,7 @@
     {
       "id": "camera-report",
       "name": "Camera Report",
-      "desc": "Print the camera department's paperwork for a shoot day: a camera report for each camera with the day's shots ready to log, and a card and data log for handing media to the DIT. Bring the basics in from the schedule and shot list.",
+      "desc": "Print the camera department's day: a report for each camera and a card log for the DIT, filled in from the schedule and shot list.",
       "category": "shoot",
       "tags": [
         "Camera",
@@ -637,7 +637,7 @@
     {
       "id": "pattern-lab",
       "name": "Lighting Pattern Lab",
-      "desc": "Learn classic portrait lighting on a 3D head: Rembrandt, loop, butterfly, split, broad and short. Move the key light and see real soft-shadow falloff.",
+      "desc": "Learn classic portrait lighting on a 3D head: Rembrandt, loop, butterfly, split, broad and short, with real shadow falloff.",
       "category": "learn",
       "tags": [
         "DP",
@@ -657,7 +657,7 @@
     {
       "id": "ratio-lab",
       "name": "Lighting Ratio Lab",
-      "desc": "Plan lighting ratios on a lit frame. Set key, fill, backlight and background in stops, read the ratios by meter or spot, and build a deck of looks to compare and export.",
+      "desc": "Set key, fill, backlight and background in stops on a lit frame, read the ratios, and build a deck of looks to compare.",
       "category": "learn",
       "tags": [
         "DP",
@@ -717,7 +717,7 @@
     {
       "id": "colour-temp",
       "name": "Colour Temperature Lab",
-      "desc": "See how the colour of light and your camera's white balance work together. Move each along the Kelvin scale and watch a scene warm, cool and come back to neutral.",
+      "desc": "Move the light's colour and the camera's white balance along the Kelvin scale and watch a scene warm, cool and settle.",
       "category": "learn",
       "tags": [
         "DP",
@@ -737,7 +737,7 @@
     {
       "id": "mic-placement",
       "name": "Mic Placement Lab",
-      "desc": "Learn how distance, pickup pattern and gain decide what your mic records. Place the mic, choose what you're recording, and see and hear the signal against the noise.",
+      "desc": "Place the mic, pick a pickup pattern and set the gain, then see and hear your signal against the noise around it.",
       "category": "learn",
       "tags": [
         "Sound",
@@ -756,7 +756,7 @@
     {
       "id": "spectrum",
       "name": "Spectrum Analysis Lab",
-      "desc": "See a sound split into its frequencies. Pick out the peaks, listen to them on their own, and hear how different mics would change the same sound.",
+      "desc": "See a sound split into its frequencies, listen to the peaks on their own, and hear how different mics change it.",
       "category": "learn",
       "tags": [
         "Sound",
