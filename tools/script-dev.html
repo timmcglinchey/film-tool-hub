@@ -602,6 +602,42 @@ details.disc[open]>summary::before{transform:rotate(90deg)}
 #print{display:none}
 #printdoc{display:none}
 
+/* ---------- ideas (opened from the Ideas page) ---------- */
+.idea-top{gap:10px}
+.idea-back{padding:6px 10px 6px 6px}
+.idea-back span{font-weight:700}
+.brand-txt small{display:block;margin-left:0}
+.grad-btn{background:var(--fth-accent,var(--accent));border-color:var(--fth-accent,var(--accent));color:var(--fth-on-accent,#fff)}
+#app{position:relative}
+.idea-side{position:fixed;left:0;top:0;bottom:0;width:288px;z-index:40;background:var(--panel);border-right:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;padding:12px;transform:translateX(-104%);transition:transform .2s ease-out;visibility:hidden}
+body.side-open .idea-side{transform:none;visibility:visible}
+.side-head{display:flex;align-items:center;gap:8px;padding:2px 2px 0}
+.side-head b{font-size:14px}
+.side-new{justify-content:center}
+.side-list{flex:1;overflow:auto;display:flex;flex-direction:column;gap:2px;margin:0 -4px;padding:0 4px}
+.side-item{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:1px solid transparent;background:none;padding:8px 10px;border-radius:9px;cursor:pointer;color:var(--ink)}
+.side-item:hover{background:var(--sunk)}
+.side-item.cur{background:var(--accent2);border-color:var(--accent)}
+.side-t{font-weight:600;font-size:13.5px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
+.side-s{font:500 10px var(--fth-mono,monospace);letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.side-s.st-developing{color:var(--warn-ink)}.side-s.st-graduated{color:var(--ok)}
+@media (min-width:1101px){body.side-open #app{padding-left:288px}body.side-open .idea-side{box-shadow:none}}
+.mood-hold{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--sunk)}
+.mood-frame{display:block;width:100%;height:min(78vh,860px);border:0;background:transparent}
+.mood-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:34px 20px;text-align:center;color:var(--ink2)}
+.mood-empty p{margin:0;max-width:52ch}
+.mood-ic{width:30px;height:30px;color:var(--ink3)}
+.mood-sec .sec-head .btn{margin-left:auto}
+.mood-sec.full{position:fixed;inset:0;z-index:45;margin:0;border-radius:0;display:flex;flex-direction:column;padding:14px 16px}
+.mood-sec.full .lede{display:none}
+.mood-sec.full .mood-hold{flex:1;display:flex}
+.mood-sec.full .mood-frame{height:auto;flex:1}
+.pill.locked svg,.lock-note svg{width:12px;height:12px}
+.lock-note{display:inline-flex;align-items:center;gap:5px;margin-left:6px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:var(--sunk);color:var(--ink2);font-size:12px;font-weight:600;cursor:pointer}
+.lock-note[hidden]{display:none}
+.btn:disabled{opacity:.45;cursor:default}
+@media (max-width:700px){.hide-sm{display:none}.idea-back span{display:none}.grad-btn span{display:none}}
+
 @media (max-width:1250px){
   .wgrid{grid-template-columns:1fr;justify-items:center}
   .wcol{display:none}
@@ -813,7 +849,14 @@ const IC = {
   mirror:'<path d="M12 3v18"/><path d="M8 7 4 12l4 5"/><path d="m16 7 4 5-4 5"/>',
   scenes:'<path d="M4 6h16M4 12h16M4 18h10"/>',
   check:'<path d="m5 12 5 5L20 7"/>',
-  eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
+  eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  back:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>',
+  history:'<path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.5 4v4h4"/><path d="M12 8v4.5l3 2"/>',
+  grad:'<path d="M2.5 9.5 12 5l9.5 4.5L12 14z"/><path d="M6.5 11.5v4.2c1.5 1.4 3.4 2 5.5 2s4-.6 5.5-2v-4.2"/><path d="M21.5 9.5v5"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  mood:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+  expand:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'
 };
 
 /* =====================================================================
@@ -1012,12 +1055,12 @@ function blankProject(){
   return {
     v:1, id:uid()+uid(), created:Date.now(), savedAt:0, backedUpAt:0,
     title:'', author:'', contact:'',
-    develop:{ idea:'', genre:'', targetPages:'', logline:'', lb:{incident:'',protagonist:'',goal:'',stakes:''}, lb2:{incident:'',protagonist:'',action:'',antagonist:''}, lbMode:'when', lbConn:'or else',
+    develop:{ idea:'', genre:'', targetPages:'', logline:'', synopsis:'', lb:{incident:'',protagonist:'',goal:'',stakes:''}, lb2:{incident:'',protagonist:'',action:'',antagonist:''}, lbMode:'when', lbConn:'or else',
       topic:'', lie:'', truth:'', tragic:'', arc:'positive', themeNotes:'', checks:{}, norm:'',
       characters:[newChar('Protagonist')], settings:[], refs:[], notes:'' },
     outline:{ step:0, view:'toggle', structure:'scaffold', alt:{}, beats:Object.fromEntries(BEAT_IDS.map(id => [id, {summary:'', items:[]}])) },
     script:{ text:'', basedOn:'' },
-    drafts:[],
+    drafts:[], lockedDraft:'',
     ui:{ tab:'develop', live:true, bar:true, checks:true, togo:true, scenes:true, smart:true, zoom:1, welcomed:false, tips:true }
   };
 }
@@ -1043,6 +1086,12 @@ let embedded = null;
 try { const t = $('#project-data').textContent.trim(); if (t && t !== 'null') embedded = JSON.parse(t); } catch(e){ embedded = null; }
 
 let bootNotice = null;
+/* Ideas (Film Tool Hub): opened from the Ideas page, this tool works on one idea. The hub files its saved work in
+   that idea's own space and passes window.__fthIdea = {id, title, where, seed, status}. Idea mode adds: Back to Ideas,
+   the list of ideas, History (automatic snapshots), Graduate, and the mood board at the foot of Develop. */
+const IDEA = window.__fthIdea && window.__fthIdea.id ? window.__fthIdea : null;
+const IDEAS_HUB = (() => { try { return window.parent !== window && window.parent.__fthHub && window.parent.__fthHub.ideas || null; } catch(e){ return null; } })();
+let ideaFresh = false;
 (function boot(){
   let local = null;
   const readLocal = id => { try { const r = lsGet(LS+'p:'+id); return r ? JSON.parse(r) : null; } catch(e){ return null; } };
@@ -1055,8 +1104,19 @@ let bootNotice = null;
   } else {
     const last = lsGet(LS+'last');
     local = last ? readLocal(last) : null;
-    if (local){ S = normaliseProject(local); bootNotice = {kind:'continue'}; }
+    if (local){ S = normaliseProject(local); if (!IDEA) bootNotice = {kind:'continue'}; }
     else S = blankProject();
+    if (IDEA && !local){   /* a new idea: start from what was caught on the Ideas page */
+      const seed = IDEA.seed || {};
+      if (seed.title) S.title = seed.title;
+      if (seed.text) S.develop.idea = seed.text;
+      S.ui.welcomed = true; ideaFresh = true;
+    }
+    if (IDEA){   /* where the Ideas page asked to start */
+      const w = IDEA.where || '';
+      if (w === 'outline' || w === 'write') S.ui.tab = w;
+      else if (w) S.ui.tab = 'develop';
+    }
   }
 })();
 
@@ -1065,26 +1125,94 @@ let saveTimer = null, dirtySinceBackup = 0;
 const derived = [];        // view-scoped updaters
 const gDerived = [];       // global updaters (header etc.)
 let derivedTimer = null;
+let unsaved = false;
 function touch(){
+  unsaved = true;
   S.savedAt = Date.now();
   dirtySinceBackup++;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveLocal, 350);
   scheduleDerived();
+  snapSoon();
 }
 function saveLocal(){
-  clearTimeout(saveTimer);
+  clearTimeout(saveTimer); unsaved = false;
   const ok = lsSet(LS+'p:'+S.id, JSON.stringify(S));
   lsSet(LS+'last', S.id);
   storageOK = ok;
   updateSaveState();
 }
 let storageOK = true;
+if (IDEA && ideaFresh){ S.savedAt = Date.now(); }
 function scheduleDerived(){ clearTimeout(derivedTimer); derivedTimer = setTimeout(runDerived, 140); }
 function runDerived(){ for (const f of gDerived) try{ f(); }catch(e){ console.error(e); } for (const f of derived) try{ f(); }catch(e){ console.error(e); } }
-window.addEventListener('pagehide', () => { flushEditor && flushEditor(); saveLocal(); });
-window.addEventListener('beforeunload', () => { flushEditor && flushEditor(); saveLocal(); });
+/* an idea's workspace can sit in the background while the Ideas page changes the same idea (its title, its text),
+   so on the way out it only saves what's actually unsaved */
+const saveOnExit = () => { flushEditor && flushEditor(); if (!IDEA || unsaved) saveLocal(); };
+window.addEventListener('pagehide', saveOnExit);
+window.addEventListener('beforeunload', saveOnExit);
 let flushEditor = null;
+
+/* ---------- history: automatic snapshots of the whole idea (Ideas). Kept under "snaps:<project id>", beside the project ---------- */
+const SNAP_MS = 10 * 60 * 1000, SNAP_MAX = 15, SNAP_BYTES = 600000;
+const snapKey = () => LS + 'snaps:' + S.id;
+function snapsGet(){ try { const v = JSON.parse(lsGet(snapKey()) || '[]'); return Array.isArray(v) ? v : []; } catch(e){ return []; } }
+function snapsPut(list){
+  let json = JSON.stringify(list);
+  while (list.length > 3 && json.length > SNAP_BYTES){ list.shift(); json = JSON.stringify(list); }   /* oldest go first when they get big */
+  if (!lsSet(snapKey(), json)) toast('The history is full for this browser, so this snapshot wasn\'t kept.');
+}
+const snapBody = () => ({title:S.title, develop:S.develop, outline:S.outline, script:S.script});
+const isBlank = () => !S.title.trim() && !S.develop.idea.trim() && !S.develop.logline.trim() && !S.script.text.trim();
+function takeSnap(why, force){
+  flushEditor && flushEditor();
+  const list = snapsGet(), body = JSON.stringify(snapBody()), last = list[list.length - 1];
+  if (last && last.body === body) return false;
+  if (!force && isBlank()) return false;
+  list.push({id:uid(), at:Date.now(), why:why || 'auto', body});
+  while (list.length > SNAP_MAX) list.shift();
+  snapsPut(list); return true;
+}
+let snapT = 0;
+function snapSoon(){   /* while working: one snapshot every ten minutes at most */
+  if (!IDEA) return;
+  const list = snapsGet(), last = list[list.length - 1];
+  if (!last || Date.now() - last.at >= SNAP_MS){ clearTimeout(snapT); snapT = setTimeout(() => takeSnap('auto'), 4000); }
+}
+function snapSummary(b){
+  const d = b.develop || {}, lines = String((b.script || {}).text || '').split('\n').filter(l => l.trim()).length;
+  const bits = [];
+  if (String(d.logline || '').trim()) bits.push('logline');
+  const ch = (d.characters || []).filter(c => String(c.name || '').trim()).length; if (ch) bits.push(ch + (ch === 1 ? ' character' : ' characters'));
+  if (Object.values((b.outline || {}).beats || {}).some(x => String(x.summary || '').trim() || (x.items || []).length)) bits.push('outline');
+  if (lines) bits.push(lines < 30 ? 'a scene' : '≈ ' + Math.max(1, Math.round(lines / 55)) + ' pages');
+  return bits.length ? bits.join(' · ') : 'the idea';
+}
+function historyModal(){
+  flushEditor && flushEditor();
+  const list = h('div', {class:'plist'});
+  let close;
+  const draw = () => {
+    const ss = snapsGet().slice().reverse();
+    list.replaceChildren(...(ss.length ? ss.map(sn => {
+      let b = {}; try { b = JSON.parse(sn.body); } catch(e){}
+      return h('div', {class:'pi'},
+        h('div', {style:'flex:1;min-width:0'}, h('b', null, new Date(sn.at).toLocaleString('en-GB', {weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})),
+          sn.why && sn.why !== 'auto' ? h('span', {class:'pill', style:'margin-left:8px'}, sn.why) : null,
+          h('div', {class:'small muted'}, (b.title ? '“' + b.title + '” · ' : '') + snapSummary(b))),
+        h('button', {class:'btn sm', title:'Go back to this version. What you have now is kept in the history first.', onclick: () => confirmBox('Go back to this version?', 'Everything in this idea goes back to how it was then. What you have now is kept in the history first, so you can come back to it.', 'Go back', () => {
+          takeSnap('before going back', true);
+          S.title = b.title || ''; S.develop = b.develop || S.develop; S.outline = b.outline || S.outline; S.script = b.script || S.script;
+          S = normaliseProject(S); touch(); saveLocal(); close && close(); renderAll(); toast('Back to the version from ' + ago(sn.at) + '.');
+        })}, 'Go back'));
+    }) : [h('div', {class:'empty'}, 'No snapshots yet. One is taken every ten minutes or so while you work on this idea, and whenever you open it.')]));
+  };
+  draw();
+  close = modal('History', h('div', null,
+    h('p', null, IDEA ? 'Snapshots of this whole idea, taken automatically as you work (every ten minutes or so, and each time you open it). Go back to any of them; what you have now is kept first.' : 'Snapshots taken while this was an idea on the Ideas page.'),
+    IDEA ? h('div', {class:'row', style:'gap:8px'}, h('button', {class:'btn sm primary', onclick: () => { if (takeSnap('saved by you', true)){ toast('Snapshot saved.'); draw(); } else toast('Nothing has changed since the last snapshot.'); }}, '+ Take a snapshot now')) : null,
+    list));
+}
 
 function stamp(d){ const p = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`; }
 function slug(s){ return (String(s||'').trim().replace(/[^\w\- ]+/g,'').replace(/\s+/g,'_').slice(0,50)) || 'Untitled_Script'; }
@@ -1211,7 +1339,7 @@ const targetPages = () => { const n = parseFloat(S.develop.targetPages); return 
 function renderShell(){
   const app = $('#app'); app.replaceChildren();
   gDerived.length = 0;
-  const title = h('input', {class:'proj-title', placeholder:'Untitled script', 'aria-label':'Project title'});
+  const title = h('input', {class:'proj-title', placeholder: IDEA ? (IDEA.title || 'Untitled idea') : 'Untitled script', 'aria-label': IDEA ? 'Idea title' : 'Project title'});
   title.value = S.title;
   title.addEventListener('input', () => { S.title = title.value; touch(); });
   gDerived.push(() => { if (document.activeElement !== title && title.value !== S.title) title.value = S.title; });
@@ -1223,7 +1351,18 @@ function renderShell(){
   });
   saveStateEl = h('div', {class:'save-state'});
   backupBtn = h('button', {class:'btn primary', title:'Download a dated copy of this file with all your work inside', onclick: backupHTML}, h('span', {class:'dot'}), svgIcon(IC.save), 'Back up');
-  const more = h('button', {class:'btn icon ghost', title:'More', 'data-pop':'1', onclick: () => menu(more, [
+  const more = h('button', {class:'btn icon ghost', title:'More', 'data-pop':'1', onclick: () => menu(more, IDEA ? [
+    {label:'History…', icon:'history', fn: historyModal},
+    {label:'Script drafts…', icon:'folder', fn: () => draftsModal()},
+    '-',
+    {label:'Export script as Fountain', sub:'.fountain', icon:'file', fn: exportFountain},
+    {label:'Export script for Final Draft', sub:'.fdx', icon:'file', fn: exportFDX},
+    {label:'Print / save script as PDF', icon:'print', fn: printScript},
+    {label:'Export Develop & Outline as PDF…', icon:'print', fn: exportDocModal},
+    {label:'Import a Fountain script…', icon:'upload', fn: importFountain},
+    '-',
+    {label: S.ui.tips === false ? 'Show teaching tips' : 'Hide teaching tips', icon:'bulb', fn: () => { S.ui.tips = S.ui.tips === false; applyTips(); touch(); }}
+  ] : [
     
     {label:'Export script as Fountain', sub:'.fountain', icon:'file', fn: exportFountain},
     {label:'Export script for Final Draft', sub:'.fdx', icon:'file', fn: exportFDX},
@@ -1231,6 +1370,7 @@ function renderShell(){
     {label:'Export Develop & Outline as PDF…', icon:'print', fn: exportDocModal},
     ...(window.fthDocs ? [{label:'Save to Documentation…', icon:'folder', fn: docsModal}] : []),
     {label:'Script drafts…', icon:'folder', fn: () => draftsModal()},
+    ...(snapsGet().length ? [{label:'Idea history…', sub:'from the Ideas page', icon:'history', fn: historyModal}] : []),
     {label:'Import a Fountain script…', icon:'upload', fn: importFountain},
     '-',
     {label:'Projects saved in this browser…', icon:'folder', fn: projectsModal},
@@ -1240,15 +1380,70 @@ function renderShell(){
     {label:'How saving works', icon:'help', fn: savingHelp}
   ])}, svgIcon(IC.more));
 
-  const top = h('header', {class:'top fth-head'}, h('div', {class:'fth-id'}, h('span', {class:'fth-eyebrow'}, window.__fthCat ? __fthCat.num + ' · ' + __fthCat.name : '01 · Develop'), h('h1', {class:'fth-title'}, 'Script Development')), h('span', {class:'fth-vsep'}), h('div', {class:'brand-txt'}, title), tabs, h('div', {class:'top-actions'}, saveStateEl, more));
+  const top = IDEA
+    ? h('header', {class:'top fth-head idea-top'},
+        h('button', {class:'btn ghost idea-back', title:'Back to your ideas', onclick: () => { flushEditor && flushEditor(); saveLocal(); IDEAS_HUB && IDEAS_HUB.back(); }}, svgIcon(IC.back), h('span', null, 'Ideas')),
+        h('button', {class:'btn icon ghost', title:'Your other ideas', 'aria-label':'Show your ideas', 'aria-expanded':'false', id:'sideBtn', onclick: () => toggleSide()}, svgIcon(IC.list)),
+        h('span', {class:'fth-vsep'}), h('div', {class:'brand-txt'}, h('small', null, 'Idea'), title), tabs,
+        h('div', {class:'top-actions'},
+          h('button', {class:'btn ghost hide-sm', title:'Snapshots of this idea, taken as you work', onclick: historyModal}, svgIcon(IC.history), h('span', null, 'History')),
+          h('button', {class:'btn primary grad-btn', title:'Make this idea a project', onclick: graduateBox}, svgIcon(IC.grad), h('span', null, 'Graduate')), more))
+    : h('header', {class:'top fth-head'}, h('div', {class:'fth-id'}, h('span', {class:'fth-eyebrow'}, window.__fthCat ? __fthCat.num + ' · ' + __fthCat.name : '01 · Develop'), h('h1', {class:'fth-title'}, 'Script Development')), h('span', {class:'fth-vsep'}), h('div', {class:'brand-txt'}, title), tabs, h('div', {class:'top-actions'}, saveStateEl, more));
   app.append(top);
+  if (IDEA) app.append(ideaSide());
   if (bootNotice) app.append(bootBanner());
   if (!storageOK) app.append(h('div', {class:'banner'}, 'This browser isn\'t letting the page save automatically, so your work will be lost when you close it.'));
   app.append(h('main', {id:'view'}));
   gDerived.push(updateSaveState);
-  const setDocTitle = () => { const t = S.title.trim() || 'Script Development Tool'; if (document.title !== t) document.title = t; };
+  const setDocTitle = () => { const t = S.title.trim() || (IDEA ? 'Idea' : 'Script Development Tool'); if (document.title !== t) document.title = t; };
   gDerived.push(setDocTitle); setDocTitle();
   updateSaveState();
+}
+/* ---------- idea mode: the list of ideas beside the workspace ---------- */
+const SIDE_KEY = 'filmtoolhub-idea-side';
+function ideaSide(){
+  const q = h('input', {class:'inp', type:'search', placeholder:'Find an idea', 'aria-label':'Find an idea'});
+  const list = h('div', {class:'side-list'});
+  const ST = {seed:'Seed', developing:'Developing', shelved:'Shelved', graduated:'Graduated'};
+  const draw = () => {
+    const all = IDEAS_HUB ? IDEAS_HUB.list() : [], f = q.value.trim().toLowerCase();
+    const items = all.filter(i => !f || i.title.toLowerCase().includes(f));
+    list.replaceChildren(...(items.length ? items.map(i => h('button', {class:'side-item' + (i.id === IDEA.id ? ' cur' : ''), 'aria-current': i.id === IDEA.id ? 'true' : null,
+        onclick: () => { if (i.id === IDEA.id){ toggleSide(false); return; } flushEditor && flushEditor(); saveLocal(); takeSnap('auto'); IDEAS_HUB.open(i.id, ''); }},
+      h('span', {class:'side-t'}, i.title), h('span', {class:'side-s st-' + i.status}, ST[i.status] || i.status))) : [h('div', {class:'small muted', style:'padding:10px'}, all.length ? 'No ideas match.' : 'No ideas yet.')]));
+  };
+  q.addEventListener('input', draw);
+  const side = h('aside', {class:'idea-side', id:'ideaSide', 'aria-label':'Your ideas'},
+    h('div', {class:'side-head'}, h('b', null, 'Your ideas'), h('span', {class:'spacer'}), h('button', {class:'btn icon ghost', title:'Close', 'aria-label':'Close the list', onclick: () => toggleSide(false)}, svgIcon(IC.x))),
+    h('button', {class:'btn sm side-new', onclick: () => { flushEditor && flushEditor(); saveLocal(); IDEAS_HUB && IDEAS_HUB.newIdea(); }}, svgIcon(IC.plus), 'New idea'),
+    q, list);
+  side._draw = draw;
+  let open = false; try { open = localStorage.getItem(SIDE_KEY) === '1' && innerWidth > 1100; } catch(e){}
+  setTimeout(() => toggleSide(open, true));
+  return side;
+}
+function toggleSide(on, quiet){
+  const side = $('#ideaSide'), btn = $('#sideBtn'); if (!side) return;
+  if (on === undefined) on = !document.body.classList.contains('side-open');
+  if (on) side._draw();
+  document.body.classList.toggle('side-open', !!on);
+  btn && btn.setAttribute('aria-expanded', String(!!on));
+  if (!quiet){ try { localStorage.setItem(SIDE_KEY, on ? '1' : '0'); } catch(e){} if (on) setTimeout(() => side.querySelector('input').focus(), 30); }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('side-open') && !$('.scrim') && innerWidth <= 1100) toggleSide(false); });
+function graduateBox(){
+  if (!IDEAS_HUB) return toast('Graduating needs Film Tool Hub.');
+  flushEditor && flushEditor(); saveLocal();
+  const inp = h('input', {class:'inp', value: S.title.trim() || IDEA.title || ''});
+  modal('Graduate into a project', h('div', null,
+    h('p', null, 'This idea becomes a new project, with everything here: Develop, Outline, the script, its drafts, its history and its mood board. From then on you work on it in the project, where the Script Development Tool opens on Write.'),
+    h('label', {class:'flabel'}, 'Project name'), inp,
+    h('p', {class:'small muted', style:'margin-top:10px'}, 'It stays on the Ideas page too, marked Graduated, with a link to the project.')),
+    [{label:'Cancel'}, {label:'Graduate', primary:true, fn: () => {
+      takeSnap('graduated', true);
+      IDEAS_HUB.graduate(IDEA.id, inp.value.trim()).catch(e => toast('It couldn\'t graduate: ' + (e.message || e)));
+    }}]);
+  setTimeout(() => inp.select(), 30);
 }
 function bootBanner(){
   const n = bootNotice; bootNotice = null;
@@ -1350,7 +1545,7 @@ function plainLogline(mode){
 }
 function renderDevelop(v){
   const d = S.develop;
-  const secs = [['idea','The Idea'],['logline','Logline'],['theme','Theme'],['characters','Characters'],['settings','Settings'],['refs','References'],['notes','Notes']];
+  const secs = [['idea','The Idea'],['logline','Logline'],['theme','Theme'],['characters','Characters'],['settings','Settings'],['refs','References'],['notes','Notes'], ...(IDEA ? [['mood','Mood board']] : [])];
   const nav = h('nav', {class:'dnav'});
   const dots = {};
   secs.forEach(([id, label]) => { dots[id] = h('span', {class:'cdot'}); nav.append(h('a', {href:'#dev-'+id, 'data-s':id, onclick: e => { e.preventDefault(); $('#dev-'+id).scrollIntoView({behavior:'smooth', block:'start'}); }}, dots[id], label)); });
@@ -1362,7 +1557,7 @@ function renderDevelop(v){
       theme: [d.lie, d.truth].filter(x => x.trim()).length / 2,
       characters: namedChars().length ? (protagonist() && protagonist().flaw.trim() ? 1 : .5) : 0,
       settings: d.settings.filter(s => s.name.trim()).length ? 1 : 0,
-      refs: d.refs.length ? 1 : 0, notes: d.notes.trim() ? 1 : 0 };
+      refs: d.refs.length ? 1 : 0, notes: d.notes.trim() ? 1 : 0, mood: moodOpened ? 1 : 0 };
     for (const k in dots) dots[k].className = 'cdot' + (fill[k] >= 1 ? ' full' : fill[k] > 0 ? ' half' : '');
   });
   const main = h('div', null);
@@ -1472,7 +1667,9 @@ function renderDevelop(v){
     prev,
     msgSlot(() => { const F = FORMULAS[d.lbMode], v = F.src; const filled = F.fields.filter(([k]) => v[k].trim()).length; if (filled === 0 || filled === F.fields.length) return []; return [{level:'tip', text:'Still missing: ' + F.fields.filter(([k]) => !v[k].trim()).map(f => f[3]).join(', ') + '.'}]; }),
     h('div', {style:'margin-top:12px'}), loglineArea, wc,
-    hint('<b>Tip:</b> a strong logline makes us want to see the film. Look for irony or contrast, like the unlikeliest person facing the very problem they\'re worst equipped for.')));
+    hint('<b>Tip:</b> a strong logline makes us want to see the film. Look for irony or contrast, like the unlikeliest person facing the very problem they\'re worst equipped for.'),
+    h('div', {class:'divider'}),
+    h('div', {id:'dev-synopsis'}, field('Synopsis', d, 'synopsis', {multi:true, rows:5, hint:'Optional. The whole story in a paragraph or a page: beginning, middle and end, in the present tense.', ph:'When… / But… / Finally…'}))));
 
   /* 3 — Theme */
   const tragicWrap = h('div');
@@ -1544,11 +1741,48 @@ function renderDevelop(v){
     h('p', {class:'lede'}, 'Research, images you have in mind, overheard dialogue: anything else.'),
     field(null, d, 'notes', {multi:true, rows:6})));
 
+  /* 8 — Mood board (ideas only): the Mood Board tool, filed with this idea, so it graduates with it */
+  if (IDEA) main.append(moodSection());
+
   // scroll spy
   const view = v;
   const spy = () => { let cur = secs[0][0]; for (const [id] of secs){ const el = $('#dev-'+id); if (el && el.getBoundingClientRect().top < 160) cur = id; } $$('.dnav a').forEach(a => a.classList.toggle('on', a.dataset.s === cur)); };
   view.addEventListener('scroll', spy, {passive:true}); setTimeout(spy, 50);
   viewCleanup = () => view.removeEventListener('scroll', spy);
+}
+
+let moodOpened = false;
+function moodSection(){
+  const holder = h('div', {class:'mood-hold'});
+  const open = async () => {
+    if (!IDEAS_HUB) return;
+    holder.replaceChildren(h('div', {class:'small muted', style:'padding:20px'}, 'Opening the mood board…'));
+    const html = await IDEAS_HUB.moodFrame().catch(() => '');
+    if (!html){ holder.replaceChildren(h('div', {class:'small muted', style:'padding:20px'}, 'The mood board couldn\'t open. Check your connection and try again.')); return; }
+    const f = h('iframe', {class:'mood-frame', title:'Mood board', 'data-fth-nested':'1', allow:'fullscreen; clipboard-read; clipboard-write; autoplay'});
+    f.srcdoc = html; holder.replaceChildren(f); moodOpened = true; runDerived();
+  };
+  const big = h('button', {class:'btn sm', title:'Make the mood board fill the window', onclick: () => { const on = !sec.classList.contains('full'); sec.classList.toggle('full', on); big.lastChild.textContent = on ? 'Back to Develop' : 'Fill the window'; if (on && !holder.querySelector('iframe')) open(); }}, svgIcon(IC.expand), h('span', null, 'Fill the window'));
+  holder.append(h('div', {class:'mood-empty'}, svgIcon(IC.mood, 'mood-ic'), h('p', null, 'Pictures, clips and music for the feel of it. Everything here goes with the idea when it graduates.'),
+    h('button', {class:'btn primary', onclick: open}, 'Open the mood board')));
+  const sec = h('section', {class:'card sec mood-sec', id:'dev-mood'},
+    h('div', {class:'sec-head'}, h('div', {class:'sec-num'}, '8'), h('h2', null, 'Mood board'), big),
+    h('p', {class:'lede'}, 'Collect stills, clips and music for the look and sound of this idea.'),
+    holder);
+  sec._open = open;
+  return sec;
+}
+/* the Ideas page asked to start at a particular part (window.__fthIdea.where) */
+function goWhere(){
+  const w = IDEA && IDEA.where; if (!w) return;
+  IDEA.where = '';
+  if (w === 'write' || w === 'outline' || w === 'develop') return;
+  const id = w === 'synopsis' ? 'dev-synopsis' : 'dev-' + w, el = $('#' + id); if (!el) return;
+  el.scrollIntoView({block:'start'});
+  if (w === 'mood'){ const sec = $('#dev-mood'); sec && sec._open && sec._open(); return; }
+  if (w === 'settings' && !S.develop.settings.length){ const add = el.querySelector('.addcard'); add && add.click(); }
+  const f = el.querySelector(w === 'characters' || w === 'settings' ? '.cards input, .cards textarea' : 'textarea, input');
+  if (f) setTimeout(() => f.focus({preventScroll:true}), 60);
 }
 
 function arcSpark(arc){
@@ -2264,6 +2498,8 @@ function renderWrite(v){
   const checkBadge = h('span', {class:'badge z'}, '0');
   const draftCount = h('span', {class:'badge z'}, String((S.drafts || []).length));
   derived.push(() => { draftCount.textContent = String((S.drafts || []).length); });
+  const lockNote = h('button', {class:'lock-note', type:'button', title:'The draft locked as the current version. Change it under Drafts.', onclick: () => draftsModal()});
+  derived.push(() => { const ld = (S.drafts || []).find(x => x.id === S.lockedDraft); lockNote.hidden = !ld; if (ld) lockNote.replaceChildren(svgIcon(IC.lock), h('span', null, 'Current version: ' + ld.name + (S.script.basedOn === ld.id && ld.text !== S.script.text ? ' · edited since' : ''))); });
   const VIEW_OPTS = [['live','Live Outline','Outline panels either side of the script, and the coloured stages on the page'],['bar','“You are here” bar','The structure bar along the top'],['checks','Script check panel','The list of tips on the right (the count stays in the toolbar)'],['togo','Pages-to-go note','“≈ X pages still to write” under the script'],['scenes','Scenes list','Your scene headings on the left']];
   function applyView(){ liveSw.checked = U.live; leftCol._key = null; touch(); schedule(); }
   function viewMenu(anchor){
@@ -2285,7 +2521,7 @@ function renderWrite(v){
       h('button', {class:'btn sm ghost', title:'Choose what is shown around the page', 'data-pop':'1', onclick: e => viewMenu(e.currentTarget)}, svgIcon(IC.eye), 'View')),
     h('div', {class:'grp'}, h('span', {class:'small'}, 'Target'), tgt, h('span', {class:'small muted'}, 'pages')),
     h('div', {class:'grp'}, h('button', {class:'btn sm ghost icon', title:'Zoom out', onclick: () => zoom(-.1)}, '−'), h('button', {class:'btn sm ghost icon', title:'Zoom in', onclick: () => zoom(.1)}, '+')),
-    h('div', {class:'grp'}, h('button', {class:'btn sm', title:'Save a snapshot of this script that you can come back to later', onclick: () => saveDraftPrompt()}, 'Save as draft'), h('button', {class:'btn sm ghost', title:'See, open or duplicate saved drafts', onclick: () => draftsModal()}, 'Drafts ', draftCount)),
+    h('div', {class:'grp'}, h('button', {class:'btn sm', title:'Save a snapshot of this script that you can come back to later', onclick: () => saveDraftPrompt()}, 'Save as draft'), h('button', {class:'btn sm ghost', title:'See, open or duplicate saved drafts', onclick: () => draftsModal()}, 'Drafts ', draftCount), lockNote),
     h('span', {class:'spacer'}), stat,
     h('button', {class:'btn sm', title:'Formatting & craft checks', onclick: () => showChecksModal()}, 'Script check ', checkBadge));
   const mtl = h('div', {class:'mtl'});
@@ -2399,7 +2635,7 @@ function renderWrite(v){
     schedule();
     updateAC();
   }
-  flushEditor = () => { if (!ed.isConnected) return; const text = [...ed.children].map(el => el._t != null ? el._t : lineText(el)).join('\n'); if (text !== S.script.text){ S.script.text = text; S.savedAt = Date.now(); } };
+  flushEditor = () => { if (!ed.isConnected) return; const text = [...ed.children].map(el => el._t != null ? el._t : lineText(el)).join('\n'); if (text !== S.script.text){ S.script.text = text; S.savedAt = Date.now(); unsaved = true; } };
 
   /* ---- undo ---- */
   let hist = [{text:S.script.text, caret:null}], hidx = 0, lastHist = 0;
@@ -2802,17 +3038,18 @@ function draftsModal(){
       const cur = S.script.basedOn === d.id;
       const same = d.text === S.script.text;
       return h('div', {class:'pi' + (cur ? ' cur' : '')},
-        h('div', {style:'flex:1;min-width:0'}, h('b', null, d.name), cur ? h('span', {class:'pill', style:'margin-left:8px'}, same ? 'Open now' : 'Open now · edited since') : null,
+        h('div', {style:'flex:1;min-width:0'}, h('b', null, d.name), S.lockedDraft === d.id ? h('span', {class:'pill locked', style:'margin-left:8px'}, svgIcon(IC.lock), 'Current version') : null, cur ? h('span', {class:'pill', style:'margin-left:8px'}, same ? 'Open now' : 'Open now · edited since') : null,
           h('div', {class:'small muted'}, new Date(d.savedAt).toLocaleString('en-GB', {dateStyle:'medium', timeStyle:'short'}) + ' · ≈ ' + pagesOf(d.text).toFixed(1) + ' pages')),
         h('button', {class:'btn sm', title:'Load this draft into the editor to keep working on it', onclick: () => guardThen(() => { close && close(); loadIntoEditor(d.text, d.id, `Now editing “${d.name}”. Save as a new draft when you want to keep a version.`); }, `Opening “${d.name}” will replace it in the editor.`)}, 'Open'),
         h('button', {class:'btn sm ghost', title:'Make a copy of this draft', onclick: () => { const c = {id:uid(), name: d.name + ' (copy)', savedAt: Date.now(), text: d.text}; S.drafts.push(c); touch(); draw(); runDerived(); }}, 'Duplicate'),
-        h('button', {class:'btn sm ghost', title:'Rename', onclick: () => { const inp = h('input', {class:'inp', value:d.name}); modal('Rename draft', inp, [{label:'Cancel'}, {label:'Rename', primary:true, fn: () => { d.name = inp.value.trim() || d.name; touch(); draw(); }}]); setTimeout(() => inp.focus(), 30); }}, 'Rename'),
-        h('button', {class:'btn sm ghost icon', title:'Delete draft', onclick: () => confirmBox('Delete draft?', `“${d.name}” will be deleted from this project.`, 'Delete', () => { S.drafts.splice(S.drafts.indexOf(d), 1); if (S.script.basedOn === d.id) S.script.basedOn = ''; touch(); draw(); runDerived(); })}, svgIcon(IC.trash)));
+        IDEA ? null : h('button', {class:'btn sm ghost', title: S.lockedDraft === d.id ? 'Unlock, so another draft can become the current version' : 'Lock this draft as the current version: the one the rest of the project should work from', onclick: () => { S.lockedDraft = S.lockedDraft === d.id ? '' : d.id; touch(); draw(); runDerived(); toast(S.lockedDraft ? `“${d.name}” is locked as the current version.` : 'Unlocked. No draft is the current version now.'); }}, svgIcon(IC.lock), S.lockedDraft === d.id ? 'Unlock' : 'Lock as current'),
+        h('button', {class:'btn sm ghost', title: S.lockedDraft === d.id ? 'Unlock it first' : 'Rename', disabled: S.lockedDraft === d.id, onclick: () => { const inp = h('input', {class:'inp', value:d.name}); modal('Rename draft', inp, [{label:'Cancel'}, {label:'Rename', primary:true, fn: () => { d.name = inp.value.trim() || d.name; touch(); draw(); }}]); setTimeout(() => inp.focus(), 30); }}, 'Rename'),
+        h('button', {class:'btn sm ghost icon', title: S.lockedDraft === d.id ? 'Unlock it first' : 'Delete draft', disabled: S.lockedDraft === d.id, onclick: () => confirmBox('Delete draft?', `“${d.name}” will be deleted from this project.`, 'Delete', () => { S.drafts.splice(S.drafts.indexOf(d), 1); if (S.script.basedOn === d.id) S.script.basedOn = ''; touch(); draw(); runDerived(); })}, svgIcon(IC.trash)));
     }) : [h('div', {class:'empty'}, 'No drafts yet. Use “Save as draft” to keep a snapshot of your script.')]));
   };
   draw();
   close = modal('Script drafts', h('div', null,
-    h('p', null, 'Snapshots of your script, saved inside this project (so they go into your backups too). ', h('b', null, 'Open'), ' loads one into the editor to keep working on it; ', h('b', null, 'Duplicate'), ' makes a copy to branch off from.'),
+    h('p', null, 'Snapshots of your script, saved inside this project (so they go into your backups too). ', h('b', null, 'Open'), ' loads one into the editor to keep working on it; ', h('b', null, 'Duplicate'), ' makes a copy to branch off from.', IDEA ? null : [' ', h('b', null, 'Lock as current'), ' marks the version everyone should work from; it can\'t be renamed or deleted while it\'s locked.']),
     h('div', {class:'row', style:'gap:8px'},
       h('button', {class:'btn sm primary', onclick: () => { close(); saveDraftPrompt(); }}, '+ Save current script as a draft'),
       h('button', {class:'btn sm', onclick: () => guardThen(() => { close(); loadIntoEditor('', '', 'Blank page ready. Your drafts are all still saved.'); }, 'Starting a blank page will clear the editor.')}, 'Start a blank page')),
@@ -3133,6 +3370,7 @@ applyTheme();
 renderAll();
 if (!S.savedAt){ S.savedAt = Date.now(); }
 saveLocal();
+if (IDEA){ setTimeout(goWhere, 120); setTimeout(() => takeSnap('auto'), 1500); }
 })();
 </script>
 </body>

@@ -1,0 +1,812 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ideas</title>
+<!--fth-standalone-->
+<!-- Film Tool Hub: this block is only used when this file is opened on its own (for example while working on it).
+     Inside the hub it is removed and the hub supplies the same look from hub/kit.css. Keep it, but don't edit it here. -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Caveat:wght@700&display=swap" rel="stylesheet">
+<style>
+/* ═════════ Film Tool Hub kit ═════════
+   Shared look for every tool. The hub injects this at the top of each tool's <head>,
+   sets data-theme="light|dark" on the tool's <html>, and sets --fth-cat to the tool's
+   category colour. Tools use the --fth-* tokens and the .fth-* components. */
+:root{
+  --fth-bg:#0b0c0e; --fth-bg2:#101216; --fth-surface:#15181d; --fth-surface2:#1b1f26; --fth-surface3:#232831;
+  --fth-line:#242931; --fth-line2:#333a45; --fth-line3:#46505e;
+  --fth-text:#f0ece5; --fth-muted:#9aa0aa; --fth-faint:#666c77;
+  --fth-good:#5cc98a; --fth-bad:#ff8f7a; --fth-warn:#f2bd5c;
+  /* accent tokens (--fth-cat, --fth-accent, --fth-accent-ink, --fth-accent-soft, --fth-accent-line, --fth-on-accent)
+     are written by the hub for each tool's category, as plain colours for both themes */
+  --fth-cat:#ffb547; --fth-accent:#ffb547; --fth-accent-ink:#ffb547; --fth-accent-soft:rgba(255,181,71,.14); --fth-accent-line:rgba(255,181,71,.45); --fth-on-accent:#14110b;
+  --fth-paper-backdrop:#07080a;
+  --fth-shadow:0 14px 34px -14px rgba(0,0,0,.7);
+  --fth-shadow-sm:none;
+  --fth-radius:14px; --fth-radius-sm:9px;
+  --fth-display:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --fth-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --fth-script:"Courier Prime","Courier New",Courier,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --fth-bg:#f3f0ea; --fth-bg2:#f9f7f3; --fth-surface:#ffffff; --fth-surface2:#f1ede5; --fth-surface3:#e6e1d6;
+  --fth-line:#e3ded4; --fth-line2:#d2ccc0; --fth-line3:#b4ad9f;
+  --fth-text:#16181c; --fth-muted:#565c66; --fth-faint:#878c95;
+  --fth-good:#22804a; --fth-bad:#c0392b; --fth-warn:#9a6200;
+  --fth-paper-backdrop:#e4dfd5;
+  --fth-shadow:0 14px 30px -16px rgba(70,50,20,.30);
+  --fth-shadow-sm:0 1px 2px rgba(60,45,20,.05),0 4px 14px rgba(60,45,20,.05);
+  color-scheme:light;
+}
+
+/* base */
+html{background:var(--fth-bg)}
+body{background:var(--fth-bg);color:var(--fth-text);font-family:var(--fth-display);-webkit-font-smoothing:antialiased}
+::selection{background:var(--fth-accent-line)}
+:focus-visible{outline:2px solid var(--fth-accent);outline-offset:2px}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--fth-line2);border-radius:6px;border:2px solid var(--fth-bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--fth-line3)}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+
+/* tool header: category eyebrow, tool name, then actions on the right */
+.fth-head{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 20px;
+  background:color-mix(in srgb,var(--fth-bg) 88%,transparent);backdrop-filter:blur(12px) saturate(1.2);-webkit-backdrop-filter:blur(12px) saturate(1.2);
+  border-bottom:1px solid var(--fth-line)}
+.fth-head::before{content:"";position:absolute;inset:auto 0 -1px 0;height:1px;background:linear-gradient(90deg,var(--fth-cat),transparent 38%);opacity:.75;pointer-events:none}
+.fth-id{display:flex;flex-direction:column;gap:5px;min-width:0;flex:none}
+.fth-eyebrow{display:flex;align-items:center;gap:8px;font:500 10.5px/1 var(--fth-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--fth-accent-ink);white-space:nowrap}
+.fth-eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--fth-cat);box-shadow:0 0 0 3px var(--fth-accent-soft);flex:none}
+.fth-title{margin:0;font-weight:800;font-variation-settings:"wdth" 68;font-size:23px;line-height:1;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap}
+.fth-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.fth-vsep{width:1px;height:22px;background:var(--fth-line2);margin:0 3px;flex:none}
+
+/* buttons */
+.fth-btn{height:34px;padding:0 13px;border-radius:var(--fth-radius-sm);border:1px solid var(--fth-line2);background:var(--fth-surface);color:var(--fth-text);
+  font:600 13px/1 var(--fth-display);display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;white-space:nowrap;text-decoration:none;
+  transition:background-color .15s,border-color .15s,color .15s}
+.fth-btn:hover{background:var(--fth-surface2);border-color:var(--fth-line3)}
+.fth-btn:disabled{opacity:.45;cursor:default}
+.fth-btn.primary{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent)}
+.fth-btn.primary:hover{filter:brightness(1.08)}
+.fth-btn.ghost{background:transparent;border-color:transparent;color:var(--fth-muted)}
+.fth-btn.ghost:hover{background:var(--fth-surface2);border-color:var(--fth-line2);color:var(--fth-text)}
+.fth-btn.danger{color:var(--fth-bad)}
+.fth-btn.sm{height:28px;padding:0 10px;font-size:12.5px;border-radius:7px}
+.fth-btn.icon{width:30px;height:30px;padding:0}
+
+/* labels, fields */
+.fth-label{font:500 10.5px/1.25 var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-muted)}
+.fth-input{width:100%;min-width:0;background:var(--fth-bg2);border:1px solid var(--fth-line2);border-radius:8px;padding:7px 10px;color:var(--fth-text);font:14px/1.35 var(--fth-display);outline:none;transition:border-color .15s,box-shadow .15s}
+.fth-input:hover{border-color:var(--fth-line3)}
+.fth-input:focus{border-color:var(--fth-accent);box-shadow:0 0 0 3px var(--fth-accent-soft)}
+select.fth-input{cursor:pointer}
+textarea.fth-input{resize:vertical;line-height:1.45}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--fth-accent)}
+
+/* sections & surfaces */
+.fth-card{background:linear-gradient(180deg,var(--fth-surface) 0%,var(--fth-bg2) 100%);border:1px solid var(--fth-line);border-radius:var(--fth-radius);box-shadow:var(--fth-shadow-sm)}
+.fth-sec{display:flex;align-items:center;gap:10px;margin:26px 0 12px;font:700 15px/1.1 var(--fth-display);font-variation-settings:"wdth" 80;text-transform:uppercase;letter-spacing:.03em}
+.fth-sec::after{content:"";flex:1;height:1px;background:var(--fth-line)}
+.fth-sec .fth-num{font:600 11px var(--fth-mono);color:var(--fth-accent-ink);letter-spacing:.08em}
+.fth-muted{color:var(--fth-muted)}
+.fth-mono{font-family:var(--fth-mono)}
+
+/* notes */
+.fth-tip{background:var(--fth-accent-soft);border-left:2px solid var(--fth-accent);color:var(--fth-text);padding:7px 10px;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.45}
+.fth-warn{background:color-mix(in srgb,var(--fth-warn) 10%,var(--fth-surface));border:1px solid color-mix(in srgb,var(--fth-warn) 40%,transparent);color:var(--fth-text);border-radius:10px;padding:10px 12px;font-size:13px}
+.fth-warn b:first-child{color:var(--fth-warn)}
+.fth-info{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--fth-line3);color:var(--fth-muted);font:600 10px/1 var(--fth-mono);text-transform:none;letter-spacing:0;cursor:pointer;user-select:none;vertical-align:1px;margin-left:5px;transition:.15s}
+.fth-info:hover{border-color:var(--fth-accent);color:var(--fth-accent-ink);background:var(--fth-accent-soft)}
+
+/* toast */
+.fth-toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);opacity:0;z-index:200;background:var(--fth-text);color:var(--fth-bg);padding:10px 16px;border-radius:10px;font:500 13.5px var(--fth-display);box-shadow:var(--fth-shadow);transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.fth-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* paper: a printable page shown on screen stays paper-white in both themes */
+.fth-paper-wrap{background:var(--fth-paper-backdrop)}
+.fth-paper{background:#fff;color:#000;color-scheme:light;box-shadow:0 2px 4px rgba(0,0,0,.12),0 18px 40px -16px rgba(0,0,0,.55)}
+
+@media print{
+  html,body{background:#fff!important;color:#000}
+  .fth-head{display:none!important}
+  .fth-paper-wrap{background:#fff!important}
+  .fth-paper{box-shadow:none!important}
+}
+@media (max-width:700px){.fth-head{padding:10px 14px}.fth-title{font-size:20px}.fth-vsep{display:none}}
+@media (prefers-reduced-motion:reduce){.fth-btn,.fth-input,.fth-toast{transition:none}}
+
+/* "Save to Documentation" buttons stay hidden until the hub switches them on (window.fthDocs.attach) */
+[data-fth-doc][hidden]{display:none!important}
+
+:root{--fth-cat:#9bd46a;--fth-accent:#9bd46a;--fth-accent-ink:#9bd46a;--fth-accent-soft:rgba(155,212,106,0.14);--fth-accent-line:rgba(155,212,106,0.45);--fth-on-accent:#14110b}:root[data-theme="light"]{--fth-accent:#5a7b3d;--fth-accent-ink:#5a7b3d;--fth-accent-soft:rgba(155,212,106,0.16);--fth-accent-line:rgba(155,212,106,0.6);--fth-on-accent:#ffffff}
+</style>
+<script>(function(){var d=document.documentElement;if(d.getAttribute('data-theme'))return;var t=null;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}d.setAttribute('data-theme',t==='light'||t==='dark'?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'))})();</script>
+<!--/fth-standalone-->
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-size:14px;line-height:1.45}
+button{font:inherit;color:inherit}
+[hidden]{display:none!important}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 80px}
+
+/* header */
+.fth-head .count{font:500 11px var(--fth-mono);color:var(--fth-muted);letter-spacing:.06em}
+
+/* capture */
+.cap{max-width:720px;margin:0 auto;padding:9vh 0 28px;text-align:center}
+.cap h1{margin:0 0 18px;font-weight:800;font-variation-settings:"wdth" 75;font-size:clamp(30px,5.4vw,48px);line-height:1.02;letter-spacing:-.005em}
+.cap h1 i{font-style:normal;color:var(--fth-accent-ink)}
+.box{position:relative;background:var(--fth-surface);border:1px solid var(--fth-line2);border-radius:18px;padding:14px 14px 12px;text-align:left;transition:border-color .15s,box-shadow .15s;box-shadow:var(--fth-shadow-sm)}
+.box:focus-within{border-color:var(--fth-accent);box-shadow:0 0 0 4px var(--fth-accent-soft)}
+.box textarea{display:block;width:100%;min-height:76px;max-height:46vh;resize:none;border:0;outline:0;background:transparent;color:var(--fth-text);font:17px/1.5 var(--fth-display);padding:4px 6px}
+.box textarea::placeholder{color:var(--fth-faint)}
+.boxbar{display:flex;align-items:center;gap:10px;margin-top:8px}
+.boxbar .grow{flex:1}
+.boxbar .kbd{font:500 10.5px var(--fth-mono);color:var(--fth-faint);letter-spacing:.04em}
+.mic{position:relative;width:46px;height:46px;border-radius:50%;border:1px solid var(--fth-line2);background:var(--fth-bg2);display:grid;place-items:center;cursor:pointer;flex:none;transition:background-color .15s,border-color .15s}
+.mic:hover{border-color:var(--fth-accent);background:var(--fth-accent-soft)}
+.mic svg.ic{width:21px;height:21px;color:var(--fth-text)}
+.mic .ring{position:absolute;inset:-5px;width:calc(100% + 10px);height:calc(100% + 10px);transform:rotate(-90deg);pointer-events:none}
+.mic .ring circle{fill:none;stroke-width:3}
+.mic .ring .tr{stroke:var(--fth-line)}
+.mic .ring .pr{stroke:var(--fth-accent);stroke-linecap:round;transition:stroke-dashoffset .25s linear}
+.mic.rec{background:var(--fth-bad);border-color:var(--fth-bad)}
+.mic.rec svg.ic{color:#fff}
+.mic.rec .sq{display:block}
+.mic .sq{display:none;width:14px;height:14px;border-radius:3px;background:#fff}
+.mic.rec svg.ic{display:none}
+.recline{font:500 12px var(--fth-mono);color:var(--fth-muted);letter-spacing:.03em}
+.recline b{color:var(--fth-bad)}
+.pitch{margin:14px 0 0;color:var(--fth-muted);font-size:13px}
+.pitch b{color:var(--fth-text);font-weight:600}
+.private{margin:12px 0 0;font-size:12px;color:var(--fth-faint)}
+
+/* recent ideas */
+.recent{margin:22px 0 0}
+.rhead{display:flex;align-items:baseline;gap:12px;margin:0 0 12px}
+.rhead h2{margin:0;font:700 13px var(--fth-display);text-transform:uppercase;letter-spacing:.06em;font-variation-settings:"wdth" 85}
+.rhead .grow{flex:1}
+.link{background:none;border:0;padding:0;color:var(--fth-accent-ink);font-weight:600;cursor:pointer;font-size:13px}
+.link:hover{text-decoration:underline}
+.row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:820px){.row{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -20px;padding:0 20px 6px}.row .card{flex:0 0 78%;scroll-snap-align:start}}
+
+/* idea cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.card{position:relative;display:flex;flex-direction:column;gap:8px;text-align:left;min-width:0;padding:14px 14px 12px;border-radius:var(--fth-radius);border:1px solid var(--fth-line);background:linear-gradient(180deg,var(--fth-surface),var(--fth-bg2));cursor:pointer;transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--fth-line3)}
+.card:focus-visible{outline:2px solid var(--fth-accent);outline-offset:2px}
+.card .top{display:flex;align-items:center;gap:8px}
+.card .t{font-weight:700;font-size:15.5px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
+.card .snip{color:var(--fth-muted);font-size:13px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
+.card .foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:auto}
+.card .when{margin-left:auto;font:500 10.5px var(--fth-mono);color:var(--fth-faint)}
+.card .go{position:absolute;right:10px;top:10px}
+.card.grad{opacity:.86}
+.from{font-size:11.5px;color:var(--fth-faint)}
+.from b{color:var(--fth-muted);font-weight:600}
+
+/* status pills, markers, tags */
+.st{display:inline-flex;align-items:center;gap:6px;height:20px;padding:0 8px;border-radius:999px;font:600 10px var(--fth-mono);letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;border:1px solid var(--fth-line2);color:var(--fth-muted)}
+.st::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.st.seed{color:var(--fth-accent-ink);border-color:var(--fth-accent-line)}
+.st.developing{color:var(--fth-warn);border-color:color-mix(in srgb,var(--fth-warn) 45%,transparent)}
+.st.shelved{color:var(--fth-faint)}
+.st.graduated{color:var(--fth-good);border-color:color-mix(in srgb,var(--fth-good) 45%,transparent)}
+.st.archived{color:var(--fth-muted)}
+.mk{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 7px;border-radius:6px;background:var(--fth-surface2);font:500 10.5px var(--fth-mono);color:var(--fth-muted);white-space:nowrap}
+.mk svg{width:12px;height:12px}
+.tag{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 9px;border-radius:999px;background:var(--fth-accent-soft);color:var(--fth-text);font-size:12px;white-space:nowrap}
+.tag.grp{background:transparent;border:1px dashed var(--fth-line3);color:var(--fth-muted)}
+.tag button{border:0;background:none;padding:0 0 0 2px;cursor:pointer;color:var(--fth-muted);font-size:14px;line-height:1}
+
+/* all ideas */
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:22px 0 14px}
+.bar .grow{flex:1}
+.bar .fth-input{max-width:320px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px;align-items:center}
+.chips .lbl{font:500 10.5px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fth-faint);margin-right:2px}
+.chip{height:28px;padding:0 11px;border-radius:999px;border:1px solid var(--fth-line2);background:transparent;color:var(--fth-muted);cursor:pointer;font-size:12.5px;white-space:nowrap}
+.chip:hover{border-color:var(--fth-line3);color:var(--fth-text)}
+.chip.on{background:var(--fth-accent);border-color:var(--fth-accent);color:var(--fth-on-accent);font-weight:600}
+.chip .n{opacity:.7;margin-left:4px;font:500 10.5px var(--fth-mono)}
+.empty{padding:40px 10px;text-align:center;color:var(--fth-muted)}
+
+/* what next */
+.next{max-width:820px;margin:0 auto;padding:7vh 0 20px}
+.saved{display:flex;align-items:center;gap:10px;color:var(--fth-good);font:600 12px var(--fth-mono);letter-spacing:.08em;text-transform:uppercase}
+.saved svg{width:16px;height:16px}
+.next h1{margin:12px 0 4px;font-weight:800;font-variation-settings:"wdth" 75;font-size:clamp(26px,4.4vw,38px);line-height:1.05}
+.next .quote{margin:0 0 26px;color:var(--fth-muted);font-size:15px;max-width:64ch;white-space:pre-wrap;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.ways{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:760px){.ways{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.way{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:16px 14px;border-radius:var(--fth-radius);border:1px solid var(--fth-line);background:var(--fth-surface);text-align:left;cursor:pointer;min-height:112px;transition:border-color .15s,background-color .15s}
+.way:hover{border-color:var(--fth-accent);background:var(--fth-accent-soft)}
+.way svg{width:22px;height:22px;color:var(--fth-accent-ink)}
+.way b{font-size:15px}
+.way span{color:var(--fth-muted);font-size:12.5px;line-height:1.35}
+.more{margin:14px 0 0}
+.more summary{cursor:pointer;color:var(--fth-muted);font-size:13px;list-style:none;display:inline-flex;align-items:center;gap:6px}
+.more summary::-webkit-details-marker{display:none}
+.more summary::before{content:"+";font:600 14px var(--fth-mono);color:var(--fth-accent-ink)}
+.more[open] summary::before{content:"–"}
+.more .ways{margin-top:10px}
+.more .way{min-height:0;padding:12px 14px}
+.nextfoot{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;align-items:center}
+.nohub{margin-top:16px}
+
+/* detail drawer */
+.scrim{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.42);display:flex;justify-content:flex-end;animation:fade .15s}
+@keyframes fade{from{opacity:0}}
+.drawer{width:min(540px,100%);height:100%;overflow:auto;background:var(--fth-bg);border-left:1px solid var(--fth-line2);box-shadow:var(--fth-shadow);display:flex;flex-direction:column;animation:slide .2s ease-out}
+@keyframes slide{from{transform:translateX(24px);opacity:.6}}
+.dhead{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;padding:12px 14px;background:color-mix(in srgb,var(--fth-bg) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--fth-line)}
+.dhead .grow{flex:1}
+.dbody{padding:16px 18px 30px;display:flex;flex-direction:column;gap:16px}
+.ttl{width:100%;border:0;outline:0;background:transparent;color:var(--fth-text);font:800 24px/1.15 var(--fth-display);font-variation-settings:"wdth" 80;padding:2px 0;border-bottom:1px solid transparent}
+.ttl:focus{border-bottom-color:var(--fth-accent)}
+.ttl::placeholder{color:var(--fth-faint)}
+.f{display:flex;flex-direction:column;gap:6px}
+.f .fth-label{display:flex;align-items:center;gap:8px}
+.waysm{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.waysm button{display:flex;align-items:center;gap:7px;height:38px;padding:0 10px;border-radius:9px;border:1px solid var(--fth-line2);background:var(--fth-surface);cursor:pointer;font-size:12.5px;text-align:left;min-width:0}
+.waysm button:hover{border-color:var(--fth-accent);background:var(--fth-accent-soft)}
+.waysm svg{width:16px;height:16px;flex:none;color:var(--fth-accent-ink)}
+.waysm button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:520px){.waysm{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tagin{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:6px;border:1px solid var(--fth-line2);border-radius:9px;background:var(--fth-bg2)}
+.tagin input{flex:1;min-width:110px;border:0;outline:0;background:transparent;color:var(--fth-text);font:14px var(--fth-display);padding:3px 4px}
+.sugg{display:flex;flex-wrap:wrap;gap:5px}
+.sugg button{height:24px;padding:0 9px;border-radius:999px;border:1px dashed var(--fth-line3);background:none;color:var(--fth-muted);cursor:pointer;font-size:12px}
+.sugg button:hover{color:var(--fth-text);border-color:var(--fth-accent)}
+.voice{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--fth-surface);border:1px solid var(--fth-line)}
+.voice audio{flex:1;min-width:0;height:36px}
+.fam{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.fam button{justify-content:flex-start}
+.proj{padding:14px;border-radius:12px;border:1px solid color-mix(in srgb,var(--fth-good) 40%,transparent);background:color-mix(in srgb,var(--fth-good) 8%,var(--fth-surface))}
+.proj p{margin:4px 0 10px;color:var(--fth-muted);font-size:13px}
+.dacts{display:flex;flex-wrap:wrap;gap:8px;padding-top:6px;border-top:1px solid var(--fth-line)}
+.small{font-size:12px;color:var(--fth-muted)}
+@media (max-width:640px){.scrim{align-items:flex-end}.drawer{height:92%;border-left:0;border-top:1px solid var(--fth-line2);border-radius:16px 16px 0 0;animation:up .2s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}}}
+
+/* dialogs */
+.dlg{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.5);display:grid;place-items:center;padding:16px;animation:fade .15s}
+.dlg .in{width:min(460px,100%);max-height:90vh;overflow:auto;background:var(--fth-bg);border:1px solid var(--fth-line2);border-radius:16px;padding:18px;box-shadow:var(--fth-shadow)}
+.dlg h3{margin:0 0 6px;font-size:18px}
+.dlg p{margin:0 0 12px;color:var(--fth-muted)}
+.dlg .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.checks{display:flex;flex-direction:column;gap:8px;margin:8px 0}
+.checks label{display:flex;gap:9px;align-items:flex-start;cursor:pointer}
+.checks small{display:block;color:var(--fth-faint)}
+@media (max-width:640px){.boxbar .kbd{display:none}.wrap{padding:0 16px 80px}.cap{padding-top:5vh}.box textarea{font-size:16px}}
+</style>
+</head>
+<body>
+<header class="fth-head">
+  <div class="fth-id"><span class="fth-eyebrow" data-fth-cat>00 · My Ideas</span><h1 class="fth-title">Ideas</h1></div>
+  <div class="fth-actions" id="hacts"></div>
+</header>
+<main class="wrap" id="app"></main>
+<div class="fth-toast" id="toast" role="status"></div>
+<script>
+/* =====================================================================
+   Ideas (Film Tool Hub). Catch an idea in seconds (typed, or spoken for up to a minute), then grow it in the
+   Script Development Tool, branch it, and graduate it into a project when it's ready.
+   Saved under "fth-ideas-v1" in the person's own space (see "Ideas" in hub/hub.js). Each idea's development work
+   lives in its own space, "idea:<id>:", which this page can read directly (the script's title, logline, outline…).
+   Voice notes are kept in this browser's IndexedDB ("fth-ideas-audio"); their words are kept with the idea.
+   ===================================================================== */
+const KEY = 'fth-ideas-v1', MAX_SEC = 60;
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function h(tag, attrs, ...kids){
+  const el = document.createElement(tag);
+  for (const k in (attrs || {})){
+    const v = attrs[k]; if (v == null || v === false) continue;
+    if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'html') el.innerHTML = v;
+    else if (k === 'class') el.className = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat(9)) if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return el;
+}
+const svg = (d, cls) => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '1.7'); s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round'); if (cls) s.setAttribute('class', cls); s.innerHTML = d; return s; };
+const IC = {
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21M8.5 21h7"/>',
+  develop: '<path d="M12 3.2a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2v.4h5.2V16c0-.8.4-1.5 1-2A6 6 0 0 0 12 3.2z"/><path d="M9 17.5h6M9.8 20.5h4.4"/>',
+  outline: '<path d="M4 6h16M4 12h11M4 18h7"/><circle cx="19" cy="18" r="1.6"/>',
+  character: '<circle cx="12" cy="8" r="3.6"/><path d="M5 20.5c0-3.7 3.1-6.3 7-6.3s7 2.6 7 6.3"/>',
+  world: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.6 2.6 14.4 0 17M12 3.5c-2.6 2.6-2.6 14.4 0 17"/>',
+  scene: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 11.5h7M9 14.5h5M9 17.5h6.5"/>',
+  mood: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+  logline: '<path d="M4 7h16M4 12h16M4 17h9"/>',
+  synopsis: '<path d="M5 4h14v16H5z"/><path d="M8 8h8M8 11.5h8M8 15h5"/>',
+  notes: '<path d="M5 4h10l4 4v12H5z"/><path d="M8 12h8M8 15.5h6"/>',
+  check: '<path d="M5 12.5l4.2 4.2L19 7"/>',
+  branch: '<circle cx="6" cy="5.5" r="2"/><circle cx="6" cy="18.5" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7.5v9M18 10c0 4-6 3.5-11 7"/>',
+  grad: '<path d="M2.5 9.5L12 5l9.5 4.5L12 14z"/><path d="M6.5 11.5v4.2c1.5 1.4 3.4 2 5.5 2s4-.6 5.5-2v-4.2"/><path d="M21.5 9.5v5"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  back: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  trash: '<path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/>',
+  play: '<path d="M7 5l12 7-12 7z"/>',
+  voice: '<path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/>',
+  script: '<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/>',
+  open: '<path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>'
+};
+/* the ways in. Each opens that part of the Script Development Tool with the idea loaded */
+const WAYS = [
+  ['develop', 'Develop it fully', 'The whole Script Development Tool, from the top.', 'develop'],
+  ['outline', 'Outline this idea', 'Find its shape, beat by beat.', 'outline'],
+  ['characters', 'Write a character bio', 'Who they are, what they want, what they believe.', 'character'],
+  ['settings', 'Build the world', 'The places it happens, and the films it feels like.', 'world'],
+  ['write', 'Write a scene', 'Straight onto the page, in screenplay format.', 'scene'],
+  ['mood', 'Mood board', 'Pictures, clips and music for the feel of it.', 'mood']
+];
+const MORE_WAYS = [
+  ['logline', 'Expand the logline', 'Who it’s about, what they want, what’s in the way.', 'logline'],
+  ['synopsis', 'Write a synopsis', 'The whole story in a paragraph or a page.', 'synopsis'],
+  ['notes', 'Just add notes', 'A scratchpad for anything that doesn’t fit yet.', 'notes']
+];
+const STATUSES = [['seed', 'Seed'], ['developing', 'Developing'], ['shelved', 'Shelved'], ['graduated', 'Graduated']];
+const TAG_SUGG = ['Short', 'Feature', 'Series', 'Documentary', 'Music video', 'Drama', 'Comedy', 'Horror', 'Thriller', 'Sci-fi', 'Romance', 'Dark', 'Funny', 'Hopeful', 'Experimental'];
+
+/* the hub's Ideas helpers (only inside Film Tool Hub) */
+const HUB = (() => { try { return window.parent !== window && window.parent.__fthHub && window.parent.__fthHub.ideas || null; } catch (e) { return null; } })();
+
+/* ---------- saved data ---------- */
+function blank(){ return {v: 1, ideas: [], groups: []}; }
+function load(){
+  try { const v = JSON.parse(localStorage.getItem(KEY) || 'null'); if (v && Array.isArray(v.ideas)) { v.groups = Array.isArray(v.groups) ? v.groups : []; v.ideas.forEach(norm); return v; } } catch (e) {}
+  return blank();
+}
+function norm(i){ i.tags = Array.isArray(i.tags) ? i.tags : []; i.status = i.status || 'seed'; i.group = i.group || ''; i.title = i.title || ''; i.text = i.text || ''; return i; }
+let D = load();
+/* every change re-reads first, so nothing the hub wrote meanwhile (a graduation) is lost */
+function change(fn, quiet){ D = load(); const r = fn(D); localStorage.setItem(KEY, JSON.stringify(D)); if (!quiet) render(); return r; }
+const live = () => D.ideas.filter(i => !i.deleted);
+const byId = id => D.ideas.find(i => i.id === id && !i.deleted) || null;
+const newId = () => 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+/* an idea's development work (the Script Development Tool's saved project, in the idea's own space) */
+const sdPre = id => 'idea:' + id + ':scaffold-script:';
+function sdGet(id){ try { const last = localStorage.getItem(sdPre(id) + 'last'); return last ? JSON.parse(localStorage.getItem(sdPre(id) + 'p:' + last) || 'null') : null; } catch (e) { return null; } }
+function sdPut(id, sd){ sd.savedAt = Date.now(); localStorage.setItem(sdPre(id) + 'p:' + sd.id, JSON.stringify(sd)); localStorage.setItem(sdPre(id) + 'last', sd.id); }
+const firstLine = s => String(s || '').trim().split(/\n/)[0].slice(0, 90);
+function textOf(i){ const sd = sdGet(i.id); return sd && sd.develop && String(sd.develop.idea || '').trim() ? sd.develop.idea : i.text; }
+function titleOf(i){ const sd = sdGet(i.id); return (sd && String(sd.title || '').trim()) || i.title.trim() || firstLine(textOf(i)) || (i.audio ? 'Voice note, ' + new Date(i.created).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'}) : 'Untitled idea'); }
+function snipOf(i){ const t = textOf(i), ttl = titleOf(i), s = String(t || '').trim(); return s.startsWith(ttl) ? s.slice(ttl.length).trim() : s; }
+function whenOf(i){ const sd = sdGet(i.id); return Math.max(i.at || 0, i.created || 0, (sd && sd.savedAt) || 0); }
+function marks(i){
+  const sd = sdGet(i.id), out = [];
+  if (sd){
+    const d = sd.develop || {};
+    if (String(d.logline || '').trim()) out.push(['Logline', 'logline']);
+    const chars = (d.characters || []).filter(c => String(c.name || '').trim()).length;
+    if (chars) out.push([chars + (chars === 1 ? ' character' : ' characters'), 'character']);
+    if ((d.settings || []).some(s => String(s.name || '').trim()) || String(d.lie || d.truth || '').trim()) out.push(['World', 'world']);
+    const beats = Object.values((sd.outline || {}).beats || {});
+    if (beats.some(b => String(b.summary || '').trim() || (b.items || []).length)) out.push(['Outline', 'outline']);
+    const lines = String((sd.script || {}).text || '').split('\n').filter(l => l.trim()).length;
+    if (lines) out.push([lines < 30 ? 'Scene' : '≈ ' + Math.max(1, Math.round(lines / 30)) + ' pp', 'scene']);
+  }
+  if (i.audio) out.push([fmtDur(i.audio.dur), 'voice']);
+  return out;
+}
+const fmtDur = s => { s = Math.round(s || 0); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+function ago(t){
+  if (!t) return '';
+  const s = (Date.now() - t) / 1000;
+  if (s < 60) return 'just now'; if (s < 3600) return Math.round(s / 60) + ' min ago'; if (s < 86400) return Math.round(s / 3600) + ' hr ago';
+  const d = Math.round(s / 86400); if (d < 7) return d + (d === 1 ? ' day ago' : ' days ago');
+  return new Date(t).toLocaleDateString('en-GB', {day: 'numeric', month: 'short', ...(new Date(t).getFullYear() !== new Date().getFullYear() ? {year: 'numeric'} : {})});
+}
+/* a graduated idea's project: "Graduated", or "Graduated, then archived" once the project is archived */
+function statusOf(i){
+  if (i.status !== 'graduated') return [i.status, (STATUSES.find(s => s[0] === i.status) || STATUSES[0])[1]];
+  const p = HUB && i.project ? HUB.project(i.project.id) : null;
+  return p && p.archived ? ['archived', 'Graduated, then archived'] : ['graduated', 'Graduated'];
+}
+
+/* ---------- voice notes (IndexedDB) ---------- */
+let adb = null;
+function audioDB(){ return adb || (adb = new Promise((res, rej) => { const r = indexedDB.open('fth-ideas-audio', 1); r.onupgradeneeded = () => r.result.createObjectStore('clips'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); })); }
+async function audioTx(mode, fn){ const d = await audioDB(); return new Promise((res, rej) => { const t = d.transaction('clips', mode), q = fn(t.objectStore('clips')); t.oncomplete = () => res(q && q.result); t.onerror = t.onabort = () => rej(t.error); }); }
+const audioPut = (id, rec) => audioTx('readwrite', s => s.put(rec, id));
+const audioGet = id => audioTx('readonly', s => s.get(id)).catch(() => null);
+const audioDel = id => audioTx('readwrite', s => s.delete(id)).catch(() => {});
+
+/* ---------- toast & dialogs ---------- */
+let toastT;
+function toast(msg, ms = 3200){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms); }
+function dialog(title, body, buttons){
+  const close = () => { el.remove(); document.removeEventListener('keydown', key); };
+  const key = e => { if (e.key === 'Escape') close(); };
+  const el = h('div', {class: 'dlg', role: 'dialog', 'aria-modal': 'true', onmousedown: e => { if (e.target === el) close(); }},
+    h('div', {class: 'in'}, h('h3', null, title), body,
+      h('div', {class: 'acts'}, buttons.map(b => h('button', {class: 'fth-btn' + (b.primary ? ' primary' : '') + (b.danger ? ' danger' : ''), onclick: async () => { if (b.fn && (await b.fn()) === false) return; close(); }}, b.label)))));
+  document.body.append(el); document.addEventListener('keydown', key);
+  setTimeout(() => { const f = el.querySelector('input,textarea,.primary'); f && f.focus(); }, 30);
+  return close;
+}
+const confirmBox = (title, text, ok, fn, danger) => dialog(title, h('p', null, text), [{label: 'Cancel'}, {label: ok, primary: !danger, danger, fn}]);
+
+/* =====================================================================
+   VIEWS: home (capture + recent), next (what do you want to do with it?), all (the backlog)
+   ===================================================================== */
+let view = 'home', nextId = null, openId = null;
+let F = {q: '', status: 'active', group: '', tag: '', sort: 'recent'};
+
+function render(){
+  D = load();
+  const app = $('#app'), scroll = view === 'all' ? window.scrollY : 0;
+  renderHead();
+  if (view === 'home') renderHome(app);
+  else if (view === 'next') renderNext(app);
+  else renderAll(app);
+  if (view === 'all') window.scrollTo(0, scroll);
+  if (openId) renderDrawer();
+}
+function renderHead(){
+  const a = $('#hacts'); a.replaceChildren();
+  const n = live().length;
+  if (view !== 'home') a.append(h('button', {class: 'fth-btn ghost sm', onclick: () => { view = 'home'; render(); setTimeout(() => $('#cap') && $('#cap').focus(), 30); }}, svg(IC.develop), 'New idea'));
+  if (view !== 'all' && n) a.append(h('button', {class: 'fth-btn sm', onclick: () => { view = 'all'; render(); }}, 'All ideas ', h('span', {class: 'count'}, n)));
+}
+
+/* ---------- home: the capture box ---------- */
+let rec = null;   /* the recording in progress */
+function renderHome(app){
+  if (rec) return;   /* never rebuild under a recording */
+  app.replaceChildren();
+  const ta = h('textarea', {id: 'cap', rows: 3, placeholder: 'A character, an image, a “what if…”. Whatever you’ve got.', 'aria-label': 'Your idea'});
+  ta.value = draft;
+  const save = h('button', {class: 'fth-btn primary', id: 'saveBtn', onclick: () => saveCapture()}, 'Save idea');
+  const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, innerHeight * .46) + 'px'; save.disabled = !ta.value.trim(); };
+  ta.addEventListener('input', () => { draft = ta.value; grow(); });
+  ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)){ e.preventDefault(); saveCapture(); } });
+  const mic = micButton();
+  const recLine = h('span', {class: 'recline', id: 'recLine'}, SR || navigator.mediaDevices ? 'or tap the mic and pitch it in a minute' : '');
+  app.append(h('section', {class: 'cap'},
+    h('h1', null, 'Tell me your ', h('i', null, 'idea'), '.'),
+    h('div', {class: 'box'}, ta, h('div', {class: 'boxbar'}, mic, recLine, h('span', {class: 'grow'}), h('span', {class: 'kbd', title: 'Save with Ctrl+Enter (⌘+Enter on a Mac)'}, '⌘/Ctrl + Enter'), save)),
+    h('p', {class: 'private'}, 'Private to you, and the same in every project.' + (HUB ? '' : ' Open Film Tool Hub to develop your ideas.'))));
+  const recent = live().sort((a, b) => whenOf(b) - whenOf(a)).slice(0, 3);
+  if (recent.length){
+    app.append(h('section', {class: 'recent'},
+      h('div', {class: 'rhead'}, h('h2', null, 'Recent ideas'), h('span', {class: 'grow'}), h('button', {class: 'link', onclick: () => { view = 'all'; render(); }}, `See all ideas (${live().length}) →`)),
+      h('div', {class: 'row'}, recent.map(i => card(i, true)))));
+  }
+  requestAnimationFrame(grow);
+}
+let draft = '';
+async function saveCapture(audio){
+  const ta = $('#cap'), text = (ta ? ta.value : draft).trim();
+  if (!text && !audio) { ta && ta.focus(); return; }
+  const i = norm({id: newId(), text, status: 'seed', created: Date.now(), at: Date.now()});
+  if (audio){
+    i.audio = {dur: audio.dur, type: audio.blob.type};
+    try { await audioPut(i.id, {blob: audio.blob, type: audio.blob.type, dur: audio.dur}); } catch (e) { delete i.audio; toast('The voice note couldn’t be kept in this browser, but the words were saved.'); }
+  }
+  change(d => { d.ideas.push(i); }, true);
+  draft = ''; nextId = i.id; view = 'next'; render(); window.scrollTo(0, 0);
+}
+
+/* ---------- the microphone: up to a minute, with live words where the browser can ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+function micButton(){
+  const R = 25, C = 2 * Math.PI * R;
+  const ring = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); ring.setAttribute('viewBox', '0 0 56 56'); ring.setAttribute('class', 'ring');
+  ring.innerHTML = `<circle class="tr" cx="28" cy="28" r="${R}"/><circle class="pr" cx="28" cy="28" r="${R}" stroke-dasharray="${C}" stroke-dashoffset="${C}"/>`;
+  const b = h('button', {class: 'mic', id: 'micBtn', type: 'button', title: 'Pitch it in a minute: record a voice note', 'aria-label': 'Record a voice note, up to one minute', onclick: () => rec ? stopRec() : startRec()}, svg(IC.mic, 'ic'), h('span', {class: 'sq'}), ring);
+  b._ring = ring.querySelector('.pr'); b._C = C;
+  if (!navigator.mediaDevices || !window.MediaRecorder) b.hidden = true;
+  return b;
+}
+async function startRec(){
+  const b = $('#micBtn'), line = $('#recLine'), ta = $('#cap');
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({audio: true}); }
+  catch (e) { toast(e && e.name === 'NotAllowedError' ? 'The browser didn’t allow the microphone. You can allow it in the address bar, or just type.' : 'No microphone could be found. You can still type your idea.', 5000); return; }
+  const type = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg'].find(t => window.MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || '';
+  let mr; try { mr = new MediaRecorder(stream, {...(type ? {mimeType: type} : {}), audioBitsPerSecond: 32000}); } catch (e) { mr = new MediaRecorder(stream); }
+  const chunks = [], t0 = Date.now(), base = ta.value.trim();
+  rec = {mr, stream, chunks, t0, base, finals: '', sr: null, timer: 0, done: false};
+  mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  mr.onstop = () => finishRec();
+  mr.start(250);
+  b.classList.add('rec'); b.title = 'Stop and save'; b.setAttribute('aria-label', 'Stop recording and save');
+  ta.setAttribute('placeholder', 'Listening… pitch it in a minute.');
+  /* live words: shown in the box as you speak, so the idea can be read and searched later */
+  if (SR){
+    try {
+      const sr = new SR(); sr.continuous = true; sr.interimResults = true; sr.lang = navigator.language || 'en-GB';
+      sr.onresult = e => {
+        let interim = '';
+        for (let k = e.resultIndex; k < e.results.length; k++){ const r = e.results[k]; if (r.isFinal) rec.finals += (rec.finals ? ' ' : '') + r[0].transcript.trim(); else interim += r[0].transcript; }
+        ta.value = [rec.base, (rec.finals + (interim ? ' ' + interim : '')).trim()].filter(Boolean).join(rec.base ? '\n\n' : '');
+      };
+      sr.onerror = () => {}; sr.onend = () => { if (rec && !rec.done) { try { sr.start(); } catch (e) {} } };
+      sr.start(); rec.sr = sr;
+    } catch (e) {}
+  }
+  const tick = () => {
+    if (!rec) return;
+    const el = (Date.now() - rec.t0) / 1000, left = Math.max(0, MAX_SEC - el);
+    b._ring.style.strokeDashoffset = String(b._C * (1 - Math.min(1, el / MAX_SEC)));
+    line.innerHTML = `<b>● REC</b> ${fmtDur(left)} left · tap to stop`;
+    if (left <= 0) stopRec();
+  };
+  tick(); rec.timer = setInterval(tick, 250);
+}
+function stopRec(){
+  if (!rec || rec.done) return;
+  rec.done = true; clearInterval(rec.timer);
+  try { rec.sr && rec.sr.stop(); } catch (e) {}
+  try { rec.mr.state !== 'inactive' ? rec.mr.stop() : finishRec(); } catch (e) { finishRec(); }
+}
+function finishRec(){
+  const r = rec; if (!r || r.finished) return; r.finished = true;
+  r.stream.getTracks().forEach(t => t.stop());
+  const dur = Math.min(MAX_SEC, (Date.now() - r.t0) / 1000);
+  const blob = new Blob(r.chunks, {type: (r.chunks[0] && r.chunks[0].type) || r.mr.mimeType || 'audio/webm'});
+  /* the recogniser can be a moment behind: give it time to hand over its last words */
+  setTimeout(() => { rec = null; const ta = $('#cap'); if (ta) draft = ta.value; saveCapture(dur >= 0.6 && blob.size ? {blob, dur} : null); }, SR ? 450 : 0);
+}
+
+/* ---------- what next ---------- */
+function renderNext(app){
+  const i = byId(nextId); if (!i) { view = 'home'; return renderHome(app); }
+  app.replaceChildren();
+  const tile = ([where, label, sub, ic]) => h('button', {class: 'way', 'data-way': where, onclick: () => openIn(i.id, where)}, svg(IC[ic]), h('b', null, label), h('span', null, sub));
+  app.append(h('section', {class: 'next'},
+    h('div', {class: 'saved'}, svg(IC.check), 'Saved to your ideas'),
+    h('h1', null, 'What do you want to do with this?'),
+    h('p', {class: 'quote'}, textOf(i) || (i.audio ? 'Voice note, ' + fmtDur(i.audio.dur) : '')),
+    h('div', {class: 'ways'}, WAYS.map(tile)),
+    h('details', {class: 'more'}, h('summary', null, 'More ways in'), h('div', {class: 'ways'}, MORE_WAYS.map(tile))),
+    HUB ? null : h('p', {class: 'fth-tip nohub'}, 'These open the Script Development Tool inside Film Tool Hub. Opened on its own, this page can only keep the list.'),
+    h('div', {class: 'nextfoot'},
+      h('button', {class: 'fth-btn', id: 'parkBtn', onclick: () => { view = 'home'; render(); setTimeout(() => $('#cap') && $('#cap').focus(), 30); }}, 'Just park it'),
+      h('button', {class: 'fth-btn ghost', onclick: () => { openId = i.id; render(); }}, 'Title, tags and group…'))));
+}
+/* open an idea in the Script Development Tool, at the part chosen */
+function openIn(id, where){
+  const i = byId(id); if (!i) return;
+  if (!HUB){ toast('Open Film Tool Hub to develop your ideas.'); return; }
+  const fresh = !sdGet(id);
+  if (i.status === 'seed') change(d => { const x = d.ideas.find(o => o.id === id); x.status = 'developing'; x.at = Date.now(); }, true);
+  openId = null; closeDrawerEl();
+  HUB.open(id, where || '', fresh ? {title: i.title, text: i.text} : null);
+  view = 'home'; render();
+}
+
+/* ---------- idea cards ---------- */
+function card(i, recent){
+  const [sk, sl] = statusOf(i), grad = i.status === 'graduated';
+  const c = h('div', {class: 'card' + (grad ? ' grad' : ''), role: 'button', tabindex: '0', 'data-id': i.id, onclick: e => { if (e.target.closest('button')) return; openId = i.id; renderDrawer(); },
+      onkeydown: e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === c){ e.preventDefault(); openId = i.id; renderDrawer(); } }},
+    h('div', {class: 'top'}, h('span', {class: 'st ' + sk}, sl), i.group ? h('span', {class: 'tag grp'}, i.group) : null),
+    h('div', {class: 't'}, titleOf(i)),
+    snipOf(i) ? h('div', {class: 'snip'}, snipOf(i)) : null,
+    i.from ? h('div', {class: 'from'}, 'Branched from ', h('b', null, fromTitle(i))) : null,
+    h('div', {class: 'foot'},
+      marks(i).map(([t, ic]) => h('span', {class: 'mk'}, svg(IC[ic]), t)),
+      i.tags.slice(0, 3).map(t => h('span', {class: 'tag'}, t)),
+      h('span', {class: 'when'}, ago(whenOf(i)))));
+  if (recent && HUB) c.append(h('button', {class: 'fth-btn icon ghost go', title: grad ? 'Open its project' : 'Carry on where you left off', 'aria-label': 'Open ' + titleOf(i), onclick: () => grad ? openProject(i) : openIn(i.id, '')}, svg(grad ? IC.open : IC.arrow)));
+  return c;
+}
+function fromTitle(i){ const p = byId(i.from && i.from.id); return p ? titleOf(p) : (i.from && i.from.title) || 'an earlier idea'; }
+
+/* ---------- all ideas ---------- */
+function renderAll(app){
+  app.replaceChildren();
+  const all = live(), q = F.q.trim().toLowerCase();
+  const groups = [...new Set([...D.groups, ...all.map(i => i.group).filter(Boolean)])].sort((a, b) => a.localeCompare(b));
+  const tags = [...new Set(all.flatMap(i => i.tags))].sort((a, b) => a.localeCompare(b));
+  const st = i => i.status;
+  const count = s => all.filter(i => s === 'active' ? st(i) !== 'shelved' && st(i) !== 'graduated' : s === 'all' || st(i) === s).length;
+  let list = all.filter(i =>
+    (F.status === 'all' || (F.status === 'active' ? st(i) === 'seed' || st(i) === 'developing' : st(i) === F.status)) &&
+    (!F.group || i.group === F.group) && (!F.tag || i.tags.includes(F.tag)) &&
+    (!q || [titleOf(i), textOf(i), i.tags.join(' '), i.group].join(' ').toLowerCase().includes(q)));
+  list.sort(F.sort === 'az' ? (a, b) => titleOf(a).localeCompare(titleOf(b)) : F.sort === 'old' ? (a, b) => (a.created || 0) - (b.created || 0) : (a, b) => whenOf(b) - whenOf(a));
+  const search = h('input', {class: 'fth-input', type: 'search', placeholder: 'Search your ideas', value: F.q, 'aria-label': 'Search your ideas'});
+  search.addEventListener('input', () => { F.q = search.value; const pos = search.selectionStart; renderAll(app); const s2 = app.querySelector('input[type=search]'); s2.focus(); s2.setSelectionRange(pos, pos); });
+  const sort = h('select', {class: 'fth-input', style: 'width:auto', 'aria-label': 'Sort'}, [['recent', 'Recently worked on'], ['old', 'Oldest first'], ['az', 'A–Z']].map(([v, l]) => h('option', {value: v, selected: F.sort === v}, l)));
+  sort.onchange = () => { F.sort = sort.value; renderAll(app); };
+  const chip = (on, label, n, fn) => h('button', {class: 'chip' + (on ? ' on' : ''), onclick: fn}, label, n != null ? h('span', {class: 'n'}, n) : null);
+  app.append(...[h('div', {class: 'bar'}, search, h('span', {class: 'grow'}), sort),
+    h('div', {class: 'chips'}, h('span', {class: 'lbl'}, 'Show'),
+      [['active', 'In progress'], ['seed', 'Seeds'], ['developing', 'Developing'], ['shelved', 'Shelved'], ['graduated', 'Graduated'], ['all', 'Everything']].map(([s, l]) => chip(F.status === s, l, count(s), () => { F.status = s; renderAll(app); }))),
+    groups.length ? h('div', {class: 'chips'}, h('span', {class: 'lbl'}, 'Groups'), chip(!F.group, 'All', null, () => { F.group = ''; renderAll(app); }), groups.map(g => chip(F.group === g, g, all.filter(i => i.group === g).length, () => { F.group = F.group === g ? '' : g; renderAll(app); }))) : null,
+    tags.length ? h('div', {class: 'chips'}, h('span', {class: 'lbl'}, 'Tags'), tags.map(t => chip(F.tag === t, t, null, () => { F.tag = F.tag === t ? '' : t; renderAll(app); }))) : null,
+    list.length ? h('div', {class: 'grid'}, list.map(i => card(i))) : h('div', {class: 'empty'}, all.length ? 'No ideas match. Try another filter.' : 'No ideas yet.')].filter(Boolean));
+}
+
+/* ---------- the idea's details ---------- */
+let drawerEl = null;
+function closeDrawerEl(){ const el = drawerEl; if (el){ drawerEl = null; document.removeEventListener('keydown', drawerKey); el.remove(); } }
+const drawerKey = e => { if (e.key === 'Escape' && !$('.dlg')) closeDrawer(); };
+function closeDrawer(){ openId = null; closeDrawerEl(); render(); }
+function renderDrawer(){
+  const i = byId(openId); if (!i){ openId = null; closeDrawerEl(); return; }
+  const keep = drawerEl ? drawerEl.querySelector('.drawer').scrollTop : 0, first = !drawerEl;
+  closeDrawerEl();
+  const id = i.id, grad = i.status === 'graduated', sd = sdGet(id);
+  const upd = (fn, re) => change(d => { const x = d.ideas.find(o => o.id === id); if (x){ fn(x); x.at = Date.now(); } }, !re);
+
+  const ttl = h('input', {class: 'ttl', placeholder: titleOf(i), 'aria-label': 'Title'});
+  ttl.value = sd ? (sd.title || '') : i.title;
+  ttl.addEventListener('input', () => { const s = sdGet(id); if (s){ s.title = ttl.value; sdPut(id, s); } upd(x => { x.title = ttl.value; }); refreshBehind(); });
+  const txt = h('textarea', {class: 'fth-input', rows: 5, placeholder: 'The idea'});
+  txt.value = textOf(i);
+  txt.addEventListener('input', () => { const s = sdGet(id); if (s){ s.develop.idea = txt.value; sdPut(id, s); } upd(x => { x.text = txt.value; }); ttl.placeholder = titleOf(byId(id)) ; refreshBehind(); });
+  if (grad){ ttl.disabled = true; txt.disabled = true; }
+
+  const status = h('select', {class: 'fth-input', style: 'width:auto', 'aria-label': 'Status', disabled: grad}, STATUSES.filter(s => grad || s[0] !== 'graduated').map(([v, l]) => h('option', {value: v, selected: i.status === v}, l)));
+  status.onchange = () => upd(x => { x.status = status.value; }, true);
+
+  /* voice note */
+  const voice = h('div');
+  if (i.audio) audioGet(id).then(r => {
+    if (!r || !r.blob){ voice.append(h('p', {class: 'small'}, 'Voice note (' + fmtDur(i.audio.dur) + ') recorded on another computer. Voice notes stay in the browser they were made in.')); return; }
+    const url = URL.createObjectURL(r.blob);
+    voice.append(h('div', {class: 'voice'}, svg(IC.voice), h('audio', {controls: true, src: url, preload: 'metadata'}),
+      h('button', {class: 'fth-btn icon ghost', title: 'Delete the voice note', onclick: () => confirmBox('Delete the voice note?', 'The recording is deleted. Its words stay in the idea.', 'Delete', async () => { await audioDel(id); upd(x => { delete x.audio; }, true); }, true)}, svg(IC.trash))));
+  });
+
+  /* tags */
+  const tagWrap = h('div', {class: 'tagin'});
+  const tagIn = h('input', {placeholder: i.tags.length ? 'Add a tag' : 'Genre, format, tone…', 'aria-label': 'Add a tag'});
+  const addTag = v => { tagIn.value = ''; v = String(v || '').trim().replace(/,$/, ''); if (!v) return; upd(x => { if (!x.tags.some(t => t.toLowerCase() === v.toLowerCase())) x.tags.push(v); }, true); setTimeout(() => { const n = drawerEl && drawerEl.querySelector('.tagin input'); n && n.focus(); }, 0); };
+  tagIn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ','){ e.preventDefault(); addTag(tagIn.value); } else if (e.key === 'Backspace' && !tagIn.value && i.tags.length) upd(x => { x.tags.pop(); }, true); });
+  tagIn.addEventListener('blur', () => { if (tagIn.value.trim()) addTag(tagIn.value); });
+  tagWrap.append(...i.tags.map(t => h('span', {class: 'tag'}, t, h('button', {title: 'Remove', 'aria-label': 'Remove ' + t, onclick: () => upd(x => { x.tags = x.tags.filter(o => o !== t); }, true)}, '×'))), tagIn);
+  const used = new Set(live().flatMap(o => o.tags).concat(TAG_SUGG));
+  const sugg = h('div', {class: 'sugg'}, [...used].filter(t => !i.tags.includes(t)).slice(0, 12).map(t => h('button', {onclick: () => addTag(t)}, '+ ' + t)));
+
+  /* group */
+  const groups = [...new Set([...D.groups, ...live().map(o => o.group).filter(Boolean)])].sort((a, b) => a.localeCompare(b));
+  const grp = h('select', {class: 'fth-input', 'aria-label': 'Group'}, h('option', {value: ''}, 'No group'), groups.map(g => h('option', {value: g, selected: i.group === g}, g)), h('option', {value: '\u0000new'}, '+ New group…'));
+  grp.onchange = () => {
+    if (grp.value !== '\u0000new') return upd(x => { x.group = grp.value; }, true);
+    grp.value = i.group;
+    const inp = h('input', {class: 'fth-input', placeholder: 'e.g. Horror shorts, Festival ideas'});
+    dialog('New group', h('div', null, h('p', null, 'Groups are your own piles of ideas. An idea sits in one group.'), inp), [{label: 'Cancel'}, {label: 'Add', primary: true, fn: () => { const g = inp.value.trim(); if (!g) return false; change(d => { if (!d.groups.includes(g)) d.groups.push(g); const x = d.ideas.find(o => o.id === id); x.group = g; x.at = Date.now(); }); }}]);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); inp.closest('.in').querySelector('.primary').click(); } });
+  };
+
+  /* family: where it branched from, and its branches */
+  const kids = live().filter(o => o.from && o.from.id === id);
+  const fam = (i.from || kids.length) ? h('div', {class: 'f'}, h('span', {class: 'fth-label'}, 'Family'), h('div', {class: 'fam'},
+    i.from ? h('div', null, 'Branched from ', byId(i.from.id) ? h('button', {class: 'link', onclick: () => { openId = i.from.id; renderDrawer(); }}, fromTitle(i)) : h('b', null, fromTitle(i))) : null,
+    kids.length ? h('div', null, kids.length === 1 ? 'Branch: ' : 'Branches: ', kids.map((k, n) => [n ? ', ' : '', h('button', {class: 'link', onclick: () => { openId = k.id; renderDrawer(); }}, titleOf(k))])) : null)) : null;
+
+  /* graduated: the project is where it lives now */
+  let projBox = null;
+  if (grad){
+    const p = HUB && i.project ? HUB.project(i.project.id) : null;
+    projBox = h('div', {class: 'proj'}, h('b', null, p && p.archived ? 'Graduated, then archived' : 'Graduated'),
+      h('p', null, i.project ? `It became the project “${(p && p.name) || i.project.name}”${i.project.at ? ' on ' + new Date(i.project.at).toLocaleDateString('en-GB', {day: 'numeric', month: 'long', year: 'numeric'}) : ''}. Work on it there, in the Script Development Tool.` : 'It became a project.')
+        , p && p.archived ? h('span', null, ' The project is archived.') : null,
+      HUB ? h('button', {class: 'fth-btn primary sm', onclick: () => openProject(i)}, svg(IC.open), p && p.archived ? 'Restore and open the project' : 'Open the project') : null);
+  }
+
+  const panel = h('div', {class: 'drawer', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Idea details'},
+    h('div', {class: 'dhead'}, h('span', {class: 'st ' + statusOf(i)[0]}, statusOf(i)[1]), h('span', {class: 'grow'}),
+      !grad && HUB ? h('button', {class: 'fth-btn primary sm', onclick: () => openIn(id, '')}, sd ? 'Carry on' : 'Open', svg(IC.arrow)) : null,
+      h('button', {class: 'fth-btn icon ghost', title: 'Close', 'aria-label': 'Close', onclick: closeDrawer}, svg(IC.x))),
+    h('div', {class: 'dbody'},
+      ttl, projBox,
+      h('div', {class: 'f'}, h('span', {class: 'fth-label'}, 'The idea'), txt, voice),
+      !grad && HUB ? h('div', {class: 'f'}, h('span', {class: 'fth-label'}, 'Ways in'), h('div', {class: 'waysm'}, [...WAYS, ...MORE_WAYS].map(([w, l, , ic]) => h('button', {'data-way': w, title: l, onclick: () => openIn(id, w)}, svg(IC[ic]), h('span', null, l))))) : null,
+      grad ? null : h('div', {class: 'f'}, h('span', {class: 'fth-label'}, 'Status'), status),
+      h('div', {class: 'f'}, h('span', {class: 'fth-label'}, 'Tags'), tagWrap, sugg),
+      h('div', {class: 'f'}, h('span', {class: 'fth-label'}, 'Group'), grp),
+      fam,
+      h('p', {class: 'small'}, 'Caught ' + new Date(i.created || Date.now()).toLocaleString('en-GB', {dateStyle: 'medium', timeStyle: 'short'}) + (whenOf(i) > (i.created || 0) + 60e3 ? ' · last worked on ' + ago(whenOf(i)) : '')),
+      h('div', {class: 'dacts'},
+        h('button', {class: 'fth-btn sm', onclick: () => branchDialog(id)}, svg(IC.branch), 'Branch…'),
+        !grad && HUB ? h('button', {class: 'fth-btn sm', onclick: () => graduateDialog(id)}, svg(IC.grad), 'Graduate…') : null,
+        h('span', {style: 'flex:1'}),
+        h('button', {class: 'fth-btn sm ghost danger', onclick: () => deleteIdea(id)}, svg(IC.trash), 'Delete'))));
+  drawerEl = h('div', {class: 'scrim', onmousedown: e => { if (e.target === drawerEl) closeDrawer(); }}, panel);
+  document.body.append(drawerEl); document.addEventListener('keydown', drawerKey);
+  panel.scrollTop = keep;
+  if (first) setTimeout(() => (grad ? panel.querySelector('.dhead button') : ttl).focus({preventScroll: true}), 30);
+}
+/* typing in the drawer: update the cards behind it without rebuilding the drawer */
+let behindT;
+function refreshBehind(){ clearTimeout(behindT); behindT = setTimeout(() => { const app = $('#app'); D = load(); if (view === 'all') renderAll(app); else if (view === 'home' && !rec){ const r = app.querySelector('.recent .row'); if (r) r.replaceWith(h('div', {class: 'row'}, live().sort((a, b) => whenOf(b) - whenOf(a)).slice(0, 3).map(i => card(i, true)))); } }, 400); }
+function openProject(i){
+  if (!HUB || !i.project) return;
+  const p = HUB.project(i.project.id);
+  const go = () => { openId = null; closeDrawerEl(); HUB.openProject(i.project.id); };
+  if (p && p.archived) confirmBox('Restore the project?', `“${p.name}” is archived. Restore it to your projects and open it?`, 'Restore and open', go);
+  else go();
+}
+
+/* ---------- branch ---------- */
+const PARTS = [
+  ['premise', 'The idea and logline', 'Working title, the idea, genre, logline and synopsis'],
+  ['theme', 'Theme', 'The Lie and the Truth'],
+  ['characters', 'Characters', ''],
+  ['world', 'Settings and references', ''],
+  ['notes', 'Notes', ''],
+  ['outline', 'Outline', ''],
+  ['script', 'Script', 'The pages and their drafts']
+];
+function branchDialog(id){
+  const i = byId(id); if (!i) return;
+  const sd = sdGet(id);
+  const name = h('input', {class: 'fth-input', value: titleOf(i) + ' (branch)'});
+  const boxes = PARTS.map(([k, l, s]) => { const c = h('input', {type: 'checkbox', checked: true, value: k}); return [k, c, h('label', null, c, h('span', null, l, s ? h('small', null, s) : null))]; });
+  dialog('Branch this idea', h('div', null,
+    h('p', null, 'A new idea that starts as a copy of this one. This one stays exactly as it is.'),
+    h('div', {class: 'f'}, h('span', {class: 'fth-label'}, 'Name'), name),
+    sd ? h('div', null, h('p', {style: 'margin:14px 0 4px'}, 'What comes along?'), h('div', {class: 'checks'}, boxes.map(b => b[2])), h('p', {class: 'small'}, 'The mood board and the history stay with this idea.')) : null),
+    [{label: 'Cancel'}, {label: 'Branch', primary: true, fn: () => {
+      const keep = new Set(boxes.filter(b => b[1].checked).map(b => b[0]));
+      const nid = newId(), now = Date.now(), title = name.value.trim();
+      if (sd){
+        const n = JSON.parse(JSON.stringify(sd)), d = n.develop || (n.develop = {});
+        n.id = 'b' + now.toString(36) + Math.random().toString(36).slice(2, 8); n.created = now; n.backedUpAt = 0; n.title = title; delete n.ui; delete n.idea;
+        if (!keep.has('premise')){ Object.assign(d, {idea: '', genre: '', targetPages: '', logline: '', synopsis: '', lb: {}, lb2: {}}); }
+        if (!keep.has('theme')) Object.assign(d, {topic: '', lie: '', truth: '', tragic: '', themeNotes: '', checks: {}, norm: ''});
+        if (!keep.has('characters')) d.characters = [];
+        if (!keep.has('world')) { d.settings = []; d.refs = []; }
+        if (!keep.has('notes')) d.notes = '';
+        if (!keep.has('outline')) delete n.outline;
+        if (!keep.has('script')) { delete n.script; n.drafts = []; }
+        sdPut(nid, n);
+      }
+      change(D2 => { D2.ideas.push(norm({id: nid, title, text: sd && !keep.has('premise') ? '' : i.text, status: i.status === 'graduated' || i.status === 'shelved' ? 'developing' : i.status, tags: i.tags.slice(), group: i.group, from: {id, title: titleOf(i)}, created: now, at: now})); }, true);
+      openId = nid; render(); toast('Branched. The original is unchanged.');
+    }}]);
+}
+
+/* ---------- graduate ---------- */
+function graduateDialog(id){
+  const i = byId(id); if (!i || !HUB) return;
+  const name = h('input', {class: 'fth-input', value: titleOf(i)});
+  dialog('Graduate into a project', h('div', null,
+    h('p', null, 'This idea has earned it. It becomes a new project, with everything you’ve developed: its Develop and Outline pages, its script, its history and its mood board. From then on you work on it in the project.'),
+    h('div', {class: 'f'}, h('span', {class: 'fth-label'}, 'Project name'), name),
+    h('p', {class: 'small', style: 'margin-top:10px'}, 'It stays on this page too, marked Graduated, with a link to the project.')),
+    [{label: 'Cancel'}, {label: 'Graduate', primary: true, fn: async () => {
+      openId = null; closeDrawerEl();
+      try { await HUB.graduate(id, name.value.trim()); }
+      catch (e) { toast('It couldn’t graduate: ' + (e.message || e), 6000); }
+      render();
+    }}]);
+}
+
+/* ---------- delete ---------- */
+function deleteIdea(id){
+  const i = byId(id); if (!i) return;
+  const grad = i.status === 'graduated';
+  confirmBox('Delete this idea?', grad ? 'Only the card is deleted. Its project isn’t touched.' : `“${titleOf(i)}” and everything developed for it (its script, history, mood board and voice note) will be deleted from your ideas.`, 'Delete', async () => {
+    const pre = 'idea:' + id + ':';
+    Object.keys(localStorage).filter(k => k.startsWith(pre)).forEach(k => localStorage.removeItem(k));
+    try { indexedDB.deleteDatabase(pre + 'fth-tool-data'); } catch (e) {}
+    await audioDel(id);
+    change(d => { d.ideas = d.ideas.filter(o => o.id !== id); d.ideas.forEach(o => { if (o.from && o.from.id === id) o.from.title = o.from.title || titleOf(i); }); }, true);
+    openId = null; closeDrawerEl(); render(); toast('Idea deleted.');
+  }, true);
+}
+
+/* ---------- the hub calls these ---------- */
+window.ideasRefresh = () => { if (!rec) render(); };
+window.ideasCapture = () => { closeDrawerEl(); openId = null; view = 'home'; render(); setTimeout(() => $('#cap') && $('#cap').focus(), 30); };
+render();
+</script>
+</body>
+</html>

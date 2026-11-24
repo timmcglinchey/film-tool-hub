@@ -470,9 +470,9 @@ dialog.dview[open]{display:flex;flex-direction:column}
 /* ── badges, My work, Conversations ── */
 .badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:#1a1205;font:700 11px/1 var(--mono);flex:none}
 .badge[hidden]{display:none}
-.mebtn.on,.convbtn.on,.tasksbtn.on,.researchbtn.on{background:var(--surface2);color:var(--text);border-color:var(--line2)}
-.mebtn.on svg,.convbtn.on svg,.tasksbtn.on svg,.researchbtn.on svg{color:var(--accent-ink)}
-@media (max-width:1180px){.mebtn .t,.convbtn .t,.tasksbtn .t,.researchbtn .t{display:none}}
+.mebtn.on,.convbtn.on,.tasksbtn.on,.researchbtn.on,.ideasbtn.on{background:var(--surface2);color:var(--text);border-color:var(--line2)}
+.mebtn.on svg,.convbtn.on svg,.tasksbtn.on svg,.researchbtn.on svg,.ideasbtn.on svg{color:var(--accent-ink)}
+@media (max-width:1180px){.mebtn .t,.convbtn .t,.tasksbtn .t,.researchbtn .t,.ideasbtn .t{display:none}}
 body.me-open #home{display:none}
 #mePage{padding-top:var(--top);min-height:100vh}
 .mlist{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface)}

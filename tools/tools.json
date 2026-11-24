@@ -10,6 +10,15 @@
       "personal": true
     },
     {
+      "id": "ideas",
+      "num": "00",
+      "short": "Ideas",
+      "name": "My Ideas",
+      "color": "#9bd46a",
+      "blurb": "Private to you: catch ideas before they're projects, then grow them.",
+      "personal": true
+    },
+    {
       "id": "develop",
       "num": "01",
       "short": "Develop",
@@ -90,6 +99,44 @@
       "personal": true
     },
     {
+      "id": "ideas",
+      "name": "Ideas",
+      "desc": "Catch an idea in seconds, typed or spoken, then grow it: develop it, outline it, write a scene, branch it, and graduate it into a project when it's ready.",
+      "category": "ideas",
+      "tags": [
+        "Writer",
+        "Director",
+        "Voice notes"
+      ],
+      "icon": "ideas",
+      "fileName": "Ideas.html",
+      "origTitle": "Ideas",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611241815,
+      "file": "tools/ideas.html",
+      "personal": true
+    },
+    {
+      "id": "idea-dev",
+      "name": "Idea workspace",
+      "desc": "The Script Development Tool, working on one idea from the Ideas page.",
+      "category": "ideas",
+      "tags": [
+        "Writer"
+      ],
+      "icon": "ideas",
+      "fileName": "Script Development Tool.html",
+      "origTitle": "Idea workspace",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611241815,
+      "file": "tools/script-dev.html",
+      "personal": true
+    },
+    {
       "id": "script-dev",
       "name": "Script Development Tool",
       "desc": "Scaffolded scriptwriting: build characters, settings and structure, then write in screenplay format with saved drafts.",
@@ -106,7 +153,7 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611171845,
+      "rev": 202611241815,
       "file": "tools/script-dev.html"
     },
     {

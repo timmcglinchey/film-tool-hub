@@ -17,7 +17,11 @@ GitHub access came back on 12 November 2026. Everything built offline is now pub
    - **Sign-off on exports:** the name and date of the sign-off print on PDF exports.
    - Optional **tutor view** (to be decided).
 3. **Casting Tracker privacy:** it stores actors' names, emails, phone numbers and headshots. `privacy.html` now covers this and the Share box warns the owner. Still to decide: limiting who in a crew can open this tool (fits with the roles work above).
-4. **Later launch steps:**
+4. **Ideas (built 24 November 2026), possible next steps:**
+   - try it on a phone and a computer with a real Google account: an idea caught on one should appear on the other;
+   - voice notes and idea mood boards stay on the device they were made on until the idea graduates. If students move between devices a lot, they could also be kept in Drive;
+   - decide whether projects should also get automatic snapshots like ideas (projects have named drafts and a locked current version).
+5. **Later launch steps:**
    - prove ownership of the domain in Google Search Console, then submit https://filmtoolhub.com/sitemap.xml there;
    - logo, sitemap, robots.txt, home page description and privacy policy: done 23 November 2026;
    - in Google Cloud, make sure filmtoolhub.com is the only authorised domain and origin (plus www);

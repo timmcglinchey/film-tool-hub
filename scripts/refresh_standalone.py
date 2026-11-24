@@ -11,6 +11,8 @@ def accent(hexv):
             f':root[data-theme="light"]{{--fth-accent:{ink};--fth-accent-ink:{ink};--fth-accent-soft:{rgba(.16)};--fth-accent-line:{rgba(.6)};--fth-on-accent:#ffffff}}')
 FONTS = '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Caveat:wght@700&display=swap" rel="stylesheet">'
 for t in man['tools']:
+    # a second entry for the same file (the idea workspace is the Script Development file) leaves the file's own look alone
+    if t['file'] != f"tools/{t['id']}.html" and any(o is not t and o['file'] == t['file'] for o in man['tools']): continue
     f = f"{R}/{t['file']}"; h = open(f).read(); c = cats[t['category']]
     label = f"{c['num']} · {c['name']}" if c.get('num') else c['name']
     block = f'''<!--fth-standalone-->

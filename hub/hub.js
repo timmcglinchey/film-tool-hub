@@ -60,6 +60,7 @@ const ICONS = {
   falsecolour: P('<rect x="3" y="5" width="18" height="14" rx="1.8"/><path d="M3 15l4.5-4.5 3.5 3.5 4-5 6 6"/><path d="M7 5v14M11 5v14M15 5v14" opacity=".35"/>'),
   budget:   P('<ellipse cx="9.5" cy="6.5" rx="6" ry="2.5"/><path d="M3.5 6.5V11c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V6.5"/><path d="M3.5 11v4.5c0 1.4 2.7 2.5 6 2.5"/><circle cx="16.8" cy="16.6" r="4.2"/><path d="M16.8 14.6v4"/>'),
   research: P('<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/><path d="M8 9.2h5M8 11.8h3.4"/>'),
+  ideas:    P('<path d="M9 17.5h6M9.8 20.5h4.4"/><path d="M12 3.2a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2v.4h5.2V16c0-.8.4-1.5 1-2A6 6 0 0 0 12 3.2z"/>'),
   generic:  P('<rect x="3" y="9" width="18" height="11.5" rx="1.6"/><path d="M3.4 5.6L20 3l.6 3.6L4 9.2z"/><path d="M8 4.8l2 3.4M13 4l2 3.4"/>')
 };
 const UI = {
@@ -875,7 +876,7 @@ function meWrite(who, data) {
   for (const [k, v] of Object.entries(data || {})) if (typeof v === 'string') localStorage.setItem(pre + k, v);
 }
 /* the person changed: open personal tools again, now showing their own work */
-function reloadPersonal() { try { PERSONAL.forEach(id => { if (frames.has(id)) reloadTool(id); }); } catch (e) {} }
+function reloadPersonal() { try { PERSONAL.forEach(id => { if (frames.has(id)) reloadTool(id); }); ideaDevCheck(); } catch (e) {} }
 /* research done before signing in on this computer becomes the person's, unless they already have some here */
 function adoptResearch() {
   if (!account) return;
@@ -883,6 +884,7 @@ function adoptResearch() {
   if (!Object.keys(anon).length || Object.keys(meData(who)).length) return;
   try { meWrite(who, anon); } catch (e) { return; }
   rsSet(who, {at: +rsRec('').at || 0, synced: 0}); meWrite('', {}); rsSet('', {at: 0, synced: 0});
+  adoptPersonalDBs(who);
 }
 let rsBusy = null, rsAgain = false, rsAt = 0, rsT = null;
 function researchChanged() { clearTimeout(rsT); rsT = setTimeout(syncResearch, 4000); }
@@ -918,6 +920,116 @@ async function syncResearch() {
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - rsAt > 60e3) syncResearch(); });
 window.addEventListener('focus', () => { if (Date.now() - rsAt > 60e3) syncResearch(); });
+
+/* ───────── Ideas ─────────
+   The Ideas page (tools/ideas.html, top-bar button beside My Research) is personal like My Research: kept under
+   "fth:me:<email>:", the same in every project, and synced to Drive in the same private file.
+   • The list of ideas (status, tags, groups, branches, voice notes…) is the Ideas page's own saved item
+     "fth-ideas-v1": {v, ideas: [{id, title, text, status, tags, group, from, project, …}], groups: [...]}.
+   • Opening an idea opens the Script Development Tool as a page of its own ("idea-dev", same file) whose saved
+     work is filed in a smaller space for that idea: "fth:me:<email>:idea:<id>:". The tool sees window.__fthIdea
+     ({id, where, seed}) and shows its idea controls (Back to Ideas, the list of ideas, History, Graduate, the mood board).
+   • Graduate moves everything in that space (localStorage and IndexedDB: the script, its history, the mood board)
+     into a new project, so it isn't a copy: the project is where the idea is edited from then on. The idea stays in
+     the list, marked graduated, with a link to the project. Voice notes stay with the idea on the Ideas page.
+   "filmtoolhub-idea-cur" remembers, per person, which idea the workspace has open. */
+const IDEAS = 'ideas', IDEA_DEV = 'idea-dev', IDEAS_KEY = 'fth-ideas-v1', IDEA_CUR = 'filmtoolhub-idea-cur';
+const ideaNs = id => 'idea:' + id + ':';
+const ideaPre = (id, who = meWho()) => mePre(who) + ideaNs(id);
+let ideaWhere = '', ideaSeed = null, ideaJustOpened = false;
+function ideasRead(who = meWho()) {
+  try { const v = JSON.parse(localStorage.getItem(mePre(who) + IDEAS_KEY) || 'null'); if (v && Array.isArray(v.ideas)) return v; } catch (e) {}
+  return {v: 1, ideas: [], groups: []};
+}
+function ideasWrite(d, who = meWho()) {
+  localStorage.setItem(mePre(who) + IDEAS_KEY, JSON.stringify(d));
+  rsSet(who, {at: Date.now()}); researchChanged();
+  ideasRefresh();
+}
+const ideaGet = (id, who) => ideasRead(who).ideas.find(i => i.id === id && !i.deleted) || null;
+function ideaScript(id, who = meWho()) {
+  try { const pre = ideaPre(id, who) + 'scaffold-script:', last = localStorage.getItem(pre + 'last'); return last ? JSON.parse(localStorage.getItem(pre + 'p:' + last) || 'null') : null; } catch (e) { return null; }
+}
+const firstLine = s => String(s || '').trim().split(/\n/)[0].slice(0, 80);
+function ideaTitle(i, who) { const sd = ideaScript(i.id, who); return (sd && String(sd.title || '').trim()) || String(i.title || '').trim() || firstLine(sd && sd.develop && sd.develop.idea) || firstLine(i.text) || 'Untitled idea'; }
+function ideaCurGet() { try { return (JSON.parse(localStorage.getItem(IDEA_CUR) || '{}') || {})[meWho()] || null; } catch (e) { return null; } }
+function ideaCurSet(id) { try { const m = JSON.parse(localStorage.getItem(IDEA_CUR) || '{}') || {}; if (id) m[meWho()] = id; else delete m[meWho()]; localStorage.setItem(IDEA_CUR, JSON.stringify(m)); } catch (e) {} }
+function ideaShimCfg() {
+  const id = ideaCurGet(), i = id && ideaGet(id), where = ideaWhere, seed = ideaSeed;
+  ideaWhere = ''; ideaSeed = null;   /* used once: a reload carries on where the person is */
+  return {tool: 'script-dev', personal: true, who: meWho(), ns: ideaNs(id || 'none'),
+    idea: {id: id || '', title: i ? ideaTitle(i) : '', where, seed, status: i ? i.status : ''}};
+}
+/* the Ideas page re-reads its list whenever it's shown or the hub changes it */
+function ideasRefresh() { const f = frames.get(IDEAS); try { f && f.contentWindow.ideasRefresh && f.contentWindow.ideasRefresh(); } catch (e) {} }
+/* the workspace's idea was graduated, deleted or replaced from Drive: close it and show the Ideas page */
+function ideaDevCheck() {
+  if (!frames.has(IDEA_DEV)) return;
+  const id = ideaCurGet();
+  if (id && ideaGet(id) && ideaGet(id).status !== 'graduated') return;
+  const was = active === IDEA_DEV; closeTab(IDEA_DEV); if (was) go(IDEAS);
+}
+/* copy one browser space into another (an idea into a project, or signed-out work to the person), then empty the first */
+async function moveSpace(from, to) {
+  for (const k of lsKeys(from)) { localStorage.setItem(to + k.slice(from.length), localStorage.getItem(k)); localStorage.removeItem(k); }
+  for (const n of await listDBs(from)) { try { await loadDB(to + n.slice(from.length), await dumpDB(n)); await delDB(n); } catch (e) {} }
+}
+async function graduateIdea(id, name) {
+  const who = meWho(), i = ideaGet(id, who); if (!i) throw new Error('That idea isn’t here any more');
+  if (i.status === 'graduated' && i.project && projById(i.project.id)) return i.project;
+  name = String(name || '').trim() || ideaTitle(i, who);
+  const p = {id: newId(), name, created: Date.now(), openedAt: Date.now(), tools: {}, archived: false, fromIdea: id};
+  /* the workspace and its mood board hold the idea's databases open: close them first */
+  if (frames.has(IDEA_DEV)) { closeTab(IDEA_DEV); await new Promise(r => setTimeout(r, 150)); }
+  const from = ideaPre(id, who), to = PFX(p.id), had = lsKeys(from).length;
+  /* the script opens on Write once it's a project */
+  const sk = from + 'scaffold-script:', last = localStorage.getItem(sk + 'last');
+  if (last) { try { const sd = JSON.parse(localStorage.getItem(sk + 'p:' + last)); sd.ui = {...(sd.ui || {}), tab: 'write', welcomed: true}; if (!String(sd.title || '').trim()) sd.title = name; sd.idea = {id, graduatedAt: Date.now()}; localStorage.setItem(sk + 'p:' + last, JSON.stringify(sd)); } catch (e) {} }
+  const mood = (await listDBs(from)).length;
+  await moveSpace(from, to);
+  const now = Date.now(); p.changedAt = now; p.tools = {...(had ? {'script-dev': now} : {}), ...(mood ? {moodboard: now} : {})};
+  projects.push(p); await putProject(p);
+  const d = ideasRead(who), x = d.ideas.find(o => o.id === id);
+  if (x) { x.status = 'graduated'; x.project = {id: p.id, name: p.name, at: now}; x.at = now; ideasWrite(d, who); }
+  ideaCurSet(null);
+  await switchProject(p.id);
+  go('script-dev');
+  toastLong(`“${p.name}” has graduated into a project. Carry on writing here; the idea stays on the Ideas page, marked Graduated.`);
+  saveProject(true);   /* straight into the project file (and Google Drive when signed in) */
+  return {id: p.id, name: p.name};
+}
+window.__fthHub.ideas = {
+  /* open an idea in the workspace; where: 'develop' | 'outline' | 'write' | a Develop section ('characters', 'settings', 'logline', 'synopsis', 'notes', 'mood') */
+  open(id, where, seed) {
+    if (!ideaGet(id)) return false;
+    const i = ideaGet(id); if (i.status === 'graduated') return this.openProject(i.project && i.project.id);
+    ideaCurSet(id); ideaWhere = where || ''; ideaSeed = seed || null;
+    if (frames.has(IDEA_DEV)) reloadTool(IDEA_DEV);
+    ideaJustOpened = true; go(IDEA_DEV);
+    return true;
+  },
+  list() { return ideasRead().ideas.filter(i => !i.deleted).map(i => ({id: i.id, title: ideaTitle(i), status: i.status || 'seed', at: Math.max(i.at || 0, ((ideaScript(i.id) || {}).savedAt) || 0), group: i.group || ''})).sort((a, b) => b.at - a.at); },
+  current() { return ideaCurGet(); },
+  back() { go(IDEAS); },
+  newIdea() { go(IDEAS); setTimeout(() => { const f = frames.get(IDEAS); try { f.contentWindow.ideasCapture && f.contentWindow.ideasCapture(); } catch (e) {} }, 60); },
+  graduate(id, name) { return graduateIdea(id, name); },
+  /* where a graduated idea's project is now: {name, archived} or null when it isn't in this browser */
+  project(pid) { const p = pid && projById(pid); return p && mine(p) ? {name: p.name, archived: !!p.archived} : null; },
+  async openProject(pid) {
+    const p = pid && projById(pid); if (!p) { toast('That project isn’t on this computer. Sign in to fetch it from Google Drive.'); return false; }
+    if (p.archived) await archiveProject(p.id, false);
+    if (curId !== p.id) await switchProject(p.id);
+    go('script-dev'); return true;
+  },
+  /* the mood board for the idea open in the workspace: the Mood Board tool, filed in that idea's space */
+  async moodFrame() {
+    const t = byId('moodboard'), id = ideaCurGet(); if (!t || !id) return '';
+    await loadHtml(t); const n = byId('moodboard'); if (!n || n.html == null) return '';
+    return themed(n, false, {tool: 'moodboard', personal: true, who: meWho(), ns: ideaNs(id), nested: true});
+  }
+};
+/* signed-out ideas also hold databases (voice notes, mood boards): they move to the person along with the rest */
+async function adoptPersonalDBs(who) { if (who && (await listDBs(mePre(who))).length === 0) await moveSpace(mePre(''), mePre(who)).catch(() => {}); }
 
 /* ───────── shared projects ─────────
    The owner shares a project's Drive file with the crew (they get edit access to that one file).
@@ -1844,12 +1956,14 @@ function fthEngine(CSS) {
    changes, and sends Ctrl/Cmd+S to the hub's Save. */
 function fthProjectShim(cfg) {
   var realLS = window.localStorage, W = window, hub = null;
-  try { if (W.parent !== W && W.parent.__fthHub) hub = W.parent.__fthHub; } catch (e) {}
+  try { if (W.parent !== W && W.parent.__fthHub) hub = W.parent.__fthHub; else if (cfg.nested && W.parent.parent.__fthHub) hub = W.parent.parent.__fthHub; } catch (e) {}
   var P = (hub && hub.project) || (function () { try { return realLS.getItem('fth-current-project'); } catch (e) {} })() || 'default';
   /* a personal tool (cfg.personal) is filed under the person instead ("fth:me:<email>:"): the same in every
      project, never part of a project file, never locked or shared, and always editable */
   var PERS = !!cfg.personal;
-  var pre = PERS ? 'fth:me:' + (cfg.who || '') + ':' : 'fth:p:' + P + ':';
+  /* an idea (see "Ideas" in hub.js) is a smaller space inside the person's own: "fth:me:<email>:idea:<id>:" (cfg.ns) */
+  var pre = PERS ? 'fth:me:' + (cfg.who || '') + ':' + (cfg.ns || '') : 'fth:p:' + P + ':';
+  if (cfg.idea) W.__fthIdea = cfg.idea;
   var GLOBAL = /^(filmtoolhub-|fth-current-project$)/;
   var tool = cfg.tool;
   W.__fthProjectId = P;
@@ -2157,6 +2271,8 @@ html.fth-dark ::-webkit-scrollbar{width:11px;height:11px}html.fth-dark ::-webkit
 
 const TOOL_THEME = {
   research:  {kit: true},
+  ideas:     {kit: true},
+  'idea-dev': {kit: true},
   callsheet: {kit: true},
   'script-log': {kit: true},
   'camera-report': {kit: true},
@@ -2219,12 +2335,17 @@ const PEOPLE_FIELDS = {
   'script-log': '[data-k="director"],[data-k="dp"],[data-k="ad"],[data-k="sup"]',
   budget: '#sProd'
 };
-function themed(t, ro) {
+function shimCfg(t, ro) {
+  if (t.id === IDEA_DEV) return ideaShimCfg();
+  if (isPersonal(t.id)) return {tool: t.id, personal: true, who: meWho()};
+  return {tool: t.id, ...(ro ? {ro: true} : {}), ...(PEOPLE_FIELDS[t.id] ? {people: PEOPLE_FIELDS[t.id]} : {})};
+}
+function themed(t, ro, sc) {
   const cfg = TOOL_THEME[t.id] || {};
   const c = catOf(t.category);
   const cat = JSON.stringify({num:c.num, name:c.name, color:c.color}).replace(/</g, '\\u003c');
   const boot = (cfg.kit ? kitHead(t) : '') + '<script data-fth>window.__fthCat=' + cat + ';(' + fthEngine.toString() + ')(' + JSON.stringify(cfg).replace(/</g, '\\u003c') + ');'
-    + '(' + fthProjectShim.toString() + ')(' + JSON.stringify(isPersonal(t.id) ? {tool: t.id, personal: true, who: meWho()} : {tool: t.id, ...(ro ? {ro: true} : {}), ...(PEOPLE_FIELDS[t.id] ? {people: PEOPLE_FIELDS[t.id]} : {})}).replace(/</g, '\\u003c') + ');<\/script>';
+    + '(' + fthProjectShim.toString() + ')(' + JSON.stringify(sc || shimCfg(t, ro)).replace(/</g, '\\u003c') + ');<\/script>';
   /* a tool file carries its own copy of the look for when it's opened on its own; inside the hub that copy is removed */
   let h = t.html.replace(/<!--fth-standalone-->[\s\S]*?<!--\/fth-standalone-->\s*/g, '');
   if (/<head[^>]*>/i.test(h)) h = h.replace(/<head[^>]*>/i, m => m + boot);
@@ -2238,7 +2359,9 @@ function setTheme(mode) {
   document.documentElement.setAttribute('data-theme', mode);
   window.__fthTheme = mode;
   try { localStorage.setItem(THEME_KEY, mode); } catch (e) {}
-  frames.forEach(f => { try { f.contentWindow.__fthApply && f.contentWindow.__fthApply(mode); } catch (e) {} });
+  frames.forEach(f => { try { f.contentWindow.__fthApply && f.contentWindow.__fthApply(mode); } catch (e) {}
+    /* a tool inside a tool (the mood board inside an idea) */
+    try { f.contentDocument.querySelectorAll('iframe[data-fth-nested]').forEach(n => { try { n.contentWindow.__fthApply && n.contentWindow.__fthApply(mode); } catch (e) {} }); } catch (e) {} });
   syncThemeBtn();
 }
 function syncThemeBtn() {
@@ -2347,10 +2470,14 @@ function activate(id) {
   const t = id && byId(id), prev = active;
   if (t) {
     if (!openTabs.includes(id)) openTabs.push(id);
+    /* back to an idea's workspace some other way (the browser's Back button): the Ideas page may have changed it meanwhile */
+    if (id === IDEA_DEV && prev !== IDEA_DEV && frames.has(id) && !ideaJustOpened) reloadTool(id);
+    if (id === IDEA_DEV) ideaJustOpened = false;
     frameFor(t);
     active = id; lastAct[id] = Date.now();
   } else active = null;
   frames.forEach((f, k) => f.classList.toggle('active', k === active));
+  if (active === IDEAS && prev !== IDEAS) ideasRefresh();
   ws.hidden = !active;
   applyFocus();
   document.body.classList.toggle('tool-open', !!active);
@@ -2371,7 +2498,15 @@ const TASKS = 'tasks';
 /* My Research is a page of its own too, opened from its button beside My work. It's personal: the same in
    every project and never shared (see "My research" above). */
 const RESEARCH = 'research';
-const isPage = id => id === TASKS || id === RESEARCH;
+/* the Ideas page and the idea workspace are personal pages too (see "Ideas" above) */
+const isPage = id => id === TASKS || id === RESEARCH || id === IDEAS || id === IDEA_DEV;
+const isIdeaPage = id => id === IDEAS || id === IDEA_DEV;
+function renderIdeasBtn() {
+  const b = $('#ideasBtn'); if (!b) return;
+  const on = isIdeaPage(active);
+  b.hidden = !byId(IDEAS);
+  b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+}
 function renderResearchBtn() {
   const b = $('#researchBtn'); if (!b) return;
   const on = active === RESEARCH;
@@ -2398,13 +2533,13 @@ function renderBar() {
           + (pin ? '' : `<span class="x" data-close="${esc(t.id)}" role="button" aria-label="Close ${n}" title="Close">${X}</span>`) + `</span></button>`;
       }).join('')
     : `<span class="tabs-hint">Open and pinned tools appear here</span>`;
-  $('#barActions').innerHTML = active ? `
+  $('#barActions').innerHTML = isIdeaPage(active) ? `<button class="ibtn" data-act="reload" title="Reload this page">${UI.reload}</button>` : active ? `
     ${convOn() && !isPersonal(active) ? `<button class="ibtn convbtn${convTool === active ? ' on' : ''}" data-act="conv" aria-pressed="${convTool === active}" title="Conversation: comments about ${esc(toolName(active))} for your crew">${CONVI}<span class="t">Conversation</span>${unreadIn(active).length ? `<b class="badge">${unreadIn(active).length}</b>` : ''}</button>` : ''}
     <button class="ibtn" data-act="reload" title="Reload this tool">${UI.reload}</button>
     <button class="ibtn" data-act="newtab" title="Open in a new browser tab">${UI.newtab}<span class="t">New tab</span></button>
     <button class="ibtn" data-act="menu" data-menu="${esc(active)}" title="More options">${UI.dots}</button>` : '';
   const at = $('#tabs .tab.active'); if (at) at.scrollIntoView({block:'nearest', inline:'nearest'});
-  renderMeBtn(); renderTasksBtn(); renderResearchBtn();
+  renderMeBtn(); renderTasksBtn(); renderResearchBtn(); renderIdeasBtn();
 }
 
 const go = id => { location.hash = id ? '#/tool/' + encodeURIComponent(id) : '#/'; };
@@ -2412,6 +2547,7 @@ function route() {
   const j = location.hash.match(/^#\/join\/(.+)$/);
   if (j && driveOn()) { activate(null); joinDialog(decodeURIComponent(j[1])); return; }
   const m = location.hash.match(/^#\/tool\/(.+)$/);
+  if (m && decodeURIComponent(m[1]) === IDEA_DEV && !(ideaCurGet() && ideaGet(ideaCurGet()) && ideaGet(ideaCurGet()).status !== 'graduated')) { history.replaceState(null, '', '#/tool/' + IDEAS); return route(); }
   const dm = location.hash.match(/^#\/docs(?:\/(.+))?$/);
   activate(m ? decodeURIComponent(m[1]) : null);
   showDocs(!!dm, dm && dm[1] ? decodeURIComponent(dm[1]) : null);
@@ -3506,6 +3642,7 @@ $('#docsBtn').onclick = () => { location.hash = location.hash.startsWith('#/docs
 $('#meBtn').onclick = () => { location.hash = location.hash === '#/me' ? '#/' : '#/me'; };
 $('#tasksBtn').onclick = () => go(active === TASKS ? null : TASKS);
 $('#researchBtn').onclick = () => go(active === RESEARCH ? null : RESEARCH);
+$('#ideasBtn').onclick = () => go(active === IDEAS ? null : IDEAS);
 $('#mePage').addEventListener('click', e => { const b = e.target.closest('[data-mc]'); if (!b) return; const t = b.dataset.mc; if (t === '*') openConv('*'); else if (byId(t)) { go(t); setTimeout(() => openConv(t), 0); } });
 $('#convPanel').addEventListener('click', async e => {
   const b = e.target.closest('[data-cv], [data-cvto]'); if (!b) return;

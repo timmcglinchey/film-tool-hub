@@ -17,6 +17,7 @@ The website for Film Tool Hub: 14 filmmaking tools in one place, with projects a
 | `tools/tools.json` | The list of tools: name, category, description and order |
 | `tools/<name>.html` | One file per tool |
 | `tools/research.html` | My Research: the Specialist Research Hub, private to each person (see below) |
+| `tools/ideas.html` | Ideas: catch ideas (typed or spoken), grow them in the Script Development Tool, graduate them into projects. Private to each person |
 | `scripts/import_research_hub.py` | Brings a new version of the Specialist Research Hub file into the hub |
 | `tests/sharing/` | Automatic tests for shared projects (run with `node tests/sharing/run.js`) |
 
