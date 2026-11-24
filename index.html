@@ -14,12 +14,12 @@
 <meta property="og:url" content="https://filmtoolhub.com/">
 <meta property="og:image" content="https://filmtoolhub.com/assets/logo.png">
 <meta property="og:type" content="website">
-<script>(function(){var t;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}if(t!=='light'&&t!=='dark'){t='dark'}document.documentElement.setAttribute('data-theme',t);window.__fthTheme=t})();</script>
+<script>(function(){var t;try{t=localStorage.getItem('filmtoolhub-theme')}catch(e){}if(t!=='light'&&t!=='dark'){t='dark'}document.documentElement.setAttribute('data-theme',t);window.__fthTheme=t;try{if(localStorage.getItem('filmtoolhub-returning')==='1')document.documentElement.setAttribute('data-returning','')}catch(e){}})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <!-- When hub.js or hub.css changes, change the ?v= below (date and time, YYYYMMDDHHMM) so browsers fetch the new copy -->
-<link rel="stylesheet" href="hub/hub.css?v=202611242225">
+<link rel="stylesheet" href="hub/hub.css?v=202611242245">
 </head>
 <body>
 
@@ -55,7 +55,7 @@
   <div class="wrap">
     <section class="about" aria-labelledby="aboutTitle">
       <h1 id="aboutTitle" class="about-t">Free filmmaking tools, from script to release</h1>
-      <p>Film Tool Hub is a free collection of tools for planning and making a film: script development, script breakdowns, schedules, call sheets, shot lists, casting, location recces, risk assessments, budgets and post-production. Your work is saved in your browser. If you choose to sign in with Google, it is also saved in a Film Tool Hub folder in your own Google Drive, so you can carry on from any computer and share a project with your crew. The site can only see the files it creates there. <a href="privacy.html">Read the privacy policy</a>.</p>
+      <p>Free tools for planning and making a film. Your work stays in your browser, or in your own Google Drive if you sign in. <a href="privacy.html">Privacy policy</a> · <button type="button" class="lnk aboutlnk" data-about>More about the site</button></p>
     </section>
     <div id="projStrip"></div>
 
@@ -74,6 +74,7 @@
     <div id="sections"></div>
 
     <footer class="foot">
+      <button type="button" class="lnk" data-about>About Film Tool Hub</button>
       <a class="lnk" href="privacy.html">Privacy policy</a>
       <span id="storeNote"></span>
       <span class="sp"></span>
@@ -113,6 +114,6 @@
   <div class="dv-body" id="dvBody"></div>
 </dialog>
 
-<script src="hub/hub.js?v=202611242235"></script>
+<script src="hub/hub.js?v=202611242245"></script>
 </body>
 </html>
