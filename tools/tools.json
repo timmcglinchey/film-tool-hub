@@ -527,6 +527,24 @@
       "file": "tools/script-log.html"
     },
     {
+      "id": "camera-report",
+      "name": "Camera Report",
+      "desc": "Print the camera department's paperwork for a shoot day: a camera report for each camera with the day's shots ready to log, and a card and data log for handing media to the DIT. Bring the basics in from the schedule and shot list.",
+      "category": "shoot",
+      "tags": [
+        "Camera",
+        "2nd AC"
+      ],
+      "icon": "camreport",
+      "fileName": "Camera Report.html",
+      "origTitle": "Camera Report",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611241000,
+      "file": "tools/camera-report.html"
+    },
+    {
       "id": "postprod",
       "name": "Post-Production Pipeline",
       "desc": "A phase-by-phase roadmap from offload to final export in DaVinci Resolve, with trackable tasks, research, Resolve basics and an editable glossary.",
