@@ -12,6 +12,7 @@ The website for Film Tool Hub: 14 filmmaking tools in one place, with projects a
 | `hub/kit.css` | The shared look every tool uses: fonts, colours, buttons, the tool header |
 | `hub/config.json` | Settings: the Google sign-in key (Client ID) and the email addresses that see the admin controls |
 | `privacy.html` | The privacy policy (linked from the home page) |
+| `assets/cards/` | The picture on each tool's home-page card |
 | `assets/` | The logo (`logo.png`, used on Google's sign-in screen) and the favicon |
 | `sitemap.xml`, `robots.txt` | Help Google Search find and list the site |
 | `tools/tools.json` | The list of tools: name, category, description and order |
@@ -32,6 +33,8 @@ The website for Film Tool Hub: 14 filmmaking tools in one place, with projects a
 **Update the Specialist Research Hub.** Run `python3 scripts/import_research_hub.py "<new file>.html"`. It writes `tools/research.html` with the hub's look and saving; the content stays exactly as written.
 
 **Change a tool's name, description or category.** Edit its entry in `tools/tools.json`.
+
+**Change a tool card's picture.** The pictures on the home page cards are in `assets/cards/`, one per tool, named after the tool's `id`. They're made from screenshots of the tools by `scripts/card-images/` (instructions at the top of `make.py`). A new tool shows the plain icon card until it has a picture and a `"card"` line in `tools.json`.
 
 **Undo a change.** Every change is kept in the history (the clock icon, "History"). Any earlier version can be brought back.
 

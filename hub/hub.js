@@ -2415,6 +2415,7 @@ function render() {
       ${body}</section>`;
   }
   $('#sections').innerHTML = html || `<div class="empty">No tools match “${esc(qEl.value)}”.</div>`;
+  sizeCards();
 
   const h = hiddenBase();
   const rb = $('#restoreBtn'); rb.hidden = !h.length; rb.textContent = `Restore removed tools (${h.length})`;
@@ -2428,18 +2429,79 @@ const groupOf = t => ((catOf(t.category).groups) || []).find(g => g.id === t.gro
 /* the wide "start here" card for a stage's pipeline guide; same menus and pin as any card */
 function leadCard(t) {
   const c = catOf(t.category);
+  if (t.card) return picCard(t, true);
   return `<div class="cardw lead" data-id="${esc(t.id)}" style="--cat:${c.color}">
     <a class="card" href="#/solo/${encodeURIComponent(t.id)}" target="_blank" rel="noopener" data-open="${esc(t.id)}" title="Click to open here · right-click to open in a new tab">
       <div class="ico">${ICONS[t.icon] || ICONS.generic}</div>
       <div class="lt"><span class="kick">Pipeline guide · start here</span><h3>${esc(t.name)}</h3><p>${esc(t.desc || '')}</p>${t.note ? `<div class="note">${esc(t.note)}</div>` : ''}</div>
       <div class="meta">${cur() && (cur().tools || {})[t.id] ? '<span class="inproj" title="Used in the current project">● In project</span>' : ''}<span class="go">Open ${UI.arrow}</span></div>
     </a>
-    <button class="pinb${isPinned(t.id) ? ' on' : ''}" data-pin="${esc(t.id)}" aria-pressed="${isPinned(t.id)}" aria-label="${isPinned(t.id) ? 'Unpin' : 'Pin'} ${esc(t.name)}" title="${isPinned(t.id) ? 'Pinned to the tab strip. Click to unpin' : 'Pin to the tab strip'}">${UI.pin}</button>
-    <button class="more" data-menu="${esc(t.id)}" aria-label="Options for ${esc(t.name)}" aria-haspopup="menu" aria-expanded="false">${UI.dots}</button>
+    ${cardButtons(t)}
   </div>`;
 }
 
+const cardButtons = t => `<button class="pinb${isPinned(t.id) ? ' on' : ''}" data-pin="${esc(t.id)}" aria-pressed="${isPinned(t.id)}" aria-label="${isPinned(t.id) ? 'Unpin' : 'Pin'} ${esc(t.name)}" title="${isPinned(t.id) ? 'Pinned to the tab strip. Click to unpin' : 'Pin to the tab strip'}">${UI.pin}</button>
+    <button class="more" data-menu="${esc(t.id)}" aria-label="Options for ${esc(t.name)}" aria-haspopup="menu" aria-expanded="false">${UI.dots}</button>`;
+const inProjBadge = t => isPersonal(t.id) ? '<span class="inproj priv" title="Only you can see this. It’s the same in every project and is never shared with your crew.">Private to you</span>'
+  : cur() && (cur().tools || {})[t.id] ? '<span class="inproj" title="Used in the current project">● In project</span>' : '';
+
+/* Picture cards (tools.json "card": a picture in assets/cards, made by scripts/card-images).
+   At rest: picture, title, and the tags line. Hovering (or keyboard focus) darkens the picture and opens
+   the description between the title and the tags. Phones and tablets always show the description.
+   Every card is the same height: just enough for the longest description (sizeCards). */
+function picCard(t, lead) {
+  const c = catOf(t.category);
+  const tags = lead ? ['Pipeline guide', 'start here', ...(t.tags || [])] : (t.tags || []);
+  return `<div class="cardw pic${lead ? ' lead' : ''}" data-id="${esc(t.id)}" style="--cat:${c.color}">
+    <a class="card" href="#/solo/${encodeURIComponent(t.id)}" target="_blank" rel="noopener" data-open="${esc(t.id)}" title="Click to open here · right-click to open in a new tab">
+      <img class="cimg" src="${esc(t.card)}" alt="" loading="lazy" decoding="async">
+      <div class="ctxt">
+        <h3>${esc(t.name)}</h3>
+        <div class="reveal"><div><p>${esc(t.desc || '')}</p>${t.note ? `<div class="note">${esc(t.note)}</div>` : ''}</div></div>
+        <div class="meta"><span class="tags">${esc(tags.join(' · '))}</span>${inProjBadge(t)}</div>
+      </div>
+    </a>
+    ${cardButtons(t)}
+  </div>`;
+}
+
+/* height for picture cards: the tallest any of them needs with its description open, plus room for the pin */
+function sizeCards() {
+  const root = $('#sections'); if (!root) return;
+  const measure = (cardEl, texts) => {
+    const txt = cardEl.querySelector('.ctxt'); if (!txt || !txt.offsetWidth) return 0;
+    const m = txt.cloneNode(true);
+    m.style.cssText = `position:absolute;visibility:hidden;pointer-events:none;left:0;top:0;bottom:auto;width:${txt.offsetWidth}px`;
+    m.classList.add('measure');
+    cardEl.appendChild(m);
+    const p = m.querySelector('.reveal p'), note = m.querySelector('.note');
+    let h = 0;
+    for (const [d, n] of texts) {
+      p.textContent = d;
+      if (note) note.hidden = !n;
+      h = Math.max(h, m.offsetHeight);
+    }
+    m.remove(); return h;
+  };
+  const HEAD = 62;   /* space above the title for the pin and ⋯ buttons */
+  const one = root.querySelector('.cardw.pic:not(.lead) .card');
+  if (one) {
+    const all = tools().filter(t => t.card && !t.lead && !isPage(t.id) && !isPersonal(t.id)).map(t => [t.desc || '', t.note || '']);
+    const h = measure(one, all);
+    if (h) root.style.setProperty('--cardh', (h + HEAD) + 'px');
+  }
+  for (const w of root.querySelectorAll('.cardw.pic.lead')) {
+    const t = byId(w.dataset.id); const a = w.querySelector('.card');
+    const h = t && measure(a, [[t.desc || '', t.note || '']]);
+    if (h) a.style.height = (h + HEAD) + 'px';
+  }
+}
+let sizeTimer = 0;
+addEventListener('resize', () => { clearTimeout(sizeTimer); sizeTimer = setTimeout(sizeCards, 80); });
+if (document.fonts) document.fonts.ready.then(() => sizeCards());
+
 function card(t) {
+  if (t.card) return picCard(t, false);
   const c = catOf(t.category);
   const ver = `<span class="ver${t.htmlLocal ? ' local' : ''}" title="${t.updated ? 'Updated ' + esc(fmtDate(t.updated)) : 'Original version'}">v${t.ver || 1}${t.updated ? ' · ' + esc(fmtDate(t.updated)) : ''}</span>`;
   return `<div class="cardw" data-id="${esc(t.id)}" style="--cat:${c.color}">
@@ -2448,10 +2510,9 @@ function card(t) {
       <h3>${esc(t.name)}</h3>
       <p>${esc(t.desc || '')}</p>
       ${t.note ? `<div class="note">${esc(t.note)}</div>` : ''}
-      <div class="meta"><span class="tags">${esc((t.tags || []).join(' · '))}</span>${isPersonal(t.id) ? '<span class="inproj priv" title="Only you can see this. It’s the same in every project and is never shared with your crew.">Private to you</span>' : cur() && (cur().tools || {})[t.id] ? '<span class="inproj" title="Used in the current project">● In project</span>' : ''}${ver}<span class="go">Open ${UI.arrow}</span></div>
+      <div class="meta"><span class="tags">${esc((t.tags || []).join(' · '))}</span>${inProjBadge(t)}${ver}<span class="go">Open ${UI.arrow}</span></div>
     </a>
-    <button class="pinb${isPinned(t.id) ? ' on' : ''}" data-pin="${esc(t.id)}" aria-pressed="${isPinned(t.id)}" aria-label="${isPinned(t.id) ? 'Unpin' : 'Pin'} ${esc(t.name)}" title="${isPinned(t.id) ? 'Pinned to the tab strip. Click to unpin' : 'Pin to the tab strip'}">${UI.pin}</button>
-    <button class="more" data-menu="${esc(t.id)}" aria-label="Options for ${esc(t.name)}" aria-haspopup="menu" aria-expanded="false">${UI.dots}</button>
+    ${cardButtons(t)}
   </div>`;
 }
 

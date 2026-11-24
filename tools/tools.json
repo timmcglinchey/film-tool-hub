@@ -148,6 +148,7 @@
         "PDF"
       ],
       "icon": "script",
+      "card": "assets/cards/script-dev.webp",
       "fileName": "Script Development Tool.html",
       "origTitle": "Scaffolded Scriptwriting",
       "ver": 1,
@@ -167,6 +168,7 @@
         "Director"
       ],
       "icon": "coverage",
+      "card": "assets/cards/coverage.webp",
       "fileName": "Script Coverage & Feedback.html",
       "origTitle": "Script Coverage & Feedback",
       "ver": 1,
@@ -186,6 +188,7 @@
         "Designer"
       ],
       "icon": "moodboard",
+      "card": "assets/cards/moodboard.webp",
       "fileName": "Mood Board.html",
       "origTitle": "Mood Board",
       "ver": 1,
@@ -206,6 +209,7 @@
         "PDF"
       ],
       "icon": "palette",
+      "card": "assets/cards/palette.webp",
       "fileName": "Colour Palette Studio.html",
       "origTitle": "Colour Palette Studio",
       "ver": 1,
@@ -224,6 +228,7 @@
         "Checklist"
       ],
       "icon": "timeline",
+      "card": "assets/cards/preprod.webp",
       "fileName": "Pre-Production Pipeline.html",
       "origTitle": "Short Film Pre-Production",
       "ver": 1,
@@ -246,6 +251,7 @@
         "CSV"
       ],
       "icon": "breakdown",
+      "card": "assets/cards/breakdown.webp",
       "fileName": "Script Breakdown.html",
       "origTitle": "Script Breakdown",
       "ver": 1,
@@ -266,6 +272,7 @@
         "PDF"
       ],
       "icon": "lining",
+      "card": "assets/cards/script-lining.webp",
       "fileName": "Script Lining Tool.html",
       "origTitle": "Script Lining Tool",
       "ver": 1,
@@ -287,6 +294,7 @@
         "PDF"
       ],
       "icon": "budget",
+      "card": "assets/cards/budget.webp",
       "fileName": "Film Budget Builder.html",
       "origTitle": "Film Budget Builder",
       "ver": 1,
@@ -307,6 +315,7 @@
         "Producer"
       ],
       "icon": "casting",
+      "card": "assets/cards/casting.webp",
       "fileName": "Casting Tracker.html",
       "origTitle": "Casting Tracker",
       "ver": 1,
@@ -327,6 +336,7 @@
         "PDF"
       ],
       "icon": "release",
+      "card": "assets/cards/release.webp",
       "fileName": "Talent Release Forms.html",
       "origTitle": "Talent Release Forms",
       "ver": 1,
@@ -347,6 +357,7 @@
         "1st AD"
       ],
       "icon": "recce",
+      "card": "assets/cards/recce.webp",
       "fileName": "Location Recce.html",
       "origTitle": "Location Recce",
       "ver": 1,
@@ -367,6 +378,7 @@
         "PDF"
       ],
       "icon": "locagree",
+      "card": "assets/cards/loc-agree.webp",
       "fileName": "Location Agreements.html",
       "origTitle": "Location Agreements",
       "ver": 1,
@@ -388,6 +400,7 @@
         "PDF"
       ],
       "icon": "shotlist",
+      "card": "assets/cards/shotlist.webp",
       "fileName": "Shot List Builder.html",
       "origTitle": "Shot List Builder",
       "ver": 1,
@@ -408,6 +421,7 @@
         "JPG"
       ],
       "icon": "blocking",
+      "card": "assets/cards/blocking.webp",
       "fileName": "Blocking Planner.html",
       "origTitle": "BLOCKING PLANNER",
       "ver": 1,
@@ -428,6 +442,7 @@
         "PDF"
       ],
       "icon": "lighting",
+      "card": "assets/cards/lighting.webp",
       "fileName": "Lighting Plan Studio.html",
       "origTitle": "Lighting Plan Studio",
       "ver": 1,
@@ -442,6 +457,7 @@
       "name": "False Colour Studio",
       "category": "prep",
       "icon": "falsecolour",
+      "card": "assets/cards/falsecolour.webp",
       "desc": "Plan exposure with false colour: load stills, check levels and contrast ratios, compare frames side by side and export a PDF.",
       "tags": [
         "DP",
@@ -468,6 +484,7 @@
         "Excel"
       ],
       "icon": "schedule",
+      "card": "assets/cards/schedule.webp",
       "fileName": "Production Schedule Builder.html",
       "origTitle": "Production Schedule Builder",
       "ver": 1,
@@ -488,6 +505,7 @@
         "Excel"
       ],
       "icon": "risk",
+      "card": "assets/cards/risk.webp",
       "fileName": "Film Shoot Risk Assessment Builder.html",
       "origTitle": "Risk Assessment Builder",
       "ver": 1,
@@ -508,6 +526,7 @@
         "Excel"
       ],
       "icon": "callsheet",
+      "card": "assets/cards/callsheet.webp",
       "fileName": "Call Sheet Builder.html",
       "origTitle": "Call Sheet Builder",
       "ver": 1,
@@ -546,6 +565,7 @@
         "Shoot day"
       ],
       "icon": "production",
+      "card": "assets/cards/production.webp",
       "fileName": "Production Pipeline.html",
       "origTitle": "Short Film Production",
       "ver": 1,
@@ -565,6 +585,7 @@
         "Continuity"
       ],
       "icon": "scriptlog",
+      "card": "assets/cards/script-log.webp",
       "fileName": "Script Supervisor's Log.html",
       "origTitle": "Script Supervisor's Log",
       "ver": 1,
@@ -583,6 +604,7 @@
         "2nd AC"
       ],
       "icon": "camreport",
+      "card": "assets/cards/camera-report.webp",
       "fileName": "Camera Report.html",
       "origTitle": "Camera Report",
       "ver": 1,
@@ -602,6 +624,7 @@
         "Sound"
       ],
       "icon": "post",
+      "card": "assets/cards/postprod.webp",
       "fileName": "Post-Production Pipeline.html",
       "origTitle": "Short Film Post-Production",
       "ver": 1,
@@ -622,6 +645,7 @@
         "Learning"
       ],
       "icon": "portrait",
+      "card": "assets/cards/pattern-lab.webp",
       "fileName": "Lighting Pattern Lab.html",
       "origTitle": "Lighting Pattern Lab",
       "ver": 2,
@@ -641,6 +665,7 @@
         "Learning"
       ],
       "icon": "ratios",
+      "card": "assets/cards/ratio-lab.webp",
       "fileName": "Lighting Ratio Lab.html",
       "origTitle": "Lighting Ratio Lab",
       "ver": 1,
@@ -654,6 +679,7 @@
       "name": "Exposure Lab",
       "category": "learn",
       "icon": "exposure",
+      "card": "assets/cards/exposure.webp",
       "desc": "Explore falloff, collimation and hard vs soft light from arm's length to a kilometre, with an exposure triangle, ND and a live camera preview.",
       "tags": [
         "DP",
@@ -679,6 +705,7 @@
         "Lenses"
       ],
       "icon": "dof",
+      "card": "assets/cards/dof.webp",
       "fileName": "Depth of Field Lab.html",
       "origTitle": "Depth of Field Lab",
       "ver": 1,
@@ -698,6 +725,7 @@
         "Learning"
       ],
       "icon": "colourtemp",
+      "card": "assets/cards/colour-temp.webp",
       "fileName": "Colour Temperature Lab.html",
       "origTitle": "Colour Temperature Lab",
       "ver": 1,
@@ -716,6 +744,7 @@
         "Learning"
       ],
       "icon": "mic",
+      "card": "assets/cards/mic-placement.webp",
       "fileName": "Mic Placement Lab.html",
       "origTitle": "Mic Placement Lab",
       "ver": 1,
@@ -734,6 +763,7 @@
         "Learning"
       ],
       "icon": "spectrum",
+      "card": "assets/cards/spectrum.webp",
       "fileName": "Spectrum Analysis Lab.html",
       "origTitle": "Spectrum Analysis Lab",
       "ver": 1,
