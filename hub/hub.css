@@ -479,6 +479,13 @@ dialog.dview[open]{display:flex;flex-direction:column}
 .mebtn.on,.convbtn.on,.tasksbtn.on,.researchbtn.on,.ideasbtn.on{background:var(--surface2);color:var(--text);border-color:var(--line2)}
 .mebtn.on svg,.convbtn.on svg,.tasksbtn.on svg,.researchbtn.on svg,.ideasbtn.on svg{color:var(--accent-ink)}
 @media (max-width:1180px){.mebtn .t,.convbtn .t,.tasksbtn .t,.researchbtn .t,.ideasbtn .t{display:none}}
+/* Each main top-bar button has its own colour, shown on its icon only on hover and while its page is open
+   (grey at rest). My Research and Ideas match their category colours in tools/tools.json; keep them in step. */
+#bar .tasksbtn{--c:#b48cff}#bar .docsbtn{--c:#f2d45c}#bar .mebtn{--c:#ffb547}#bar .researchbtn{--c:#5fb4f0}#bar .ideasbtn{--c:#9bd46a}
+#bar :is(.tasksbtn,.docsbtn,.mebtn,.researchbtn,.ideasbtn){--ci:var(--c)}
+:root[data-theme="light"] #bar :is(.tasksbtn,.docsbtn,.mebtn,.researchbtn,.ideasbtn){--ci:color-mix(in oklab,var(--c) 80%,#000)}
+#bar :is(.tasksbtn,.docsbtn,.mebtn,.researchbtn,.ideasbtn) svg{transition:color .15s ease}
+#bar :is(.tasksbtn,.docsbtn,.mebtn,.researchbtn,.ideasbtn):is(:hover,.on) svg{color:var(--ci)}
 body.me-open #home{display:none}
 #mePage{padding-top:var(--top);min-height:100vh}
 .mlist{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface)}
