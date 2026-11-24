@@ -2446,15 +2446,16 @@ const inProjBadge = t => isPersonal(t.id) ? '<span class="inproj priv" title="On
   : cur() && (cur().tools || {})[t.id] ? '<span class="inproj" title="Used in the current project">● In project</span>' : '';
 
 /* Picture cards (tools.json "card": a picture in assets/cards, made by scripts/card-images).
-   At rest: picture, title, and the tags line. Hovering (or keyboard focus) darkens the picture and opens
-   the description between the title and the tags. Phones and tablets always show the description.
+   At rest: the picture heavily blurred ("rack focus"), the title, and the tags line. Hovering (or keyboard
+   focus) pulls the picture into focus, darkens it and opens the description between the title and the tags.
+   The grain (.cgrain) is its own layer so it stays sharp while the picture is blurred. Phones and tablets always show the description.
    Every card is the same height: just enough for the longest description (sizeCards). */
 function picCard(t, lead) {
   const c = catOf(t.category);
   const tags = lead ? ['Pipeline guide', 'start here', ...(t.tags || [])] : (t.tags || []);
   return `<div class="cardw pic${lead ? ' lead' : ''}" data-id="${esc(t.id)}" style="--cat:${c.color}">
     <a class="card" href="#/solo/${encodeURIComponent(t.id)}" target="_blank" rel="noopener" data-open="${esc(t.id)}" title="Click to open here · right-click to open in a new tab">
-      <img class="cimg" src="${esc(t.card)}" alt="" loading="lazy" decoding="async">
+      <img class="cimg" src="${esc(t.card)}" alt="" loading="lazy" decoding="async"><span class="cgrain"></span>
       <div class="ctxt">
         <h3>${esc(t.name)}</h3>
         <div class="reveal"><div><p>${esc(t.desc || '')}</p>${t.note ? `<div class="note">${esc(t.note)}</div>` : ''}</div></div>

@@ -1,8 +1,9 @@
 """Makes the picture on each home-page tool card (assets/cards/<id>.webp).
 
-Each picture is a crop of a screenshot of the tool, recoloured in its stage's two colours,
-with heavy film grain. The darkening behind the card's text is done by the site (hub.css),
-not baked into the picture.
+Each picture is a crop of a screenshot of the tool, recoloured in its stage's two colours.
+The site shows it heavily blurred until the card is hovered ("rack focus"). The film grain and
+the darkening behind the text are separate layers added by the site (hub.css, assets/cards/grain.png),
+so they stay sharp; they are not baked into the picture.
 
   1. Take the screenshots:   node scripts/card-images/shoot.js     (needs Playwright; writes to scripts/card-images/shots/)
   2. Make the pictures:      python3 scripts/card-images/make.py    (needs Pillow and numpy)
@@ -76,7 +77,7 @@ def gradmap(l, col):
     hi = col + (pale - col) * np.clip((l - .55) / .45, 0, 1)
     return np.where(l < .55, lo, hi)
 
-def treat(img, accent, partner, size, seed):
+def treat(img, accent, partner, size, seed, grain=0):
     W, H = size
     arr = np.asarray(img.resize(size, Image.LANCZOS), float) / 255
     l = lum(arr)
@@ -95,7 +96,7 @@ def treat(img, accent, partner, size, seed):
     g = Image.fromarray(((n * 40) + 128).clip(0, 255).astype('uint8')).filter(ImageFilter.GaussianBlur(.6))
     n = ((np.asarray(g, float) - 128) / 40)[..., None]
     lm = lum(out)[..., None]
-    out = out + n * .17 * (.35 + 1.3 * lm * (1 - lm))
+    out = out + n * grain * (.35 + 1.3 * lm * (1 - lm))
     # gentle vignette
     v = ((x - W / 2) / (W * .75)) ** 2 + ((y - H / 2) / (H * .9)) ** 2
     out = out * (1 - np.clip(v, 0, 1)[..., None] * .35)
@@ -115,8 +116,11 @@ def main(only):
         if y0 + h > src.height: y0 = src.height - h
         cat = tools[tid]['category']
         img = treat(src.crop((x0, y0, x0 + w, y0 + h)), cats[cat]['color'], PARTNER[cat], size, seed=n + 7)
-        img.save(os.path.join(OUT, tid + '.webp'), quality=60, method=6)
+        img.save(os.path.join(OUT, tid + '.webp'), quality=72, method=6)
         print(tid, os.path.getsize(os.path.join(OUT, tid + '.webp')) // 1024, 'KB')
+    # the grain laid over every card (tileable)
+    g = np.random.default_rng(3).normal(128, 46, (256, 256)).clip(0, 255).astype('uint8')
+    Image.fromarray(g).filter(ImageFilter.GaussianBlur(.55)).save(os.path.join(OUT, 'grain.png'), optimize=True)
 
 
 if __name__ == '__main__':

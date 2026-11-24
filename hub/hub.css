@@ -565,15 +565,20 @@ body.me-open #home{display:none}
 .cardw.lead .card .go{opacity:1;transform:none}
 .cardw.lead .pinb,.cardw.lead .more{top:50%;margin-top:-16px}
 /* ───────── picture cards (tools.json "card"; see picCard in hub.js) ─────────
-   Picture with the title and tags line over it. Hover darkens it and opens the description,
+   Blurred picture with the title and tags line over it. Hover brings it into focus, darkens it and opens the description,
    which pushes the title up. --cardh is set by sizeCards() to fit the longest description. */
 .cardw.pic .card{display:block;height:var(--cardh,236px);min-height:0;padding:0;gap:0;background:#07080a;isolation:isolate;
   border-color:color-mix(in srgb,var(--cat) 22%,var(--line))}
-.cardw.pic .card::before{content:"";position:absolute;inset:0;z-index:-1;height:auto;transform:none;
-  background:linear-gradient(to top,rgba(6,7,9,.92) 0%,rgba(6,7,9,.6) 32%,rgba(6,7,9,0) 62%);transition:none}
-.cardw.pic .card::after{content:"";position:absolute;inset:0;z-index:-1;width:auto;height:auto;border-radius:0;opacity:0;
+.cardw.pic .card::before{content:"";position:absolute;inset:0;z-index:-2;height:auto;transform:none;
+  background:linear-gradient(to top,rgba(6,7,9,.85) 0%,rgba(6,7,9,.35) 34%,rgba(6,7,9,0) 60%);transition:none}
+.cardw.pic .card::after{content:"";position:absolute;inset:0;z-index:-2;width:auto;height:auto;border-radius:0;opacity:0;
   background:linear-gradient(to top,rgba(6,7,9,.95) 0%,rgba(6,7,9,.84) 55%,rgba(6,7,9,.6) 100%);transition:opacity .45s}
-.cardw.pic .cimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;transition:transform .7s cubic-bezier(.2,.7,.2,1),filter .45s}
+/* rack focus: heavily blurred at rest, scaled so the soft edges stay outside the card; sharp on hover */
+.cardw.pic{--rf-blur:30px;--rf-dim:.72;--rf-grain:.5}
+.cardw.pic .cimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3;
+  filter:blur(var(--rf-blur)) brightness(var(--rf-dim)) saturate(1.35);transform:scale(1.3);
+  transition:filter .9s cubic-bezier(.25,.8,.25,1),transform .9s cubic-bezier(.25,.8,.25,1)}
+.cardw.pic .cgrain{position:absolute;inset:0;z-index:-1;pointer-events:none;background:url(../assets/cards/grain.png) 0 0/200px;mix-blend-mode:overlay;opacity:var(--rf-grain)}
 .cardw.pic .ctxt{position:absolute;left:20px;right:20px;bottom:14px}
 .cardw.pic .card h3{margin:0;padding:0;color:#fff;font-size:22px;text-shadow:0 1px 14px rgba(0,0,0,.55)}
 .cardw.pic .reveal{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s cubic-bezier(.2,.7,.2,1)}
@@ -586,7 +591,7 @@ body.me-open #home{display:none}
 .cardw.pic :is(.pinb,.more):hover,.cardw.pic .more[aria-expanded="true"]{background:rgba(10,11,13,.6);border-color:rgba(255,255,255,.18);color:#fff}
 .cardw.pic .pinb.on{color:var(--accent)}
 .cardw.pic .card:is(:hover,:focus-visible),.cardw.pic.drop .card{border-color:color-mix(in srgb,var(--cat) 55%,var(--line2))}
-.cardw.pic .card:is(:hover,:focus-visible) .cimg{transform:scale(1.05);filter:saturate(.85)}
+.cardw.pic .card:is(:hover,:focus-visible) .cimg{transform:scale(1.04);filter:blur(0) brightness(1) saturate(1)}
 .cardw.pic .card:is(:hover,:focus-visible)::after{opacity:1}
 .cardw.pic .card:is(:hover,:focus-visible) .reveal{grid-template-rows:1fr}
 .cardw.pic .card:is(:hover,:focus-visible) .reveal p{opacity:1;transform:none;transition-delay:.12s}
