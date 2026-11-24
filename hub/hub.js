@@ -1754,7 +1754,7 @@ function renderProjUI() {
 /* Returning visitors (signed in, or already working in a project) skip the intro at the top of
    the home page; first-time and signed-out visitors still see it (Google's check of the home page
    needs it). The flag is read by the script in index.html's <head> so the intro doesn't flash. */
-let metaOpen = false;
+let metaOpen = false, usedOpen = false; // the save details and the project's tool list start folded away
 function markReturning() {
   const back = !!account || projects.some(p => Object.keys(p.tools || {}).length);
   document.documentElement.toggleAttribute('data-returning', back);
@@ -1767,8 +1767,8 @@ function renderStrip() {
   el.innerHTML = `<div class="pstrip">
     <div class="pmain"><span class="plbl">Current project</span><h2>${esc(p.name)}</h2>
       <button type="button" class="pmeta" data-pact="meta" aria-expanded="${metaOpen}" title="${metaOpen ? 'Show less' : 'Show save details'}">${changed(p) ? '<b class="un">Unsaved changes</b>' : 'Saved ' + esc(fmtWhen(p.savedAt))}${p.sharedBy ? ' · <b class="shr">Shared by ' + esc(p.sharedBy.name) + '</b>' : p.shared ? ' · <b class="shr">Shared with your crew</b>' : ''}${metaOpen ? '<span class="pmore">' + [changed(p) ? 'Last saved ' + esc(fmtWhen(p.savedAt)) : '', p.backupAt ? 'Backup ' + esc(fmtWhen(p.backupAt)) : '', p.driveFileId ? 'On Google Drive' : 'In this browser only'].filter(Boolean).join(' · ') + '</span>' : ''}<svg class="pchev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button></div>
-    <div class="pused">${used.length ? used.map(x => `<a class="pchip" href="#/tool/${encodeURIComponent(x.t.id)}" style="--cat:${catOf(x.t.category).color}" title="Last changed ${esc(fmtWhen(x.at))}"><span class="sw"></span>${esc(x.t.name)}<small>${esc(fmtWhen(x.at))}</small></a>`).join('') : '<span class="pnone">No tools used in this project yet. Open any tool to start; its work is filed under this project.</span>'}</div>
-    <div class="pacts">${driveOn() && account && !p.sharedBy ? `<button class="btn ghost" data-pact="share">${UI.share}${p.shared ? 'Sharing' : 'Share'}</button>` : ''}<button class="btn ghost" data-pact="manage">Manage projects</button><button class="btn" data-pact="new">New project</button></div>
+    ${used.length && usedOpen ? `<div class="pused">${used.map(x => `<a class="pchip" href="#/tool/${encodeURIComponent(x.t.id)}" style="--cat:${catOf(x.t.category).color}" title="Last changed ${esc(fmtWhen(x.at))}"><span class="sw"></span>${esc(x.t.name)}<small>${esc(fmtWhen(x.at))}</small></a>`).join('')}</div>` : ''}
+    <div class="pacts">${used.length ? `<button class="btn ghost pusedbtn" data-pact="used" aria-expanded="${usedOpen}">Tools in this project <small>${used.length}</small><svg class="pchev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>` : ''}${driveOn() && account && !p.sharedBy ? `<button class="btn ghost" data-pact="share">${UI.share}${p.shared ? 'Sharing' : 'Share'}</button>` : ''}<button class="btn ghost" data-pact="manage">Manage projects</button><button class="btn" data-pact="new">New project</button></div>
     ${driveOn() && !account ? `<div class="psignin">${GLOGO}<span><b>Sign in with Google</b> to keep your projects in your own Google Drive and carry on from any computer. <a href="privacy.html">Privacy</a></span><button class="btn primary" data-pact="signin">Sign in</button></div>` : ''}
   </div>`;
 }
@@ -3768,7 +3768,7 @@ $('#lockBar').addEventListener('click', e => {
   if (a === 'take' || a === 'start') takeOver(active);
 });
 form.addEventListener('click', e => { const b = e.target.closest('[data-pa]'); if (!b) return; e.preventDefault(); projAction(b.dataset.pa, b.dataset.id, b.dataset.bid); });
-document.addEventListener('click', e => { const b = e.target.closest('[data-pact]'); if (!b) return; if (b.dataset.pact === 'signin') signInFlow(); if (b.dataset.pact === 'manage') manageDialog(); if (b.dataset.pact === 'share') shareDialog(); if (b.dataset.pact === 'new') newProjectDialog(); if (b.dataset.pact === 'meta') { metaOpen = !metaOpen; renderStrip(); } });
+document.addEventListener('click', e => { const b = e.target.closest('[data-pact]'); if (!b) return; if (b.dataset.pact === 'signin') signInFlow(); if (b.dataset.pact === 'manage') manageDialog(); if (b.dataset.pact === 'share') shareDialog(); if (b.dataset.pact === 'new') newProjectDialog(); if (b.dataset.pact === 'meta') { metaOpen = !metaOpen; renderStrip(); } if (b.dataset.pact === 'used') { usedOpen = !usedOpen; renderStrip(); } });
 document.addEventListener('click', e => { if (e.target.closest('[data-about]')) helpDialog(); });
 $('#acctBtn').onclick = e => { e.stopPropagation(); if (!account) { signInFlow(); return; } const m = $('#amenu'); if (!m.hidden) closeAcctMenu(); else { closeProjMenu(); closeMenu(); openAcctMenu(); } };
 $('#amenu').addEventListener('click', e => {
