@@ -44,6 +44,7 @@ const ICONS = {
   callsheet:P('<rect x="5" y="4.5" width="14" height="16.5" rx="1.6"/><path d="M9 4.5V3h6v1.5"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4.5"/>'),
   locagree: P('<path d="M12 14.5s-4.6-4-4.6-7.4a4.6 4.6 0 0 1 9.2 0c0 3.4-4.6 7.4-4.6 7.4z"/><circle cx="12" cy="7.1" r="1.6"/><path d="M4 21c1.4-1.8 2.4-1.8 2.9-.5.5 1.3 1.3 1.3 2.4-.2.8-1 1.6-1 2.6.3"/><path d="M14.5 20.5H20"/>'),
   release:  P('<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 10h6M9 13h4"/><path d="M8.5 18c1.2-1.6 2-1.6 2.4-.4.4 1.1 1.1 1.1 2.1-.2.7-.9 1.5-.9 2.5.2"/>'),
+  camreport:P('<rect x="2.5" y="7" width="13" height="10" rx="1.5"/><path d="M15.5 10.5l5-2.5v8l-5-2.5"/><circle cx="6.5" cy="4.5" r="2"/><circle cx="11.5" cy="4.5" r="2"/><path d="M5.5 20.5h12"/>'),
   scriptlog:P('<rect x="4" y="4.5" width="11.5" height="16" rx="1.5"/><path d="M7.5 4.5V3h4.5v1.5"/><path d="M7 9.5h5.5M7 12.5h3.5"/><circle cx="16.8" cy="16" r="4.2"/><path d="M16.8 13.8V16l1.5 1"/>'),
   risk:     P('<path d="M12 3.2l9.3 16.6H2.7z"/><path d="M12 10v4.6"/><circle cx="12" cy="17.2" r=".5" fill="currentColor"/>'),
   ratios:   P('<circle cx="9.5" cy="12" r="6.5"/><path d="M9.5 5.5a6.5 6.5 0 0 0 0 13z" fill="currentColor" stroke="none" opacity=".45"/><path d="M16.5 17v-4M19 17V9.5M21.5 17V6"/>'),
@@ -2158,6 +2159,7 @@ const TOOL_THEME = {
   research:  {kit: true},
   callsheet: {kit: true},
   'script-log': {kit: true},
+  'camera-report': {kit: true},
   release: {kit: true},
   'loc-agree': {kit: true},
   shotlist:  {kit: true},
@@ -2213,6 +2215,7 @@ const PEOPLE_FIELDS = {
   recce: '[data-f="by"],[data-f="aid"]',
   release: '[data-k="producer"]',
   'loc-agree': '[data-k="producer"]',
+  'camera-report': '[data-k="director"],[data-k="dp"],[data-k="ac1"],[data-k="ac2"],[data-k="dit"]',
   'script-log': '[data-k="director"],[data-k="dp"],[data-k="ad"],[data-k="sup"]',
   budget: '#sProd'
 };
@@ -2662,6 +2665,7 @@ const DOC_TYPES = {
   palette: ['Palette PDF', 'Palette Deck PDF'],
   callsheet: ['Call Sheet PDF', 'Call Sheet Excel'],
   'script-log': ['Script Supervisor Pack PDF'],
+  'camera-report': ['Camera Report PDF'],
   release: ['Talent Release PDF'],
   'loc-agree': ['Location Agreement PDF'],
   risk: ['Risk Assessment PDF', 'Risk Assessment Excel']
