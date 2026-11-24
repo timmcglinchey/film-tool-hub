@@ -9,7 +9,8 @@ const H = {
   async get(u, tool, k) { const f = await H.frame(u, tool); return f.evaluate(k => localStorage.getItem(k), k); },
   async kvSet(u, tool, k, v) { const f = await H.frame(u, tool); return f.evaluate(([k, v]) => window.fthStore.set(k, v), [k, v]); },
   async kvGet(u, tool, k) { const f = await H.frame(u, tool); return f.evaluate(k => window.fthStore.get(k), k); },
-  bar: u => u.page.evaluate(() => { const b = document.querySelector('#lockBar'); return b.hidden ? '' : b.textContent.trim(); }),
+  /* the bar above a tool; while you're editing it's a pill beside Save instead (its words are in its title) */
+  bar: u => u.page.evaluate(() => { const b = document.querySelector('#lockBar'), p = document.querySelector('#editPill'); if (p && !p.hidden) return p.title; return b.hidden ? '' : b.textContent.trim(); }),
   toast: u => u.page.evaluate(() => document.querySelector('#toast').textContent),
   async save(u) { await u.page.evaluate(() => { document.querySelector('#toast').textContent = ''; }); await u.page.click('#saveBtn'); await until(async () => /Saved “|up to date/.test(await H.toast(u)), 'save toast ' + u.email); },
   editing: (u, tool) => until(async () => /You’re editing/.test(await H.bar(u)), u.email + ' editing ' + tool),

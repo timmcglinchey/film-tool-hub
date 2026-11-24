@@ -1423,7 +1423,20 @@ function renderShare() {
     sb.title = c && c.shared ? 'This project is shared. Click to see or change who it’s shared with' : 'Share this project with your crew';
   }
   if (!bar) return;
-  const show = !!(p && active && !isPersonal(active));
+  const pill = $('#editPill');
+  let show = !!(p && active && !isPersonal(active));
+  /* editing with nothing to ask: a small pill beside Save instead of the bar */
+  const quiet = show && hasToken() && !sh.lost && held.has(active) && !(tokenExp - Date.now() < 8 * 60e3);
+  if (pill) {
+    pill.hidden = !quiet;
+    if (quiet) {
+      const nm = toolName(active), dirty = changed(p);
+      pill.title = `You’re editing ${nm}. Your crew can view it. Press Save to send them your changes.`;
+      pill.classList.toggle('dirty', dirty);
+      $('#editPillLbl').textContent = dirty ? 'Editing · unsaved changes' : 'You’re editing';
+    }
+  }
+  if (quiet) { show = false; bar.innerHTML = ''; bar.dataset.h = ''; }
   document.body.classList.toggle('has-lockbar', show);
   bar.hidden = !show; if (!show) return;
   const t = active, l = lockOf(t), nm = esc(toolName(t));

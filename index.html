@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <!-- When hub.js or hub.css changes, change the ?v= below (date and time, YYYYMMDDHHMM) so browsers fetch the new copy -->
-<link rel="stylesheet" href="hub/hub.css?v=202611241815">
+<link rel="stylesheet" href="hub/hub.css?v=202611242045">
 </head>
 <body>
 
@@ -36,6 +36,7 @@
   <button class="ibtn mebtn" id="meBtn" aria-pressed="false" title="My work: your tasks, comments left for you and your documents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-6.2 7-6.2s7 2.6 7 6.2"/></svg><span class="t">My work</span><b class="badge" hidden></b></button>
   <button class="ibtn researchbtn" id="researchBtn" aria-pressed="false" hidden title="My Research: your private research space. The same in every project, and never shared with your crew"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/><path d="M8 9.2h5M8 11.8h3.4"/></svg><span class="t">My Research</span></button>
   <button class="ibtn ideasbtn" id="ideasBtn" aria-pressed="false" hidden title="Ideas: catch ideas before they're projects, then grow them. Private to you, the same in every project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17.5h6M9.8 20.5h4.4"/><path d="M12 3.2a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2v.4h5.2V16c0-.8.4-1.5 1-2A6 6 0 0 0 12 3.2z"/></svg><span class="t">Ideas</span></button>
+  <span class="editpill" id="editPill" hidden><i class="dot"></i><span id="editPillLbl">You’re editing</span></span>
   <button class="ibtn savebtn" id="saveBtn" title="Save this project (Ctrl/⌘+S)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></svg><span class="t" id="saveLbl">Save</span><i class="dot"></i></button>
   <button class="ibtn sharebtn" id="shareBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c0-3.2 2.7-5.6 6-5.6s6 2.4 6 5.6"/><path d="M18.5 8v6M15.5 11h6"/></svg><span class="t" id="shareLbl">Share</span></button>
   <button class="ibtn acct" id="acctBtn" hidden></button>
@@ -112,6 +113,6 @@
   <div class="dv-body" id="dvBody"></div>
 </dialog>
 
-<script src="hub/hub.js?v=202611241815"></script>
+<script src="hub/hub.js?v=202611242045"></script>
 </body>
 </html>

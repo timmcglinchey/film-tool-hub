@@ -83,6 +83,12 @@ svg{display:block}
 .projbtn b{font-weight:650;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .projbtn svg{width:15px;height:15px;color:var(--muted);flex:none}
 .savebtn{position:relative}
+.editpill{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 11px;border-radius:999px;background:var(--surface2);border:1px solid var(--line2);color:var(--muted);font-size:12px;font-weight:600;white-space:nowrap;flex:none;cursor:default}
+.editpill[hidden]{display:none}
+.editpill .dot{width:7px;height:7px;border-radius:50%;background:var(--good,#5cc98a)}
+.editpill.dirty{color:var(--text)}
+.editpill.dirty .dot{background:var(--accent)}
+@media (max-width:900px){.editpill #editPillLbl{display:none}.editpill{padding:0 9px}}
 .savebtn .dot{display:none;position:absolute;top:6px;left:22px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--bg)}
 .savebtn.dirty{color:var(--text)}
 .savebtn.dirty .dot{display:block}

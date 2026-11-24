@@ -785,6 +785,93 @@ body.side-open .idea-side{transform:none;visibility:visible}
 .btn.icon{width:34px;padding:0;justify-content:center}
 .tab.on,.tab[aria-selected="true"]{color:var(--fth-text)}
 
+/* ═════ Write page (tidied November 2026) ═════ */
+/* the header shrinks to one row on Write */
+body.on-write .top.fth-head{padding:8px 20px;gap:8px 16px}
+body.on-write .top .fth-id{flex-direction:row;align-items:center;gap:12px}
+body.on-write .top .fth-eyebrow{font:600 11px/1 var(--fth-display);letter-spacing:.08em}
+body.on-write .top .fth-title{font-size:16px;font-weight:650;text-transform:none;font-variation-settings:normal;letter-spacing:0}
+body.on-write .top .fth-vsep{height:16px}
+body.on-write .top .brand-txt input{font-weight:500;color:var(--ink2)}
+body.on-write .top .brand-txt input:focus{color:var(--ink)}
+/* toolbar: writing · view · status */
+.wbar{padding:8px 20px 2px;gap:8px 12px;background:color-mix(in srgb,var(--bg) 94%,transparent)}
+.wbar .grp{border-right:0;padding-right:0;gap:6px;flex-wrap:wrap}
+.wbar .grp.sep{padding-right:12px;border-right:1px solid var(--line)}
+.wbar .btn.sm{height:32px;padding:0 11px;font-size:13px;border-radius:8px;gap:7px;background:var(--card)}
+.wbar .btn.sm.icon{width:32px;padding:0}
+.wbar .btn.sm.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.wbar .btn svg{width:15px;height:15px}
+.elsel{height:32px;min-width:150px;border-radius:8px}
+.wbar .swbtn{gap:8px;font-weight:600;cursor:pointer}
+.wbar .swbtn input{width:28px;height:16px}
+.wbar .swbtn input::after{width:12px;height:12px}
+.wbar .swbtn input:checked{background:var(--ink)}
+.wbar .swbtn input:checked::after{left:14px;background:var(--bg)}
+.zoomg{display:inline-flex;align-items:center;height:32px;border:1px solid var(--line2);border-radius:8px;background:var(--card)}
+.wbar .zoomg .btn.sm.icon{height:30px;width:30px;border:0;background:transparent;font-size:16px}
+.zlbl{min-width:42px;text-align:center;font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--ink2)}
+.tgtg{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 5px 0 10px;border:1px solid var(--line2);border-radius:8px;background:var(--card);font-size:13px;color:var(--ink2)}
+.tgtg .tgt{width:48px;height:24px;border:0;background:var(--sunk);border-radius:6px}
+.wstat{margin-right:6px;font-variant-numeric:tabular-nums}
+.wstat[hidden],.badge[hidden]{display:none}
+.wbar .badge{min-width:20px;height:20px;padding:0 6px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:11.5px}
+.wbar .badge.z{background:var(--line);color:var(--ink2)}
+/* the "you are here" bar: grey, with the beat you're in coloured; hover a stretch for its name */
+.mtl{height:24px;margin:2px 0 0}
+.mtl-row{top:8px;height:8px;gap:3px;overflow:visible;border-radius:0}
+.mtl-row div{position:relative;border-radius:4px;border-right:0;background:var(--line2);transition:background .12s}
+.mtl-row div::before{content:"";position:absolute;inset:-8px 0}
+.mtl-row div:hover{background:color-mix(in srgb,var(--c) 40%,var(--line2))}
+.mtl-row div.grp:not(.cur){background:var(--line2)}
+.mtl-row div.grp:not(.cur):hover{background:color-mix(in srgb,var(--pr) 40%,var(--line2))}
+.mtl-row div.cur,.mtl-row div.cur:hover{background:var(--c)}
+.mtl-row div.grp.cur{background:linear-gradient(180deg,var(--pr) 50%,var(--ch) 50%)}
+.mtl-row div::after{content:attr(data-l);display:none;position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:var(--fth-surface3,var(--card));color:var(--ink);font:600 12px/1 var(--ui);padding:7px 10px;border-radius:7px;white-space:nowrap;box-shadow:var(--shadow2);z-index:5;pointer-events:none}
+.mtl-row div:hover::after{display:block}
+.mtl-ticks{top:8px;height:8px}
+.mtl-tick{top:-2px;width:2px;height:12px;transform:translateX(-1px);box-shadow:none;opacity:.7}
+.mtl-cur{top:5px;width:14px;height:14px;border-radius:50%;background:var(--bg);border:3px solid var(--accent);transform:translateX(-7px);pointer-events:none;z-index:2}
+.mtl-cur::after{display:none}
+.mtl-end,.mtl-over{top:8px;height:8px}
+/* panels: Scenes on the left, the current beat on the right; both fold away */
+.wgrid{padding:20px 20px 140px}
+.pcard{border-radius:12px;padding:14px 16px}
+.pcard.beat{border-top:1px solid var(--line)}
+.pcard.beat.grp{border-top-color:var(--line)}
+.pcard.beat.grp::before{display:none}
+.pcard .pk{align-items:center}
+.pcard .pkl{display:inline-flex;align-items:center;gap:8px}
+.pcard .pkr{display:inline-flex;align-items:center;gap:4px;letter-spacing:.02em}
+.bdotc{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+.pcard.beat.grp .bdotc{background:linear-gradient(90deg,var(--pr) 50%,var(--ch) 50%)}
+.pcard h4{font-size:19px}
+.psep{height:1px;background:var(--line);margin:14px 0 12px}
+.colbtn{width:26px;height:26px;margin:-6px -7px -6px 0;display:inline-grid;place-items:center;border:0;background:transparent;border-radius:6px;color:var(--ink2);padding:0;cursor:pointer}
+.colbtn:hover{background:var(--sunk);color:var(--ink)}
+.colbtn svg{width:15px;height:15px}
+.colrail{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px 0 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink2);font:600 12.5px var(--ui);cursor:pointer}
+.colrail:hover{color:var(--ink);border-color:var(--line2)}
+.colrail svg{width:15px;height:15px}
+.wcol.left .colrail{align-self:flex-end}
+.wcol.right .colrail{align-self:flex-start}
+.write.focus .wcol,.write.focus .floatbeat{visibility:hidden}
+/* the page: a full sheet, with the hint written where the words will go */
+.page{min-height:calc(var(--lh) * 63)}
+.ed.empty{padding:0;border:0;border-radius:0;text-align:left;color:inherit;font-size:inherit}
+.ed.empty::before{font-style:normal;font-weight:700;text-transform:uppercase;color:color-mix(in srgb,var(--ink2) 75%,var(--paper))}
+.ed.empty::after{content:attr(data-ph2);position:absolute;top:calc(var(--lh) * 2);left:0;right:0;color:color-mix(in srgb,var(--ink2) 75%,var(--paper));pointer-events:none;white-space:pre-wrap}
+/* Script check drawer */
+.cdrawer{position:fixed;right:0;bottom:0;top:0;width:min(380px,100vw);z-index:30;background:var(--panel);border-left:1px solid var(--line2);box-shadow:-18px 0 40px -12px rgba(0,0,0,.45);padding:18px;display:flex;flex-direction:column;gap:14px;overflow:auto;animation:cdin .18s ease-out}
+.cdrawer[hidden]{display:none}
+@keyframes cdin{from{transform:translateX(24px);opacity:0}}
+.cd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.cd-head h4{margin:0 0 2px;font:650 16px var(--ui)}
+@media (prefers-reduced-motion:reduce){.cdrawer{animation:none}}
+@media (max-width:700px){.wbar .grp.sep{border-right:0;padding-right:0}}
+/* with the list of ideas open there's 288px less room: the side panels give way sooner */
+@media (max-width:1538px){body.side-open .wgrid{grid-template-columns:1fr;justify-items:center}body.side-open .wcol{display:none}body.side-open .floatbeat{display:block;position:fixed;right:16px;bottom:16px;max-width:300px;z-index:16}}
+
 </style>
 </head>
 <body>
@@ -837,7 +924,7 @@ const IC = {
   x:'<path d="M18 6 6 18M6 6l12 12"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
   up:'<path d="m18 15-6-6-6 6"/>', down:'<path d="m6 9 6 6 6-6"/>',
-  right:'<path d="m9 18 6-6-6-6"/>',
+  right:'<path d="m9 18 6-6-6-6"/>', left:'<path d="m15 18-6-6 6-6"/>',
   trash:'<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>',
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   print:'<path d="M6 9V3h12v6"/><rect x="4" y="9" width="16" height="8" rx="2"/><path d="M7 14h10v7H7z"/>',
@@ -1505,6 +1592,7 @@ function renderView(){
   derived.length = 0;
   flushEditor = null; reloadEditor = null;
   const v = $('#view'); v.replaceChildren(); v.scrollTop = 0;
+  document.body.classList.toggle('on-write', S.ui.tab === 'write');
   ({develop: renderDevelop, outline: renderOutline, write: renderWrite})[S.ui.tab](v);
   requestAnimationFrame(() => { $$('textarea', v).forEach(autosize); runDerived(); });
 }
@@ -2495,12 +2583,12 @@ function renderWrite(v){
   const tgt = h('input', {class:'tgt', type:'number', min:1, placeholder:'—', title:'Target length in pages (shared with Develop)'});
   bindInput(tgt, S.develop, 'targetPages', () => schedule());
   const stat = h('div', {class:'wstat'});
-  const checkBadge = h('span', {class:'badge z'}, '0');
+  const checkBadge = h('span', {class:'badge'}, '0'); checkBadge.hidden = true;
   const draftCount = h('span', {class:'badge z'}, String((S.drafts || []).length));
   derived.push(() => { draftCount.textContent = String((S.drafts || []).length); });
   const lockNote = h('button', {class:'lock-note', type:'button', title:'The draft locked as the current version. Change it under Drafts.', onclick: () => draftsModal()});
   derived.push(() => { const ld = (S.drafts || []).find(x => x.id === S.lockedDraft); lockNote.hidden = !ld; if (ld) lockNote.replaceChildren(svgIcon(IC.lock), h('span', null, 'Current version: ' + ld.name + (S.script.basedOn === ld.id && ld.text !== S.script.text ? ' · edited since' : ''))); });
-  const VIEW_OPTS = [['live','Live Outline','Outline panels either side of the script, and the coloured stages on the page'],['bar','“You are here” bar','The structure bar along the top'],['checks','Script check panel','The list of tips on the right (the count stays in the toolbar)'],['togo','Pages-to-go note','“≈ X pages still to write” under the script'],['scenes','Scenes list','Your scene headings on the left']];
+  const VIEW_OPTS = [['live','Live Outline','The beat panel on the right, and the coloured stages on the page'],['bar','“You are here” bar','The structure bar along the top'],['togo','Pages-to-go note','“≈ X pages still to write” under the script'],['scenes','Scenes list','Your scene headings on the left']];
   function applyView(){ liveSw.checked = U.live; leftCol._key = null; touch(); schedule(); }
   function viewMenu(anchor){
     if (popEl && popEl._k === 'view'){ closePop(); return; }
@@ -2514,26 +2602,36 @@ function renderWrite(v){
         h('button', {class:'btn sm ghost', onclick: () => { VIEW_OPTS.forEach(([k]) => U[k] = true); applyView(); closePop(); }}, 'Show everything')));
     popEl._k = 'view'; placePop(popEl, anchor);
   }
-  const zoom = d => { U.zoom = clamp(Math.round((U.zoom + d) * 10) / 10, .7, 1.6); page.style.setProperty('--z', U.zoom); touch(); schedule(); };
+  const zoomLbl = h('span', {class:'zlbl'}, Math.round(U.zoom * 100) + '%');
+  const zoom = d => { U.zoom = clamp(Math.round((U.zoom + d) * 10) / 10, .7, 1.6); page.style.setProperty('--z', U.zoom); zoomLbl.textContent = Math.round(U.zoom * 100) + '%'; touch(); schedule(); };
+  const focusLbl = h('span', null, U.focus ? 'Exit focus' : 'Focus');
+  const focusBtn = h('button', {class:'btn sm' + (U.focus ? ' on' : ''), 'aria-pressed': String(!!U.focus), title:'Hide the panels either side: just you and the page', onclick: () => setFocus(!U.focus)}, svgIcon(IC.expand), focusLbl);
+  function setFocus(on){ U.focus = !!on; root.classList.toggle('focus', U.focus); focusBtn.classList.toggle('on', U.focus); focusBtn.setAttribute('aria-pressed', String(U.focus)); focusLbl.textContent = U.focus ? 'Exit focus' : 'Focus'; touch(); }
+  const checkBtn = h('button', {class:'btn sm', 'aria-expanded':'false', 'aria-controls':'checkDrawer', title:'Formatting and craft tips', onclick: () => toggleDrawer()}, 'Script check', checkBadge);
   const bar = h('div', {class:'wbar'},
-    h('div', {class:'grp'}, elSel, h('button', {class:'btn sm ghost', title:'How auto-formatting works', onclick: syntaxHelp}, svgIcon(IC.help), 'Formatting help')),
-    h('div', {class:'grp'}, h('label', {class:'switch', title:'Show your structure either side of the script and on the page'}, liveSw, 'Live Outline'), infoBtn('live'),
-      h('button', {class:'btn sm ghost', title:'Choose what is shown around the page', 'data-pop':'1', onclick: e => viewMenu(e.currentTarget)}, svgIcon(IC.eye), 'View')),
-    h('div', {class:'grp'}, h('span', {class:'small'}, 'Target'), tgt, h('span', {class:'small muted'}, 'pages')),
-    h('div', {class:'grp'}, h('button', {class:'btn sm ghost icon', title:'Zoom out', onclick: () => zoom(-.1)}, '−'), h('button', {class:'btn sm ghost icon', title:'Zoom in', onclick: () => zoom(.1)}, '+')),
-    h('div', {class:'grp'}, h('button', {class:'btn sm', title:'Save a snapshot of this script that you can come back to later', onclick: () => saveDraftPrompt()}, 'Save as draft'), h('button', {class:'btn sm ghost', title:'See, open or duplicate saved drafts', onclick: () => draftsModal()}, 'Drafts ', draftCount), lockNote),
-    h('span', {class:'spacer'}), stat,
-    h('button', {class:'btn sm', title:'Formatting & craft checks', onclick: () => showChecksModal()}, 'Script check ', checkBadge));
+    h('div', {class:'grp sep'}, elSel, h('button', {class:'btn sm icon', title:'Formatting help: how auto-formatting works', 'aria-label':'Formatting help', onclick: syntaxHelp}, svgIcon(IC.help))),
+    h('div', {class:'grp'},
+      h('label', {class:'switch btn sm swbtn', title:'Show your structure beside the script and on the page'}, liveSw, 'Live outline'),
+      h('button', {class:'btn sm', title:'Choose what is shown around the page', 'data-pop':'1', onclick: e => viewMenu(e.currentTarget)}, 'View', svgIcon(IC.down)),
+      h('div', {class:'zoomg'}, h('button', {class:'btn sm ghost icon', title:'Zoom out', 'aria-label':'Zoom out', onclick: () => zoom(-.1)}, '−'), zoomLbl, h('button', {class:'btn sm ghost icon', title:'Zoom in', 'aria-label':'Zoom in', onclick: () => zoom(.1)}, '+')),
+      focusBtn),
+    h('span', {class:'spacer'}),
+    h('div', {class:'grp'}, stat,
+      h('label', {class:'tgtg', title:'Target length in pages (shared with Develop)'}, h('span', null, 'Target'), tgt, h('span', {class:'muted'}, 'pages')),
+      h('button', {class:'btn sm', title:'Save a snapshot of this script that you can come back to later', onclick: () => saveDraftPrompt()}, 'Save as draft'),
+      h('button', {class:'btn sm', title:'See, open or duplicate saved drafts', onclick: () => draftsModal()}, 'Drafts', draftCount), lockNote,
+      checkBtn));
   const mtl = h('div', {class:'mtl'});
   bar.append(mtl);
   const leftCol = h('aside', {class:'wcol left'}), rightCol = h('aside', {class:'wcol right'});
   const page = h('div', {class:'page', style:`--z:${U.zoom}`});
   const ovl = h('div', {class:'ovl'});
-  const ed = h('div', {class:'ed', contenteditable:'true', spellcheck:'true', 'data-ph':'Start with a scene heading, e.g.\n\nINT. KITCHEN - NIGHT\n\nThen just write. Formatting happens as you type.', 'aria-label':'Script editor'});
+  const ed = h('div', {class:'ed', contenteditable:'true', spellcheck:'true', 'data-ph':'INT. KITCHEN - NIGHT', 'data-ph2':'Just write. Formatting happens as you type.', 'aria-label':'Script editor. Start with a scene heading, such as INT. KITCHEN - NIGHT, then just write.'});
   const ghost = h('div', {class:'ghostpages'});
   page.append(ovl, ed, ghost);
   const floatBeat = h('div', {class:'floatbeat'});
   root.append(bar, h('div', {class:'wgrid'}, leftCol, h('div', {class:'pagewrap'}, page), rightCol), floatBeat);
+  if (U.focus) root.classList.add('focus');
   try { document.execCommand('defaultParagraphSeparator', false, 'div'); } catch(e){}
 
   /* ---- editor core ---- */
@@ -2811,9 +2909,11 @@ function renderWrite(v){
   document.addEventListener('selectionchange', onSel);
   const onScroll = () => { if (document.activeElement !== ed) updatePanels(); hideAC(); };
   v.addEventListener('scroll', onScroll, {passive:true});
-  const onResize = () => schedule();
+  const onResize = () => { schedule(); if (!drawer.hidden) placeDrawer(); };
   window.addEventListener('resize', onResize);
-  viewCleanup = () => { document.removeEventListener('selectionchange', onSel); v.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onResize); hideAC(); };
+  const onKey = e => { if (e.key === 'Escape' && !drawer.hidden && !$('.scrim')) toggleDrawer(false); };
+  document.addEventListener('keydown', onKey);
+  viewCleanup = () => { document.removeEventListener('selectionchange', onSel); document.removeEventListener('keydown', onKey); v.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onResize); hideAC(); };
 
   /* ---- layout: pages, live outline bands ---- */
   let layoutTimer = null, geo = null;
@@ -2844,7 +2944,7 @@ function renderWrite(v){
     const frag = document.createDocumentFragment();
     const maxR = Math.max(total, U.live ? R : 0);
     for (let p = 1; p * LPP < maxR; p++) frag.append(h('div', {class:'pline', style:`top:${edTop + yAt(p * LPP)}px`}, h('span', null, (p + 1) + '.')));
-    if (U.live){
+    if (U.live && (total || tp)){   /* nothing to colour on an empty page */
       const st = curStruct();
       st.bands.forEach(sp => {
         const y0 = yAt(sp.s / 100 * R), y1 = yAt(sp.e / 100 * R);
@@ -2860,7 +2960,8 @@ function renderWrite(v){
     const pages = total / LPP;
     const c = getCaret(); const cl = c ? c.line : caretLine;
     const curPage = cl >= 0 ? Math.floor(P.starts[cl] / LPP) + 1 : 1;
-    stat.innerHTML = `Page <b>${total ? curPage : 0}</b> of <b>${Math.max(1, curPage, Math.ceil(pages || 0))}</b>${tp ? ` <span class="muted">(target ${tp})</span>` : ''} · ≈ <b>${pages < 1 ? Math.round(pages * 60) + ' sec' : pages.toFixed(1) + ' min'}</b>`;
+    stat.hidden = !total;
+    stat.innerHTML = !total ? '' : `Page <b>${curPage}</b> of <b>${Math.max(1, curPage, Math.ceil(pages || 0))}</b>${tp ? ` <span class="muted">(target ${tp})</span>` : ''} · ≈ <b>${pages < 1 ? Math.round(pages * 60) + ' sec' : pages.toFixed(1) + ' min'}</b>`;
     drawMTL(); updatePanels(); drawChecks();
   }
   function caretR(){
@@ -2884,7 +2985,8 @@ function renderWrite(v){
     if (U.bar === false){ mtl.style.display = 'none'; return; }
     mtl.style.display = '';
     const R = refLines(), total = P.total, tp = targetPages(), st = curStruct();
-    const segs = st.bands.map(sp => h('div', {class:`fam-${sp.fam}` + (sp.grp ? ' grp' : ''), style:`flex:${sp.e - sp.s} 1 0`, title: sp.label}));
+    const crPct = Math.min(99.99, caretR() / R * 100);
+    const segs = st.bands.map(sp => h('div', {class:`fam-${sp.fam}` + (sp.grp ? ' grp' : '') + (crPct >= sp.s && crPct < sp.e ? ' cur' : ''), style:`flex:${sp.e - sp.s} 1 0`, 'data-l': `${sp.label} · ${sp.s}–${sp.e}%`}));
     const row = h('div', {class:'mtl-row'}, segs);
     const ticks = h('div', {class:'mtl-ticks'}, st.moments.map(m => h('div', {class:`mtl-tick fam-${m.fam}`, style:`left:${m.s}%`, title: m.name + ' · ' + m.s + '%'})));
     const kids = [row, ticks];
@@ -2892,13 +2994,13 @@ function renderWrite(v){
     if (scale < 1){ row.style.right = ticks.style.right = (100 - scale * 100) + '%'; kids.push(h('div', {class:'mtl-over', style:`left:${scale * 100}%;right:0`, title:'Over target'})); }
     if (tp && total < R) kids.push(h('div', {class:'mtl-end', style:`left:0;width:${total / R * 100}%`, title:'Written so far'}));
     const cr = caretR(); const f = Math.min(1, (cr / (scale < 1 ? total : R)) || 0);
-    kids.push(h('div', {class:'mtl-cur', style:`left:${f * 100}%`, 'data-l': 'You are here · ' + Math.round(cr / R * 100) + '%'}));
+    kids.push(h('div', {class:'mtl-cur', style:`left:${f * 100}%`, title: 'You are here · ' + Math.round(cr / R * 100) + '%'}));
     mtl.replaceChildren(...kids);
   }
   function updatePanels(){
     if (!geo) return;
     root.style.setProperty('--wbarh', bar.offsetHeight + 'px');
-    if (!U.live){ setCols(null, null, null, 'off'); return; }
+    if (!U.live){ setCols(null, null, 'off'); return; }
     const R = refLines(), r = caretR(), frac = Math.min(.9999, r / R), pct = frac * 100;
     const {span, near, st} = beatAt(frac);
     const store = beatStore(st.key);
@@ -2915,14 +3017,7 @@ function renderWrite(v){
     const descBits = span.ids.length
       ? span.ids.flatMap(id => [span.ids.length > 1 ? h('p', {class:`fam-${bOf(id).fam}`, style:'margin-bottom:0'}, h('b', {style:'color:var(--c)'}, (st.key === 'scaffold' ? BEAT[id].name : bOf(id).name) + ': '), bOf(id).desc) : h('p', null, bOf(id).desc)])
       : [h('p', null, span.desc || '')];
-    const left = h('div', {class:`pcard beat fam-${span.fam}` + (span.grp ? ' grp' : '')},
-      h('div', {class:'pk'}, h('span', null, 'Where you are'), h('span', null, rangeTxt)),
-      h('h4', null, title),
-      h('div', {class:'small muted'}, `≈ ${fmtP(pgOf(span.s))}–${fmtP(pgOf(span.e))} of ${fmtP(R / LPP)} pages${targetPages() ? '' : ' (current length)'}`),
-      ...descBits, arcRowAt(pct),
-      near ? h('div', {class:`near fam-${near.fam}`}, h('b', null, (Math.abs(pct - near.s) < .6 ? 'Here: ' : 'Close to: ') + near.name + ' · ' + near.s + '%'), h('p', {style:'margin:4px 0 0'}, near.desc)) : null,
-      inside.length ? h('div', {class:'next', style:'border-top:0;padding-top:0'}, 'In this stretch: ', inside.map((m, i) => [i ? ', ' : '', h('b', null, m.name), ` (≈ ${fmtP(pgOf(m.s))} pages in)`])) : null,
-      upcoming ? h('div', {class:'next'}, `Coming up: `, h('b', null, upcoming.label), ` ≈ ${fmtP(pgOf(upcoming.s))} pages in`) : null);
+    const showNums = targetPages() > 0 || P.total >= LPP / 2;   /* no "0.0 of 0.0 pages" until there's half a page */
     const outlineBits = id => { const BB = store[id]; return [BB.summary.trim() ? h('p', {style:'color:var(--ink)'}, BB.summary.trim()) : h('p', {class:'muted', style:'font-style:italic'}, 'Nothing outlined for this yet.'), BB.items.length ? h('ul', null, BB.items.map(i => h('li', null, i.title || '…'))) : null]; };
     const editId = span.ids[0] || (near && near.id) || (inside[0] && inside[0].id);
     const edit = h('a', {href:'#', onclick: e => { e.preventDefault(); const id = editId;
@@ -2930,57 +3025,77 @@ function renderWrite(v){
       else if (id) S.outline._focus = id;
       go('outline'); }}, 'Edit');
     const momentOutline = m => h('div', {class:`near fam-${m.fam}`}, h('b', null, m.name), ...outlineBits(m.id));
-    const right = h('div', {class:`pcard beat fam-${span.fam}` + (span.grp ? ' grp' : '')},
-      h('div', {class:'pk'}, h('span', null, 'Your outline'), edit),
+    const card = h('div', {class:`pcard beat fam-${span.fam}` + (span.grp ? ' grp' : '')},
+      h('div', {class:'pk'}, h('span', {class:'pkl'}, h('i', {class:'bdotc'}), 'Current beat'), h('span', {class:'pkr'}, rangeTxt, colBtn('right'))),
       h('h4', null, title),
+      showNums ? h('div', {class:'small muted'}, `≈ ${fmtP(pgOf(span.s))}–${fmtP(pgOf(span.e))} of ${fmtP(R / LPP)} pages${targetPages() ? '' : ' (current length)'}`) : null,
+      ...descBits, arcRowAt(pct),
+      near ? h('div', {class:`near fam-${near.fam}`}, h('b', null, (Math.abs(pct - near.s) < .6 ? 'Here: ' : 'Close to: ') + near.name + ' · ' + near.s + '%'), h('p', {style:'margin:4px 0 0'}, near.desc)) : null,
+      inside.length ? h('div', {class:'next', style:'border-top:0;padding-top:0'}, 'In this stretch: ', inside.map((m, i) => [i ? ', ' : '', h('b', null, m.name), showNums ? ` (≈ ${fmtP(pgOf(m.s))} pages in)` : ''])) : null,
+      h('div', {class:'psep'}),
+      h('div', {class:'pk'}, h('span', null, 'Your outline'), edit),
       ...(span.ids.length ? span.ids.flatMap(id => span.ids.length > 1 ? [h('div', {class:`pk fam-${bOf(id).fam}`, style:'margin:10px 0 0;color:var(--c)'}, st.key === 'scaffold' ? BEAT[id].name : bOf(id).name), ...outlineBits(id)] : outlineBits(id))
         : (!near && !inside.length ? [h('p', {class:'muted', style:'font-style:italic'}, 'This stretch has no key point of its own. Your outline for the points either side is in the Outline tab.')] : [])),
       near ? momentOutline(near) : null,
-      ...inside.map(momentOutline));
+      ...inside.map(momentOutline),
+      upcoming ? h('div', {class:'next'}, 'Coming up: ', h('b', null, upcoming.label), showNums ? ` · ≈ ${fmtP(pgOf(upcoming.s))} pages in` : '') : null);
     const firstSum = span.ids.length ? store[span.ids[0]].summary.trim() : (near ? store[near.id].summary.trim() : '');
-    setCols(left, right, h('div', {class:`pcard beat fam-${span.fam}`}, h('div', {class:'pk'}, h('span', null, 'Where you are'), h('span', null, rangeTxt)), h('h4', null, title), firstSum ? h('p', null, firstSum) : null), key);
+    setCols(card, h('div', {class:`pcard beat fam-${span.fam}`}, h('div', {class:'pk'}, h('span', {class:'pkl'}, h('i', {class:'bdotc'}), 'Current beat'), h('span', null, rangeTxt)), h('h4', null, title), firstSum ? h('p', null, firstSum) : null), key + '|' + showNums);
   }
-  function setCols(left, right, flt, key){
-    key += '|' + (U.scenes !== false) + (U.checks !== false);
+  /* the panels either side fold away to a small button */
+  function colBtn(side){
+    return h('button', {class:'colbtn', type:'button', title: side === 'left' ? 'Hide the scenes list' : 'Hide the beat panel', 'aria-label': side === 'left' ? 'Hide the scenes list' : 'Hide the beat panel',
+      onclick: () => { U[side + 'Hide'] = true; touch(); leftCol._key = null; updatePanels(); }}, svgIcon(side === 'left' ? IC.left : IC.right));
+  }
+  function colRail(side){
+    return h('button', {class:'colrail', type:'button', title: side === 'left' ? 'Show the scenes list' : 'Show the beat panel', 'aria-label': side === 'left' ? 'Show the scenes list' : 'Show the beat panel',
+      onclick: () => { U[side + 'Hide'] = false; touch(); leftCol._key = null; updatePanels(); }}, svgIcon(side === 'left' ? IC.right : IC.left), h('span', null, side === 'left' ? 'Scenes' : 'Beat'));
+  }
+  function setCols(beat, flt, key){
+    key += '|' + (U.scenes !== false) + '|' + !!U.leftHide + '|' + !!U.rightHide;
     if (leftCol._key === key) return;
     leftCol._key = key;
-    leftCol.replaceChildren(...[left, U.scenes !== false ? scenesCard() : null].filter(Boolean));
-    rightCol.replaceChildren(...[right, U.checks !== false ? checksCard() : null].filter(Boolean));
+    const hasLeft = U.scenes !== false, hasRight = !!beat;
+    leftCol.replaceChildren(...(!hasLeft ? [] : U.leftHide ? [colRail('left')] : [scenesCard()]));
+    rightCol.replaceChildren(...(!hasRight ? [] : U.rightHide ? [colRail('right')] : [beat]));
     floatBeat.replaceChildren(...(flt ? [flt] : []));
   }
-  let scenesEl = null, checksEl = null;
+  let scenesEl = null;
   function scenesCard(){
     if (!scenesEl) scenesEl = h('div', {class:'scenes'});
     drawScenes();
-    return h('div', {class:'pcard'}, h('div', {class:'pk'}, h('span', null, 'Scenes')), scenesEl);
+    return h('div', {class:'pcard'}, h('div', {class:'pk'}, h('span', null, 'Scenes'), colBtn('left')), scenesEl);
   }
   function drawScenes(){
     if (!scenesEl) return;
     const items = [];
     P.lines.forEach((l, i) => { if (P.types[i] === 'scene') items.push([i, l]); if (P.types[i] === 'section') items.push([i, l, true]); });
     let k = 0;
-    scenesEl.replaceChildren(...(items.length ? items.map(([i, l, sec]) => h('button', {onclick: () => jumpTo(i), title:'p.' + (Math.floor(P.starts[i] / LPP) + 1), style: sec ? 'font-family:var(--ui);font-weight:700;color:var(--accent)' : ''}, h('span', null, sec ? '' : ++k), h('span', null, sec ? l.replace(/^#+\s*/, '') : cleanText(l, 'scene').toUpperCase()))) : [h('div', {class:'small muted'}, 'Your scene headings will be listed here.')]));
+    scenesEl.replaceChildren(...(items.length ? items.map(([i, l, sec]) => h('button', {onclick: () => jumpTo(i), title:'p.' + (Math.floor(P.starts[i] / LPP) + 1), style: sec ? 'font-family:var(--ui);font-weight:700;color:var(--accent)' : ''}, h('span', null, sec ? '' : ++k), h('span', null, sec ? l.replace(/^#+\s*/, '') : cleanText(l, 'scene').toUpperCase()))) : [h('div', {class:'small muted'}, 'Scene headings will appear here as you write.')]));
   }
-  function drawScenesCol(){
-    if (leftCol._key !== 'off'){ leftCol._key = 'off'; leftCol.replaceChildren(scenesCard()); rightCol.replaceChildren(checksCard()); floatBeat.replaceChildren(); }
-  }
-  function checksCard(){
-    if (!checksEl) checksEl = h('div', {class:'checklist'});
-    return h('div', {class:'pcard'}, h('div', {class:'pk'}, h('span', null, 'Script check'), h('span', {class:'teach'}, 'tips, not rules')), checksEl);
+  /* Script check: a drawer that opens from the toolbar */
+  const checksEl = h('div', {class:'checklist'});
+  const drawer = h('aside', {class:'cdrawer', id:'checkDrawer', 'aria-label':'Script check'},
+    h('div', {class:'cd-head'},
+      h('div', null, h('h4', null, 'Script check'), h('div', {class:'small muted'}, 'Tips, not rules: use your judgement.')),
+      h('button', {class:'btn sm icon ghost', title:'Close', 'aria-label':'Close script check', onclick: () => toggleDrawer(false)}, svgIcon(IC.x))),
+    checksEl);
+  drawer.hidden = true;
+  root.append(drawer);
+  function placeDrawer(){ drawer.style.top = Math.max(0, v.getBoundingClientRect().top) + 'px'; }
+  function toggleDrawer(on){
+    if (on === undefined) on = drawer.hidden;
+    drawer.hidden = !on; checkBtn.setAttribute('aria-expanded', String(!!on)); checkBtn.classList.toggle('on', !!on);
+    if (on){ placeDrawer(); drawChecks(true); }
   }
   let lastChecks = '';
-  function drawChecks(){
+  function drawChecks(force){
     drawScenes();
     const list = scriptChecks(P);
-    checkBadge.textContent = list.length; checkBadge.className = 'badge' + (list.some(m => m.level === 'warn') ? '' : ' z');
-    const key = JSON.stringify(list.map(m => m.text));
-    if (key === lastChecks || !checksEl) return; lastChecks = key;
+    checkBadge.textContent = list.length; checkBadge.hidden = !list.length;
+    const key = JSON.stringify(list.map(m => m.text)) + '|' + !!P.total;
+    if (key === lastChecks && !force) return; lastChecks = key;
     checksEl.replaceChildren(...(list.length ? list.map(m => msgEl(m, m.line != null ? () => jumpTo(m.line) : null)) : [h('div', {class:'small muted'}, P.total ? 'Nothing to flag right now. Nice.' : 'Craft and formatting tips will appear here as you write.')]));
-  }
-  function showChecksModal(){
-    const list = scriptChecks(P);
-    const close = modal('Script check', h('div', null, h('p', {class:'small muted'}, 'Friendly pointers based on common screenwriting conventions. They\'re tips, not rules: use your judgement.'),
-      list.length ? h('div', {class:'checklist'}, list.map(m => msgEl(m, m.line != null ? () => { close(); jumpTo(m.line); } : null))) : h('div', {class:'empty'}, 'Nothing to flag right now.')));
   }
   function jumpTo(i){
     const el = ed.children[i]; if (!el) return;
