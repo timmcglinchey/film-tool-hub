@@ -582,9 +582,9 @@ body.me-open #home{display:none}
 .cardw.pic .card::after{content:"";position:absolute;inset:0;z-index:-2;width:auto;height:auto;border-radius:0;opacity:0;
   background:linear-gradient(to top,rgba(6,7,9,.95) 0%,rgba(6,7,9,.84) 55%,rgba(6,7,9,.6) 100%);transition:opacity .45s}
 /* rack focus: heavily blurred at rest, scaled so the soft edges stay outside the card; sharp on hover */
-.cardw.pic{--rf-blur:30px;--rf-dim:.72;--rf-grain:.5}
+.cardw.pic{--rf-blur:4px;--rf-dim:.72;--rf-grain:.2}
 .cardw.pic .cimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-3;
-  filter:blur(var(--rf-blur)) brightness(var(--rf-dim)) saturate(1.35);transform:scale(1.3);
+  filter:blur(var(--rf-blur)) brightness(var(--rf-dim)) saturate(1.35);transform:scale(1.08);
   transition:filter .9s cubic-bezier(.25,.8,.25,1),transform .9s cubic-bezier(.25,.8,.25,1)}
 .cardw.pic .cgrain{position:absolute;inset:0;z-index:-1;pointer-events:none;background:url(../assets/cards/grain.png) 0 0/200px;mix-blend-mode:overlay;opacity:var(--rf-grain)}
 .cardw.pic .ctxt{position:absolute;left:20px;right:20px;bottom:14px}
