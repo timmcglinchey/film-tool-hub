@@ -392,7 +392,8 @@ function marks(i){
     if (chars) out.push([chars + (chars === 1 ? ' character' : ' characters'), 'character']);
     if ((d.settings || []).some(s => String(s.name || '').trim()) || String(d.lie || d.truth || '').trim()) out.push(['World', 'world']);
     const beats = Object.values((sd.outline || {}).beats || {});
-    if (beats.some(b => String(b.summary || '').trim() || (b.items || []).length)) out.push(['Outline', 'outline']);
+    const free = (((sd.outline || {}).free || {}).beats || []);
+    if (beats.some(b => String(b.summary || '').trim() || (b.items || []).length) || free.some(b => String(b.text || '').trim())) out.push(['Outline', 'outline']);
     const lines = String((sd.script || {}).text || '').split('\n').filter(l => l.trim()).length;
     if (lines) out.push([lines < 30 ? 'Scene' : '≈ ' + Math.max(1, Math.round(lines / 30)) + ' pp', 'scene']);
   }
