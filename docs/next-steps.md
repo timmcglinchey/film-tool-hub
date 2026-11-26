@@ -4,7 +4,7 @@ GitHub access came back on 12 November 2026. Everything built offline is now pub
 
 ## To do
 1. **Shared projects: built 12 November 2026, needs a real-world check.** Share button, "Shared with me", merging saves and one editor per tool are in (see `docs/handover.md`). Still to do:
-   - Tim switches on the **Google Picker API** in Google Cloud and adds each crew member as a **test user**.
+   - Tim switches on the **Google Picker API** in Google Cloud (test users are no longer needed: the app is published).
    - Try it on the live site with two real Google accounts (it could only be tested against a pretend Google Drive). Things to watch: the file chooser opening on the shared file, and Google's sharing email arriving.
    - Possible later improvement: save shared projects automatically every few minutes, so crew see each other's work without anyone pressing Save.
    - **Documentation** (built 13 November 2026) also needs this check: save a document signed in and look for it in Drive under Film Tool Hub → Documentation; then, in a shared project, check a second account sees it and can open it.
@@ -25,4 +25,4 @@ GitHub access came back on 12 November 2026. Everything built offline is now pub
    - prove ownership of the domain in Google Search Console, then submit https://filmtoolhub.com/sitemap.xml there;
    - logo, sitemap, robots.txt, home page description and privacy policy: done 23 November 2026;
    - in Google Cloud, make sure filmtoolhub.com is the only authorised domain and origin (plus www);
-   - publish the Google app and get it verified.
+   - publish the Google app and get it verified: branding verified 26 November 2026.
