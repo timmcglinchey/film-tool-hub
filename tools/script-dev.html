@@ -475,6 +475,63 @@ details.disc[open]>summary::before{transform:rotate(90deg)}
 .mhinge b{font:700 12px var(--ui);letter-spacing:.1em;text-transform:uppercase;color:var(--mid)}
 
 .structpick{padding:14px 20px;margin-bottom:18px}
+.structpick .seg .seg-free{margin-left:4px;position:relative}
+.structpick .seg .seg-free::before{content:"";position:absolute;left:-4px;top:5px;bottom:5px;width:1px;background:var(--line2)}
+/* Free Outlining */
+.free-card{padding:18px 20px;margin-bottom:18px}
+.free-card .stephead{margin-bottom:10px}
+.fb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.fb{display:flex;align-items:flex-start;gap:6px;border:1px solid transparent;border-radius:9px;padding:3px 6px 3px 2px;background:transparent;position:relative;transition:background .12s,border-color .12s}
+.fb:hover,.fb:focus-within{background:var(--panel);border-color:var(--line)}
+.fb.dragging{opacity:.4}
+.fb.drop-before::before,.fb.drop-after::after{content:"";position:absolute;left:8px;right:8px;height:2px;border-radius:2px;background:var(--accent)}
+.fb.drop-before::before{top:-4px}.fb.drop-after::after{bottom:-4px}
+.fb-grip{flex:none;width:22px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--ink3);cursor:grab;border-radius:6px;opacity:.35}
+.fb:hover .fb-grip,.fb:focus-within .fb-grip{opacity:1}
+.fb-grip:active{cursor:grabbing}
+.fb-grip svg{width:14px;height:14px}
+.fb-n{flex:none;min-width:22px;height:32px;text-align:right;font:700 12px/32px var(--mono);color:var(--ink3)}
+.fb.placed .fb-n{color:var(--accent)}
+.fb-body{flex:1;min-width:0}
+.fb textarea,.fb-add textarea{display:block;width:100%;border:0;background:transparent;resize:none;padding:5px 4px;font:500 15px/1.45 var(--ui);color:var(--ink);overflow:hidden;min-height:30px}
+.fb textarea:focus,.fb-add textarea:focus{outline:none}
+.fb-chips{display:flex;flex-wrap:wrap;gap:4px;padding:0 4px 4px}
+.fb-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:1px 4px 1px 8px;border-radius:999px;border:1px solid color-mix(in srgb,var(--c) 45%,var(--line));background:color-mix(in srgb,var(--c) 10%,var(--card));color:var(--ink2);cursor:pointer}
+.fb-chip:hover{color:var(--ink)}
+.fb-chip .x{border:0;background:transparent;color:var(--ink3);padding:0 3px;font-size:13px;line-height:1;border-radius:50%}
+.fb-chip .x:hover{color:var(--ink);background:var(--sunk)}
+.fb-tools{flex:none;display:flex;align-items:center;gap:2px;height:30px;opacity:0;transition:opacity .12s}
+.fb:hover .fb-tools,.fb:focus-within .fb-tools{opacity:1}
+.fb-tools .ib{border:0;background:transparent;color:var(--ink3);width:26px;height:26px;border-radius:6px;padding:0}
+.fb-tools .ib:hover{background:var(--sunk);color:var(--ink)}
+.fb-place{height:26px;max-width:132px;border:1px solid var(--line);border-radius:7px;background:var(--card);color:var(--ink2);font-size:12px;padding:0 4px}
+.fb-add{display:flex;align-items:center;gap:6px;border:1.5px dashed var(--line2);border-radius:9px;padding:3px 6px 3px 2px;margin-top:6px}
+.fb-add:focus-within{border-color:var(--accent);border-style:solid}
+.fb-add .fb-n{color:var(--ink3)}
+.fb-empty{color:var(--ink3);font-size:13.5px;margin:2px 0 6px 52px;font-style:italic}
+.place-card{padding:18px 20px;margin-bottom:18px}
+.place-card .row.head{flex-wrap:wrap;gap:12px;margin-bottom:6px}
+.fz-sec{margin-top:14px}
+.fz-sec>h4{margin:0 0 8px;font:700 12px var(--ui);letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);display:flex;gap:8px;align-items:center}
+.fz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.fz{border:1.5px solid var(--line);border-left:5px solid var(--c);border-radius:10px;background:var(--panel);padding:8px 10px 9px;min-height:74px;transition:background .12s,border-color .12s,box-shadow .12s;display:flex;flex-direction:column}
+.fz-h{display:flex;align-items:baseline;gap:6px}
+.fz-h b{font-size:13px;flex:1;min-width:0}
+.fz-h .rng{font-size:11px;color:var(--ink3);font-weight:600;white-space:nowrap}
+.fz-h a{font-size:11.5px;white-space:nowrap}
+.fz ul{margin:5px 0 0;padding-left:16px;font-size:12.5px;color:var(--ink2)}
+.fz ul li{margin:1px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fz ul li.ff::marker{color:var(--accent)}
+.fz .fz-drop{margin-top:auto;padding-top:6px;font-size:11.5px;color:var(--ink3)}
+body.fb-dragging .fz{border-style:dashed}
+body.fb-dragging .fz .fz-drop{color:var(--accent)}
+.fz.over{background:color-mix(in srgb,var(--c) 14%,var(--card));border-color:var(--c);border-style:solid!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 30%,transparent)}
+.fz.flash{box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 50%,transparent)}
+.fromtag{flex:none;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));border-radius:5px;padding:0 4px}
+.pcard ol.freelist{margin:6px 0;padding-left:22px;color:var(--ink2)}
+.pcard ol.freelist li{margin:3px 0}
+@media (max-width:700px){ .fb{flex-wrap:wrap} .fb-tools{opacity:1;flex-basis:100%;justify-content:flex-end;height:auto} .fb-place{max-width:60%} .fb-grip{display:none} }
+@media (hover:none){ .fb-tools{opacity:1} }
 .tl-under.alt{height:84px}
 .tl-under.alt .tl-mlab{margin-top:4px}
 .tl-m.alt .dia{top:auto;bottom:18px;transform:translate(-50%,0) rotate(45deg);width:14px;height:14px}
@@ -1092,9 +1149,15 @@ STRUCTS.scaffold.beats = BEATS.map(b => ({id:b.id, name:beatFull(b.id), s:b.s, e
 STRUCTS.scaffold.bands = SPANS.map(sp => ({s:sp.s, e:sp.e, fam:sp.fam, label:spanLabel(sp), ids: sp.grp ? [] : sp.ids, grp:sp.grp, desc:sp.desc, tag: sp.grp ? 'Between the Problem and the Choice' : ''}));
 STRUCTS.scaffold.momentIds = ['p1','c1','mid','p2','c2'];
 for (const st of Object.values(STRUCTS)){ st.beat = Object.fromEntries(st.beats.map(b => [b.id, b])); st.moments = st.momentIds.map(id => st.beat[id]); }
+/* Free Outlining: a loose, ordered list of one-line beats with no timings. It sits beside the structures as a tab;
+   beats can be copied into any structure's beats as plot points (independent copies that remember where they came from). */
+const FREE = {key:'free', name:'Free Outlining', short:'Free Outlining',
+  blurb:'Jot down beats in any order, one line each, with no structure in the way. When you\'re ready, copy them into a structure below.'};
+const isFree = () => S.outline.structure === 'free';
 const curStruct = () => STRUCTS[S.outline.structure] || STRUCTS.scaffold;
 function beatStore(key){
   key = key || S.outline.structure || 'scaffold';
+  if (!STRUCTS[key]) key = 'scaffold';
   if (key === 'scaffold') return S.outline.beats;
   if (!S.outline.alt) S.outline.alt = {};
   const a = S.outline.alt[key] || (S.outline.alt[key] = {});
@@ -1145,7 +1208,7 @@ function blankProject(){
     develop:{ idea:'', genre:'', targetPages:'', logline:'', synopsis:'', lb:{incident:'',protagonist:'',goal:'',stakes:''}, lb2:{incident:'',protagonist:'',action:'',antagonist:''}, lbMode:'when', lbConn:'or else',
       topic:'', lie:'', truth:'', tragic:'', arc:'positive', themeNotes:'', checks:{}, norm:'',
       characters:[newChar('Protagonist')], settings:[], refs:[], notes:'' },
-    outline:{ step:0, view:'toggle', structure:'scaffold', alt:{}, beats:Object.fromEntries(BEAT_IDS.map(id => [id, {summary:'', items:[]}])) },
+    outline:{ step:0, view:'toggle', structure:'scaffold', alt:{}, free:{beats:[], target:'scaffold'}, beats:Object.fromEntries(BEAT_IDS.map(id => [id, {summary:'', items:[]}])) },
     script:{ text:'', basedOn:'' },
     drafts:[], lockedDraft:'',
     ui:{ tab:'develop', live:true, bar:true, checks:true, togo:true, scenes:true, smart:true, zoom:1, welcomed:false, tips:true }
@@ -1271,7 +1334,7 @@ function snapSummary(b){
   const bits = [];
   if (String(d.logline || '').trim()) bits.push('logline');
   const ch = (d.characters || []).filter(c => String(c.name || '').trim()).length; if (ch) bits.push(ch + (ch === 1 ? ' character' : ' characters'));
-  if (Object.values((b.outline || {}).beats || {}).some(x => String(x.summary || '').trim() || (x.items || []).length)) bits.push('outline');
+  if (Object.values((b.outline || {}).beats || {}).some(x => String(x.summary || '').trim() || (x.items || []).length) || (((b.outline || {}).free || {}).beats || []).some(x => String(x.text || '').trim())) bits.push('outline');
   if (lines) bits.push(lines < 30 ? 'a scene' : '≈ ' + Math.max(1, Math.round(lines / 55)) + ' pages');
   return bits.length ? bits.join(' · ') : 'the idea';
 }
@@ -2044,6 +2107,7 @@ function timeline(onPick, selFn){
 }
 
 function renderOutline(v){
+  if (isFree()) return renderFreeOutline(v);
   if ((S.outline.structure || 'scaffold') !== 'scaffold') return renderAltOutline(v);
   const O = S.outline;
   if (O.pass !== 2) O.pass = 1;
@@ -2191,6 +2255,7 @@ function itemsEditor(id, redraw, opts={}){
         h('button', {class:'car', title:'Show details', onclick: () => { it.open = !it.open; item.classList.toggle('open', it.open); touch(); autosize(notes); }}, svgIcon(IC.right)),
         opts.letter ? h('span', {class:'letter'}, opts.letter(i)) : null,
         t,
+        it.from ? h('span', {class:'fromtag', title:'Copied from Free Outlining. It\'s an independent copy: editing it here won\'t change your free beat.'}, 'Free') : null,
         h('button', {class:'ib', title:'Move up', onclick: () => { if (i > 0){ [B.items[i-1], B.items[i]] = [B.items[i], B.items[i-1]]; touch(); redraw(); } }}, svgIcon(IC.up)),
         h('button', {class:'ib', title:'Move down', onclick: () => { if (i < B.items.length - 1){ [B.items[i+1], B.items[i]] = [B.items[i], B.items[i+1]]; touch(); redraw(); } }}, svgIcon(IC.down)),
         h('button', {class:'ib', title:'Delete', onclick: () => { B.items.splice(i, 1); touch(); redraw(); }}, svgIcon(IC.trash))),
@@ -2281,18 +2346,24 @@ function mirrorView(redraw){
 /* =====================================================================
    STRUCTURE SWITCHER + Save the Cat / Three-Act outlines
    ===================================================================== */
+function switchStructure(v, key, quiet){
+  S.outline.structure = key; touch();
+  derived.length = 0; v.replaceChildren(); v.scrollTop = 0; renderOutline(v);
+  requestAnimationFrame(() => { $$('textarea', v).forEach(autosize); runDerived(); });
+  if (!quiet) toast(key === 'free' ? 'Free Outlining: the Write page now lists your beats in order.' : STRUCTS[key].name + ': the Write page now follows this structure.');
+}
 function structPicker(v){
-  const cur = S.outline.structure || 'scaffold';
-  const blurb = h('p', {class:'small muted', style:'margin:6px 0 0'}, STRUCTS[cur].blurb, ' ', h('span', {class:'teach'}, 'Each structure keeps its own outline, and the Write page follows whichever one is selected.'));
+  const cur = isFree() ? 'free' : (S.outline.structure || 'scaffold');
+  const info = cur === 'free' ? FREE : STRUCTS[cur];
+  const blurb = h('p', {class:'small muted', style:'margin:6px 0 0'}, info.blurb, ' ', h('span', {class:'teach'}, cur === 'free'
+    ? 'Your free beats are kept separately from every structure, and the Write page shows them as a simple ordered list.'
+    : 'Each structure keeps its own outline, and the Write page follows whichever one is selected.'));
   return h('div', {class:'card structpick'},
     h('div', {class:'row', style:'flex-wrap:wrap;gap:12px'},
       h('span', {class:'eyebrow'}, 'Story structure'),
-      h('div', {class:'seg'}, Object.values(STRUCTS).map(st => h('button', {class: st.key === cur ? 'on' : '', onclick: () => {
-        if (st.key === (S.outline.structure || 'scaffold')) return;
-        S.outline.structure = st.key; touch();
-        derived.length = 0; v.replaceChildren(); v.scrollTop = 0; renderOutline(v);
-        requestAnimationFrame(() => { $$('textarea', v).forEach(autosize); runDerived(); });
-        toast(st.name + ': the Write page now follows this structure.');
+      h('div', {class:'seg'}, [...Object.values(STRUCTS), FREE].map(st => h('button', {class: (st.key === cur ? 'on' : '') + (st.key === 'free' ? ' seg-free' : ''), 'data-struct': st.key, onclick: () => {
+        if (st.key === cur) return;
+        switchStructure(v, st.key);
       }}, st.short)))),
     blurb);
 }
@@ -2328,6 +2399,241 @@ function altTimeline(st, store, onPick){
   draw(); derived.push(draw);
   return wrap;
 }
+/* =====================================================================
+   FREE OUTLINING — one-line beats, no timings; copy them into any structure
+   ===================================================================== */
+const GRIP = '<circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/>';
+function freeData(){
+  const O = S.outline;
+  if (!O.free || typeof O.free !== 'object' || Array.isArray(O.free)) O.free = {beats:[], target:'scaffold'};
+  if (!Array.isArray(O.free.beats)) O.free.beats = [];
+  O.free.beats = O.free.beats.filter(b => b && typeof b === 'object').map(b => ({id: b.id || uid(), text: String(b.text ?? '')}));
+  if (!STRUCTS[O.free.target]) O.free.target = 'scaffold';
+  return O.free;
+}
+const structBeatName = (key, id) => key === 'scaffold' ? beatFull(id) : STRUCTS[key].beat[id].name;
+const structBeatRange = (key, id) => key === 'scaffold' ? beatRange(BEAT[id]) : rangeOf(STRUCTS[key].beat[id]);
+/* the beats of a structure, grouped as its Outline page groups them */
+function structGroups(key){
+  const st = STRUCTS[key];
+  if (key === 'scaffold') return [
+    {label:'Setup half · 0–50%', beats: st.beats.filter(b => b.s < 50)},
+    {label:'The hinge · 50%', beats: st.beats.filter(b => b.id === 'mid')},
+    {label:'Payoff half · 50–100%', beats: st.beats.filter(b => b.s >= 50 && b.id !== 'mid')}];
+  return st.sections.map((sec, i) => {
+    const last = i === st.sections.length - 1;
+    return {label: `${sec.label} · ${sec.s}–${sec.e}%`, beats: st.beats.filter(b => b.s >= sec.s && (b.s < sec.e || (last && b.s <= sec.e))).sort((x, y) => x.s - y.s || (x.m ? -1 : 1))};
+  }).filter(g => g.beats.length);
+}
+/* where each free beat has been copied to: {freeId: [{key, id, it}]}, in structure and beat order */
+function freePlacements(){
+  const m = {};
+  Object.keys(STRUCTS).forEach(key => {
+    const store = key === 'scaffold' ? S.outline.beats : (S.outline.alt || {})[key];
+    if (!store) return;
+    STRUCTS[key].beats.forEach(b => ((store[b.id] || {}).items || []).forEach(it => { if (it.from) (m[it.from] || (m[it.from] = [])).push({key, id:b.id, it}); }));
+  });
+  return m;
+}
+const copyEdited = it => (it.title || '') !== (it.src ?? it.title ?? '') || !!String(it.notes || '').trim();
+function placeFree(fb, key, id){
+  const text = fb.text.trim();
+  if (!text){ toast('Write the beat first, then place it.'); return false; }
+  const B = beatStore(key)[id];
+  if (B.items.some(it => it.from === fb.id)){ toast('That beat is already in ' + STRUCTS[key].short + ' › ' + structBeatName(key, id) + '.'); return false; }
+  B.items.push({id:uid(), title:text, notes:'', open:false, from:fb.id, src:text});
+  touch(); toast('Copied to ' + STRUCTS[key].short + ' › ' + structBeatName(key, id) + '.');
+  return true;
+}
+function openStructBeat(v, key, id){
+  if (key === 'scaffold'){ S.outline.step = SI('det'); S.outline.view = 'toggle'; S.outline.beats[id]._open = true; }
+  else { beatStore(key)[id]._open = true; S.outline._focus = id; }
+  switchStructure(v, key);
+  if (key === 'scaffold') setTimeout(() => { const el = v.querySelector(`.stepbody .tgl[data-beat="${id}"]`); if (el){ el.scrollIntoView({behavior:'smooth', block:'center'}); el.classList.add('hl'); setTimeout(() => el.classList.remove('hl'), 1400); } }, 80);
+}
+const splitLines = t => String(t || '').split(/\r?\n/).map(l => l.replace(/^\s*(?:[-*•–]|\d+[.)])\s+/, '').trim()).filter(Boolean);
+
+function renderFreeOutline(v){
+  const F = freeData();
+  const root = h('div', {class:'ol'});
+  v.append(root);
+  const list = h('ol', {class:'fb-list'});
+  const zones = h('div');
+  let dragId = null;
+  const count = h('span', {class:'pill'});
+  const updCount = () => { const n = F.beats.filter(b => b.text.trim()).length; count.textContent = n + (n === 1 ? ' beat' : ' beats'); };
+  const focusAt = (i, pos) => {
+    const ta = i >= F.beats.length ? addTa : list.querySelectorAll('.fb textarea')[i];
+    if (!ta) return; ta.focus(); const n = pos == null ? ta.value.length : pos; ta.setSelectionRange(n, n);
+  };
+  const endDrag = () => { dragId = null; document.body.classList.remove('fb-dragging'); $$('.dragging,.drop-before,.drop-after', list).forEach(x => x.classList.remove('dragging', 'drop-before', 'drop-after')); $$('.fz.over', zones).forEach(z => z.classList.remove('over')); };
+
+  function freeRow(fb, i, places){
+    const ta = h('textarea', {rows:1, placeholder:'A beat…', 'aria-label':'Beat ' + (i + 1)});
+    ta.value = fb.text;
+    ta.addEventListener('input', () => { fb.text = ta.value.replace(/\r?\n/g, ' '); if (ta.value !== fb.text) ta.value = fb.text; autosize(ta); touch(); updCount(); });
+    ta.addEventListener('paste', e => {
+      const lines = splitLines(e.clipboardData && e.clipboardData.getData('text/plain'));
+      if (lines.length < 2) return;
+      e.preventDefault();
+      const a = ta.selectionStart, b = ta.selectionEnd, before = fb.text.slice(0, a), after = fb.text.slice(b);
+      fb.text = before + lines[0];
+      const extra = lines.slice(1).map(t => ({id:uid(), text:t}));
+      extra[extra.length - 1].text += after;
+      F.beats.splice(i + 1, 0, ...extra); touch(); drawList(); focusAt(i + extra.length, extra[extra.length - 1].text.length - after.length);
+    });
+    ta.addEventListener('keydown', e => {
+      const a = ta.selectionStart, b = ta.selectionEnd, n = ta.value.length;
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){
+        e.preventDefault();
+        const rest = fb.text.slice(b).trimStart(); fb.text = fb.text.slice(0, a).trimEnd();
+        F.beats.splice(i + 1, 0, {id:uid(), text:rest}); touch(); drawList(); focusAt(i + 1, 0);
+      } else if (e.key === 'Backspace' && a === 0 && b === 0 && i > 0){
+        e.preventDefault();
+        const prev = F.beats[i - 1], join = prev.text.length;
+        if (fb.text) prev.text = prev.text + (prev.text && !/\s$/.test(prev.text) ? ' ' : '') + fb.text;
+        F.beats.splice(i, 1); touch(); drawList(); focusAt(i - 1, join + (fb.text && join ? 1 : 0));
+      } else if (e.key === 'Backspace' && !fb.text && i === 0 && F.beats.length > 1){
+        e.preventDefault(); F.beats.splice(0, 1); touch(); drawList(); focusAt(0, 0);
+      } else if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')){
+        e.preventDefault();
+        const j = i + (e.key === 'ArrowUp' ? -1 : 1);
+        if (j < 0 || j >= F.beats.length) return;
+        [F.beats[i], F.beats[j]] = [F.beats[j], F.beats[i]]; touch(); drawList(); focusAt(j, a);
+      } else if (e.key === 'ArrowUp' && a === 0 && b === 0 && i > 0){ e.preventDefault(); focusAt(i - 1); }
+      else if (e.key === 'ArrowDown' && a === n && b === n){ e.preventDefault(); focusAt(i + 1); }
+      else if (e.key === 'Escape') ta.blur();
+    });
+    const sel = h('select', {class:'fb-place', title:'Copy this beat into a point of ' + STRUCTS[F.target].name, 'aria-label':'Copy this beat into a point of ' + STRUCTS[F.target].name});
+    sel.append(h('option', {value:''}, 'Place in…'));
+    structGroups(F.target).forEach(g => sel.append(h('optgroup', {label:g.label}, g.beats.map(bt => h('option', {value:bt.id}, structBeatName(F.target, bt.id))))));
+    sel.addEventListener('change', () => { const id = sel.value; sel.value = ''; if (id && placeFree(fb, F.target, id)){ drawList(); drawZones(id); } });
+    const grip = h('span', {class:'fb-grip', draggable:'true', title:'Drag to reorder, or drag onto a point of the structure below'}, svgIcon(GRIP));
+    const li = h('li', {class:'fb' + (places.length ? ' placed' : ''), 'data-fb': fb.id},
+      grip,
+      h('span', {class:'fb-n', title: places.length ? `Placed in ${places.length} ${places.length === 1 ? 'beat' : 'beats'}` : null}, i + 1),
+      h('div', {class:'fb-body'}, ta,
+        places.length ? h('div', {class:'fb-chips'}, places.map(p => h('span', {class:'fb-chip fam-' + STRUCTS[p.key].beat[p.id].fam, title:'Open in ' + STRUCTS[p.key].name + (copyEdited(p.it) ? ' (the copy has been edited there)' : ''), onclick: () => openStructBeat(v, p.key, p.id)},
+          STRUCTS[p.key].short + ' › ' + structBeatName(p.key, p.id),
+          h('button', {class:'x', type:'button', title:'Remove this copy', 'aria-label':'Remove this copy from ' + STRUCTS[p.key].short, onclick: e => { e.stopPropagation(); unplace(p); }}, '×')))) : null),
+      h('div', {class:'fb-tools'}, sel,
+        h('button', {class:'ib', type:'button', title:'Delete beat', 'aria-label':'Delete beat', onclick: () => { F.beats.splice(i, 1); touch(); drawList(); }}, svgIcon(IC.trash))));
+    grip.addEventListener('dragstart', e => {
+      dragId = fb.id; e.dataTransfer.effectAllowed = 'copyMove'; e.dataTransfer.setData('text/plain', fb.text);
+      try { e.dataTransfer.setDragImage(li, 24, 16); } catch(_){}
+      requestAnimationFrame(() => { li.classList.add('dragging'); document.body.classList.add('fb-dragging'); });
+    });
+    grip.addEventListener('dragend', endDrag);
+    li.addEventListener('dragover', e => {
+      if (!dragId || dragId === fb.id) return;
+      e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+      const r = li.getBoundingClientRect(), after = e.clientY > r.top + r.height / 2;
+      li.classList.toggle('drop-after', after); li.classList.toggle('drop-before', !after);
+    });
+    li.addEventListener('dragleave', e => { if (!li.contains(e.relatedTarget)) li.classList.remove('drop-before', 'drop-after'); });
+    li.addEventListener('drop', e => {
+      if (!dragId || dragId === fb.id) return;
+      e.preventDefault();
+      const after = li.classList.contains('drop-after'), from = F.beats.findIndex(x => x.id === dragId);
+      if (from < 0) return;
+      const [m] = F.beats.splice(from, 1);
+      F.beats.splice(F.beats.indexOf(fb) + (after ? 1 : 0), 0, m);
+      endDrag(); touch(); drawList();
+    });
+    return li;
+  }
+  function unplace(p){
+    const label = STRUCTS[p.key].short + ' › ' + structBeatName(p.key, p.id);
+    if (copyEdited(p.it)){ toast('That copy has been edited in ' + label + ', so remove it there if you\'re sure.'); return; }
+    const B = beatStore(p.key)[p.id]; const k = B.items.indexOf(p.it);
+    if (k >= 0) B.items.splice(k, 1);
+    touch(); drawList(); drawZones(); toast('Removed from ' + label + '.');
+  }
+  function drawList(){
+    const ae = document.activeElement, keep = ae && ae.closest && ae.closest('.fb') && list.contains(ae) ? [ae.closest('.fb').dataset.fb, ae.selectionStart] : null;
+    const pl = freePlacements();
+    list.replaceChildren(...F.beats.map((fb, i) => freeRow(fb, i, pl[fb.id] || [])));
+    if (!F.beats.length) list.append(h('li', {class:'fb-empty'}, 'Nothing here yet. Type your first beat below and press Enter.'));
+    requestAnimationFrame(() => $$('textarea', list).forEach(autosize));
+    if (keep){ const ta = list.querySelector(`[data-fb="${keep[0]}"] textarea`); if (ta){ ta.focus({preventScroll:true}); try { ta.setSelectionRange(keep[1], keep[1]); } catch(_){} } }
+    updCount();
+  }
+
+  const commitAdd = () => {
+    const lines = splitLines(addTa.value);
+    if (!lines.length) return false;
+    lines.forEach(t => F.beats.push({id:uid(), text:t}));
+    addTa.value = ''; autosize(addTa); touch(); drawList(); return true;
+  };
+  const addTa = h('textarea', {rows:1, placeholder:'Add a beat… (Enter adds the next one; paste a list to add several)', 'aria-label':'Add a beat'});
+  addTa.addEventListener('input', () => autosize(addTa));
+  addTa.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); if (commitAdd()) focusAt(F.beats.length); }
+    else if ((e.key === 'ArrowUp' || e.key === 'Backspace') && addTa.selectionStart === 0 && addTa.selectionEnd === 0 && F.beats.length){ e.preventDefault(); focusAt(F.beats.length - 1); }
+  });
+  addTa.addEventListener('paste', e => {
+    const lines = splitLines(e.clipboardData && e.clipboardData.getData('text/plain'));
+    if (lines.length < 2) return;
+    e.preventDefault(); addTa.value = addTa.value + lines.join('\n'); commitAdd(); focusAt(F.beats.length);
+  });
+  addTa.addEventListener('blur', e => {   /* typed but didn't press Enter: keep it, and keep wherever the click went */
+    if (!addTa.value.trim()) return;
+    const to = e.relatedTarget, row = to && to.closest && to.closest('.fb');
+    commitAdd();
+    if (row){ const ta = list.querySelector(`[data-fb="${row.dataset.fb}"] textarea`); ta && ta.focus({preventScroll:true}); }
+  });
+
+  const card = h('section', {class:'card free-card'},
+    h('div', {class:'stephead'}, h('div', {style:'flex:1'}, h('h2', null, 'Your beats'),
+      h('p', null, 'Write the moments of your story as they come to you, one line each, in any order. ', h('span', {class:'teach'}, 'Press Enter for the next beat, drag the handle to reorder, or use Alt + ↑/↓ to move a beat.'))),
+      count),
+    list,
+    h('div', {class:'fb-add'}, h('span', {class:'fb-grip', style:'visibility:hidden'}), h('span', {class:'fb-n'}, '+'), h('div', {class:'fb-body'}, addTa)));
+
+  const tgtSeg = h('div', {class:'seg'}, Object.values(STRUCTS).map(st => h('button', {class: st.key === F.target ? 'on' : '', 'data-target': st.key, onclick: () => {
+    if (F.target === st.key) return;
+    F.target = st.key; touch();
+    $$('button', tgtSeg).forEach(b => b.classList.toggle('on', b.dataset.target === st.key));
+    drawList(); drawZones();
+  }}, st.short)));
+  const place = h('section', {class:'card place-card'},
+    h('div', {class:'row head'}, h('h2', {style:'margin:0'}, 'Place beats into a structure'), h('span', {class:'spacer'}), tgtSeg),
+    h('p', {class:'small muted', style:'margin:0'}, 'Drag a beat by its handle onto a point below, or use its “Place in…” menu. It becomes a plot point in that structure\'s own outline. ',
+      h('span', {class:'teach'}, 'The copy is independent, so you can rework it there without changing your free beat. The free beat stays here, marked with everywhere it\'s been placed.')),
+    zones,
+    h('div', {class:'stepnav', style:'margin-top:16px'}, h('span'), h('button', {class:'btn primary', onclick: () => go('write')}, 'Start writing →')));
+
+  function zone(key, b, B, flash){
+    const its = B.items.filter(it => String(it.title || '').trim());
+    const z = h('div', {class:`fz fam-${b.fam}` + (flash ? ' flash' : ''), 'data-beat': b.id},
+      h('div', {class:'fz-h'}, h('b', null, structBeatName(key, b.id)), h('span', {class:'rng'}, structBeatRange(key, b.id)),
+        h('a', {href:'#', title:'Open this point in ' + STRUCTS[key].name, onclick: e => { e.preventDefault(); openStructBeat(v, key, b.id); }}, 'Open ›')),
+      its.length ? h('ul', null, its.slice(0, 5).map(it => h('li', {class: it.from ? 'ff' : '', title: it.title + (it.from ? ' (from Free Outlining)' : '')}, it.title)),
+        its.length > 5 ? h('li', {style:'list-style:none;color:var(--ink3)'}, `+ ${its.length - 5} more`) : null) : null,
+      h('div', {class:'fz-drop'}, its.length ? 'Drop a beat to add it here' : 'Drop a beat here'));
+    if (flash) setTimeout(() => z.classList.remove('flash'), 1200);
+    z.addEventListener('dragover', e => { if (!dragId) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; z.classList.add('over'); });
+    z.addEventListener('dragleave', e => { if (!z.contains(e.relatedTarget)) z.classList.remove('over'); });
+    z.addEventListener('drop', e => {
+      if (!dragId) return;
+      e.preventDefault();
+      const fb = F.beats.find(x => x.id === dragId); endDrag();
+      if (fb && placeFree(fb, key, b.id)){ drawList(); drawZones(b.id); }
+    });
+    return z;
+  }
+  function drawZones(flash){
+    const key = F.target, store = beatStore(key);
+    zones.replaceChildren(...structGroups(key).map(g => h('div', {class:'fz-sec'},
+      h('h4', null, g.label),
+      h('div', {class:'fz-grid'}, g.beats.map(b => zone(key, b, store[b.id], flash === b.id))))));
+  }
+
+  root.append(structPicker(v), card, place);
+  drawList(); drawZones();
+  requestAnimationFrame(() => { autosize(addTa); if (!F.beats.length) addTa.focus({preventScroll:true}); });
+}
+
 function renderAltOutline(v){
   const st = curStruct(), store = beatStore();
   const root = h('div', {class:'ol'});
@@ -2944,7 +3250,7 @@ function renderWrite(v){
     const frag = document.createDocumentFragment();
     const maxR = Math.max(total, U.live ? R : 0);
     for (let p = 1; p * LPP < maxR; p++) frag.append(h('div', {class:'pline', style:`top:${edTop + yAt(p * LPP)}px`}, h('span', null, (p + 1) + '.')));
-    if (U.live && (total || tp)){   /* nothing to colour on an empty page */
+    if (U.live && !isFree() && (total || tp)){   /* nothing to colour on an empty page; Free Outlining has no timings */
       const st = curStruct();
       st.bands.forEach(sp => {
         const y0 = yAt(sp.s / 100 * R), y1 = yAt(sp.e / 100 * R);
@@ -2982,7 +3288,7 @@ function renderWrite(v){
     return {span, near, st};
   }
   function drawMTL(){
-    if (U.bar === false){ mtl.style.display = 'none'; return; }
+    if (U.bar === false || isFree()){ mtl.style.display = 'none'; return; }
     mtl.style.display = '';
     const R = refLines(), total = P.total, tp = targetPages(), st = curStruct();
     const crPct = Math.min(99.99, caretR() / R * 100);
@@ -3001,6 +3307,18 @@ function renderWrite(v){
     if (!geo) return;
     root.style.setProperty('--wbarh', bar.offsetHeight + 'px');
     if (!U.live){ setCols(null, null, 'off'); return; }
+    if (isFree()){   /* no timings: just the free beats, in order */
+      const bs = freeData().beats.filter(b => b.text.trim());
+      const key = 'free|' + bs.map(b => b.id + ':' + b.text).join('\u0001');
+      const edit = h('a', {href:'#', onclick: e => { e.preventDefault(); go('outline'); }}, 'Edit');
+      const card = h('div', {class:'pcard beat'},
+        h('div', {class:'pk'}, h('span', {class:'pkl'}, 'Free outline'), h('span', {class:'pkr'}, edit, colBtn('right'))),
+        h('h4', null, 'Your beats, in order'),
+        bs.length ? h('ol', {class:'freelist'}, bs.map(b => h('li', null, b.text.trim()))) : h('p', {class:'muted', style:'font-style:italic'}, 'No beats yet. Add them in Outline › Free Outlining.'),
+        h('div', {class:'next'}, 'Free Outlining has no timings, so this list doesn\'t follow where you are in the script. Pick a structure in the Outline tab to see beats against your pages.'));
+      setCols(card, h('div', {class:'pcard beat'}, h('div', {class:'pk'}, h('span', null, 'Free outline')), h('h4', null, bs.length + (bs.length === 1 ? ' beat' : ' beats')), bs[0] ? h('p', null, '1. ' + bs[0].text.trim()) : null), key);
+      return;
+    }
     const R = refLines(), r = caretR(), frac = Math.min(.9999, r / R), pct = frac * 100;
     const {span, near, st} = beatAt(frac);
     const store = beatStore(st.key);
@@ -3337,7 +3655,14 @@ function pdArcFigure(st){
       others.map((c, k) => h('span', {html: key(DASH[k % 4]) + `<b>${esc(pdTxt(c.name))}</b> · ${ARCS[c.arc].name}`}))));
 }
 
+function pdFreeOutline(){
+  const bs = freeData().beats.filter(b => pdTxt(b.text));
+  return h('section', {class:'pd-part'},
+    h('h2', null, 'Outline', h('small', null, FREE.name)),
+    pdSec('Beat by beat', bs.length ? h('div', {class:'pd-pts'}, bs.map((b, i) => h('div', {class:'pd-pt'}, h('b', null, (i + 1) + '.'), h('div', null, h('p', null, pdTxt(b.text)))))) : h('p', {class:'pd-empty'}, 'No beats yet')));
+}
 function pdOutline(guide){
+  if (isFree()) return pdFreeOutline();
   const st = curStruct(), store = beatStore(), d = S.develop, N = targetPages(), scaffold = st.key === 'scaffold';
   const items = id => store[id].items.filter(it => pdTxt(it.title) || pdTxt(it.notes));
   /* mirror letters, as in Mirror view: A ↔ A′, and inside each pair the payoff side runs in reverse */
@@ -3438,7 +3763,7 @@ function exportDocModal(){
   modal('Export Develop & Outline as PDF', h('div', null,
     h('p', null, 'Makes a tidy document of what you\'ve filled in. Empty boxes and teaching tips are left out.'),
     sw('develop', 'Develop', 'Idea, logline, theme, characters, settings, references and notes.'),
-    sw('outline', 'Outline', `Your arc and every beat of the ${curStruct().name}, with plot points${curStruct().key === 'scaffold' ? ' and the mirror' : ''}.`),
+    sw('outline', 'Outline', isFree() ? 'Your free beats, in order.' : `Your arc and every beat of the ${curStruct().name}, with plot points${curStruct().key === 'scaffold' ? ' and the mirror' : ''}.`),
     sw('guide', 'Add the guidance for each beat', 'Prints what each beat is for above your own words. Handy for a reader who doesn\'t know the structure.'),
     h('p', {class:'small muted', style:'margin-top:16px'}, 'In the print window, choose “Save as PDF” as the printer.')),
     [{label:'Cancel'}, ...(window.fthDocs ? [{label:'Save to Documentation', fn: () => { if (!o.develop && !o.outline){ toast('Choose Develop, Outline or both.'); return false; } window.fthDocs.run(() => printDoc(o)); }}] : []),
