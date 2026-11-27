@@ -73,7 +73,7 @@
       "num": "",
       "short": "Learn",
       "name": "Learn",
-      "color": "#e889c8",
+      "color": "#62d384",
       "blurb": "Hands-on labs to build your skills. Not tied to any project.",
       "learn": true
     }
@@ -672,7 +672,7 @@
       "ver": 2,
       "updated": 1793998377844,
       "note": "",
-      "rev": 202611171845,
+      "rev": 202611270935,
       "file": "tools/pattern-lab.html"
     },
     {
@@ -692,7 +692,7 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611191627,
+      "rev": 202611270935,
       "file": "tools/ratio-lab.html"
     },
     {
@@ -712,7 +712,7 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611171845,
+      "rev": 202611270935,
       "file": "tools/exposure.html"
     },
     {
@@ -732,7 +732,7 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611171845,
+      "rev": 202611270935,
       "file": "tools/dof.html"
     },
     {
@@ -752,7 +752,7 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611182115,
+      "rev": 202611270935,
       "file": "tools/colour-temp.html"
     },
     {
@@ -771,7 +771,7 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611211230,
+      "rev": 202611270935,
       "file": "tools/mic-placement.html"
     },
     {
@@ -790,7 +790,7 @@
       "ver": 1,
       "updated": null,
       "note": "",
-      "rev": 202611232055,
+      "rev": 202611270935,
       "file": "tools/spectrum.html"
     }
   ]
