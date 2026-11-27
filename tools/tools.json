@@ -137,6 +137,27 @@
       "personal": true
     },
     {
+      "id": "storydev",
+      "name": "Story Development Pipeline",
+      "desc": "From idea to rewrite, one document at a time: premise, logline, synopsis, treatment, outline, draft and notes, with the reading behind each step and story frameworks compared on a three-strand timeline.",
+      "category": "develop",
+      "tags": [
+        "Writer",
+        "Story",
+        "Learning"
+      ],
+      "icon": "script",
+      "card": "assets/cards/storydev.webp",
+      "fileName": "Story Development Pipeline.html",
+      "origTitle": "Story Development Pipeline",
+      "ver": 1,
+      "updated": null,
+      "note": "",
+      "rev": 202611270859,
+      "file": "tools/storydev.html",
+      "lead": true
+    },
+    {
       "id": "script-dev",
       "name": "Script Development Tool",
       "desc": "Scaffolded scriptwriting: build characters, settings and structure, then write in screenplay format with saved drafts.",
