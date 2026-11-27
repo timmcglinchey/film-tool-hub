@@ -11,7 +11,7 @@ const SAMPLES = path.join(__dirname, 'samples');
 const OUT = path.join(__dirname, 'shots');
 const S = f => path.join(SAMPLES, f);
 
-const IDS = ['script-dev','coverage','moodboard','palette','preprod','breakdown','script-lining','budget','casting','release','recce',
+const IDS = ['storydev','script-dev','coverage','moodboard','palette','preprod','breakdown','script-lining','budget','casting','release','recce',
   'loc-agree','shotlist','blocking','lighting','falsecolour','schedule','risk','callsheet','production','script-log','camera-report',
   'postprod','pattern-lab','ratio-lab','exposure','dof','colour-temp','mic-placement','spectrum'];
 

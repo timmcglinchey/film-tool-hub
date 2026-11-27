@@ -52,11 +52,12 @@ CROPS = {
     'mic-placement': (140, 200, 1100),
     'spectrum':      (15, 150, 1020),
     # the wide "start here" cards: the task list, not the big title (the card shows the title)
+    'storydev':      (160, 420, 1140),   # the three-strand timeline
     'preprod':       (300, 600, 1140),
     'production':    (300, 560, 1140),
     'postprod':      (300, 640, 1140),
 }
-WIDE = {'preprod', 'production', 'postprod'}
+WIDE = {'storydev', 'preprod', 'production', 'postprod'}
 SIZE, WIDE_SIZE = (768, 480), (1600, 330)
 
 # each stage's colour sweeps diagonally into a partner colour

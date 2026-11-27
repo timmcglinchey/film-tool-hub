@@ -2309,6 +2309,7 @@ const TOOL_THEME = {
   tasks:     {kit: true},
   coverage:  {kit: true},
   moodboard: {kit: true},
+  storydev:      {kit: true},
   preprod:       {kit: true},
   production:    {kit: true},
   postprod:      {kit: true},
