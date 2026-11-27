@@ -666,7 +666,7 @@
         "Learning"
       ],
       "icon": "portrait",
-      "card": "assets/cards/pattern-lab.webp",
+      "card": "assets/cards/pattern-lab.webp?v=202611271015",
       "fileName": "Lighting Pattern Lab.html",
       "origTitle": "Lighting Pattern Lab",
       "ver": 2,
@@ -686,7 +686,7 @@
         "Learning"
       ],
       "icon": "ratios",
-      "card": "assets/cards/ratio-lab.webp",
+      "card": "assets/cards/ratio-lab.webp?v=202611271015",
       "fileName": "Lighting Ratio Lab.html",
       "origTitle": "Lighting Ratio Lab",
       "ver": 1,
@@ -700,7 +700,7 @@
       "name": "Exposure Lab",
       "category": "learn",
       "icon": "exposure",
-      "card": "assets/cards/exposure.webp",
+      "card": "assets/cards/exposure.webp?v=202611271015",
       "desc": "Explore falloff, collimation and hard vs soft light from arm's length to a kilometre, with an exposure triangle, ND and a live camera preview.",
       "tags": [
         "DP",
@@ -726,7 +726,7 @@
         "Lenses"
       ],
       "icon": "dof",
-      "card": "assets/cards/dof.webp",
+      "card": "assets/cards/dof.webp?v=202611271015",
       "fileName": "Depth of Field Lab.html",
       "origTitle": "Depth of Field Lab",
       "ver": 1,
@@ -746,7 +746,7 @@
         "Learning"
       ],
       "icon": "colourtemp",
-      "card": "assets/cards/colour-temp.webp",
+      "card": "assets/cards/colour-temp.webp?v=202611271015",
       "fileName": "Colour Temperature Lab.html",
       "origTitle": "Colour Temperature Lab",
       "ver": 1,
@@ -765,7 +765,7 @@
         "Learning"
       ],
       "icon": "mic",
-      "card": "assets/cards/mic-placement.webp",
+      "card": "assets/cards/mic-placement.webp?v=202611271015",
       "fileName": "Mic Placement Lab.html",
       "origTitle": "Mic Placement Lab",
       "ver": 1,
@@ -784,7 +784,7 @@
         "Learning"
       ],
       "icon": "spectrum",
-      "card": "assets/cards/spectrum.webp",
+      "card": "assets/cards/spectrum.webp?v=202611271015",
       "fileName": "Spectrum Analysis Lab.html",
       "origTitle": "Spectrum Analysis Lab",
       "ver": 1,

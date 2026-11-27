@@ -61,7 +61,7 @@ WIDE = {'storydev', 'preprod', 'production', 'postprod'}
 SIZE, WIDE_SIZE = (768, 480), (1600, 330)
 
 # each stage's colour sweeps diagonally into a partner colour
-PARTNER = {'develop': '#e8506a', 'prep': '#3d6bff', 'shoot': '#c03fa0', 'post': '#6a2cff', 'learn': '#3b2bd9'}
+PARTNER = {'develop': '#e8506a', 'prep': '#3d6bff', 'shoot': '#c03fa0', 'post': '#6a2cff', 'learn': '#1f8f6a'}
 
 
 def hexrgb(h):
